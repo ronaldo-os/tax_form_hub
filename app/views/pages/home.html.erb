@@ -1,3 +1,16 @@
+<nav class="navbar bg-body-tertiary">
+  <div class="container">
+    <a class="navbar-brand">Tax Form Hub</a>
+    <% if user_signed_in? %>
+      <div class="d-flex align-items-center">
+        <span class="text-muted me-2">Hello, <strong><%= current_user.email %></strong></span>
+        <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-danger btn-sm mb-0" %>
+      </div>
+    <% end %>
+  </div>
+</nav>
+
+
 <div class="container py-5 text-center">
   <h1 class="display-4">Welcome to Tax Form Hub</h1>
   <p class="lead">Tax document submission.</p>

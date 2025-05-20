@@ -1,0 +1,72 @@
+<div class="container mt-5" style="max-width: 400px;">
+  <h2 class="mb-4 text-center">Sign up</h2>
+
+  <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "needs-validation", novalidate: true }) do |f| %>
+    <%= render "devise/shared/error_messages", resource: resource %>
+
+    <div class="mb-3">
+      <%= f.label :email, class: "form-label" %>
+      <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control", required: true %>
+      <div class="invalid-feedback">
+        Please enter your email.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :password, class: "form-label" %>
+      <% if @minimum_password_length %>
+        <small class="form-text text-muted mb-1">
+          (<%= @minimum_password_length %> characters minimum)
+        </small>
+      <% end %>
+      <div class="input-group">
+        <%= f.password_field :password, autocomplete: "new-password", class: "form-control border-end-0", id: "password", required: true %>
+        <span class="input-group-text bg-white">
+          <i class="fa-solid fa-eye" id="togglePasswordIcon" style="cursor: pointer;"></i>
+        </span>
+      </div>
+      <div class="invalid-feedback">
+        Please enter a password.
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <%= f.label :password_confirmation, class: "form-label" %>
+      <div class="input-group">
+        <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control border-end-0", id: "password_confirmation", required: true %>
+        <span class="input-group-text bg-white">
+          <i class="fa-solid fa-eye" id="toggleConfirmIcon" style="cursor: pointer;"></i>
+        </span>
+      </div>
+      <div class="invalid-feedback">
+        Please confirm your password.
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <%= f.submit "Sign up", class: "btn btn-primary btn-lg" %>
+    </div>
+  <% end %>
+
+  <div class="mt-3 text-center">
+    <%= render "devise/shared/links" %>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function () {
+    $('#togglePasswordIcon').on('click', function () {
+      const input = $('#password');
+      const type = input.attr('type') === 'password' ? 'text' : 'password';
+      input.attr('type', type);
+      $(this).toggleClass('fa-eye fa-eye-slash');
+    });
+
+    $('#toggleConfirmIcon').on('click', function () {
+      const input = $('#password_confirmation');
+      const type = input.attr('type') === 'password' ? 'text' : 'password';
+      input.attr('type', type);
+      $(this).toggleClass('fa-eye fa-eye-slash');
+    });
+  });
+</script>
