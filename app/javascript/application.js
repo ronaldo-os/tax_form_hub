@@ -1,4 +1,3 @@
-// Entry point for the build script in your package.json
-import * as bootstrap from "bootstrap"
+// Configure your import map in config/importmap.rb. Read more: https://github.com/rails/importmap-rails
 import "bootstrap"
-import "../stylesheets/application.bootstrap"  // or wherever your Bootstrap CSS is imported
+import "@hotwired/turbo-rails"
