@@ -1,24 +1,35 @@
-# README
+# Tax Form Hub
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A web application built with Ruby on Rails for securely submitting and managing tax-related documents.
 
-Things you may want to cover:
+## 🚀 Requirements
 
-* Ruby version
+- Ruby 3.2.2 (use [rbenv](https://github.com/rbenv/rbenv) or [rvm](https://rvm.io/))
+- Rails 7+
+- Node.js (for JavaScript runtime)
+- Yarn (for managing JS dependencies)
+- PostgreSQL (or your chosen DB)
 
-* System dependencies
+## 📦 Setup Instructions
 
-* Configuration
+1. **Clone the repository**
 
-* Database creation
+git clone https://github.com/ronaldo-os/tax_form_hub.git
+cd tax_form_hub
 
-* Database initialization
+2. **Install Dependencies**
+bundle install
+yarn install
 
-* How to run the test suite
+3. **Set Up the Database**
+rails db:setup
+rails db:create
+rails db:migrate
+rails db:seed
 
-* Services (job queues, cache servers, search engines, etc.)
+4. **Configure Environment Variables**
+Populate the env.sample file
 
-* Deployment instructions
+5. **Run the Server**
+rails s
 
-* ...

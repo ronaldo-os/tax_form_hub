@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get "tax_submissions/new"
+  get "tax_submissions/create"
   devise_for :users
   get "pages/home"
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
@@ -15,6 +17,6 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   root "pages#home"
-
-  resources :client_submissions, only: [:index, :new, :create, :show]
+  
+  resources :tax_submissions, only: [:new, :create]
 end
