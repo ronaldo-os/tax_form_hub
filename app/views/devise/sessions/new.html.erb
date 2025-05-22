@@ -39,14 +39,3 @@
     <%= render "devise/shared/links" %>
   </div>
 </div>
-
-<script>
-  $(document).ready(function() {
-    $('#togglePasswordIcon').on('click', function() {
-      const passwordInput = $('#password');
-      const type = passwordInput.attr('type') === 'password' ? 'text' : 'password';
-      passwordInput.attr('type', type);
-      $(this).toggleClass('fa-eye fa-eye-slash');
-    });
-  });
-</script>

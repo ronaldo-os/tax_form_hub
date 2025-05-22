@@ -19,6 +19,9 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <%= javascript_importmap_tags %>
+    <% if devise_controller? %>
+      <%= javascript_include_tag "devise_password_toggle", type: "module" %>
+    <% end %>
   </head>
 
   <body>
