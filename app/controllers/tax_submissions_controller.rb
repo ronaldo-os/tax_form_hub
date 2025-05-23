@@ -6,8 +6,9 @@ class TaxSubmissionsController < ApplicationController
   def create
     @tax_submission = TaxSubmission.new(tax_submission_params)
     if @tax_submission.save
-      redirect_to new_tax_submission_path, notice: "Submission successful."
+      redirect_to root_path, notice: "Submission successful."
     else
+      flash.now[:alert] = "Submission failed. Please check the form for errors."
       render :new, status: :unprocessable_entity
     end
   end

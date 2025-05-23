@@ -1,0 +1,70 @@
+<nav class="navbar bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand">Tax Form Hub</a>
+    <% if user_signed_in? %>
+      <div class="d-flex align-items-center">
+        <span class="text-muted me-2">Hello, <strong><%= current_user.email %></strong></span>
+        <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-danger btn-sm mb-0" %>
+      </div>
+    <% end %>
+  </div>
+</nav>
+
+
+<div class="container-fluid mt-5">
+    <h1 class="mb-4 text-center">Client Submissions</h1>
+
+    <table id="taxSubmissionsTable" class="table table-striped">
+    <thead class="table-light">
+        <tr>
+        <th>Email</th>
+        <th>Details</th>
+        <th>Form 2307</th>
+        <th>Deposit Slip</th>
+        <th>Reviewed</th>
+        <th>Processed</th>
+        <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% @tax_submissions.each do |submission| %>
+        <tr>
+            <td><%= submission.email.presence || "N/A" %></td>
+            <td><%= truncate(submission.details, length: 50) %></td>
+            <td>
+            <% if submission.form_2307.attached? %>
+                <%= link_to "View Image", rails_blob_path(submission.form_2307, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
+            <% else %>
+                <span class="text-muted">None</span>
+            <% end %>
+            </td>
+            <td>
+            <% if submission.deposit_slip.attached? %>
+                <%= link_to "View Image", rails_blob_path(submission.deposit_slip, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
+            <% else %>
+                <span class="text-muted">None</span>
+            <% end %>
+            </td>
+            <td><%= submission.reviewed? ? "Yes" : "No" %></td>
+            <td><%= submission.processed? ? "Yes" : "No" %></td>
+            <td style="min-width: 150px;">
+            <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
+                <div class="form-check form-check-inline">
+                <%= f.check_box :reviewed, class: "form-check-input", id: "reviewed_#{submission.id}" %>
+                <%= f.label :reviewed, "Reviewed", class: "form-check-label", for: "reviewed_#{submission.id}" %>
+                </div>
+                <div class="form-check form-check-inline ms-3">
+                <%= f.check_box :processed, class: "form-check-input", id: "processed_#{submission.id}" %>
+                <%= f.label :processed, "Processed", class: "form-check-label", for: "processed_#{submission.id}" %>
+                </div>
+                <div class="mt-2">
+                <%= f.submit "Update", class: "btn btn-sm btn-success" %>
+                </div>
+            <% end %>
+            </td>
+        </tr>
+        <% end %>
+    </tbody>
+    </table>
+
+</div>

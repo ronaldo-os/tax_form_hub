@@ -7,4 +7,8 @@ class User < ApplicationRecord
     user: "user",
     superadmin: "superadmin"
   }, _suffix: true
+
+  def superadmin?
+    role == "superadmin"
+  end
 end

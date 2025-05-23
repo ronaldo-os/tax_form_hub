@@ -1,4 +1,8 @@
 Rails.application.routes.draw do
+  namespace :admin do
+    get "tax_submissions/index"
+    get "tax_submissions/update"
+  end
   get "tax_submissions/new"
   get "tax_submissions/create"
   devise_for :users
@@ -17,6 +21,10 @@ Rails.application.routes.draw do
   # root "posts#index"
 
   root "pages#home"
+
+  namespace :admin do
+    resources :tax_submissions, only: [:index, :update]
+  end
   
   resources :tax_submissions, only: [:new, :create]
 end

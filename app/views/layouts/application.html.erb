@@ -17,14 +17,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <%= javascript_importmap_tags %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
+
     <% if devise_controller? %>
-      <%= javascript_include_tag "devise_password_toggle", type: "module" %>
+      <%= javascript_include_tag "devise_password_toggle" %>
     <% end %>
+
   </head>
 
-  <body>
+  <body class="bg-dark text-light">
+
     <%= yield %>
+
+    <% unless controller_name == 'sessions' && action_name == 'new' %>
+      <% flash.each do |key, message| %>
+        <div class="alert alert-<%= key == "notice" ? "success" : "danger" %> alert-dismissible show" role="alert">
+          <%= message %>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      <% end %>
+    <% end %>
+
+
+
   </body>
 </html>

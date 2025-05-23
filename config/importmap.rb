@@ -2,3 +2,4 @@
 
 pin "application"
 pin "devise_password_toggle", to: "devise_password_toggle.js"
+pin "jquery" # @3.7.1
