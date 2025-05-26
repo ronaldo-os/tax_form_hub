@@ -3,7 +3,6 @@
   <head>
     <title><%= content_for(:title) || "Tax Form Hub" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -13,19 +12,17 @@
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
-
     <%= javascript_include_tag "application", "data-turbo-track": "reload", defer: true %>
 
-    <% if devise_controller? %>
-      <%= javascript_include_tag "devise_password_toggle" %>
+    <% if request.path == '/admin/tax_submissions' %>
+      <%= javascript_pack_tag 'admin_client_submissions', 'data-turbo-track': 'reload' %>
     <% end %>
-
   </head>
 
-  <body class="bg-dark text-light">
+  <body class="<%= 'devise' if devise_controller? %> bg-dark text-light">
 
     <%= yield %>
 
@@ -37,8 +34,6 @@
         </div>
       <% end %>
     <% end %>
-
-
 
   </body>
 </html>

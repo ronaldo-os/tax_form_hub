@@ -5,10 +5,11 @@ A web application built with Ruby on Rails for securely submitting and managing 
 ## 🚀 Requirements
 
 - Ruby 3.2.2 (use [rbenv](https://github.com/rbenv/rbenv) or [rvm](https://rvm.io/))
-- Rails 7+
+- Rails 7.2.2+
 - Node.js (for JavaScript runtime)
 - Yarn (for managing JS dependencies)
 - PostgreSQL (or your chosen DB)
+- Webpack (for asset compilation)
 
 ## 📦 Setup Instructions
 

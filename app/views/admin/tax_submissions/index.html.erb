@@ -12,59 +12,72 @@
 
 
 <div class="container-fluid mt-5">
-    <h1 class="mb-4 text-center">Client Submissions</h1>
-
-    <table id="taxSubmissionsTable" class="table table-striped">
+  <h1 class="mb-4 text-center">Client Submissions</h1>
+  <table id="taxSubmissionsTable" class="table table-striped table-bordered">
     <thead class="table-light">
-        <tr>
+      <tr>
         <th>Email</th>
         <th>Details</th>
         <th>Form 2307</th>
         <th>Deposit Slip</th>
-        <th>Reviewed</th>
-        <th>Processed</th>
+        <th>Status</th>
+        <th>Date Submitted</th>
         <th>Actions</th>
-        </tr>
+      </tr>  
     </thead>
     <tbody>
-        <% @tax_submissions.each do |submission| %>
+      <% @tax_submissions.each do |submission| %>
         <tr>
-            <td><%= submission.email.presence || "N/A" %></td>
-            <td><%= truncate(submission.details, length: 50) %></td>
-            <td>
+          <td><%= submission.email.presence || "N/A" %></td>
+          <td><%= truncate(submission.details, length: 50) %></td>
+          <td>
             <% if submission.form_2307.attached? %>
-                <%= link_to "View Image", rails_blob_path(submission.form_2307, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
+              <%= link_to "View Image", rails_blob_path(submission.form_2307, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
             <% else %>
-                <span class="text-muted">None</span>
+              <span class="text-muted">None</span>
             <% end %>
-            </td>
-            <td>
+          </td>
+          <td>
             <% if submission.deposit_slip.attached? %>
-                <%= link_to "View Image", rails_blob_path(submission.deposit_slip, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
+              <%= link_to "View Image", rails_blob_path(submission.deposit_slip, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
             <% else %>
-                <span class="text-muted">None</span>
+              <span class="text-muted">None</span>
+            <% end %>
+          </td>
+          <td>
+            <% if submission.reviewed? && submission.processed? %>
+              <span class="badge bg-success">Processed & Reviewed</span>
+            <% elsif submission.reviewed? %>
+              <span class="badge bg-info">Reviewed</span>
+            <% elsif submission.processed? %>
+              <span class="badge bg-warning text-dark">Processed</span>
+            <% else %>
+              <span class="badge bg-secondary">Pending</span>
+            <% end %>
+          </td>
+          <td><%= submission.created_at.strftime("%B %d, %Y %I:%M %p") %></td>
+          <td style="min-width: 150px; position: relative;">
+            <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true, html: { class: "auto-submit-form" } do |f| %>
+                <div class="dropdown text-center">
+                <button class="btn btn-link text-dark btn-lg p-0 text-decoration-none" type="button" id="statusDropdown_<%= submission.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                    &#8942;
+                </button>
+                <ul class="dropdown-menu p-3" aria-labelledby="statusDropdown_<%= submission.id %>">
+                    <li class="form-check">
+                    <%= f.check_box :reviewed, class: "form-check-input auto-submit", id: "reviewed_#{submission.id}" %>
+                    <%= f.label :reviewed, "Reviewed", class: "form-check-label ms-2", for: "reviewed_#{submission.id}" %>
+                    </li>
+                    <li class="form-check mt-2">
+                    <%= f.check_box :processed, class: "form-check-input auto-submit", id: "processed_#{submission.id}" %>
+                    <%= f.label :processed, "Processed", class: "form-check-label ms-2", for: "processed_#{submission.id}" %>
+                    </li>
+                </ul>
+                </div>
             <% end %>
             </td>
-            <td><%= submission.reviewed? ? "Yes" : "No" %></td>
-            <td><%= submission.processed? ? "Yes" : "No" %></td>
-            <td style="min-width: 150px;">
-            <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
-                <div class="form-check form-check-inline">
-                <%= f.check_box :reviewed, class: "form-check-input", id: "reviewed_#{submission.id}" %>
-                <%= f.label :reviewed, "Reviewed", class: "form-check-label", for: "reviewed_#{submission.id}" %>
-                </div>
-                <div class="form-check form-check-inline ms-3">
-                <%= f.check_box :processed, class: "form-check-input", id: "processed_#{submission.id}" %>
-                <%= f.label :processed, "Processed", class: "form-check-label", for: "processed_#{submission.id}" %>
-                </div>
-                <div class="mt-2">
-                <%= f.submit "Update", class: "btn btn-sm btn-success" %>
-                </div>
-            <% end %>
-            </td>
-        </tr>
-        <% end %>
-    </tbody>
-    </table>
 
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
 </div>

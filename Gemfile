@@ -54,6 +54,9 @@ end
 
 # ADDED GEMS
 gem 'devise'
-gem 'importmap-rails'
 gem "dotenv-rails"
 
+
+gem "webpacker", "~> 5.4"
+
+gem "jsbundling-rails", "~> 1.3"
