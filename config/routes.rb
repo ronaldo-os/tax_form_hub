@@ -23,8 +23,9 @@ Rails.application.routes.draw do
   root "pages#home"
 
   namespace :admin do
-    resources :tax_submissions, only: [:index, :update]
+    resources :tax_submissions, only: [:index, :show, :update]
   end
-  
+
+
   resources :tax_submissions, only: [:new, :create]
 end

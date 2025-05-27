@@ -1,7 +1,3 @@
-import $ from "jquery";
-import "datatables.net-bs5";
-import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
-
 $(document).ready(function() {
     if ($('#taxSubmissionsTable').length) {
         $('#taxSubmissionsTable').DataTable({
@@ -15,4 +11,15 @@ $(document).ready(function() {
     $('.auto-submit').on('change', function () {
         $(this).closest('form').submit();
     });
+    
+    $('.zoom-link').on('click', function(e) {
+        e.preventDefault();
+        var imgUrl = $(this).data('img-url');
+        $('#modalImage').attr('src', imgUrl);
+
+        var myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+        myModal.show();
+    });
+
+
 });

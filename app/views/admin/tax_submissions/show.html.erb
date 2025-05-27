@@ -1,0 +1,82 @@
+<div class="container mt-5">
+  <div class="card shadow-lg border-0 rounded-1">
+    <div class="card-header bg-primary text-white rounded-top-1">
+      <h3 class="mb-0">Tax Submission Details</h3>
+    </div>
+
+    <div class="card-body p-4">
+      <dl class="row">
+        <dt class="col-sm-3">Submission ID</dt>
+        <dd class="col-sm-9"><%= @tax_submission.id %></dd>
+
+        <dt class="col-sm-3">Email</dt>
+        <dd class="col-sm-9"><%= @tax_submission.email %></dd>
+
+        <dt class="col-sm-3">Details</dt>
+        <dd class="col-sm-9"><%= simple_format(@tax_submission.details) %></dd>
+      </dl>
+
+      <div class="row mb-4">
+        <div class="col-md-6">
+          <h5>Form 2307</h5>
+          <% if @tax_submission.form_2307.attached? %>
+            <div class="border p-2 rounded bg-light text-center">
+              <a href="#" class="zoom-link" data-img-url="<%= url_for(@tax_submission.form_2307) %>">
+                <%= image_tag url_for(@tax_submission.form_2307), class: "img-fluid rounded", style: "max-height: 300px;" %>
+              </a>
+            </div>
+          <% else %>
+            <p class="text-muted fst-italic">No attachment</p>
+          <% end %>
+        </div>
+
+        <div class="col-md-6">
+          <h5>Deposit Slip</h5>
+          <% if @tax_submission.deposit_slip.attached? %>
+            <div class="border p-2 rounded bg-light text-center">
+              <a href="#" class="zoom-link" data-img-url="<%= url_for(@tax_submission.deposit_slip) %>">
+                <%= image_tag url_for(@tax_submission.deposit_slip), class: "img-fluid rounded", style: "max-height: 300px;" %>
+              </a>
+            </div>
+          <% else %>
+            <p class="text-muted fst-italic">No attachment</p>
+          <% end %>
+        </div>
+      </div>
+
+      <%= form_with model: @tax_submission, url: admin_tax_submission_path(@tax_submission), method: :patch, local: true do |f| %>
+        <div class="row mb-3">
+          <div class="col-md-6"></div>
+          <div class="col-md-6">
+            <div class="float-end">
+              <div class="form-check form-switch">
+                <%= f.check_box :processed, class: "form-check-input", id: "processedSwitch" %>
+                <%= f.label :processed, "Processed", class: "form-check-label", for: "processedSwitch" %>
+              </div>
+              <div class="form-check form-switch">
+                <%= f.check_box :reviewed, class: "form-check-input", id: "reviewedSwitch" %>
+                <%= f.label :reviewed, "Reviewed", class: "form-check-label", for: "reviewedSwitch" %>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <%= link_to "Back to Submissions", admin_tax_submissions_path, class: "btn btn-outline-secondary" %>
+          <%= f.submit "Update Submission", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for zoomed image -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0">
+        <img src="" id="modalImage" class="img-fluid rounded" alt="Zoomed image">
+      </div>
+    </div>
+  </div>
+</div>
