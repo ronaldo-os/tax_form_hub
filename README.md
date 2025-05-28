@@ -35,5 +35,5 @@ Populate the env.sample file
 rails assets:precompile
 
 6. **Run the Server**
-
+rails s
 
