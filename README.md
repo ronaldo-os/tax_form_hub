@@ -27,7 +27,7 @@ rails db:migrate
 rails db:seed
 
 4. **Configure Environment Variables**
-Populate the env.sample file
+rename env.sample to .env and populate it.
 
 5. **Build JavaScript Assets**
 ./bin/dev

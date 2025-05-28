@@ -1,0 +1,12 @@
+<h2>New Tax Submission Received</h2>
+
+<p>A new tax submission has been made with the following details:</p>
+
+<ul>
+  <% if @tax_submission.email.present? %>
+    <li><strong>Submitted Email:</strong> <%= @tax_submission.email %></li>
+  <% end %>
+  <li><strong>Notes:</strong> <%= @tax_submission.details.presence || "None" %></li>
+</ul>
+
+<p>You can review the submission in the admin dashboard.</p>
