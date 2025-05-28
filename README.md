@@ -7,20 +7,18 @@ A web application built with Ruby on Rails for securely submitting and managing 
 - Ruby 3.2.2 (use [rbenv](https://github.com/rbenv/rbenv) or [rvm](https://rvm.io/))
 - Rails 7.2.2+
 - Node.js (for JavaScript runtime)
-- Yarn (for managing JS dependencies)
 - PostgreSQL (or your chosen DB)
-- Webpack (for asset compilation)
+- [jsbundling-rails](https://github.com/rails/jsbundling-rails) with esbuild (for asset compilation)
 
 ## 📦 Setup Instructions
 
 1. **Clone the repository**
-
 git clone https://github.com/ronaldo-os/tax_form_hub.git
 cd tax_form_hub
 
 2. **Install Dependencies**
 bundle install
-yarn install
+npm install
 
 3. **Set Up the Database**
 rails db:setup
@@ -31,6 +29,11 @@ rails db:seed
 4. **Configure Environment Variables**
 Populate the env.sample file
 
-5. **Run the Server**
-rails s
+5. **Build JavaScript Assets**
+./bin/dev
+# or for production build
+rails assets:precompile
+
+6. **Run the Server**
+
 

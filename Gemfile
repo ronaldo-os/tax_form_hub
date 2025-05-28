@@ -53,10 +53,7 @@ group :development do
 end
 
 # ADDED GEMS
-gem 'devise'
+gem "devise"
 gem "dotenv-rails"
-
-
-gem "webpacker", "~> 5.4"
 
 gem "jsbundling-rails", "~> 1.3"
