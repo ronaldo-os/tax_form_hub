@@ -1,13 +1,15 @@
 if (window.location.pathname.includes("/admin/tax_submissions")) {
     $(document).ready(function () {
-        if ($('#taxSubmissionsTable').length) {
-            $('#taxSubmissionsTable').DataTable({
+        ['#taxSubmissionsTableActive', '#taxSubmissionsTableArchived'].forEach(function (id) {
+            if ($(id).length) {
+            $(id).DataTable({
                 paging: true,
                 searching: true,
                 info: true,
                 lengthChange: true,
             });
-        }
+            }
+        });
 
         $('.auto-submit').on('change', function () {
             $(this).closest('form').submit();

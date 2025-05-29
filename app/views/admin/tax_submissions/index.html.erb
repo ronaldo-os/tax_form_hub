@@ -13,75 +13,29 @@
 
 <div class="container-fluid mt-5">
   <h1 class="mb-4 text-center">Client Submissions</h1>
-  <table id="taxSubmissionsTable" class="table table-striped table-bordered">
-    <thead class="table-light">
-      <tr>
-        <th>ID</th>
-        <th>Email</th>
-        <th>Details</th>
-        <th>Form 2307</th>
-        <th>Deposit Slip</th>
-        <th>Status</th>
-        <th>Date Submitted</th>
-        <th>Actions</th>
-      </tr>  
-    </thead>
-    <tbody>
-      <% @tax_submissions.each do |submission| %>
-        <tr>
-          <td>
-            <%= link_to submission.id, admin_tax_submission_path(submission), class: "text-decoration-none" %>
-          </td>
-          <td><%= submission.email.presence || "N/A" %></td>
-          <td><%= truncate(submission.details, length: 50) %></td>
-          <td>
-            <% if submission.form_2307.attached? %>
-              <%= link_to "View Image", rails_blob_path(submission.form_2307, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
-            <% else %>
-              <span class="text-muted">None</span>
-            <% end %>
-          </td>
-          <td>
-            <% if submission.deposit_slip.attached? %>
-              <%= link_to "View Image", rails_blob_path(submission.deposit_slip, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
-            <% else %>
-              <span class="text-muted">None</span>
-            <% end %>
-          </td>
-          <td>
-            <% if submission.reviewed? && submission.processed? %>
-              <span class="badge bg-success">Processed & Reviewed</span>
-            <% elsif submission.reviewed? %>
-              <span class="badge bg-info">Reviewed</span>
-            <% elsif submission.processed? %>
-              <span class="badge bg-warning text-dark">Processed</span>
-            <% else %>
-              <span class="badge bg-secondary">Pending</span>
-            <% end %>
-          </td>
-          <td><%= submission.created_at.strftime("%B %d, %Y %I:%M %p") %></td>
-          <td style="min-width: 150px; position: relative;">
-            <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true, html: { class: "auto-submit-form" } do |f| %>
-                <div class="dropdown text-center">
-                <button class="btn btn-link text-dark btn-lg p-0 text-decoration-none" type="button" id="statusDropdown_<%= submission.id %>" data-bs-toggle="dropdown" aria-expanded="false">
-                    &#8942;
-                </button>
-                <ul class="dropdown-menu p-3" aria-labelledby="statusDropdown_<%= submission.id %>">
-                    <li class="form-check">
-                    <%= f.check_box :reviewed, class: "form-check-input auto-submit", id: "reviewed_#{submission.id}" %>
-                    <%= f.label :reviewed, "Reviewed", class: "form-check-label ms-2", for: "reviewed_#{submission.id}" %>
-                    </li>
-                    <li class="form-check mt-2">
-                    <%= f.check_box :processed, class: "form-check-input auto-submit", id: "processed_#{submission.id}" %>
-                    <%= f.label :processed, "Processed", class: "form-check-label ms-2", for: "processed_#{submission.id}" %>
-                    </li>
-                </ul>
-                </div>
-            <% end %>
-            </td>
 
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <ul class="nav nav-tabs mb-3" id="submissionTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#activeSubmissions" type="button" role="tab" aria-controls="activeSubmissions" aria-selected="true">
+        Active Submissions
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archivedSubmissions" type="button" role="tab" aria-controls="archivedSubmissions" aria-selected="false">
+        Archived Submissions
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="submissionTabsContent">
+    <!-- Active Tab -->
+    <div class="tab-pane fade show active" id="activeSubmissions" role="tabpanel" aria-labelledby="active-tab">
+      <%= render partial: "submission_table", locals: { submissions: @unarchived_submissions, table_id: "taxSubmissionsTableActive", archived_table: false } %>
+    </div>
+
+    <!-- Archived Tab -->
+    <div class="tab-pane fade" id="archivedSubmissions" role="tabpanel" aria-labelledby="archived-tab">
+      <%= render partial: "submission_table", locals: { submissions: @archived_submissions, table_id: "taxSubmissionsTableArchived", archived_table: true } %>
+    </div>
+  </div>
 </div>

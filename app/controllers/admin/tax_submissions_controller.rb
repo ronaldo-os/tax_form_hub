@@ -2,12 +2,15 @@ class Admin::TaxSubmissionsController < ApplicationController
   before_action :set_submission, only: [:show, :update]
 
   def index
-    @tax_submissions = TaxSubmission.all.order(created_at: :desc)
+    @unarchived_submissions = TaxSubmission.where(archived: [false, nil]).order(created_at: :desc)
+    @archived_submissions = TaxSubmission.where(archived: true).order(created_at: :desc)
 
     if params[:q].present?
-      @tax_submissions = @tax_submissions.where("email ILIKE ?", "%#{params[:q]}%")
+      @unarchived_submissions = @unarchived_submissions.where("email ILIKE ?", "%#{params[:q]}%")
+      @archived_submissions = @archived_submissions.where("email ILIKE ?", "%#{params[:q]}%")
     end
   end
+
 
   def show
   end
@@ -30,6 +33,7 @@ class Admin::TaxSubmissionsController < ApplicationController
   end
 
   def tax_submission_params
-    params.require(:tax_submission).permit(:reviewed, :processed)
+    params.require(:tax_submission).permit(:reviewed, :processed, :archived)
   end
+
 end
