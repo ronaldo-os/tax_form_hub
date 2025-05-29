@@ -9,20 +9,14 @@
     
     <div class="mb-3">
       <%= f.label :form_2307, "Form 2307", class: "form-label" %>
-      <div class="custom-file">
-        <%= f.file_field :form_2307, class: "form-control custom-file-input", id: "form2307Upload" %>
-        <label class="form-text text-muted mt-1" id="form2307Label">No file selected</label>
-      </div>
+      <%= f.file_field :form_2307, class: "form-control", required: true %>
     </div>
 
     <div class="mb-3">
       <%= f.label :deposit_slip, "Deposit Slip or Bank Transfer Details", class: "form-label" %>
-      <div class="custom-file">
-        <%= f.file_field :deposit_slip, class: "form-control custom-file-input", id: "depositSlipUpload" %>
-        <label class="form-text text-muted mt-1" id="depositSlipLabel">No file selected</label>
-      </div>
+      <%= f.file_field :deposit_slip, class: "form-control", required: true %>
     </div>
-    
+
     <div class="mb-3">
       <%= f.label :details, "Additional Notes", class: "form-label" %>
       <%= f.text_area :details, class: "form-control", rows: 4 %>
