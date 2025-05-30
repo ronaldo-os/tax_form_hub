@@ -16,3 +16,71 @@
   <p class="lead">Tax document submission.</p>
   <%= link_to "Start Submission", new_tax_submission_path, class: "btn btn-primary btn-lg mt-3" %>
 </div>
+
+<div class="container mt-5">
+  <table id="submissionsTable" class="table table-striped table-bordered">
+    <thead class="table-light">
+      <tr>
+        <th>ID</th>
+        <th>Details</th>
+        <th>Form 2307</th>
+        <th>Deposit Slip</th>
+        <th>Status</th>
+        <th>Date Submitted</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @tax_submissions.each do |submission| %>
+        <tr>
+          <td>
+            <%= submission.id %>
+          </td>
+          <td><%= truncate(submission.details, length: 50) %></td>
+          <td>
+            <% if submission.form_2307.attached? %>
+              <%= link_to "View Image", rails_blob_path(submission.form_2307, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
+            <% else %>
+              <span class="text-muted">None</span>
+            <% end %>
+          </td>
+          <td>
+            <% if submission.deposit_slip.attached? %>
+              <%= link_to "View Image", rails_blob_path(submission.deposit_slip, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
+            <% else %>
+              <span class="text-muted">None</span>
+            <% end %>
+          </td>
+          <td>
+            <% if submission.reviewed? && submission.processed? %>
+              <span class="badge bg-success">Processed & Reviewed</span>
+            <% elsif submission.reviewed? %>
+              <span class="badge bg-info">Reviewed</span>
+            <% elsif submission.processed? %>
+              <span class="badge bg-warning text-dark">Processed</span>
+            <% else %>
+              <span class="badge bg-secondary">Pending</span>
+            <% end %>
+          </td>
+          <td><%= submission.created_at.strftime("%B %d, %Y %I:%M %p") %></td>
+          <td style="position: relative;">
+            <div class="dropdown text-center">
+              <button class="btn btn-link text-dark p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_<%= submission.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                &#8942;
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="actionsDropdown_<%= submission.id %>">
+                <li>
+                  <%= link_to "View", "#", class: "dropdown-item" %>
+                </li>
+                <li>
+                  <%= link_to "Delete", "#", class: "dropdown-item text-danger", data: { confirm: "Are you sure you want to delete this submission?" } %>
+                </li>
+              </ul>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+
+</div>

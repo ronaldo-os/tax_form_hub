@@ -41,5 +41,15 @@ if (document.body.dataset.devise === "true") {
           $(this).toggleClass('fa-eye fa-eye-slash');
         });
       }
+
+
+      $('.needs-validation').on('submit', function(event) {
+        if (this.checkValidity() === false) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        $(this).addClass('was-validated');
+      });
+
   });
 }

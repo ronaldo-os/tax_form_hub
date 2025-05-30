@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_29_055255) do
+ActiveRecord::Schema[7.2].define(version: 2025_05_30_075520) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -43,13 +43,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_29_055255) do
   end
 
   create_table "tax_submissions", force: :cascade do |t|
-    t.string "email"
     t.text "details"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "reviewed"
     t.boolean "processed"
     t.boolean "archived"
+    t.string "company_name"
+    t.string "email"
   end
 
   create_table "users", force: :cascade do |t|
@@ -61,6 +62,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_29_055255) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "role"
+    t.string "company_name"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

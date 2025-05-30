@@ -3,18 +3,20 @@
 
   <%= form_with model: @tax_submission, local: true, html: { multipart: true } do |f| %>
     <div class="mb-3">
-        <%= f.label :email, "Email (optional)", class: "form-label" %>
-        <%= f.email_field :email, class: "form-control" %>
+      <%= f.label :company_name, "Company Name", class: "form-label" %>
+      <%= f.text_field :company_name, class: "form-control", value: current_user.company_name %>
     </div>
-    
+        
     <div class="mb-3">
       <%= f.label :form_2307, "Form 2307", class: "form-label" %>
-      <%= f.file_field :form_2307, class: "form-control", required: true %>
+      <%= f.file_field :form_2307, class: "form-control", required: true, accept: "image/*,application/pdf" %>
+      <small class="form-text text-light">Only image files (like JPG, JPEG or PNG) and PDFs are allowed.</small>
     </div>
 
     <div class="mb-3">
       <%= f.label :deposit_slip, "Deposit Slip or Bank Transfer Details", class: "form-label" %>
-      <%= f.file_field :deposit_slip, class: "form-control", required: true %>
+      <%= f.file_field :deposit_slip, class: "form-control", required: true, accept: "image/*,application/pdf" %>
+      <small class="form-text text-light">Only image files (like JPG, JPEG or PNG) and PDFs are allowed.</small>
     </div>
 
     <div class="mb-3">

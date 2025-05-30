@@ -5,14 +5,11 @@ class TaxSubmissionsController < ApplicationController
 
   def create
     @tax_submission = TaxSubmission.new(tax_submission_params)
-    if @tax_submission.save
-      # Send confirmation email to the current user if they have an email
-      if current_user&.email.present?
-        TaxSubmissionMailer.confirmation_email(current_user, @tax_submission).deliver_later
-      end
+    # Automatically assign the current user's email only
+    @tax_submission.email = current_user.email if current_user
 
-      # Send confirmation email to recipient included by the user
-      TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later if @tax_submission.email.present?
+    if @tax_submission.save
+      TaxSubmissionMailer.confirmation_email(current_user, @tax_submission).deliver_later
 
       # Notify all superadmins
       TaxSubmissionMailer.notify_superadmins(@tax_submission).deliver_later
@@ -28,7 +25,7 @@ class TaxSubmissionsController < ApplicationController
 
   def tax_submission_params
     params.require(:tax_submission).permit(
-      :email,
+      :company_name,
       :form_2307,
       :deposit_slip,
       :details
