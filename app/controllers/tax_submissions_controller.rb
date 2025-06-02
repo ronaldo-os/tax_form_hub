@@ -1,4 +1,6 @@
 class TaxSubmissionsController < ApplicationController
+  before_action :set_tax_submission, only: [:destroy]
+
   def new
     @tax_submission = TaxSubmission.new
   end
@@ -21,6 +23,11 @@ class TaxSubmissionsController < ApplicationController
     end
   end
 
+  def destroy
+    @tax_submission.destroy
+    redirect_to root_path, notice: "Submission deleted successfully."
+  end
+
   private
 
   def tax_submission_params
@@ -30,5 +37,9 @@ class TaxSubmissionsController < ApplicationController
       :deposit_slip,
       :details
     )
+  end
+
+  def set_tax_submission
+    @tax_submission = TaxSubmission.find(params[:id])
   end
 end

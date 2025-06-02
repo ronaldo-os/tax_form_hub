@@ -26,6 +26,7 @@ Rails.application.routes.draw do
     resources :tax_submissions, only: [:index, :show, :update]
   end
 
+  resources :tax_submissions, only: [:new, :create, :destroy] # No update here
 
-  resources :tax_submissions, only: [:new, :create]
+  patch '/tax_submissions/:id', to: 'pages#update', as: 'update_tax_submission'
 end
