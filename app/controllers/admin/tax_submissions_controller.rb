@@ -17,11 +17,23 @@ class Admin::TaxSubmissionsController < ApplicationController
 
   def update
     if @tax_submission.update(tax_submission_params)
-      redirect_to admin_tax_submissions_path, notice: "Submission updated."
+      message =
+        if tax_submission_params.key?(:reviewed)
+          @tax_submission.reviewed? ? "Submission marked as reviewed." : "Submission unmarked as reviewed."
+        elsif tax_submission_params.key?(:processed)
+          @tax_submission.processed? ? "Submission marked as processed." : "Submission unmarked as processed."
+        elsif tax_submission_params.key?(:archived)
+          @tax_submission.archived? ? "Submission archived." : "Submission unarchived."
+        else
+          "Submission updated."
+        end
+
+      redirect_to admin_tax_submissions_path, notice: message
     else
-      render :index, alert: "Failed to update."
+      redirect_to admin_tax_submissions_path, alert: "Failed to update."
     end
   end
+
 
   private
 

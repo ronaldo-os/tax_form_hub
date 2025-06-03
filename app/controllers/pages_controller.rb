@@ -11,8 +11,15 @@ class PagesController < ApplicationController
 
   def update
     @submission = TaxSubmission.find(params[:id])
+
     if @submission.email == current_user.email && @submission.update(tax_submission_params)
-      redirect_to root_path, notice: "Submission updated."
+      message = if tax_submission_params.key?(:archived)
+        @submission.archived? ? "Submission archived." : "Submission unarchived."
+      else
+        "Submission updated."
+      end
+
+      redirect_to root_path, notice: message
     else
       redirect_to root_path, alert: "Update failed or unauthorized."
     end

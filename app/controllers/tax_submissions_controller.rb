@@ -7,13 +7,10 @@ class TaxSubmissionsController < ApplicationController
 
   def create
     @tax_submission = TaxSubmission.new(tax_submission_params)
-    # Automatically assign the current user's email only
     @tax_submission.email = current_user.email if current_user
 
     if @tax_submission.save
-      TaxSubmissionMailer.confirmation_email(current_user, @tax_submission).deliver_later
-
-      # Notify all superadmins
+      TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later
       TaxSubmissionMailer.notify_superadmins(@tax_submission).deliver_later
 
       redirect_to root_path, notice: "Submission successful."

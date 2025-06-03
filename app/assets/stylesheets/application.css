@@ -1,3 +1,26 @@
+/* Alert */
+.custom_tfh_alert{
+    position: fixed;
+    top: 70px;
+    right: 10px;
+    background: white;
+    color: #080808;
+    border-radius: 2px;
+}
+.alert_text_notice{
+    color: rgb(59, 59, 59);
+}
+.alert_text_success{
+    color: rgb(0, 177, 0)
+}
+.alert_text_danger{
+    color: red
+}
+
+
 .text-decoration-none{
     text-decoration: none !important;
+}
+.table_text_centered thead th,.table_text_centered tbody td {
+    text-align: center !important;
 }
