@@ -20,6 +20,11 @@ class TaxSubmissionsController < ApplicationController
     end
   end
 
+  def show
+    @tax_submission = TaxSubmission.find(params[:id])
+  end
+
+
   def destroy
     @tax_submission.destroy
     redirect_to root_path, notice: "Submission deleted successfully."

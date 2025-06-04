@@ -1,5 +1,15 @@
 class Admin::TaxSubmissionsController < ApplicationController
+  before_action :authenticate_user!  # Ensure the user is logged in (if using Devise)
+  before_action :authorize_superadmin!
   before_action :set_submission, only: [:show, :update]
+
+  private
+
+  def authorize_superadmin!
+    unless current_user&.role == 'superadmin'
+      redirect_to root_path, alert: "Access denied. Superadmin privileges required."
+    end
+  end
 
   def index
     @unarchived_submissions = TaxSubmission.where(archived: [false, nil]).order(created_at: :desc)

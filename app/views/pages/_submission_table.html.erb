@@ -13,7 +13,7 @@
   <tbody>
     <% submissions.each do |submission| %>
       <tr>
-        <td><%= submission.id %></td>
+        <td> <%= link_to submission.id, tax_submission_path(submission), class: "text-decoration-none" %></td>
         <td><%= truncate(submission.details, length: 50) %></td>
         <td>
           <% if submission.form_2307.attached? %>
@@ -47,10 +47,6 @@
               &#8942;
             </button>
             <ul class="dropdown-menu" aria-labelledby="actionsDropdown_<%= submission.id %>">
-              <li>
-                <%= link_to "View", "#", class: "dropdown-item" %>
-              </li>
-
               <li>
               <% if archived_table %>
                 <%= form_with model: submission, url: update_tax_submission_path(submission), method: :patch, local: true do |f| %>
