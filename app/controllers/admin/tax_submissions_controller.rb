@@ -1,17 +1,9 @@
 class Admin::TaxSubmissionsController < ApplicationController
-  before_action :authenticate_user!  # Ensure the user is logged in (if using Devise)
+  before_action :authenticate_user!
   before_action :authorize_superadmin!
-  before_action :set_submission, only: [:show, :update]
-
-  private
-
-  def authorize_superadmin!
-    unless current_user&.role == 'superadmin'
-      redirect_to root_path, alert: "Access denied. Superadmin privileges required."
-    end
-  end
 
   def index
+    @tax_submission = TaxSubmission.find_by(id: params[:id])
     @unarchived_submissions = TaxSubmission.where(archived: [false, nil]).order(created_at: :desc)
     @archived_submissions = TaxSubmission.where(archived: true).order(created_at: :desc)
 
@@ -20,7 +12,6 @@ class Admin::TaxSubmissionsController < ApplicationController
       @archived_submissions = @archived_submissions.where("email ILIKE ?", "%#{params[:q]}%")
     end
   end
-
 
   def show
   end
@@ -44,13 +35,11 @@ class Admin::TaxSubmissionsController < ApplicationController
     end
   end
 
-
   private
 
-  def set_submission
-    @tax_submission = TaxSubmission.find_by(id: params[:id])
-    unless @tax_submission
-      redirect_to admin_tax_submissions_path, alert: "Submission not found."
+  def authorize_superadmin!
+    unless current_user&.role == 'superadmin'
+      redirect_to root_path, alert: "Access denied. Superadmin privileges required."
     end
   end
 
