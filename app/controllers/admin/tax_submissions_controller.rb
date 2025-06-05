@@ -14,7 +14,9 @@ class Admin::TaxSubmissionsController < ApplicationController
   end
 
   def show
+    @tax_submission = TaxSubmission.find(params[:id])
   end
+
 
   def update
     if @tax_submission.update(tax_submission_params)
