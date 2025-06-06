@@ -1,12 +1,14 @@
-/* Alert */
-.custom_tfh_alert{
-    position: fixed;
-    top: 70px;
-    right: 10px;
-    background: white;
-    color: #080808;
-    border-radius: 2px;
+.custom_tfh_alert {
+  position: fixed;
+  top: 70px;
+  right: 10px;
+  background: white;
+  color: #080808;
+  border-radius: 2px;
+  border: 1px solid #00000010;
+  box-shadow: 0 5px 5px rgba(0, 0, 0, 0.055); /* Mild shadow */
 }
+
 .alert_text_notice{
     color: rgb(59, 59, 59);
 }
@@ -17,10 +19,42 @@
     color: red
 }
 
+.card{
+    border-radius: 2px;
+    border-color: #00000011;
+}
+.custom_nav_tabs {
+    border-radius: 0px;
+    border-color: transparent;
+}
+
+.custom_nav_tabs.nav-tabs .nav-link {
+  color: grey;
+  border: 3px solid transparent; 
+  background-color: transparent;
+}
+
+.custom_nav_tabs.nav-tabs .nav-link:hover {
+  color: grey;
+  border-color: transparent; 
+}
+
+.custom_nav_tabs.nav-tabs .nav-link.active,
+.custom_nav_tabs.nav-tabs .nav-link.active:hover {
+  color: #0d6efd;
+  border-color: transparent transparent #0d6efd transparent;
+  background-color: transparent;
+}
+
 
 .text-decoration-none{
     text-decoration: none !important;
 }
 .table_text_centered thead th,.table_text_centered tbody td {
     text-align: center !important;
+}
+
+table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
+table.dataTable.dtr-inline.collapsed > tbody > tr > td {
+  text-align: left !important;
 }

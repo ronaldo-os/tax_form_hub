@@ -1,11 +1,11 @@
-<div class="container mt-5">
-  <div class="card shadow-lg border-0 rounded-1">
-    <div class="card-header bg-primary text-white rounded-top-1">
-      <h3 class="mb-0">Tax Submission Details</h3>
-    </div>
-
-    <div class="card-body p-4">
-      <dl class="row">
+<div class="d-flex justify-content-center align-items-center mt-5">
+  <div class="container" style="max-width: 1200px;">
+    <div class="card">
+      <div class="card-header bg-primary text-white rounded-top-1">
+        <h3 class="mb-0">Tax Submission Details</h3>
+      </div>
+      <div class="card-body p-5">
+        <dl class="row">
         <dt class="col-sm-3">Submission ID</dt>
         <dd class="col-sm-9"><%= @tax_submission.id %></dd>
 
@@ -76,6 +76,18 @@
         <div class="d-flex justify-content-between">
           <%= link_to "Back", root_path, class: "btn btn-outline-secondary" %>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for zoomed image -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content bg-transparent border-0">
+      <div class="modal-body p-0">
+        <img src="" id="modalImage" class="img-fluid rounded" alt="Zoomed image">
+      </div>
     </div>
   </div>
 </div>

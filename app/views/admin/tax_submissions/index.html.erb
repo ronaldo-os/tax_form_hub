@@ -1,20 +1,7 @@
-<nav class="navbar bg-body-tertiary">
-  <div class="container-fluid">
-    <a class="navbar-brand">Tax Form Hub</a>
-    <% if user_signed_in? %>
-      <div class="d-flex align-items-center">
-        <span class="text-muted me-2">Hello, <strong><%= current_user.email %></strong></span>
-        <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-danger btn-sm mb-0" %>
-      </div>
-    <% end %>
-  </div>
-</nav>
+<div class="container-fluid">
+  <h1 class="display-2 mb-4 mt-4">Client Submissions</h1>
 
-
-<div class="container-fluid mt-5">
-  <h1 class="mb-4 text-center">Client Submissions</h1>
-
-  <ul class="nav nav-tabs mb-3" id="submissionTabs" role="tablist">
+  <ul class="custom_nav_tabs nav nav-tabs mb-3" id="submissionTabs" role="tablist">
     <li class="nav-item" role="presentation">
       <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#activeSubmissions" type="button" role="tab" aria-controls="activeSubmissions" aria-selected="true">
         Active Submissions

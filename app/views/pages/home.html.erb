@@ -1,16 +1,3 @@
-<nav class="navbar bg-body-tertiary">
-  <div class="container">
-    <a class="navbar-brand">Tax Form Hub</a>
-    <% if user_signed_in? %>
-      <div class="d-flex align-items-center">
-        <span class="text-muted me-2">Hello, <strong><%= current_user.email %></strong></span>
-        <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-danger btn-sm mb-0" %>
-      </div>
-    <% end %>
-  </div>
-</nav>
-
-
 <div class="container py-5">
   <h1 class="display-2">Tax Form Hub</h1>
   <p class="lead">Submit 2307 and Payment Receipt</p>
@@ -18,12 +5,12 @@
 </div>
 
 <div class="container mt-2">
-  <ul class="nav nav-tabs mb-3">
+  <ul class="custom_nav_tabs nav nav-tabs mb-3">
     <li class="nav-item">
-      <a class="nav-link active" data-bs-toggle="tab" href="#unarchived">Active Submissions</a>
+      <a class="nav-link active" data-bs-toggle="tab" href="#unarchived">Active</a>
     </li>
     <li class="nav-item">
-      <a class="nav-link" data-bs-toggle="tab" href="#archived">Archived Submissions</a>
+      <a class="nav-link" data-bs-toggle="tab" href="#archived">Archived</a>
     </li>
   </ul>
 
