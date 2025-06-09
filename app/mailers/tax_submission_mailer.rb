@@ -3,7 +3,7 @@ class TaxSubmissionMailer < ApplicationMailer
     @tax_submission = tax_submission
     mail(
       to: @tax_submission.email,
-      subject: "Tax Submission Confirmation"
+      subject: "Tax Document Submission Confirmation"
     )
   end
 
