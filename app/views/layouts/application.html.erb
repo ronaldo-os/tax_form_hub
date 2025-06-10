@@ -39,25 +39,38 @@
   <body data-devise="<%= devise_controller? %>" class="bg-light">
 
 
-  <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom shadow-sm">
-    <div class="<%= request.path.include?('/admin/') ? 'container-fluid' : 'container' %>">
-      <%= link_to "Tax Form Hub", root_path, class: "navbar-brand" %>
+  
+  <% unless devise_controller? %>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom shadow-sm">
+      <div class="<%= request.path.include?('/admin/') ? 'container-fluid' : 'container' %>">
+        <%= link_to "Tax Form Hub", root_path, class: "navbar-brand" %>
 
-      <% if user_signed_in? %>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
-          aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
+                aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse justify-content-end" id="navbarContent">
-          <div class="d-flex align-items-center gap-3">
-            <span class="text-muted">Hello, <strong><%= current_user.email %></strong></span>
-            <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-danger btn-sm mb-0" %>
+        <div class="collapse navbar-collapse justify-content-between" id="navbarNavAltMarkup">
+          <div class="navbar-nav">
+            <!-- Add nav links here if needed -->
           </div>
+
+          <% if user_signed_in? %>
+            <div class="d-flex align-items-center gap-3 pt-2 pb-2 pb-md-0 pt-md-0">
+              <!-- Show greeting only on md+ -->
+              <span class="text-muted d-none d-md-inline">
+                Hello, <strong><%= current_user.email %></strong>
+              </span>
+
+              <!-- Logout button always visible -->
+              <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-danger btn-sm mb-0" %>
+            </div>
+
+          <% end %>
         </div>
-      <% end %>
-    </div>
-  </nav>
+      </div>
+    </nav>
+  <% end %>
 
 
     <%= yield %>

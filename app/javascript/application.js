@@ -10,4 +10,13 @@ $(document).ready(function () {
           $(this).remove();
         });
     }, 3000); 
+
+    $('.zoom-link').on('click', function (e) {
+      e.preventDefault();
+      const imgUrl = $(this).data('img-url');
+      $('#modalImage').attr('src', imgUrl);
+
+      const myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+      myModal.show();
+    });
 });
