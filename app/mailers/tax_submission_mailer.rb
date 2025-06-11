@@ -14,4 +14,15 @@ class TaxSubmissionMailer < ApplicationMailer
       subject: "New Tax Submission Received"
     )
   end
+
+  def status_updated(tax_submission, status_message)
+    @tax_submission = tax_submission
+    @status_message = status_message
+
+    mail(
+      to: @tax_submission.email,
+      subject: "Your Tax Submission Has Been Updated"
+    )
+  end
+
 end

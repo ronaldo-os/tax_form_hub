@@ -20,7 +20,17 @@ class Admin::TaxSubmissionsController < ApplicationController
   def update
     if @tax_submission.update(tax_submission_params)
       message =
-        if tax_submission_params.key?(:reviewed)
+        if tax_submission_params.key?(:reviewed) && tax_submission_params.key?(:processed)
+          if @tax_submission.reviewed? && @tax_submission.processed?
+            "Submission marked as reviewed and processed."
+          elsif @tax_submission.reviewed?
+            "Submission marked as reviewed. Processed status unchanged."
+          elsif @tax_submission.processed?
+            "Submission marked as processed. Reviewed status unchanged."
+          else
+            "Submission unmarked as reviewed and processed."
+          end
+        elsif tax_submission_params.key?(:reviewed)
           @tax_submission.reviewed? ? "Submission marked as reviewed." : "Submission unmarked as reviewed."
         elsif tax_submission_params.key?(:processed)
           @tax_submission.processed? ? "Submission marked as processed." : "Submission unmarked as processed."
@@ -30,11 +40,13 @@ class Admin::TaxSubmissionsController < ApplicationController
           "Submission updated."
         end
 
+      TaxSubmissionMailer.status_updated(@tax_submission, message).deliver_later
       redirect_to admin_tax_submissions_path, notice: message
     else
       redirect_to admin_tax_submissions_path, alert: "Failed to update."
     end
   end
+
 
   private
 
