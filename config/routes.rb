@@ -1,5 +1,13 @@
 Rails.application.routes.draw do
-  devise_for :users
+  get "invoices/index"
+  devise_for :users, controllers: {
+    registrations: 'users/registrations'
+  }
+
+  # Alias to create a clean /profile/edit route
+  as :user do
+    get 'profile/edit' => 'users/registrations#edit', as: :edit_profile
+  end
 
   root "pages#home"
 
@@ -10,7 +18,8 @@ Rails.application.routes.draw do
   end
 
   resources :tax_submissions, only: [:new, :create, :show, :destroy]
-
+  resources :invoices, only: [:index, :show]
+  
   patch '/tax_submissions/:id', to: 'pages#update', as: 'update_tax_submission'
 
   # Optional: health check + PWA

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_05_30_075520) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_11_093229) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -40,6 +40,43 @@ ActiveRecord::Schema[7.2].define(version: 2025_05_30_075520) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "invoices", force: :cascade do |t|
+    t.string "invoice_number"
+    t.date "issue_date"
+    t.string "currency"
+    t.date "payment_due_date"
+    t.integer "item_id"
+    t.text "description"
+    t.integer "quantity"
+    t.string "unit"
+    t.decimal "price_per_unit"
+    t.decimal "tax"
+    t.decimal "total"
+    t.text "recipient_note"
+    t.string "header_type"
+    t.text "header_description"
+    t.integer "header_qty"
+    t.string "header_unit"
+    t.decimal "header_tax"
+    t.decimal "header_total"
+    t.decimal "pricing_discount"
+    t.string "bank_name"
+    t.string "bank_sort_code"
+    t.string "bank_account_number"
+    t.string "bank_account_holder"
+    t.string "bank_street_name"
+    t.string "bank_builder_number"
+    t.string "bank_city"
+    t.string "bank_zip_code"
+    t.string "bank_region"
+    t.string "bank_address_line"
+    t.string "bank_country"
+    t.text "bank_payment_note"
+    t.string "attachment"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "tax_submissions", force: :cascade do |t|

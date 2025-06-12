@@ -33,12 +33,7 @@
     <!-- Your App JavaScript (ES Modules) -->
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
-
-
-
   <body data-devise="<%= devise_controller? %>" class="bg-light">
-
-
   
   <% unless devise_controller? %>
     <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom shadow-sm">
@@ -52,7 +47,9 @@
 
         <div class="collapse navbar-collapse justify-content-between" id="navbarNavAltMarkup">
           <div class="navbar-nav">
-            <!-- Add nav links here if needed -->
+            <li class="nav-item">
+              <%= link_to 'Invoice', invoices_path, class: 'nav-link' %>
+            </li>
           </div>
 
           <% if user_signed_in? %>
@@ -62,15 +59,18 @@
                 Hello, <strong><%= current_user.email %></strong>
               </span>
 
-              <!-- Logout button always visible -->
+              <!-- Edit Profile link -->
+              <%= link_to "Edit Profile", edit_profile_path, class: "btn btn-outline-primary btn-sm mb-0" %>
+
+              <!-- Logout button -->
               <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-danger btn-sm mb-0" %>
             </div>
-
           <% end %>
         </div>
       </div>
     </nav>
   <% end %>
+
 
 
     <%= yield %>
