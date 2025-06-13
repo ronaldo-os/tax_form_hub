@@ -30,7 +30,6 @@
     <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.4.1/js/responsive.bootstrap5.min.js"></script>
 
-    <!-- Your App JavaScript (ES Modules) -->
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
   <body data-devise="<%= devise_controller? %>" class="bg-light">
@@ -52,36 +51,42 @@
             </li>
           </div>
 
-          <% if user_signed_in? %>
-            <div class="d-flex align-items-center gap-3 pt-2 pb-2 pb-md-0 pt-md-0">
-              <!-- Show greeting only on md+ -->
-              <span class="text-muted d-none d-md-inline">
-                Hello, <strong><%= current_user.email %></strong>
-              </span>
-
-              <!-- Edit Profile link -->
-              <%= link_to "Edit Profile", edit_profile_path, class: "btn btn-outline-primary btn-sm mb-0" %>
-
-              <!-- Logout button -->
-              <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-danger btn-sm mb-0" %>
+          <div class="d-flex align-items-center gap-3 pt-2 pb-2 pb-md-0 pt-md-0">
+            <div class="dropdown">
+              <a href="#" class="d-block link-body-emphasis text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <%= image_tag(
+                  current_user.profile_image.attached? ? url_for(current_user.profile_image) : asset_path("user_avatar_default.png"),
+                  class: "rounded-circle",
+                  style: "width: 40px; height: 40px; object-fit: cover;"
+                ) %>
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end text-small shadow">
+                <li class="px-3 py-2 text-muted small">
+                  Signed in as<br><strong><%= current_user.email %></strong>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                <li><%= link_to "Edit Profile", edit_profile_path, class: "dropdown-item" %></li>
+                <li>
+                  <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "dropdown-item text-danger", form: { class: "d-inline" } %>
+                </li>
+              </ul>
             </div>
-          <% end %>
+          </div>
+
         </div>
       </div>
     </nav>
   <% end %>
 
+  <%= yield %>
 
-
-    <%= yield %>
-
-    <% unless controller_name == 'sessions' && action_name == 'new' %>
-      <% flash.each do |key, message| %>
-        <div class="custom_tfh_alert alert alert-dismissible show" role="alert">
-          <i class="fa-solid fa-circle-exclamation me-2 alert_text_<%= key == "notice" ? "success" : "danger" %>"></i> <%= message %>
-        </div>
-      <% end %>
+  <% unless controller_name == 'sessions' && action_name == 'new' %>
+    <% flash.each do |key, message| %>
+      <div class="custom_tfh_alert alert alert-dismissible show" role="alert">
+        <i class="fa-solid fa-circle-exclamation me-2 alert_text_<%= key == "notice" ? "success" : "danger" %>"></i> <%= message %>
+      </div>
     <% end %>
+  <% end %>
 
   </body>
 </html>

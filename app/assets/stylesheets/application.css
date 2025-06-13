@@ -58,3 +58,9 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
 table.dataTable.dtr-inline.collapsed > tbody > tr > td {
   text-align: left !important;
 }
+
+.profile-preview {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+}

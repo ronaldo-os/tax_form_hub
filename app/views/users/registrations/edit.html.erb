@@ -1,10 +1,35 @@
 <div class="d-flex justify-content-center align-items-center min-vh-100 bg-light">
-  <div class="container" style="max-width: 500px;">
+  <div class="container" style="max-width: 700px;">
     <div class="card">
       <div class="card-body p-5">
         <h2 class="mb-4 text-center">Edit Profile</h2>
 
-        <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, class: "needs-validation", novalidate: true }) do |f| %>
+        <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, class: "needs-validation", novalidate: true, multipart: true }) do |f| %>
+
+          <div class="mb-4 text-center">
+            <div id="image-preview-wrapper" class="position-relative d-inline-block" style="cursor: pointer;">
+              <%= image_tag(
+                resource.profile_image.attached? ? url_for(resource.profile_image) : asset_path("user_avatar_default.png"),
+                id: "image-preview",
+                class: "rounded-circle img-thumbnail",
+                style: "width: 150px; height: 150px; object-fit: cover;"
+              ) %>
+              <%= f.file_field :profile_image,
+                accept: "image/*",
+                id: "profile_image_input",
+                style: "display: none;" %>
+            </div>
+            <div class="mt-2">
+              <small class="text-muted">
+                <%= resource.profile_image.attached? ? "Click image to upload new one" : "No profile image uploaded. Click image to upload." %>
+              </small>
+            </div>
+            <% if resource.errors[:profile_image].any? %>
+              <div class="text-danger small mt-1">
+                <%= resource.errors[:profile_image].first %>
+              </div>
+            <% end %>
+          </div>
 
           <div class="mb-3">
             <%= f.label :email, class: "form-label" %>
@@ -68,9 +93,9 @@
             </div>
           </div>
 
-          <div class="d-grid">
-            <%= f.submit "Update Profile", class: "btn btn-primary btn-md" %>
-            <%= link_to "Back", root_path, class: "btn btn-secondary btn-md mt-2" %>
+          <div class="d-flex justify-content-between gap-2 mt-5">
+            <%= link_to "Back", root_path, class: "btn btn-secondary btn-md" %>
+            <%= f.submit "Update Profile", class: "btn btn-primary btn-md"%>
           </div>
 
         <% end %>

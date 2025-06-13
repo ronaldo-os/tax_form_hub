@@ -4,8 +4,9 @@ class Users::RegistrationsController < Devise::RegistrationsController
   protected
 
   def configure_account_update_params
-    devise_parameter_sanitizer.permit(:account_update) do |user_params|
-      user_params.permit(:email, :company_name, :password, :password_confirmation, :current_password)
-    end
+    devise_parameter_sanitizer.permit(:account_update, keys: [
+      :email, :company_name, :profile_image,
+      :password, :password_confirmation, :current_password
+    ])
   end
 end

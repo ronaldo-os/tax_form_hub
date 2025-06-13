@@ -5,6 +5,7 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable
 
   has_many :tax_submissions
+  has_one_attached :profile_image
 
 
   def set_default_role
