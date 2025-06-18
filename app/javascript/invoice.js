@@ -30,6 +30,69 @@ if (window.location.pathname.includes("/invoices")) {
             "billingReferenceId": [
                 { name: "billingReferenceId.reference_id", label: "Billing reference", type: "text", cols: 12, class: "mb-3" },
             ],
+            "billingReferenceId": [
+                { name: "billingReferenceId.reference_id", label: "Billing reference", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "contractDocumentReferenceId": [
+                { name: "contractDocumentReferenceId.contract_number", label: "Contract number", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "despatchDocumentReference.id": [
+                { name: "despatchDocumentReference.id.shipping_reference", label: "Shipping Notice Reference", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "despatchDocumentReference.issueDate": [
+                { name: "despatchDocumentReference.issueDate.issue_date", label: "Shipping Notice Issue Date", type: "date", cols: 12, class: "mb-3" },
+            ],
+            "receiptDocumentReference.id": [
+                { name: "receiptDocumentReference.id.receipt_reference", label: "Goods Receipt Reference", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "receiptDocumentReference.issueDate": [
+                { name: "receiptDocumentReference.issueDate.receipt_reference_date", label: "Goods Receipt Issue Date", type: "date", cols: 12, class: "mb-3" },
+            ],
+            "accountingCost": [
+                { name: "accountingCost.cost_center", label: "Cost center", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "customerPartyContactName": [
+                { name: "customerPartyContactName.person_reference", label: "Person reference", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "additionalReferences[BOL ID]": [
+                { name: "additionalReferences[BOL ID].transport_reference", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "BOLIssueDate": [
+                { name: "BOLIssueDate.transport_reference_date", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" },
+            ],
+            "additionalReferences[File ID]": [
+                { name: "additionalReferences[File ID].file_id", label: "File Id", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "customerAssignedId": [
+                { name: "customerAssignedId.customer_id", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "taxPointDate": [
+                { name: "taxPointDate.tax_point_date", label: "Tax point date", type: "date", cols: 12, class: "mb-3" },
+            ],
+            "supplierCommissionNumber": [
+                { name: "supplierCommissionNumber.number_of_seller", label: "Commission number of seller", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "supplierPhysicalLocationValue": [
+                { name: "supplierPhysicalLocationValue.data_universal_numbering_system", label: "Data universal numbering system", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "deliveryTerms": [
+                { name: "deliveryTerms.delivery_terms", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "additionalReferences[Interim Hours]": [
+                { name: "additionalReferences[Interim Hours].interim_hours", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "additionalReferences[BookingNumber]": [
+                { name: "additionalReferences[BookingNumber].booking_number", label: "Booking Number", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "additionalReferences[PaymentReference]": [
+                { name: "additionalReferences[PaymentReference].payment_reference", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "promisedDeliveryPeriod": [
+                { name: "promisedDeliveryPeriod.delivery_period", label: "Delivery period", type: "text", cols: 12, class: "mb-3" },
+            ],
+            "additionalReferences[Clearance Clave]": [
+                { name: "additionalReferences[Clearance Clave].clearance_clave", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" },
+            ],
         };
 
         $('#optionalField').on('change', function () {
