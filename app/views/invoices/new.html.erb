@@ -93,6 +93,77 @@
 
         </div>
 
+        <table class="table text-center align-middle invoice-table">
+          <thead class="table-light">
+            <tr>
+              <th></th>
+              <th>Item ID</th>
+              <th>Description</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Price per unit</th>
+              <th>Tax (%)</th>
+              <th>Total excl. tax</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="line-items">
+            <tr class="line-item">
+              <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+              <td><input type="text" class="form-control item-id"></td>
+              <td><input type="text" class="form-control description"></td>
+              <td><input type="number" class="form-control quantity" value="1"></td>
+              <td><input type="text" class="form-control unit" value="pcs"></td>
+              <td><input type="number" class="form-control price" step="0.01"></td>
+              <td><input type="number" class="form-control tax" step="0.01"></td>
+              <td class="text-end total">0.00</td>
+              <td><button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button></td>
+            </tr>
+            <tr class="dropdown_per_line hidden">
+              <td colspan="3">
+                <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
+                  <option value="">Add optional field</option>
+                  <option value="discount">Discount</option>
+                  <option value="charge">Charge (e.g. freight)</option>
+                  <option value="bolid">Transport Reference</option>
+                  <option value="fileid">File Id</option>
+                  <option value="taxexemptionreason">Tax exemption reason</option>
+                  <option value="modelname">Model name</option>
+                  <option value="hsnsac">HSN/SAC</option>
+                  <option value="documentreference">Purchase order number</option>
+                  <option value="documentlinereference">Purchase order line number</option>
+                  <option value="accountingcost">Cost center</option>
+                  <option value="deliveryaddress">Delivery Address</option>
+                  <option value="actualdeliverydate">Delivery Date</option>
+                  <option value="buyersitemidentification">Buyer material number</option>
+                  <option value="origincountry">Country of origin</option>
+                  <option value="eccn">Commodity classification: ECCN</option>
+                  <option value="eangtin">EAN/GTIN</option>
+                  <option value="incoterms">Delivery Terms</option>
+                  <option value="manufacturename">Manufacture name</option>
+                  <option value="trackingid">Freight order number</option>
+                  <option value="serialID">Serial number</option>
+                  <option value="linenote">Notes</option>
+                  <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
+                  <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
+                  <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
+                  <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
+                </select>
+              </td>
+              <td colspan="6"></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <button type="button" id="add-line" class="btn btn-primary">ADD NEW LINE</button>
+
+        <!-- Totals -->
+        <div class="text-end">
+          <div>Subtotal excl. taxes: <span id="subtotal">0.00</span></div>
+          <h5>Total PHP: <strong id="total">0.00</strong></h5>
+          <div class="text-muted">Total taxes: <span id="totaltax">0.00</span> PHP</div>
+        </div>
+
         <div class="d-flex justify-content-between gap-2 mt-5">
             <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
             <%= f.submit "Create Invoice", class: "btn btn-primary" %>
@@ -101,3 +172,81 @@
     </div>
   </div>
 </div>
+
+<script>
+  $(document).ready(function () {
+    let lineIndex = 1;
+
+    // Utility Functions
+    function updateRemoveButtons() {
+      const isSingleRow = $('#line-items .line-item').length <= 1;
+      $('#line-items .remove-line').toggle(!isSingleRow);
+    }
+
+    function getDropdownOptions() {
+      const options = [
+        'discount', 'charge', 'bolid', 'fileid', 'taxexemptionreason',
+        'modelname', 'hsnsac', 'documentreference', 'documentlinereference',
+        'accountingcost', 'deliveryaddress', 'actualdeliverydate', 'buyersitemidentification',
+        'origincountry', 'eccn', 'eangtin', 'incoterms', 'manufacturename',
+        'trackingid', 'serialID', 'linenote', 'despatchlinedocumentreference',
+        'despatchlineiddocumentreference', 'receiptlinedocumentreference', 'receiptlineiddocumentreference'
+      ];
+
+      return options.map(opt => `<option value="${opt}">${opt.replace(/([a-z])([A-Z])/g, '$1 $2')}</option>`).join('');
+    }
+
+    function getLineItemHTML(index) {
+      return `
+        <tr class="line-item">
+          <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+          <td><input type="text" class="form-control item-id"></td>
+          <td><input type="text" class="form-control description"></td>
+          <td><input type="number" class="form-control quantity" value="1"></td>
+          <td><input type="text" class="form-control unit" value="pcs"></td>
+          <td><input type="number" class="form-control price" step="0.01"></td>
+          <td><input type="number" class="form-control tax" step="0.01"></td>
+          <td class="text-end total">0.00</td>
+          <td><button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button></td>
+        </tr>
+        <tr class="dropdown_per_line hidden">
+          <td colspan="3">
+            <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select">
+              <option value="">Add optional field</option>
+              ${getDropdownOptions()}
+            </select>
+          </td>
+          <td colspan="6"></td>
+        </tr>
+      `;
+    }
+
+    
+    // Event Listeners
+    $('#add-line').on('click', function () {
+      $('#line-items').append(getLineItemHTML(lineIndex++));
+      updateRemoveButtons();
+    });
+
+    $(document).on('click', '.toggle-dropdown', function () {
+      const $btn = $(this);
+      const $dropdownRow = $btn.closest('tr').next('.dropdown_per_line');
+      $dropdownRow.toggle();
+      $btn.text($dropdownRow.is(':visible') ? '−' : '+');
+    });
+
+    $(document).on('click', '.remove-line', function () {
+      const $row = $(this).closest('tr');
+      const $dropdown = $row.next('.dropdown_per_line');
+      $row.remove();
+      $dropdown.remove();
+      recalculateTotals();
+      updateRemoveButtons();
+    });
+
+    
+    // Initialization
+    updateRemoveButtons();
+  });
+
+</script>
