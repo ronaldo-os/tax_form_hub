@@ -65,9 +65,9 @@
           <div class="input-group">
             <%= f.password_field :password,
                   autocomplete: "new-password",
-                  class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:password].any?}",
+                  class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:password].any?} border-end-0",
                   id: "password" %>
-            <span class="input-group-text">
+            <span class="input-group-text bg-white border-start-0">
               <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
             </span>
           </div>
@@ -81,9 +81,9 @@
           <div class="input-group">
             <%= f.password_field :password_confirmation,
                   autocomplete: "new-password",
-                  class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:password_confirmation].any?}",
+                  class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:password_confirmation].any?} border-end-0",
                   id: "password_confirmation" %>
-            <span class="input-group-text">
+            <span class="input-group-text bg-white border-start-0">
               <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
             </span>
           </div>
@@ -98,9 +98,9 @@
             <%= f.password_field :current_password,
                   autocomplete: "current-password",
                   required: true,
-                  class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:current_password].any?}",
+                  class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:current_password].any?} border-end-0",
                   id: "current_password" %>
-            <span class="input-group-text">
+            <span class="input-group-text bg-white border-start-0">
               <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
             </span>
           </div>
