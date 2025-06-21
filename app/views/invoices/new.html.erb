@@ -247,6 +247,160 @@
     
     // Initialization
     updateRemoveButtons();
+
+   const fieldTypeMap = {
+    discount: [
+      { name: "discount.discount_type", label: "Discount type", type: "select", options: [
+        "Choose reason code",
+        "Bank Charges",
+        "Customs Duties",
+        "Repair Costs",
+        "Attorney Fees",
+        "Taxes",
+        "Late Delivery",
+        "Freight Costs",
+        "Reason Unknown",
+        "Price Change",
+        "Early payment allowance adjustment",
+        "Quantity Discount",
+        "Pricing Discount",
+        "Volume Discount",
+        "Agreed Discount",
+        "Expediting fee",
+        "Currency exchange differences"
+      ], cols: 3 },
+      { name: "discount.discount_type_edit", label: "Edit type (if needed)", type: "text", cols: 3 },
+      { name: "discount.qty", label: "Quantity", type: "text", cols: 2 },
+      { name: "discount.currency", label: "Currency", type: "select", options: ["PHP", "USD"], cols: 2 },
+      { name: "discount.price_per_unit", label: "Price per unit", type: "text", cols: 2, disabled: true }
+    ],
+    charge: [
+      { name: "charge.charge_type", label: "Charge type", type: "select", options: [
+        "Choose reason code",
+        "Bank Charges",
+        "Customs Duties",
+        "Repair Costs",
+        "Attorney Fees",
+        "Taxes",
+        "Late Delivery",
+        "Freight Costs",
+        "Reason Unknown",
+        "Price Change",
+        "Early payment allowance adjustment",
+        "Quantity Discount",
+        "Pricing Discount",
+        "Volume Discount",
+        "Agreed Discount",
+        "Expediting fee",
+        "Currency exchange differences"
+      ], cols: 3 },
+      { name: "charge.charge_type_edit", label: "Edit type (if needed)", type: "text", cols: 3 },
+      { name: "charge.qty", label: "Quantity", type: "text", cols: 2 },
+      { name: "charge.currency", label: "Currency", type: "select", options: ["%", "PHP"], cols: 2 },
+      { name: "charge.price_per_unit", label: "Price per unit", type: "text", cols: 2, disabled: true }
+    ],
+    bolid: [
+      { name: "bolid.transport_reference", label: "Transport Reference", type: "text", cols: 4 }
+    ],
+    fileid: [
+      { name: "fileid.file_id", label: "File ID", type: "text", cols: 4 }
+    ],
+    
+  };
+
+  $(document).on('change', 'select[name^="optional_fields"]', function () {
+    const $select = $(this);
+    const selectedValue = $select.val();
+    const $rowGroup = $select.closest('tr.optional-field-row');
+
+    if ($select.attr('name').includes('discount.discount_type')) {
+      const $editInput = $rowGroup.find('input[name^="optional_fields"][name*="discount.discount_type_edit"]');
+      if ($editInput.length > 0) {
+        $editInput.val(selectedValue);
+      }
+    }
+
+    if ($select.attr('name').includes('charge.charge_type')) {
+      const $editInput = $rowGroup.find('input[name^="optional_fields"][name*="charge.charge_type_edit"]');
+      if ($editInput.length > 0) {
+        $editInput.val(selectedValue);
+      }
+    }
+  });
+
+
+  $(document).on('change', 'select[id^="additional_field_"]', function () {
+    const $select = $(this);
+    const selectedKey = $select.val();
+    const selectedText = $select.find("option:selected").text();
+    if (!selectedKey) return;
+
+    const $dropdownRow = $select.closest('tr.dropdown_per_line');
+    const $lineItemRow = $dropdownRow.prev('.line-item');
+    const rowIndex = $('tr.line-item').index($lineItemRow);
+
+    // Prevent duplicate field groups in the same line item
+    if ($lineItemRow.siblings(`[data-optional-group="${selectedKey}"][data-line-index="${rowIndex}"]`).length > 0) {
+      alert("This field group has already been added to this line item.");
+      $select.val('');
+      return;
+    }
+
+    const fields = fieldTypeMap[selectedKey];
+    if (!fields || !Array.isArray(fields)) return;
+
+    // Build the new row
+    newRowHtml = `
+      <tr class="optional-field-row" data-optional-group="${selectedKey}" data-line-index="${rowIndex}">
+        <td colspan="9">
+          <div class="p-2 border rounded bg-light mb-2">
+            <p class="fs-5 mb-3 d-flex justify-content-between align-items-center">
+              ${selectedText.toUpperCase()}
+              <button type="button" class="btn btn-sm btn-outline-danger remove-group ms-2">×</button>
+            </p>
+            <div class="row g-3">`;
+
+    fields.forEach(field => {
+      const colClass = `col-md-${field.cols || 6} ${field.class || ''}`;
+      let inputHtml = '';
+
+      if (field.type === "select") {
+        inputHtml = `<select name="optional_fields[${rowIndex}][${field.name}]" class="form-select"${field.disabled ? ' disabled' : ''}>
+          ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+        </select>`;
+      } else if (field.type === "textarea") {
+        inputHtml = `<textarea name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}></textarea>`;
+      } else {
+        inputHtml = `<input type="${field.type}" name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}>`;
+      }
+
+      newRowHtml += `
+        <div class="${colClass}">
+          <div class="d-flex flex-column">
+            <label class="form-label text-start w-100">${field.label}</label>
+            ${inputHtml}
+          </div>
+        </div>`;
+    });
+
+    newRowHtml += `
+            </div>
+          </div>
+        </td>
+      </tr>`;
+
+    // Insert before the dropdown row
+    $dropdownRow.before(newRowHtml);
+    $select.val('');
+  });
+
+  // Remove dynamically added group
+  $(document).on('click', '.remove-group', function () {
+    $(this).closest('tr.optional-field-row').remove();
+  });
+
+
+
   });
 
 </script>
