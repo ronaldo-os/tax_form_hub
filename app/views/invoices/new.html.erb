@@ -230,19 +230,42 @@
 
     $(document).on('click', '.toggle-dropdown', function () {
       const $btn = $(this);
-      const $dropdownRow = $btn.closest('tr').next('.dropdown_per_line');
-      $dropdownRow.toggle();
-      $btn.text($dropdownRow.is(':visible') ? '−' : '+');
+      const $currentLineItem = $btn.closest('tr');
+      let $next = $currentLineItem.next();
+      const $toggleRows = [];
+
+      while ($next.length && !$next.hasClass('line-item')) {
+        if ($next.hasClass('optional-field-row') || $next.hasClass('dropdown_per_line')) {
+          $toggleRows.push($next);
+        }
+        $next = $next.next();
+      }
+
+      const shouldShow = $toggleRows.length > 0 && !$toggleRows[0].is(':visible');
+      $toggleRows.forEach($row => $row.toggle(shouldShow));
+      $btn.text(shouldShow ? '−' : '+');
     });
 
+
     $(document).on('click', '.remove-line', function () {
-      const $row = $(this).closest('tr');
-      const $dropdown = $row.next('.dropdown_per_line');
-      $row.remove();
-      $dropdown.remove();
-      recalculateTotals();
+      const $lineItem = $(this).closest('tr');
+
+      let $next = $lineItem.next();
+      const $relatedRows = [];
+
+      while ($next.length && !$next.hasClass('line-item')) {
+        if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
+          $relatedRows.push($next);
+        }
+        $next = $next.next();
+      }
+
+      $lineItem.remove();
+      $relatedRows.forEach($row => $row.remove());
+
       updateRemoveButtons();
     });
+
 
     
     // Initialization
@@ -305,7 +328,141 @@
     fileid: [
       { name: "fileid.file_id", label: "File ID", type: "text", cols: 4 }
     ],
-    
+    taxexemptionreason: [
+      { name: "taxexemptionreason.tax_exemption_reason", label: "Tax exemption reason", type: "text", cols: 4 }
+    ],
+    modelname: [
+      { name: "modelname.model_name", label: "Model name", type: "text", cols: 4 }
+    ],
+    hsnsac: [
+      { name: "hsnsac.hsn_sac", label: "HSN/SAC", type: "select" , options: ["HSN", "SAC"], cols: 4 },
+      { name: "hsnsac.qty", label: "Quantity", type: "text", cols: 4 },
+    ],
+    documentreference: [
+      { name: "documentreference.purchase_order_number", label: "Purchase order number", type: "text", cols: 4 }
+    ],
+    documentlinereference: [
+      { name: "documentlinereference.purchase_order_line_number", label: "Purchase order line number", type: "text", cols: 4 }
+    ],
+    accountingcost: [
+      { name: "accountingcost.cost_center", label: "Cost center", type: "text", cols: 4 }
+    ],
+    deliveryaddress: [
+      {
+        name: "deliveryaddress.country_origin",
+        label: "Country/Region",
+        type: "select",
+        options: [
+          "", "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina",
+          "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados",
+          "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana",
+          "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon",
+          "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)",
+          "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo", "Denmark",
+          "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea",
+          "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia",
+          "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+          "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
+          "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
+          "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+          "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania",
+          "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
+          "Myanmar (Burma)", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger",
+          "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State",
+          "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+          "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa",
+          "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone",
+          "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
+          "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan",
+          "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia",
+          "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
+          "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+          "Yemen", "Zambia", "Zimbabwe"
+        ],
+        cols: 4
+      },
+      { name: "deliveryaddress.postbox", label: "Postbox", type: "text", cols: 4 },
+      { name: "deliveryaddress.street", label: "Street", type: "text", cols: 4 },
+      { name: "deliveryaddress.number", label: "Number", type: "text", cols: 4 },
+      { name: "deliveryaddress.locality_name", label: "Locality name", type: "text", cols: 4 },
+      { name: "deliveryaddress.postal_zipcode", label: "Postal/ZIP", type: "text", cols: 4 },
+      { name: "deliveryaddress.city", label: "City", type: "text", cols: 4 },
+      { name: "deliveryaddress.location_id", label: "Location Id", type: "text", cols: 4 },
+    ],
+    actualdeliverydate: [
+      { name: "actualdeliverydate.delivery_date", label: "Delivery Date", type: "date", cols: 4 }
+    ],
+    buyersitemidentification: [
+      { name: "buyersitemidentification.buyer_material_number", label: "Buyer material number", type: "text", cols: 4 }
+    ],
+    origincountry: [
+      {
+        name: "origincountry.country_origin",
+        label: "Country of origin",
+        type: "select",
+        options: [
+          "", "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina",
+          "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados",
+          "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana",
+          "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon",
+          "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)",
+          "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo", "Denmark",
+          "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea",
+          "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia",
+          "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+          "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
+          "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
+          "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+          "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania",
+          "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
+          "Myanmar (Burma)", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger",
+          "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State",
+          "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+          "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa",
+          "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone",
+          "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
+          "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan",
+          "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia",
+          "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
+          "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+          "Yemen", "Zambia", "Zimbabwe"
+        ],
+        cols: 4
+      }
+    ],
+    eccn: [
+      { name: "eccn.commodity_classification", label: "Commodity classification: ECCN", type: "text", cols: 4 }
+    ],
+    eangtin: [
+      { name: "eangtin.ean_gtin", label: "EAN/GTIN", type: "text", cols: 4 }
+    ],
+    incoterms: [
+      { name: "incoterms.delivery_terms", label: "Delivery Terms", type: "text", cols: 4 }
+    ],
+    manufacturename: [
+      { name: "manufacturename.manufacture_name", label: "Manufacture name", type: "text", cols: 4 }
+    ],
+    trackingid: [
+      { name: "trackingid.freight_order_number", label: "Freight order number", type: "text", cols: 4 }
+    ],
+    serialID: [
+      { name: "serialID.serial_id", label: "Serial number", type: "text", cols: 4 }
+    ],
+    linenote: [
+      { name: "linenote.note", label: "Notes", type: "text", cols: 4 }
+    ],
+    despatchlinedocumentreference: [
+      { name: "despatchlinedocumentreference.shipping_notice_reference", label: "Shipping Notice Reference", type: "text", cols: 4 }
+    ],
+    despatchlineiddocumentreference: [
+      { name: "despatchlineiddocumentreference.shipping_notice_line_reference", label: "Shipping Notice Line Reference", type: "text", cols: 4 }
+    ],
+    receiptlinedocumentreference: [
+      { name: "receiptlinedocumentreference.receipt_reference", label: "Goods Receipt Reference", type: "text", cols: 4 }
+    ],
+    receiptlineiddocumentreference: [
+      { name: "receiptlineiddocumentreference.receipt_line_reference", label: "Goods Receipt Line Reference", type: "text", cols: 4 }
+    ],
   };
 
   $(document).on('change', 'select[name^="optional_fields"]', function () {
