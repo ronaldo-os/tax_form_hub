@@ -108,7 +108,10 @@ if (window.location.pathname.includes("/invoices")) {
             const fields = fieldTypeMap[key];
             if (!fields || !Array.isArray(fields)) return;
 
-            let rowsHtml = `<div class="mb-3" data-optional-group="${key}"><hr>`;
+            let rowsHtml = `
+            <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="${key}">
+                <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
+            `;
 
             // Render fields in Bootstrap rows
             for (let i = 0; i < fields.length; i += 12) {
@@ -140,14 +143,6 @@ if (window.location.pathname.includes("/invoices")) {
 
             rowsHtml += `</div>`; // close row
             }
-
-            rowsHtml += `
-                <div class="row mt-2">
-                    <div class="col-12 text-end">
-                    <button type="button" class="btn btn-outline-danger remove-group">× Remove</button>
-                    </div>
-                </div>
-            </div>`;
 
             $('#optional_fields_container').append(rowsHtml);
             $(this).val('');

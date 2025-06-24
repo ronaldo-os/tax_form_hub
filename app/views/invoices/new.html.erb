@@ -1,7 +1,7 @@
 <div class="container mt-5">
   <div class="card shadow-sm mb-5">
     <div class="card-body">
-      <%= form_with model: @invoice, local: true, html: { multipart: true, class: "row g-3" } do |f| %>
+      <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
 
         <h5 class="text-secondary">Invoice Details</h5>
         
@@ -29,26 +29,22 @@
             </div>
 
             <div id="invoice_details_parent_div" class="mt-3">
-              <div class="mb-3" data-optional-group="payment_due_date">
+              <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="payment_due_date">
+                <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
                 <div class="row">
-                  <div class="col-md-6">
+                  <div class="col-md-12">
                     <%= f.label :payment_due_date, class: "form-label" %>
                     <%= f.date_field :payment_due_date, class: "form-control" %>
-                  </div>
-                  <div class="col-md-6 d-flex align-items-end">
-                    <button type="button" class="btn btn-outline-danger ms-auto remove-group">× Remove</button>
                   </div>
                 </div>
               </div>
 
-              <div class="mb-3" data-optional-group="delivery_date">
+              <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="delivery_date">
+                <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
                 <div class="row">
-                  <div class="col-md-6">
+                  <div class="col-md-12">
                     <%= f.label :delivery_date, class: "form-label" %>
                     <%= f.date_field :delivery_date, class: "form-control" %>
-                  </div>
-                  <div class="col-md-6 d-flex align-items-end">
-                    <button type="button" class="btn btn-outline-danger ms-auto remove-group">× Remove</button>
                   </div>
                 </div>
               </div>
@@ -155,7 +151,25 @@
           </tbody>
         </table>
 
-        <button type="button" id="add-line" class="btn btn-primary">ADD NEW LINE</button>
+        <div class="row g-3 mb-3 mt-0">
+          <div class="col-md-4 d-grid">
+            <button type="button" id="add-discount-row" class="btn btn-outline-primary">
+              Add Header Charge / Discount / Tax
+            </button>
+          </div>
+          <div class="col-md-4 d-grid">
+            <button type="button" id="add-base-quantity" class="btn btn-outline-secondary">
+              Show Base Quantity Column
+            </button>
+          </div>
+          <div class="col-md-4 d-grid">
+            <button type="button" id="add-line" class="btn btn-success">
+              <i class="bi bi-plus-square me-1"></i> Add New Line
+            </button>
+          </div>
+        </div>
+
+        
 
         <!-- Totals -->
         <div class="text-end">
@@ -163,6 +177,33 @@
           <h5>Total PHP: <strong id="total">0.00</strong></h5>
           <div class="text-muted">Total taxes: <span id="totaltax">0.00</span> PHP</div>
         </div>
+
+        <hr>
+
+        <div class="row">
+          <div class="col-md-6">
+
+          </div>
+          
+          <div class="col-md-6">
+            <div class="mb-3">
+              <%= f.label :message, "Write a message to the recipient", class: "form-label" %>
+              <%= f.text_area :message, class: "form-control", rows: 5, placeholder: "Enter your message..." %>
+            </div>
+
+            <div class="form-check mb-4">
+              <%= f.check_box :save_notes_for_future, class: "form-check-input" %>
+              <%= f.label :save_notes_for_future, "Save notes for future Invoices", class: "form-check-label" %>
+            </div>
+
+            <div class="mb-3">
+              <%= f.label :attachments, class: "form-label" %>
+              <%= f.file_field :attachments, class: "form-control", accept: "image/*,application/pdf", aria: { describedby: "fileHelp" } %>
+              <div id="fileHelp" class="form-text">Only images and PDFs allowed. Max file size is 10 MB.</div>
+            </div>
+          </div>
+        </div>
+
 
         <div class="d-flex justify-content-between gap-2 mt-5">
             <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
@@ -179,7 +220,7 @@
 
     // Utility Functions
     function updateRemoveButtons() {
-      const isSingleRow = $('#line-items .line-item').length <= 1;
+      const isSingleRow = $('#line-items .line-item, #line-items .discount-item').length <= 1;
       $('#line-items .remove-line').toggle(!isSingleRow);
     }
 
@@ -557,7 +598,97 @@
   });
 
 
+  // Add header button 
+  $('#add-discount-row').on('click', function () {
+      const newRow = `
+        <tr class="discount-item">
+          <td class="align-top"></td>
+          <td class="align-top">
+            <select name="price_adjustment_discount" class="form-select">
+              <option value="true">Discount</option>
+              <option value="false">Charge</option>
+              <option value="fixedtax">Fixed Tax</option>
+            </select>
+          </td>
+          <td class="align-top">
+            <input type="text" class="form-control description mb-2">
+            <select name="price_adjustment_discount_type" class="form-select">
+              <option value="Choose reason code" disabled selected>Choose reason code</option>
+              <option value="Bank Charges">Bank Charges</option>
+              <option value="Customs Duties">Customs Duties</option>
+              <option value="Repair Costs">Repair Costs</option>
+              <option value="Attorney Fees">Attorney Fees</option>
+              <option value="Taxes">Taxes</option>
+              <option value="Late Delivery">Late Delivery</option>
+              <option value="Freight Costs">Freight Costs</option>
+              <option value="Reason Unknown">Reason Unknown</option>
+              <option value="Price Change">Price Change</option>
+              <option value="Early payment allowance adjustment">Early payment allowance adjustment</option>
+              <option value="Quantity Discount">Quantity Discount</option>
+              <option value="Pricing Discount">Pricing Discount</option>
+              <option value="Volume Discount">Volume Discount</option>
+              <option value="Agreed Discount">Agreed Discount</option>
+              <option value="Expediting fee">Expediting fee</option>
+              <option value="Currency exchange differences">Currency exchange differences</option>
+            </select>
+          </td>
+          <td class="align-top">
+            <input type="number" class="form-control quantity" value="1">
+          </td>
+          <td class="align-top">
+            <select name="price_adjustment_unit_type" class="form-select">
+              <option value="true">%</option>
+              <option value="false">PHP</option>
+            </select>
+          </td>
+          <td class="align-top"></td>
+          <td class="align-top">
+            <input type="number" class="form-control tax" step="0.01">
+          </td>
+          <td class="align-top text-end total">0.00</td>
+          <td class="align-top">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
+          </td>
+        </tr>
+      `;
 
+      $('#line-items').append(newRow);
+      updateRemoveButtons(); 
+    });
+
+    $('#line-items').on('click', '.remove-line', function () {
+      $(this).closest('tr').remove();
+      updateRemoveButtons();
+    });
+  });
+
+  // Toggle base quantity column button 
+  let baseQuantityVisible = false;
+
+  $('#add-base-quantity').on('click', function () {
+    baseQuantityVisible = !baseQuantityVisible;
+
+    const $theadRow = $('.invoice-table thead tr');
+    const $headerCells = $theadRow.find('th');
+
+    if (baseQuantityVisible) {
+      $(this).text('Hide Base Quantity Column');
+      $headerCells.eq(5).text('Price');
+      $('<th class="base-quantity-header">Price per Quantity</th>').insertAfter($headerCells.eq(5));
+
+      $('.line-item').each(function () {
+        $('<td class="base-quantity-cell"><input type="number" name="price_per_quantity" class="form-control price-per-quantity" step="0.01"></td>')
+          .insertAfter($(this).find('td').eq(5));
+      });
+
+      $('.optional-field-row td[colspan]').attr('colspan', 10);
+    } else {
+      $(this).text('Show Base Quantity Column');
+      $headerCells.eq(5).text('Price per unit');
+      $('.base-quantity-header').remove();
+      $('.base-quantity-cell').remove();
+      $('.optional-field-row td[colspan]').attr('colspan', 9);
+    }
   });
 
 </script>
