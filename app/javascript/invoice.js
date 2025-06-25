@@ -155,4 +155,140 @@ if (window.location.pathname.includes("/invoices")) {
     });
 
 
+    // PAYMENT TERMS FIELD 
+    const payment_terms_fieldTypeMap = {
+        paymentterms: [
+            { name: "paymentterms.discount_percent", label: "Discount Percent", type: "text", cols: 6},
+            { name: "paymentterms.surcharge_percent", label: "Surcharge Percent", type: "text", cols: 6},
+            { name: "paymentterms.settelement_start_date", label: "Settlement Start Date", type: "date", cols: 6},
+            { name: "paymentterms.penalty_start_date", label: "Penalty Start Date", type: "date", cols: 6},
+            { name: "paymentterms.settlement_end_date", label: "Settlement End Date", type: "date", cols: 6},
+            { name: "paymentterms.penalty_end_date", label: "Penalty End Date", type: "date", cols: 6},
+            { name: "paymentterms.note", label: "Note", type: "textarea", cols: 12 },
+        ],
+        cash: [
+            { name: "cash.cash", label: "Cash Payment", type: "text_only", cols: 12 }
+        ],
+        check: [
+            { name: "check.check", label: "Check Payment", type: "text_only", cols: 12 },
+        ],
+        bank: [
+            { name: "bank.name", label: "Bank name", type: "text", cols: 12 },
+            { name: "bank.sortcode", label: "Sort Code", type: "text", cols: 6 },
+            { name: "bank.account_number", label: "Account number", type: "text", cols: 6 },
+            { name: "bank.account_holder_name", label: "Account holder name (optional) ", type: "text", cols: 12 },
+            { name: "bank.street_name", label: "Street name (optional)", type: "text", cols: 12 },
+            { name: "bank.additional_street_name", label: "Additional street name (optional)", type: "text", cols: 12 },
+            { name: "bank.building_number", label: "Building number (optional)", type: "text", cols: 6 },
+            { name: "bank.city", label: "City (optional)", type: "text", cols: 6 },
+            { name: "bank.zip_code", label: "Postal/Zip code (optional)", type: "text", cols: 12 },
+            { name: "bank.state", label: "State/Region (optional)", type: "text", cols: 12 },
+            { name: "bank.address_line", label: "Address line (optional)", type: "text", cols: 12 },
+            { name: "bank.country", label: "Country (optional)", type: "text", cols: 12 },
+            { name: "bank.note", label: "Payment note", type: "text", cols: 12 },
+        ],
+        bank_card: [
+            { name: "bank_card.bank_card", label: "Bank Card", type: "text_only", cols: 6 },
+        ],
+        debit: [
+            { name: "debit.name", label: "Bank name", type: "text", cols: 12 },
+            { name: "debit.sortcode", label: "Sort Code", type: "text", cols: 6 },
+            { name: "debit.account_number", label: "Account number", type: "text", cols: 6 },
+            { name: "debit.account_holder_name", label: "Account holder name (optional) ", type: "text", cols: 12 },
+            { name: "debit.street_name", label: "Street name (optional)", type: "text", cols: 12 },
+            { name: "debit.additional_street_name", label: "Additional street name (optional)", type: "text", cols: 12 },
+            { name: "debit.building_number", label: "Building number (optional)", type: "text", cols: 6 },
+            { name: "debit.city", label: "City (optional)", type: "text", cols: 6 },
+            { name: "debit.zip_code", label: "Postal/Zip code (optional)", type: "text", cols: 12 },
+            { name: "debit.state", label: "State/Region (optional)", type: "text", cols: 12 },
+            { name: "debit.address_line", label: "Address line (optional)", type: "text", cols: 12 },
+            { name: "debit.country", label: "Country (optional)", type: "text", cols: 12 },
+            { name: "debit.note", label: "Payment note", type: "text", cols: 12 },
+        ],
+        bic_iban: [
+            { name: "bic_iban.bic_swift", label: "BIC/SWIFT", type: "text", cols: 4 },
+            { name: "bic_iban.iban", label: "IBAN", type: "text", cols: 8 },
+            { name: "bic_iban.note", label: "Payment note", type: "text", cols: 12 },
+        ],
+    };
+
+    $('#payment_terms_select').on('change', function () {
+        const key = $(this).val();
+        const key_text = $(this).find('option:selected').text().trim();
+        if (!key) return;
+
+        if ($(`#payment_terms_parent_div [data-optional-group="${key}"]`).length > 0) {
+        alert("This payment term group is already added.");
+        $(this).val('');
+        return;
+        }
+
+        const fields = payment_terms_fieldTypeMap[key];
+        if (!fields || !Array.isArray(fields)) return;
+
+        let groupHtml = `
+        <div class="mb-3 border rounded p-3 pt-3" data-optional-group="${key}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">${key_text}</h5>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-group">×</button>
+            </div>
+        `;
+
+        for (let i = 0; i < fields.length; i += 12) {
+        groupHtml += `<div class="row">`;
+
+        const subFields = fields.slice(i, i + 12);
+        subFields.forEach(field => {
+        const colClass = `col-md-${field.cols || 6} ${field.class || ""}`;
+        let inputHtml = "";
+
+        if (field.type === "text_only") {
+            inputHtml = `<p class="mb-0">${field.label}</p>`;
+        } else {
+            if (field.type === "select") {
+            inputHtml = `<select name="optional_fields[${field.name}]" class="form-select">
+                ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+            </select>`;
+            } else if (field.type === "textarea") {
+            inputHtml = `<textarea name="optional_fields[${field.name}]" class="form-control"></textarea>`;
+            } else {
+            inputHtml = `<input type="${field.type}" name="optional_fields[${field.name}]" class="form-control">`;
+            }
+
+            groupHtml += `
+            <div class="${colClass} mb-3">
+                <label class="form-label">${field.label}</label>
+                ${inputHtml}
+            </div>
+            `;
+        }
+        });
+
+
+        groupHtml += `</div>`; 
+        }
+
+        groupHtml += `</div>`; 
+        $('#payment_terms_parent_div').append(groupHtml);
+        $(this).val('');
+    });
+
+    $(document).on('click', '.remove-group', function () {
+        $(this).closest('[data-optional-group]').remove();
+    });
+
+    // Delivery Details Toggle 
+    const $delivery_details_button = $('[data-bs-toggle="collapse"][data-bs-target="#delivery_details_parent_div"]');
+    const delivery_details_target_id = $delivery_details_button.attr('data-bs-target');
+    const $delivery_details_target = $(delivery_details_target_id);
+
+    $delivery_details_target.on('show.bs.collapse', function () {
+      $delivery_details_button.text('− Hide Delivery Details');
+    });
+
+    $delivery_details_target.on('hide.bs.collapse', function () {
+      $delivery_details_button.text('+ Delivery Details');
+    });
+
+
 }
