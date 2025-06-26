@@ -3,6 +3,7 @@ import "./client_submissions";
 import "./admin_client_submissions";
 import "./edit_profile";
 import "./invoice";
+import "./locations";
 
 import Rails from "@rails/ujs";
 Rails.start();

@@ -5,6 +5,9 @@ if (window.location.pathname.includes("/invoices")) {
 
 
     $(document).ready(function () {
+
+        //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
+        
         const fieldTypeMap = {
             "customsDeclarations": [
                 { name: "customsDeclarations.number_1", label: "Reference Number of Customs Form No.1,9", type: "text", cols: 12, class: "mb-3" },
@@ -141,21 +144,21 @@ if (window.location.pathname.includes("/invoices")) {
                 `;
             });
 
-            rowsHtml += `</div>`; // close row
+            rowsHtml += `</div>`;
             }
 
             $('#optional_fields_container').append(rowsHtml);
             $(this).val('');
         });
 
-        // Remove entire group
         $(document).on('click', '.remove-group', function () {
             $(this).closest('[data-optional-group]').remove();
         });
     });
 
 
-    // PAYMENT TERMS FIELD 
+    //----------------------------------------------------- PAYMENT TERMS FIELD 
+
     const payment_terms_fieldTypeMap = {
         paymentterms: [
             { name: "paymentterms.discount_percent", label: "Discount Percent", type: "text", cols: 6},
@@ -277,7 +280,8 @@ if (window.location.pathname.includes("/invoices")) {
         $(this).closest('[data-optional-group]').remove();
     });
 
-    // Delivery Details Toggle 
+    //----------------------------------------------------- DELIVERY DETAILS BUTTON TOGGLE
+
     const $delivery_details_button = $('[data-bs-toggle="collapse"][data-bs-target="#delivery_details_parent_div"]');
     const delivery_details_target_id = $delivery_details_button.attr('data-bs-target');
     const $delivery_details_target = $(delivery_details_target_id);

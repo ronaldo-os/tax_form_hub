@@ -1,0 +1,163 @@
+<div class="container py-2 py-md-5">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <h1 class="display-2 mb-0">Locations</h1>
+
+    <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" id="addLocationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+        ADD A NEW LOCATION
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="addLocationDropdown">
+        <li><a class="dropdown-item location-option" href="#" data-location-type="Ship From" data-bs-toggle="modal" data-bs-target="#locationModal">Ship From</a></li>
+        <li><a class="dropdown-item location-option" href="#" data-location-type="Remit To" data-bs-toggle="modal" data-bs-target="#locationModal">Remit To</a></li>
+        <li><a class="dropdown-item location-option" href="#" data-location-type="Tax Representative" data-bs-toggle="modal" data-bs-target="#locationModal">Tax Representative</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-3">
+      <table class="table table-hover table-striped table-bordered table_text_centered align-middle nowrap w-100" id="location-table">
+        <thead class="thead-dark">
+          <tr>
+            <th>Type</th>
+            <th>Location Name</th>
+            <th>Address</th>
+            <th>Company Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @locations.each do |location| %>
+            <tr>
+              <td><%= location.location_type %></td>
+              <td><%= location.location_name %></td>
+              <td><%= location.country %></td>
+              <td><%= location.company_name %></td>
+              <td>
+                <div class="dropdown text-center">
+                  <button class="btn btn-link text-dark p-0 text-decoration-none fs-3" type="button" id="actionsDropdown-<%= location.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                    &#8942;
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="actionsDropdown-<%= location.id %>">
+                    <li>
+                      <%= link_to 'Edit', '#',
+                        class: 'dropdown-item edit-location',
+                        data: {
+                          id: location.id,
+                          location_type: location.location_type,
+                          location_name: location.location_name,
+                          country: location.country,
+                          company_name: location.company_name,
+                          tax_number: location.tax_number,
+                          post_box: location.post_box,
+                          street: location.street,
+                          building: location.building,
+                          additional_street: location.additional_street,
+                          zip_code: location.zip_code,
+                          city: location.city
+                      } %>
+                    </li>
+                    <li>
+                      <%= link_to 'Delete', location_path(location),
+                        method: :delete,
+                        data: { confirm: 'Are you sure?' },
+                        class: 'dropdown-item text-danger' %>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="locationModalLabel">Add Location</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with model: Location.new, url: locations_path, local: true do |f| %>
+        <div class="modal-body">
+
+          <%= f.hidden_field :location_type, id: "modal_location_type" %>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <%= f.label :location_name %>
+              <%= f.text_field :location_name, class: "form-control", required: true, id: "location_name" %>
+            </div>
+            <div class="col-md-6 mb-3">
+              <%= f.label :country %>
+              <%= f.select :country, ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Argentina", "Armenia", "Australia", "Austria", 
+                  "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", 
+                  "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
+                  "Cambodia", "Cameroon", "Canada", "Cape Verde", "Central African Republic", "Chad", "Chile", "China", 
+                  "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", 
+                  "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", 
+                  "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", 
+                  "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", 
+                  "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", 
+                  "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", 
+                  "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", 
+                  "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", 
+                  "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", 
+                  "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", 
+                  "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", 
+                  "Philippines", "Poland", "Portugal", "Qatar", "Romania", "Russia", "Rwanda", "Saint Kitts and Nevis", 
+                  "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", 
+                  "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", 
+                  "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", 
+                  "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania", "Thailand", 
+                  "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu", 
+                  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", 
+                  "Vanuatu", "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"], {}, class: "form-select", required: true, id: "location_country" %>
+            </div>
+            <div class="col-md-6 mb-3">
+              <%= f.label :company_name %>
+              <%= f.text_field :company_name, class: "form-control", id: "location_company_name" %>
+            </div>
+            <div class="col-md-6 mb-3">
+              <%= f.label :tax_number %>
+              <%= f.text_field :tax_number, class: "form-control", id: "location_tax_number" %>
+            </div>
+            <div class="col-md-4 mb-3">
+              <%= f.label :post_box %>
+              <%= f.text_field :post_box, class: "form-control", id: "location_post_box" %>
+            </div>
+            <div class="col-md-8 mb-3">
+              <%= f.label :street_name %>
+              <%= f.text_field :street, class: "form-control", required: true, id: "location_street" %>
+            </div>
+            <div class="col-md-4 mb-3">
+              <%= f.label :building %>
+              <%= f.text_field :building, class: "form-control", id: "location_building" %>
+            </div>
+            <div class="col-md-8 mb-3">
+              <%= f.label :additional_street_name %>
+              <%= f.text_field :additional_street, class: "form-control", id: "location_additional_street" %>
+            </div>
+            <div class="col-md-5 mb-3">
+              <%= f.label :zip_code %>
+              <%= f.text_field :zip_code, class: "form-control", id: "location_zip_code" %>
+            </div>
+            <div class="col-md-7 mb-3">
+              <%= f.label :city %>
+              <%= f.text_field :city, class: "form-control", required: true, id: "location_city" %>
+            </div>
+          </div>
+
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          <%= f.submit "Save Location", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

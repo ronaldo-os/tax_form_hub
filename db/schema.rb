@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_06_11_093229) do
+ActiveRecord::Schema[7.2].define(version: 2025_06_26_025316) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -75,6 +75,22 @@ ActiveRecord::Schema[7.2].define(version: 2025_06_11_093229) do
     t.string "bank_country"
     t.text "bank_payment_note"
     t.string "attachment"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "locations", force: :cascade do |t|
+    t.string "location_type"
+    t.string "location_name"
+    t.string "country"
+    t.string "company_name"
+    t.string "tax_number"
+    t.string "post_box"
+    t.string "street"
+    t.string "building"
+    t.string "additional_street"
+    t.string "zip_code"
+    t.string "city"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end
