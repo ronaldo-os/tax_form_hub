@@ -3,6 +3,11 @@ class Invoice < ApplicationRecord
 
   validate :attachment_type_allowed
 
+  def new
+    @invoice = Invoice.new
+    @ship_from_locations = Location.where(location_type: "Ship From")
+  end
+
   private
 
   def attachment_type_allowed

@@ -23,6 +23,13 @@ class LocationsController < ApplicationController
     end
   end
 
+  def show
+    @location = Location.find(params[:id])
+    respond_to do |format|
+      format.json { render json: @location }
+    end
+  end
+
   def update
     @location = Location.find(params[:id])
 

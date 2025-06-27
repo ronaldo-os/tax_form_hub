@@ -280,19 +280,43 @@ if (window.location.pathname.includes("/invoices")) {
         $(this).closest('[data-optional-group]').remove();
     });
 
-    //----------------------------------------------------- DELIVERY DETAILS BUTTON TOGGLE
+    // ----------------------------------------------------- DELIVERY DETAILS BUTTON TOGGLE
 
-    const $delivery_details_button = $('[data-bs-toggle="collapse"][data-bs-target="#delivery_details_parent_div"]');
-    const delivery_details_target_id = $delivery_details_button.attr('data-bs-target');
-    const $delivery_details_target = $(delivery_details_target_id);
+    var $btn = $('[data-bs-toggle="collapse"][data-bs-target="#delivery_details_parent_div"]');
+    var $target = $($btn.data('bs-target'));
 
-    $delivery_details_target.on('show.bs.collapse', function () {
-      $delivery_details_button.text('− Hide Delivery Details');
+    $target.on('show.bs.collapse hide.bs.collapse', function (e) {
+    var symbol = e.type === 'show' ? '−' : '+';
+    $btn.text(symbol + ' Delivery Details');
+    });
+    
+    //----------------------------------------------------- PAYMENT TERMS LOCATIONS BUTTON TOGGLE
+
+    $(document).on('click', '.location-toggle-btn', function () {
+        const $btn = $(this);
+        const type = $btn.data('type');
+        const wrapperId = `#${type.toLowerCase().replace(/ /g, '_')}_selector_wrapper`;
+        const $wrapper = $(wrapperId);
+
+        $wrapper.slideToggle(200, function () {
+            const isVisible = $wrapper.is(':visible');
+            $btn.html(`${isVisible ? '–' : '+'} ${type} Details`);
+        });
     });
 
-    $delivery_details_target.on('hide.bs.collapse', function () {
-      $delivery_details_button.text('+ Delivery Details');
+    //----------------------------------------------------- ADD FOOTER BUTTON TOGGLE
+
+    $('.add-footer-toggle-btn').on('click', function() {
+      const $button = $(this);
+      const $target = $('#footer_wrapper_parent_div');
+
+      $target.slideToggle(300, function() {
+        const isVisible = $target.is(':visible');
+        $button.text(isVisible ? '− Remove footer notes' : '+ Add footer notes');
+      });
     });
+
+
 
 
 }

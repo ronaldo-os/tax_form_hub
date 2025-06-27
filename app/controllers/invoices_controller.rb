@@ -5,7 +5,9 @@ class InvoicesController < ApplicationController
 
   def new
     @invoice = Invoice.new
+    @locations_by_type = Location.all.group_by(&:location_type)
   end
+
 
   def create
     @invoice = Invoice.new(invoice_params)
