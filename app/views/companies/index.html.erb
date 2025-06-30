@@ -1,0 +1,202 @@
+<div class="container py-2 py-md-5">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <h1 class="display-2 mb-0">Companies</h1>
+    <button class="btn btn-primary" id="add-new-company-btn" data-bs-toggle="modal" data-bs-target="#companyModal">
+      Add New Company
+    </button>
+  </div>
+  <div class="card">
+    <div class="card-body p-3">
+      <table id="companies-table" class="table table-bordered table-striped">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Company No.</th>
+            <th>Tax No.</th>
+            <th>Country</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @companies.each do |company| %>
+            <tr>
+              <td><%= company.name %></td>
+              <td><%= company.company_number %></td>
+              <td><%= company.tax_number %></td>
+              <td><%= company.country %></td>
+              <td class="text-center align-middle">
+                <div class="dropdown">
+                  <button class="btn btn-link text-dark p-0 text-decoration-none fs-3" type="button" id="actionsDropdown-<%= company.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                    &#8942;
+                  </button>
+
+                  <ul class="dropdown-menu" aria-labelledby="actionsDropdown-<%= company.id %>">
+                    <li>
+                      <%= link_to 'View', '#',
+                        class: 'dropdown-item view-company-btn',
+                        data: {
+                          bs_toggle: "modal",
+                          bs_target: "#viewCompanyModal",
+                          name: company.name,
+                          company_number: company.company_number,
+                          tax_number: company.tax_number,
+                          country: company.country,
+                          address_line1: company.address_line1,
+                          address_line2: company.address_line2,
+                          zip_code: company.zip_code,
+                          city: company.city
+                        } %>
+                    </li>
+
+                    <li>
+                      <%= link_to 'Edit', '#',
+                        class: 'dropdown-item edit-company-btn',
+                        data: {
+                          bs_toggle: "modal",
+                          bs_target: "#companyModal",
+                          id: company.id,
+                          name: h(company.name.to_s),
+                          company_number: h(company.company_number.to_s),
+                          tax_number: h(company.tax_number.to_s),
+                          country: h(company.country.to_s),
+                          address_line1: h(company.address_line1.to_s),
+                          address_line2: h(company.address_line2.to_s),
+                          zip_code: h(company.zip_code.to_s),
+                          city: h(company.city.to_s),
+                          url: company_path(company)
+                        } %>
+                    </li>
+
+                    <li>
+                      <%= link_to 'Delete', company_path(company),
+                        method: :delete,
+                        data: { confirm: 'Are you sure?' },
+                        class: 'dropdown-item text-danger' %>
+                    </li>
+                  </ul>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+</div>
+
+<div class="modal fade" id="companyModal" tabindex="-1" aria-labelledby="companyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="companyModalLabel">Add New Company</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <%= form_with model: Company.new, url: companies_path, local: true, html: { id: "company-form" } do |f| %>
+          <div class="row">
+            <%= hidden_field_tag :_method, 'post', id: 'form-method-field' %>
+            <div class="col-md-6 mb-3">
+              <%= f.label :name %>
+              <%= f.text_field :name, class: "form-control", id: "company_name", required: true %>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <%= f.label :company_number %>
+              <%= f.text_field :company_number, class: "form-control", id: "company_number", required: true %>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <%= f.label :tax_number %>
+              <%= f.text_field :tax_number, class: "form-control", id: "tax_number", required: true %>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <%= f.label(:country) + f.select(:country,
+                options_for_select(["", "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina",
+                  "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium",
+                  "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria",
+                  "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad",
+                  "Chile", "China", "Colombia", "Comoros", "Congo", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic",
+                  "Denmark", "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea",
+                  "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia", "Germany",
+                  "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Honduras", "Hungary",
+                  "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast", "Jamaica", "Japan",
+                  "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan", "Laos", "Latvia", "Lebanon", "Lesotho",
+                  "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg", "Madagascar", "Malawi", "Malaysia", "Maldives",
+                  "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco",
+                  "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands",
+                  "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan",
+                  "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+                  "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa",
+                  "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone",
+                  "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan",
+                  "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan", "Tajikistan", "Tanzania",
+                  "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+                  "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan", "Vanuatu",
+                  "Vatican City", "Venezuela", "Vietnam", "Yemen", "Zambia", "Zimbabwe"], @company&.country),
+                {}, class: "form-select", id: "country") %>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <%= f.label :address_line1 %>
+              <%= f.text_field :address_line1, class: "form-control", id: "address_line1", required: true %>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <%= f.label :address_line2, "Address Line 2 (optional)" %>
+              <%= f.text_field :address_line2, class: "form-control", id: "address_line2" %>
+            </div>
+
+            <div class="col-md-3 mb-3">
+              <%= f.label :zip_code, "ZIP Code" %>
+              <%= f.text_field :zip_code, class: "form-control", id: "zip_code", required: true %>
+            </div>
+
+            <div class="col-md-3 mb-3">
+              <%= f.label :city %>
+              <%= f.text_field :city, class: "form-control", id: "city", required: true %>
+            </div>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <%= submit_tag "Save Company", class: "btn btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="viewCompanyModal" tabindex="-1" aria-labelledby="viewCompanyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="viewCompanyModalLabel">Company Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="px-2">
+          <p class="fw-bold fs-5 mb-1" id="view_name"></p>
+          <p class="mb-1" id="view_address_line1"></p>
+          <p class="mb-1" id="view_address_line2"></p>
+          <p class="mb-1" id="view_zip_code_city"></p>
+          <p class="mb-1" id="view_country"></p>
+
+          <hr class="my-3" />
+
+          <p class="mb-1"><strong>Company number:</strong> <span id="view_company_number"></span></p>
+          <p class="mb-1"><strong>Tax number:</strong> <span id="view_tax_number"></span></p>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

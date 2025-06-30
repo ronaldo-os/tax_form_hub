@@ -20,7 +20,8 @@ Rails.application.routes.draw do
 
   resources :tax_submissions, only: [:new, :create, :show, :destroy]
   resources :invoices, only: [:index, :create, :new, :show]
-  
+  resources :companies
+
   patch '/tax_submissions/:id', to: 'pages#update', as: 'update_tax_submission'
 
   # Optional: health check + PWA
