@@ -1,8 +1,8 @@
 class LocationsController < ApplicationController
-  before_action :set_location, only: %i[ destroy ]
+  before_action :set_location, only: %i[update destroy]
 
   def index
-    @locations = Location.all
+    @locations = current_user.locations
   end
 
   def new
@@ -10,7 +10,7 @@ class LocationsController < ApplicationController
   end
 
   def create
-    @location = Location.new(location_params)
+    @location = current_user.locations.build(location_params)
 
     respond_to do |format|
       if @location.save
@@ -24,14 +24,14 @@ class LocationsController < ApplicationController
   end
 
   def show
-    @location = Location.find(params[:id])
+    @location = current_user.locations.find(params[:id])
     respond_to do |format|
       format.json { render json: @location }
     end
   end
 
   def update
-    @location = Location.find(params[:id])
+    @location = current_user.locations.find(params[:id])
 
     respond_to do |format|
       if @location.update(location_params)
@@ -44,7 +44,6 @@ class LocationsController < ApplicationController
     end
   end
 
-
   def destroy
     @location.destroy!
 
@@ -55,11 +54,15 @@ class LocationsController < ApplicationController
   end
 
   private
-    def set_location
-      @location = Location.find(params[:id])
-    end
 
-    def location_params
-      params.require(:location).permit(:location_type, :location_name, :country, :company_name, :tax_number, :post_box, :street, :building, :additional_street, :zip_code, :city)
-    end
+  def set_location
+    @location = current_user.locations.find(params[:id])
+  end
+
+  def location_params
+    params.require(:location).permit(
+      :location_type, :location_name, :country, :company_name, :tax_number,
+      :post_box, :street, :building, :additional_street, :zip_code, :city
+    )
+  end
 end

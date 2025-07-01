@@ -2,7 +2,7 @@ class CompaniesController < ApplicationController
   before_action :set_company, only: [:update, :show]
 
   def index
-    @companies = Company.all
+    @companies = current_user.companies
   end
 
   def show
@@ -13,13 +13,15 @@ class CompaniesController < ApplicationController
   end
 
   def create
-    @company = Company.new(company_params)
+    @company = current_user.companies.build(company_params)
+
     if @company.save
-      redirect_to companies_path, notice: "Company created successfully."
+      redirect_to companies_path, notice: 'Company was successfully created.'
     else
-      redirect_to companies_path, alert: "Failed to create company."
+      render :index
     end
   end
+
 
   def update
     @company = Company.find(params[:id])

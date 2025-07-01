@@ -1,10 +1,8 @@
 if (window.location.pathname.includes("/invoices")) {
-    $(document).ready(function() {
-        $('#invoice-table').DataTable();
-    });
-
 
     $(document).ready(function () {
+
+        $('#invoice-table').DataTable();
 
         //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
         
@@ -304,6 +302,48 @@ if (window.location.pathname.includes("/invoices")) {
         });
     });
 
+    $('.toggle-location-details').on('click', function (e) {
+      e.preventDefault();
+      const type = $(this).data('type').toLowerCase().replace(/\s+/g, '_');
+      $(`#${type}_selector_wrapper`).toggle();
+    });
+
+    $('.clear-location-details').on('click', function (e) {
+      e.preventDefault();
+      const type = $(this).data('type').toLowerCase().replace(/\s+/g, '_');
+      $(`#${type}_select`).val('');
+      $(`#${type}_details`).hide();
+    });
+
+    $('.location-select').on('change', function () {
+        const type = $(this).data('type').toLowerCase().replace(/\s+/g, '_');
+        const selectedId = $(this).val();
+
+        if (!selectedId) {
+            $(`#${type}_details`).hide();
+            return;
+        }
+
+        $.ajax({
+            url: `/locations/${selectedId}.json`,
+            method: 'GET',
+            success: function (data) {
+            const details = $(`#${type}_details`);
+            details.find('.location_name').text(data.location_name || '');
+            details.find('.company_name').text(data.company_name || '');
+            details.find('.tax_number').text(data.tax_number ? `Tax number : ${data.tax_number}` : '');
+            details.find('.street').text(data.street || '');
+            details.find('.city').text(data.city || '');
+            details.find('.country').text(data.country || '');
+            details.show();
+            },
+            error: function () {
+            alert('Failed to fetch location details.');
+            $(`#${type}_details`).hide();
+            }
+        });
+    });
+
     //----------------------------------------------------- ADD FOOTER BUTTON TOGGLE
 
     $('.add-footer-toggle-btn').on('click', function() {
@@ -317,6 +357,451 @@ if (window.location.pathname.includes("/invoices")) {
     });
 
 
+    $(document).ready(function () {
 
+    const COUNTRY_OPTIONS = [
+        "", "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina",
+        "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados",
+        "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana",
+        "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon",
+        "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)",
+        "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Democratic Republic of the Congo", "Denmark",
+        "Djibouti", "Dominica", "Dominican Republic", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea",
+        "Eritrea", "Estonia", "Eswatini", "Ethiopia", "Fiji", "Finland", "France", "Gabon", "Gambia", "Georgia",
+        "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti",
+        "Honduras", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
+        "Ivory Coast", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
+        "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+        "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania",
+        "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique",
+        "Myanmar (Burma)", "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger",
+        "Nigeria", "North Korea", "North Macedonia", "Norway", "Oman", "Pakistan", "Palau", "Palestine State",
+        "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal", "Qatar", "Romania",
+        "Russia", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa",
+        "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone",
+        "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea",
+        "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria", "Taiwan",
+        "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia",
+        "Turkey", "Turkmenistan", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom",
+        "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+        "Yemen", "Zambia", "Zimbabwe"
+    ];
+
+    const $select = $('#initial_delivery_details_country');
+
+    if ($select.length) {
+      $.each(COUNTRY_OPTIONS, function (i, country) {
+        $select.append($('<option>', {
+          value: country,
+          text: country
+        }));
+      });
+    }
+    
+    const DISCOUNT_OPTIONS =  [
+        "Choose reason code",
+        "Bank Charges",
+        "Customs Duties",
+        "Repair Costs",
+        "Attorney Fees",
+        "Taxes",
+        "Late Delivery",
+        "Freight Costs",
+        "Reason Unknown",
+        "Price Change",
+        "Early payment allowance adjustment",
+        "Quantity Discount",
+        "Pricing Discount",
+        "Volume Discount",
+        "Agreed Discount",
+        "Expediting fee",
+        "Currency exchange differences"
+    ];
+
+    let lineIndex = 1;
+
+    // Utility Functions
+    function updateRemoveButtons() {
+      const isSingleRow = $('#line-items .line-item, #line-items .discount-item').length <= 1;
+      $('#line-items .remove-line').toggle(!isSingleRow);
+    }
+
+    function getDropdownOptions() {
+      const options = [
+        'discount', 'charge', 'bolid', 'fileid', 'taxexemptionreason',
+        'modelname', 'hsnsac', 'documentreference', 'documentlinereference',
+        'accountingcost', 'deliveryaddress', 'actualdeliverydate', 'buyersitemidentification',
+        'origincountry', 'eccn', 'eangtin', 'incoterms', 'manufacturename',
+        'trackingid', 'serialID', 'linenote', 'despatchlinedocumentreference',
+        'despatchlineiddocumentreference', 'receiptlinedocumentreference', 'receiptlineiddocumentreference'
+      ];
+
+      return options.map(opt => `<option value="${opt}">${opt.replace(/([a-z])([A-Z])/g, '$1 $2')}</option>`).join('');
+    }
+
+    function getLineItemHTML(index) {
+      return `
+        <tr class="line-item">
+          <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+          <td><input type="text" class="form-control item-id"></td>
+          <td><input type="text" class="form-control description"></td>
+          <td><input type="number" class="form-control quantity" value="1"></td>
+          <td><input type="text" class="form-control unit" value="pcs"></td>
+          <td><input type="number" class="form-control price" step="0.01"></td>
+          <td><input type="number" class="form-control tax" step="0.01"></td>
+          <td class="text-end total">0.00</td>
+          <td><button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button></td>
+        </tr>
+        <tr class="dropdown_per_line hidden">
+          <td colspan="3">
+            <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select">
+              <option value="">Add optional field</option>
+              ${getDropdownOptions()}
+            </select>
+          </td>
+          <td colspan="6"></td>
+        </tr>
+      `;
+    }
+
+    
+    // Event Listeners
+    $('#add-line').on('click', function () {
+      $('#line-items').append(getLineItemHTML(lineIndex++));
+      updateRemoveButtons();
+    });
+
+    $(document).on('click', '.toggle-dropdown', function () {
+      const $btn = $(this);
+      const $currentLineItem = $btn.closest('tr');
+      let $next = $currentLineItem.next();
+      const $toggleRows = [];
+
+      while ($next.length && !$next.hasClass('line-item')) {
+        if ($next.hasClass('optional-field-row') || $next.hasClass('dropdown_per_line')) {
+          $toggleRows.push($next);
+        }
+        $next = $next.next();
+      }
+
+      const shouldShow = $toggleRows.length > 0 && !$toggleRows[0].is(':visible');
+      $toggleRows.forEach($row => $row.toggle(shouldShow));
+      $btn.text(shouldShow ? '−' : '+');
+    });
+
+
+    $(document).on('click', '.remove-line', function () {
+      const $lineItem = $(this).closest('tr');
+
+      let $next = $lineItem.next();
+      const $relatedRows = [];
+
+      while ($next.length && !$next.hasClass('line-item')) {
+        if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
+          $relatedRows.push($next);
+        }
+        $next = $next.next();
+      }
+
+      $lineItem.remove();
+      $relatedRows.forEach($row => $row.remove());
+
+      updateRemoveButtons();
+    });
+
+
+    
+    // Initialization   
+    updateRemoveButtons();
+
+   const discount_fieldTypeMap = {
+    discount: [
+      { name: "discount.discount_type", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 3 },
+      { name: "discount.discount_type_edit", label: "Edit type (if needed)", type: "text", cols: 3 },
+      { name: "discount.qty", label: "Quantity", type: "text", cols: 2 },
+      { name: "discount.currency", label: "Currency", type: "select", options: ["PHP", "USD"], cols: 2 },
+      { name: "discount.price_per_unit", label: "Price per unit", type: "text", cols: 2, disabled: true }
+    ],
+    charge: [
+      { name: "charge.charge_type", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 3 },
+      { name: "charge.charge_type_edit", label: "Edit type (if needed)", type: "text", cols: 3 },
+      { name: "charge.qty", label: "Quantity", type: "text", cols: 2 },
+      { name: "charge.currency", label: "Currency", type: "select", options: ["%", "PHP"], cols: 2 },
+      { name: "charge.price_per_unit", label: "Price per unit", type: "text", cols: 2, disabled: true }
+    ],
+    bolid: [
+      { name: "bolid.transport_reference", label: "Transport Reference", type: "text", cols: 4 }
+    ],
+    fileid: [
+      { name: "fileid.file_id", label: "File ID", type: "text", cols: 4 }
+    ],
+    taxexemptionreason: [
+      { name: "taxexemptionreason.tax_exemption_reason", label: "Tax exemption reason", type: "text", cols: 4 }
+    ],
+    modelname: [
+      { name: "modelname.model_name", label: "Model name", type: "text", cols: 4 }
+    ],
+    hsnsac: [
+      { name: "hsnsac.hsn_sac", label: "HSN/SAC", type: "select" , options: ["HSN", "SAC"], cols: 4 },
+      { name: "hsnsac.qty", label: "Quantity", type: "text", cols: 4 },
+    ],
+    documentreference: [
+      { name: "documentreference.purchase_order_number", label: "Purchase order number", type: "text", cols: 4 }
+    ],
+    documentlinereference: [
+      { name: "documentlinereference.purchase_order_line_number", label: "Purchase order line number", type: "text", cols: 4 }
+    ],
+    accountingcost: [
+      { name: "accountingcost.cost_center", label: "Cost center", type: "text", cols: 4 }
+    ],
+    deliveryaddress: [
+      {
+        name: "deliveryaddress.country_origin",
+        label: "Country/Region",
+        type: "select",
+        options: COUNTRY_OPTIONS,
+        cols: 4
+      },
+      { name: "deliveryaddress.postbox", label: "Postbox", type: "text", cols: 4 },
+      { name: "deliveryaddress.street", label: "Street", type: "text", cols: 4 },
+      { name: "deliveryaddress.number", label: "Number", type: "text", cols: 4 },
+      { name: "deliveryaddress.locality_name", label: "Locality name", type: "text", cols: 4 },
+      { name: "deliveryaddress.postal_zipcode", label: "Postal/ZIP", type: "text", cols: 4 },
+      { name: "deliveryaddress.city", label: "City", type: "text", cols: 4 },
+      { name: "deliveryaddress.location_id", label: "Location Id", type: "text", cols: 4 },
+    ],
+    actualdeliverydate: [
+      { name: "actualdeliverydate.delivery_date", label: "Delivery Date", type: "date", cols: 4 }
+    ],
+    buyersitemidentification: [
+      { name: "buyersitemidentification.buyer_material_number", label: "Buyer material number", type: "text", cols: 4 }
+    ],
+    origincountry: [
+      {
+        name: "origincountry.country_origin",
+        label: "Country of origin",
+        type: "select",
+        options: COUNTRY_OPTIONS,
+        cols: 4
+      }
+    ],
+    eccn: [
+      { name: "eccn.commodity_classification", label: "Commodity classification: ECCN", type: "text", cols: 4 }
+    ],
+    eangtin: [
+      { name: "eangtin.ean_gtin", label: "EAN/GTIN", type: "text", cols: 4 }
+    ],
+    incoterms: [
+      { name: "incoterms.delivery_terms", label: "Delivery Terms", type: "text", cols: 4 }
+    ],
+    manufacturename: [
+      { name: "manufacturename.manufacture_name", label: "Manufacture name", type: "text", cols: 4 }
+    ],
+    trackingid: [
+      { name: "trackingid.freight_order_number", label: "Freight order number", type: "text", cols: 4 }
+    ],
+    serialID: [
+      { name: "serialID.serial_id", label: "Serial number", type: "text", cols: 4 }
+    ],
+    linenote: [
+      { name: "linenote.note", label: "Notes", type: "text", cols: 4 }
+    ],
+    despatchlinedocumentreference: [
+      { name: "despatchlinedocumentreference.shipping_notice_reference", label: "Shipping Notice Reference", type: "text", cols: 4 }
+    ],
+    despatchlineiddocumentreference: [
+      { name: "despatchlineiddocumentreference.shipping_notice_line_reference", label: "Shipping Notice Line Reference", type: "text", cols: 4 }
+    ],
+    receiptlinedocumentreference: [
+      { name: "receiptlinedocumentreference.receipt_reference", label: "Goods Receipt Reference", type: "text", cols: 4 }
+    ],
+    receiptlineiddocumentreference: [
+      { name: "receiptlineiddocumentreference.receipt_line_reference", label: "Goods Receipt Line Reference", type: "text", cols: 4 }
+    ],
+  };
+
+  $(document).on('change', 'select[name^="optional_fields"]', function () {
+    const $select = $(this);
+    const selectedValue = $select.val();
+    const $rowGroup = $select.closest('tr.optional-field-row');
+
+    if ($select.attr('name').includes('discount.discount_type')) {
+      const $editInput = $rowGroup.find('input[name^="optional_fields"][name*="discount.discount_type_edit"]');
+      if ($editInput.length > 0) {
+        $editInput.val(selectedValue);
+      }
+    }
+
+    if ($select.attr('name').includes('charge.charge_type')) {
+      const $editInput = $rowGroup.find('input[name^="optional_fields"][name*="charge.charge_type_edit"]');
+      if ($editInput.length > 0) {
+        $editInput.val(selectedValue);
+      }
+    }
+  });
+
+
+  $(document).on('change', 'select[id^="additional_field_"]', function () {
+    const $select = $(this);
+    const selectedKey = $select.val();
+    const selectedText = $select.find("option:selected").text();
+    if (!selectedKey) return;
+
+    const $dropdownRow = $select.closest('tr.dropdown_per_line');
+    const $lineItemRow = $dropdownRow.prev('.line-item');
+    const rowIndex = $('tr.line-item').index($lineItemRow);
+
+    // Prevent duplicate field groups in the same line item
+    const duplicate = $(`tr.optional-field-row[data-optional-group="${selectedKey}"][data-line-index="${rowIndex}"]`);
+    if (duplicate.length > 0) {
+        alert("This field group has already been added to this line item.");
+        $select.val('');
+        return;
+    }
+
+    const fields = discount_fieldTypeMap[selectedKey];
+    if (!Array.isArray(fields)) return;
+
+    let newRowHtml = `
+        <tr class="optional-field-row" data-optional-group="${selectedKey}" data-line-index="${rowIndex}">
+        <td colspan="9">
+            <div class="p-2 border rounded bg-light mb-2">
+            <p class="fs-5 mb-3 d-flex justify-content-between align-items-center">
+                ${selectedText.toUpperCase()}
+                <button type="button" class="btn btn-sm btn-outline-danger remove-group ms-2">×</button>
+            </p>
+            <div class="row g-3">`;
+
+    fields.forEach(field => {
+        const colClass = `col-md-${field.cols || 6} ${field.class || ''}`.trim();
+        let inputHtml = '';
+
+        if (field.type === "select") {
+        const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+        inputHtml = `<select name="optional_fields[${rowIndex}][${field.name}]" class="form-select"${field.disabled ? ' disabled' : ''}>${optionsHtml}</select>`;
+        } else if (field.type === "textarea") {
+        inputHtml = `<textarea name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}></textarea>`;
+        } else {
+        inputHtml = `<input type="${field.type}" name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}>`;
+        }
+
+        newRowHtml += `
+        <div class="${colClass}">
+            <div class="d-flex flex-column">
+            <label class="form-label text-start w-100">${field.label}</label>
+            ${inputHtml}
+            </div>
+        </div>`;
+    });
+
+    newRowHtml += `
+            </div>
+            </div>
+        </td>
+        </tr>`;
+
+    $dropdownRow.before(newRowHtml);
+    $select.val('');
+    });
+
+
+  // Remove dynamically added group
+  $(document).on('click', '.remove-group', function () {
+    $(this).closest('tr.optional-field-row').remove();
+  });
+
+
+  // Add header button 
+  $('#add-discount-row').on('click', function () {
+      const newRow = `
+        <tr class="discount-item">
+          <td class="align-top"></td>
+          <td class="align-top">
+            <select name="price_adjustment_discount" class="form-select">
+              <option value="true">Discount</option>
+              <option value="false">Charge</option>
+              <option value="fixedtax">Fixed Tax</option>
+            </select>
+          </td>
+          <td class="align-top">
+            <input type="text" class="form-control description mb-2">
+            <select name="price_adjustment_discount_type" class="form-select">
+              <option value="Choose reason code" disabled selected>Choose reason code</option>
+              <option value="Bank Charges">Bank Charges</option>
+              <option value="Customs Duties">Customs Duties</option>
+              <option value="Repair Costs">Repair Costs</option>
+              <option value="Attorney Fees">Attorney Fees</option>
+              <option value="Taxes">Taxes</option>
+              <option value="Late Delivery">Late Delivery</option>
+              <option value="Freight Costs">Freight Costs</option>
+              <option value="Reason Unknown">Reason Unknown</option>
+              <option value="Price Change">Price Change</option>
+              <option value="Early payment allowance adjustment">Early payment allowance adjustment</option>
+              <option value="Quantity Discount">Quantity Discount</option>
+              <option value="Pricing Discount">Pricing Discount</option>
+              <option value="Volume Discount">Volume Discount</option>
+              <option value="Agreed Discount">Agreed Discount</option>
+              <option value="Expediting fee">Expediting fee</option>
+              <option value="Currency exchange differences">Currency exchange differences</option>
+            </select>
+          </td>
+          <td class="align-top">
+            <input type="number" class="form-control quantity" value="1">
+          </td>
+          <td class="align-top">
+            <select name="price_adjustment_unit_type" class="form-select">
+              <option value="true">%</option>
+              <option value="false">PHP</option>
+            </select>
+          </td>
+          <td class="align-top"></td>
+          <td class="align-top">
+            <input type="number" class="form-control tax" step="0.01">
+          </td>
+          <td class="align-top text-end total">0.00</td>
+          <td class="align-top">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
+          </td>
+        </tr>
+      `;
+
+      $('#line-items').append(newRow);
+      updateRemoveButtons(); 
+    });
+
+    $('#line-items').on('click', '.remove-line', function () {
+      $(this).closest('tr').remove();
+      updateRemoveButtons();
+    });
+  });
+
+  // Toggle base quantity column button 
+  let baseQuantityVisible = false;
+
+  $('#add-base-quantity').on('click', function () {
+    baseQuantityVisible = !baseQuantityVisible;
+
+    const $theadRow = $('.invoice-table thead tr');
+    const $headerCells = $theadRow.find('th');
+
+    if (baseQuantityVisible) {
+      $(this).text('Hide Base Quantity Column');
+      $headerCells.eq(5).text('Price');
+      $('<th class="base-quantity-header">Price per Quantity</th>').insertAfter($headerCells.eq(5));
+
+      $('.line-item').each(function () {
+        $('<td class="base-quantity-cell"><input type="number" name="price_per_quantity" class="form-control price-per-quantity" step="0.01"></td>')
+          .insertAfter($(this).find('td').eq(5));
+      });
+
+      $('.optional-field-row td[colspan]').attr('colspan', 10);
+    } else {
+      $(this).text('Show Base Quantity Column');
+      $headerCells.eq(5).text('Price per unit');
+      $('.base-quantity-header').remove();
+      $('.base-quantity-cell').remove();
+      $('.optional-field-row td[colspan]').attr('colspan', 9);
+    }
+  });
 
 }
