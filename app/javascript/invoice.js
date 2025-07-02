@@ -5,6 +5,7 @@ if (window.location.pathname.includes("/invoices")) {
     $(document).ready(function () {
 
         $('#invoice-table').DataTable();
+        recalculateTotals();
 
         //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
         
@@ -709,9 +710,7 @@ if (window.location.pathname.includes("/invoices")) {
             </select>
           </td>
           <td class="align-top"></td>
-          <td class="align-top">
-            <input type="number" class="form-control tax" step="0.01">
-          </td>
+          <td class="align-top"></td>
           <td class="align-top text-end total">0.00</td>
           <td class="align-top">
             <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
@@ -757,5 +756,89 @@ if (window.location.pathname.includes("/invoices")) {
       $('.optional-field-row td[colspan]').attr('colspan', 9);
     }
   });
+
+  $(document).on('change', 'select[name="price_adjustment_discount_type"]', function () {
+    const selectedText = $(this).find('option:selected').text();
+    const $descriptionInput = $(this).siblings('input.description');
+
+    $descriptionInput.val(selectedText);
+  });
+
+
+
+  function recalculateTotals() {
+    let subtotal = 0;
+    let totalTax = 0;
+    let discountAmount = 0;
+    let chargeAmount = 0;
+    let fixedTax = 0;
+
+    // Line Items Calculation
+    $('#line-items .line-item').each(function () {
+      const $row = $(this);
+      const qty = parseFloat($row.find('.quantity').val()) || 0;
+      const price = parseFloat(
+        $row.find('.price-per-quantity').length && $row.find('.price-per-quantity').val()
+          ? $row.find('.price-per-quantity').val()
+          : $row.find('.price').val()
+      ) || 0;
+      const taxRate = parseFloat($row.find('.tax').val()) || 0;
+
+      const lineTotal = qty * price;
+      const taxAmount = lineTotal * (taxRate / 100);
+
+      $row.find('.total').text(lineTotal.toFixed(2));
+
+      subtotal += lineTotal;
+      totalTax += taxAmount;
+    });
+
+    // Discount / Charge / Fixed Tax Items
+    $('#line-items .discount-item').each(function () {
+      const $row = $(this);
+      const qty = parseFloat($row.find('.quantity').val()) || 1;
+      const type = $row.find('select[name="price_adjustment_discount"]').val(); // "true", "false", "fixedtax"
+      const isPercent = $row.find('select[name="price_adjustment_unit_type"]').val() === "true";
+
+      // Discount is applied on the current subtotal
+      let value = 0;
+      if (isPercent) {
+        value = subtotal * (qty / 100);
+      } else {
+        value = qty;
+      }
+
+      if (type === "true") {
+        // Discount
+        discountAmount += value;
+        $row.find('.total').text(`-${value.toFixed(2)}`);
+      } else if (type === "false") {
+        // Charge
+        chargeAmount += value;
+        $row.find('.total').text(`+${value.toFixed(2)}`);
+      } else if (type === "fixedtax") {
+        // Fixed Tax
+        fixedTax += value;
+        $row.find('.total').text(`+${value.toFixed(2)}`);
+      }
+    });
+
+    const adjustedSubtotal = subtotal - discountAmount + chargeAmount;
+    const grandTotal = adjustedSubtotal + totalTax + fixedTax;
+
+    $('.subtotal-amount').text(adjustedSubtotal.toFixed(2));
+    $('.total-tax-amount').text((totalTax + fixedTax).toFixed(2));
+    $('.grand-total-amount').text(grandTotal.toFixed(2));
+  }
+
+
+  $(document).on('input change', '#line-items .line-item input, #line-items .discount-item input, #line-items .discount-item select', function () {
+    recalculateTotals();
+  });
+
+
+
+
+
 
 }
