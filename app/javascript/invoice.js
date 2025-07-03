@@ -445,24 +445,6 @@ if (window.location.pathname.includes("/invoices")) {
     });
 
 
-    $(document).on('click', '.remove-line', function () {
-      const $lineItem = $(this).closest('tr');
-
-      let $next = $lineItem.next();
-      const $relatedRows = [];
-
-      while ($next.length && !$next.hasClass('line-item')) {
-        if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
-          $relatedRows.push($next);
-        }
-        $next = $next.next();
-      }
-
-      $lineItem.remove();
-      $relatedRows.forEach($row => $row.remove());
-
-      updateRemoveButtons();
-    });
 
 
     
@@ -723,9 +705,24 @@ if (window.location.pathname.includes("/invoices")) {
     });
 
     $('#line-items').on('click', '.remove-line', function () {
-      $(this).closest('tr').remove();
+      const $lineItem = $(this).closest('tr');
+
+      let $next = $lineItem.next();
+      const $relatedRows = [];
+
+      while ($next.length && !$next.hasClass('line-item')) {
+        if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
+          $relatedRows.push($next);
+        }
+        $next = $next.next();
+      }
+
+      $lineItem.remove();
+      $relatedRows.forEach($row => $row.remove());
+
       updateRemoveButtons();
     });
+
   });
 
   // Toggle base quantity column button 
@@ -755,6 +752,8 @@ if (window.location.pathname.includes("/invoices")) {
       $('.base-quantity-cell').remove();
       $('.optional-field-row td[colspan]').attr('colspan', 9);
     }
+
+    recalculateTotals();
   });
 
   $(document).on('change', 'select[name="price_adjustment_discount_type"]', function () {
@@ -777,14 +776,23 @@ if (window.location.pathname.includes("/invoices")) {
     $('#line-items .line-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 0;
-      const price = parseFloat(
-        $row.find('.price-per-quantity').length && $row.find('.price-per-quantity').val()
-          ? $row.find('.price-per-quantity').val()
-          : $row.find('.price').val()
-      ) || 0;
+      const price = parseFloat($row.find('.price').val()) || 0;
+      const pricePerQty = parseFloat($row.find('.price-per-quantity').val()) || 0;
       const taxRate = parseFloat($row.find('.tax').val()) || 0;
 
-      const lineTotal = qty * price;
+      let lineTotal = 0;
+
+      // If price-per-quantity is visible and non-zero, use adjusted formula
+      if (
+        $row.find('.price-per-quantity').is(':visible') &&
+        !isNaN(pricePerQty) &&
+        pricePerQty !== 0
+      ) {
+        lineTotal = (qty * price) / pricePerQty;
+      } else {
+        lineTotal = qty * price;
+      }
+
       const taxAmount = lineTotal * (taxRate / 100);
 
       $row.find('.total').text(lineTotal.toFixed(2));
@@ -800,7 +808,6 @@ if (window.location.pathname.includes("/invoices")) {
       const type = $row.find('select[name="price_adjustment_discount"]').val(); // "true", "false", "fixedtax"
       const isPercent = $row.find('select[name="price_adjustment_unit_type"]').val() === "true";
 
-      // Discount is applied on the current subtotal
       let value = 0;
       if (isPercent) {
         value = subtotal * (qty / 100);
@@ -809,15 +816,12 @@ if (window.location.pathname.includes("/invoices")) {
       }
 
       if (type === "true") {
-        // Discount
         discountAmount += value;
         $row.find('.total').text(`-${value.toFixed(2)}`);
       } else if (type === "false") {
-        // Charge
         chargeAmount += value;
         $row.find('.total').text(`+${value.toFixed(2)}`);
       } else if (type === "fixedtax") {
-        // Fixed Tax
         fixedTax += value;
         $row.find('.total').text(`+${value.toFixed(2)}`);
       }
@@ -832,11 +836,13 @@ if (window.location.pathname.includes("/invoices")) {
   }
 
 
-  $(document).on('input change', '#line-items .line-item input, #line-items .discount-item input, #line-items .discount-item select', function () {
-    recalculateTotals();
-  });
-
-
+  $(document).on(
+    'input change',
+    '#line-items .line-item input, #line-items .discount-item input, #line-items .discount-item select',
+    function () {
+      recalculateTotals();
+    }
+  );
 
 
 
