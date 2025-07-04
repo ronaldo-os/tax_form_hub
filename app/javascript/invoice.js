@@ -396,7 +396,7 @@ if (window.location.pathname.includes("/invoices")) {
 
     function getLineItemHTML(index) {
       return `
-        <tr class="line-item">
+        <tr class="line-item" data-line-index="${index}">
           <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
           <td><input type="text" class="form-control item-id"></td>
           <td><input type="text" class="form-control description"></td>
@@ -455,16 +455,14 @@ if (window.location.pathname.includes("/invoices")) {
     discount: [
       { name: "discount.discount_type", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 3 },
       { name: "discount.discount_type_edit", label: "Edit type (if needed)", type: "text", cols: 3 },
-      { name: "discount.qty", label: "Quantity", type: "text", cols: 2 },
-      { name: "discount.currency", label: "Currency", type: "select", options: ["PHP", "USD"], cols: 2 },
-      { name: "discount.price_per_unit", label: "Price per unit", type: "text", cols: 2, disabled: true }
+      { name: "discount.qty", label: "Quantity", type: "text", cols: 3 },
+      { name: "discount.currency", label: "Unit", type: "select", options: ["PHP", "%"], cols: 3 },
     ],
     charge: [
       { name: "charge.charge_type", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 3 },
       { name: "charge.charge_type_edit", label: "Edit type (if needed)", type: "text", cols: 3 },
-      { name: "charge.qty", label: "Quantity", type: "text", cols: 2 },
-      { name: "charge.currency", label: "Currency", type: "select", options: ["%", "PHP"], cols: 2 },
-      { name: "charge.price_per_unit", label: "Price per unit", type: "text", cols: 2, disabled: true }
+      { name: "charge.qty", label: "Quantity", type: "text", cols: 3 },
+      { name: "charge.currency", label: "Unit", type: "select", options: ["PHP", "%"], cols: 3 },
     ],
     bolid: [
       { name: "bolid.transport_reference", label: "Transport Reference", type: "text", cols: 4 }
@@ -586,15 +584,7 @@ if (window.location.pathname.includes("/invoices")) {
 
     const $dropdownRow = $select.closest('tr.dropdown_per_line');
     const $lineItemRow = $dropdownRow.prev('.line-item');
-    const rowIndex = $('tr.line-item').index($lineItemRow);
-
-    // Prevent duplicate field groups in the same line item
-    const duplicate = $(`tr.optional-field-row[data-optional-group="${selectedKey}"][data-line-index="${rowIndex}"]`);
-    if (duplicate.length > 0) {
-        alert("This field group has already been added to this line item.");
-        $select.val('');
-        return;
-    }
+    const rowIndex = $lineItemRow.data('line-index');
 
     const fields = discount_fieldTypeMap[selectedKey];
     if (!Array.isArray(fields)) return;
@@ -639,7 +629,7 @@ if (window.location.pathname.includes("/invoices")) {
 
     $dropdownRow.before(newRowHtml);
     $select.val('');
-    });
+  });
 
 
   // Remove dynamically added group
@@ -764,7 +754,6 @@ if (window.location.pathname.includes("/invoices")) {
   });
 
 
-
   function recalculateTotals() {
     let subtotal = 0;
     let totalTax = 0;
@@ -772,7 +761,7 @@ if (window.location.pathname.includes("/invoices")) {
     let chargeAmount = 0;
     let fixedTax = 0;
 
-    // Line Items Calculation
+    // Line Items Calculation (with per-line discount/charge)
     $('#line-items .line-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 0;
@@ -780,8 +769,41 @@ if (window.location.pathname.includes("/invoices")) {
       const pricePerQty = parseFloat($row.find('.price-per-quantity').val()) || 0;
       const taxRate = parseFloat($row.find('.tax').val()) || 0;
 
-      let lineTotal = 0;
+      // --- Per-line discount/charge logic
+      let $discountRow = $row.nextAll('.optional-field-row[data-optional-group="discount"]').first();
+      let $chargeRow = $row.nextAll('.optional-field-row[data-optional-group="charge"]').first();
 
+      let discount = 0;
+      if ($discountRow.length) {
+        let dval = parseFloat($discountRow.find('input[name*="discount.qty"]').val()) || 0;
+        let unit = $discountRow.find('select[name*="discount.currency"]').val();
+        let base = 0;
+        if (unit === "%") {
+          base = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
+            ? (qty * price) / pricePerQty
+            : qty * price;
+          discount = base * (dval / 100);
+        } else {
+          discount = dval;
+        }
+      }
+
+      let charge = 0;
+      if ($chargeRow.length) {
+        let cval = parseFloat($chargeRow.find('input[name*="charge.qty"]').val()) || 0;
+        let unit = $chargeRow.find('select[name*="charge.currency"]').val();
+        let base = 0;
+        if (unit === "%") {
+          base = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
+            ? (qty * price) / pricePerQty
+            : qty * price;
+          charge = base * (cval / 100);
+        } else {
+          charge = cval;
+        }
+      }
+
+      let lineTotal = 0;
       // If price-per-quantity is visible and non-zero, use adjusted formula
       if (
         $row.find('.price-per-quantity').is(':visible') &&
@@ -793,6 +815,9 @@ if (window.location.pathname.includes("/invoices")) {
         lineTotal = qty * price;
       }
 
+      // Apply per-line charge/discount
+      lineTotal = lineTotal + charge - discount;
+
       const taxAmount = lineTotal * (taxRate / 100);
 
       $row.find('.total').text(lineTotal.toFixed(2));
@@ -801,7 +826,7 @@ if (window.location.pathname.includes("/invoices")) {
       totalTax += taxAmount;
     });
 
-    // Discount / Charge / Fixed Tax Items
+    // Discount / Charge / Fixed Tax Items (global)
     $('#line-items .discount-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 1;
@@ -835,16 +860,13 @@ if (window.location.pathname.includes("/invoices")) {
     $('.grand-total-amount').text(grandTotal.toFixed(2));
   }
 
-
   $(document).on(
     'input change',
-    '#line-items .line-item input, #line-items .discount-item input, #line-items .discount-item select',
+    '#line-items .line-item input, #line-items .discount-item input, #line-items .discount-item select, .optional-field-row input, .optional-field-row select',
     function () {
       recalculateTotals();
     }
   );
-
-
 
 
 }
