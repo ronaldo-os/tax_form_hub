@@ -453,16 +453,19 @@ if (window.location.pathname.includes("/invoices")) {
 
    const discount_fieldTypeMap = {
     discount: [
-      { name: "discount.discount_type", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 3 },
-      { name: "discount.discount_type_edit", label: "Edit type (if needed)", type: "text", cols: 3 },
-      { name: "discount.qty", label: "Quantity", type: "text", cols: 3 },
-      { name: "discount.currency", label: "Unit", type: "select", options: ["PHP", "%"], cols: 3 },
+      { name: "discount.discount_type", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
+      { name: "discount.discount_type_edit", label: "Edit type (if needed)", type: "text", cols: 4 },
+      { name: "discount.qty", label: "Quantity", type: "text", cols: 2 },
+      { name: "discount.unit", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
+      { name: "discount.total", label: "Total", type: "text_only", cols: 2 },
+
     ],
     charge: [
-      { name: "charge.charge_type", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 3 },
-      { name: "charge.charge_type_edit", label: "Edit type (if needed)", type: "text", cols: 3 },
-      { name: "charge.qty", label: "Quantity", type: "text", cols: 3 },
-      { name: "charge.currency", label: "Unit", type: "select", options: ["PHP", "%"], cols: 3 },
+      { name: "charge.charge_type", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
+      { name: "charge.charge_type_edit", label: "Edit type (if needed)", type: "text", cols: 4 },
+      { name: "charge.qty", label: "Quantity", type: "text", cols: 2 },
+      { name: "charge.unit", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
+      { name: "charge.total", label: "Total", type: "text_only", cols: 2 },
     ],
     bolid: [
       { name: "bolid.transport_reference", label: "Transport Reference", type: "text", cols: 4 }
@@ -604,12 +607,15 @@ if (window.location.pathname.includes("/invoices")) {
         let inputHtml = '';
 
         if (field.type === "select") {
-        const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
-        inputHtml = `<select name="optional_fields[${rowIndex}][${field.name}]" class="form-select"${field.disabled ? ' disabled' : ''}>${optionsHtml}</select>`;
+            const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+            inputHtml = `<select name="optional_fields[${rowIndex}][${field.name}]" class="form-select"${field.disabled ? ' disabled' : ''}>${optionsHtml}</select>`;
         } else if (field.type === "textarea") {
-        inputHtml = `<textarea name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}></textarea>`;
+            inputHtml = `<textarea name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}></textarea>`;
+        } else if (field.type === "text_only") {
+            // Render a span for displaying the computed total
+            inputHtml = `<span class="form-control-plaintext optional-total" data-total-type="${selectedKey}" data-line-index="${rowIndex}">0.00</span>`;
         } else {
-        inputHtml = `<input type="${field.type}" name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}>`;
+            inputHtml = `<input type="${field.type}" name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}>`;
         }
 
         newRowHtml += `
@@ -620,7 +626,6 @@ if (window.location.pathname.includes("/invoices")) {
             </div>
         </div>`;
     });
-
     newRowHtml += `
             </div>
             </div>
@@ -711,6 +716,7 @@ if (window.location.pathname.includes("/invoices")) {
       $relatedRows.forEach($row => $row.remove());
 
       updateRemoveButtons();
+      recalculateTotals();
     });
 
   });
@@ -761,7 +767,7 @@ if (window.location.pathname.includes("/invoices")) {
     let chargeAmount = 0;
     let fixedTax = 0;
 
-    // Line Items Calculation (with per-line discount/charge)
+    // Calculate each line-item total
     $('#line-items .line-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 0;
@@ -769,76 +775,55 @@ if (window.location.pathname.includes("/invoices")) {
       const pricePerQty = parseFloat($row.find('.price-per-quantity').val()) || 0;
       const taxRate = parseFloat($row.find('.tax').val()) || 0;
 
-      // --- Per-line discount/charge logic
-      let $discountRow = $row.nextAll('.optional-field-row[data-optional-group="discount"]').first();
-      let $chargeRow = $row.nextAll('.optional-field-row[data-optional-group="charge"]').first();
+      // Find related discount/charge rows for this line
+      const lineIndex = $row.data('line-index');
+      let $discountRow = $(`#line-items .optional-field-row[data-optional-group="discount"][data-line-index="${lineIndex}"]`);
+      let $chargeRow = $(`#line-items .optional-field-row[data-optional-group="charge"][data-line-index="${lineIndex}"]`);
 
       let discount = 0;
       if ($discountRow.length) {
-        let dval = parseFloat($discountRow.find('input[name*="discount.qty"]').val()) || 0;
-        let unit = $discountRow.find('select[name*="discount.currency"]').val();
-        let base = 0;
-        if (unit === "%") {
-          base = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
-            ? (qty * price) / pricePerQty
-            : qty * price;
-          discount = base * (dval / 100);
-        } else {
-          discount = dval;
-        }
+        const dval = parseFloat($discountRow.find('input[name*="discount.qty"]').val()) || 0;
+        const unit = $discountRow.find('select[name*="discount.unit"]').val();
+        const base = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
+          ? (qty * price) / pricePerQty
+          : qty * price;
+        discount = (unit === "%") ? base * (dval / 100) : dval;
+        $discountRow.find('.optional-total[data-total-type="discount"]').text(discount.toFixed(2));
       }
 
       let charge = 0;
       if ($chargeRow.length) {
-        let cval = parseFloat($chargeRow.find('input[name*="charge.qty"]').val()) || 0;
-        let unit = $chargeRow.find('select[name*="charge.currency"]').val();
-        let base = 0;
-        if (unit === "%") {
-          base = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
-            ? (qty * price) / pricePerQty
-            : qty * price;
-          charge = base * (cval / 100);
-        } else {
-          charge = cval;
-        }
+        const cval = parseFloat($chargeRow.find('input[name*="charge.qty"]').val()) || 0;
+        const unit = $chargeRow.find('select[name*="charge.unit"]').val();
+        const base = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
+          ? (qty * price) / pricePerQty
+          : qty * price;
+        charge = (unit === "%") ? base * (cval / 100) : cval;
+        $chargeRow.find('.optional-total[data-total-type="charge"]').text(charge.toFixed(2));
       }
 
-      let lineTotal = 0;
-      // If price-per-quantity is visible and non-zero, use adjusted formula
-      if (
-        $row.find('.price-per-quantity').is(':visible') &&
-        !isNaN(pricePerQty) &&
-        pricePerQty !== 0
-      ) {
-        lineTotal = (qty * price) / pricePerQty;
-      } else {
-        lineTotal = qty * price;
-      }
-
-      // Apply per-line charge/discount
+      // Calculate line total
+      let lineTotal = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
+        ? (qty * price) / pricePerQty
+        : qty * price;
       lineTotal = lineTotal + charge - discount;
 
-      const taxAmount = lineTotal * (taxRate / 100);
-
+      // Update the .total cell for this line
       $row.find('.total').text(lineTotal.toFixed(2));
 
+      // Add to subtotal and tax
       subtotal += lineTotal;
-      totalTax += taxAmount;
+      totalTax += lineTotal * (taxRate / 100);
     });
 
-    // Discount / Charge / Fixed Tax Items (global)
+    // Global discount/charge/fixed tax items
     $('#line-items .discount-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 1;
-      const type = $row.find('select[name="price_adjustment_discount"]').val(); // "true", "false", "fixedtax"
+      const type = $row.find('select[name="price_adjustment_discount"]').val();
       const isPercent = $row.find('select[name="price_adjustment_unit_type"]').val() === "true";
 
-      let value = 0;
-      if (isPercent) {
-        value = subtotal * (qty / 100);
-      } else {
-        value = qty;
-      }
+      let value = isPercent ? subtotal * (qty / 100) : qty;
 
       if (type === "true") {
         discountAmount += value;
