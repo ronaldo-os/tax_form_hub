@@ -68,3 +68,11 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 .hidden{
   display: none;
 }
+
+.form-group{
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+}

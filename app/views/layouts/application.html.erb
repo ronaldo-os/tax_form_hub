@@ -53,7 +53,6 @@
               <ul class="dropdown-menu" aria-labelledby="invoiceDropdown">
                 <li><%= link_to 'Invoices', invoices_path, class: 'dropdown-item' %></li>
                 <li><%= link_to 'Locations', locations_path, class: 'dropdown-item' %></li>
-                <li><%= link_to 'Company Management', companies_path, class: 'dropdown-item' %></li>
               </ul>
             </li>
           </div>
@@ -74,6 +73,7 @@
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li><%= link_to "Edit Profile", edit_profile_path, class: "dropdown-item" %></li>
+                <li><%= link_to 'Company Profile', companies_path, class: 'dropdown-item' %></li>
                 <li>
                   <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "dropdown-item text-danger", form: { class: "d-inline" } %>
                 </li>
