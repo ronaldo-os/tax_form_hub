@@ -1,11 +1,9 @@
 <div class="container py-2 py-md-5">
   <div class="d-flex justify-content-between align-items-end mb-3">
-    <h1 class="display-2 mb-0">Company Profile</h1>
+    <h1 class="display-2 mb-0">Edit Company Profile</h1>
   </div>
 
-
   <div class="row mt-4">
-    
     <div class="col-md-3">
       <div class="card shadow-sm">
         <div class="card-body">
@@ -15,24 +13,34 @@
               <li>
                 <a href="#" id="company_connections" class="d-flex align-items-center">
                   <i class="fa-solid fa-link me-2"></i>
-                  <p id="company_connections_text" class="mb-0 d-inline">1 Connection</p>
+                  <p id="company_connections_text" class="mb-0 d-inline">
+                    <%# <%= pluralize(@company.connections.count, "Connection") %> %>
+                  </p>
                 </a>
               </li>
               <li class="mt-2 d-flex align-items-center">
                 <i class="fa-solid fa-laptop me-2"></i>
-                <p id="company_industry_text" class="mb-0 d-inline">Software and IT</p>
+                <p id="company_industry_text" class="mb-0 d-inline">
+                  <%# <%= @company.industry.humanize if @company.industry.present? %> %>
+                </p>
               </li>
               <li class="mt-2 d-flex align-items-center">
                 <i class="fa-solid fa-users me-2"></i>
-                <p id="company_size_text" class="mb-0 d-inline">1 employee (just me)</p>
+                <p id="company_size_text" class="mb-0 d-inline">
+                  <%# <%= Company::SIZES[@company.size] if @company.size.present? %> %>
+                </p>
               </li>
               <li class="mt-2 d-flex align-items-center">
                 <i class="fa-solid fa-briefcase me-2"></i>
-                <p id="company_ownership_text" class="mb-0 d-inline">Sole proprietorship</p>
+                <p id="company_ownership_text" class="mb-0 d-inline">
+                  <%# <%= Company::OWNERSHIPS[@company.ownership] if @company.ownership.present? %> %>
+                </p>
               </li>
               <li class="mt-2 d-flex align-items-center">
                 <i class="fa-solid fa-location-dot me-2"></i>
-                <p id="company_location_text" class="mb-0 d-inline">Binangonan, PH</p>
+                <p id="company_location_text" class="mb-0 d-inline">
+                  <%# <%= @company.address %> %>
+                </p>
               </li>
             </ul>
           </div>
@@ -41,11 +49,11 @@
             <ul class="list-unstyled mt-3 mb-0">
               <li class="d-flex align-items-center">
                 <i class="fa-solid fa-phone me-2"></i>
-                <p id="company_phone_text" class="mb-0 d-inline">09989918461</p>
+                <%# <p id="company_phone_text" class="mb-0 d-inline"><%= @company.phone %></p> %>
               </li>
               <li class="mt-2 d-flex align-items-center">
                 <i class="fa-solid fa-envelope me-2"></i>
-                <p id="company_email_text" class="mb-0 d-inline">officialrparalejas@gmail.com</p>
+                <%# <p id="company_email_text" class="mb-0 d-inline"><%= @company.email_address %></p> %>
               </li>
             </ul>
           </div>
@@ -71,231 +79,105 @@
     </div>
 
     <div class="col-md-9">
-      <div class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h5>Company Profile</h5>
-
-          <div class="row">
-            <div class="col-md-6">
-
-              <div class="form-group">
-                <label for="company_name">Company Name</label>
-                <input type="text" class="form-control" id="company_name">
-              </div>
-
-              <div class="form-group">
-                <label for="website">Website</label>
-                <input type="text" class="form-control" id="website">
-              </div>
-
-              <div class="form-group">
-                <label for="industry">Industry</label>
-                <select class="form-select" name="company_industry">
-                  <option value="">Hide industry</option>
-                  <option value="AGRICULTURE">Agriculture</option>
-                  <option value="ACADEMIA">Academia</option>
-                  <option value="ANIMAL">Animal care</option>
-                  <option value="APPAREL">Apparel</option>
-                  <option value="BANKING">Banking</option>
-                  <option value="BEAUTY">Beauty and Cosmetics</option>
-                  <option value="BIOTECHNOLOGY">Biotechnology</option>
-                  <option value="BUSINESS_SERVICES">Business Services</option>
-                  <option value="CHEMICALS">Chemicals</option>
-                  <option value="COMMUNICATIONS">Communications</option>
-                  <option value="CONSTRUCTION">Construction</option>
-                  <option value="CONSULTING">Consulting</option>
-                  <option value="DISTRIBUTION">Distribution</option>
-                  <option value="EDUCATION">Education</option>
-                  <option value="ELECTRONICS">Electronics</option>
-                  <option value="ENERGY">Energy</option>
-                  <option value="ENGINEERING">Engineering</option>
-                  <option value="ENTERTAINMENT">Entertainment</option>
-                  <option value="ENVIRONMENTAL">Environmental</option>
-                  <option value="FINANCE">Finance</option>
-                  <option value="FOOD_BEVERAGE">Food and Beverage</option>
-                  <option value="GOVERNMENT">Government and Public services</option>
-                  <option value="GRANT">Grant and Fundraising</option>
-                  <option value="HEALTHCARE">Healthcare</option>
-                  <option value="HOSPITALITY">Hospitality</option>
-                  <option value="HR">HR and Recruitment</option>
-                  <option value="INSURANCE">Insurance</option>
-                  <option value="LEGAL">Legal Services</option>
-                  <option value="MACHINERY">Machinery</option>
-                  <option value="MANUFACTURING">Manufacturing</option>
-                  <option value="MEDIA">Media</option>
-                  <option value="MEDICAL_EQUIPMENT_AND_SUPPLIES">Medical Equipment and Supplies</option>
-                  <option value="NOT_FOR_PROFIT">Not for profit</option>
-                  <option value="OIL_GAS">Oil and Gas</option>
-                  <option value="PHARMACEUTICAL">Pharmaceutical</option>
-                  <option value="REAL_ESTATE">Real Estate</option>
-                  <option value="RECREATION">Recreation</option>
-                  <option value="RECRUITMENT">Recruitment</option>
-                  <option value="RESEARCH">Research (non-academic)</option>
-                  <option value="RETAIL">Retail</option>
-                  <option value="SECURITY">Security Services</option>
-                  <option value="SHIPPING">Shipping</option>
-                  <option value="SOFTWARE">Software and IT</option>
-                  <option value="TECHNOLOGY">Technology Hardware</option>
-                  <option value="TELECOMMUNICATIONS">Telecommunications</option>
-                  <option value="TRANSPORTATION">Transportation</option>
-                  <option value="TRAVEL">Travel</option>
-                  <option value="UTILITIES">Utilities</option>
-                  <option value="OTHER">Other</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="company_ownership">Company Ownership</label>
-                <select class="form-select" name="company_ownership">
-                  <option value="">Hide ownership</option>
-                  <option value="SOLE">Sole proprietorship</option>
-                  <option value="GENERAL">General partnership</option>
-                  <option value="LIMITED">Limited partnership</option>
-                  <option value="ASSOCIATION">Association/Non-profit/NGO</option>
-                  <option value="PRIVATE_LIMITED">Private limited company</option>
-                  <option value="PUBLIC_LIMITED">Public limited company</option>
-                  <option value="LIMITED_COOPERATIVE">Limited Cooperative</option>
-                  <option value="SINGLE_MEMBER">Single member close corporation</option>
-                  <option value="UNINCORPORATED_FUND">Unincorporated investment fund</option>
-                  <option value="INVESTMENT_TRUST">Investment trust</option>
-                  <option value="INVESTMENT_COMPANY">Investment company with variable capital</option>
-                  <option value="ECONOMIC_INTEREST">Economic interest grouping</option>
-                  <option value="PUBLICLY_TRADED">Publicly traded partnership</option>
-                  <option value="PROPERTY_COMPANY">Property company</option>
-                  <option value="SINGLE_SHAREHOLDER">Single shareholder limited company</option>
-                  <option value="GOVERNMENT_OWNED">Government owned corporation</option>
-                  <option value="UNINCORPORATED_ASSOCIATION">Unincorporated association</option>
-                  <option value="INCORPORATED_ASSOCIATION">Incorporated association</option>
-                  <option value="INDEPENDENT_CONTRACTOR">Independent contractor</option>
-                  <option value="OTHER">Other</option>
-                </select>                
-              </div>
-
-              <div class="form-group">
-                <label for="company_address">Company Address</label>
-                <input type="text" class="form-control" id="company_address">
-              </div>
-
-              <div class="form-group">
-                <label for="phone">Phone</label>
-                <input type="text" class="form-control" id="phone">
-              </div>
-
-            </div>
-            <div class="col-md-6">
-
-              <div class="form-group">
-                <label for="company_description">Company Description</label>
-                <textarea class="form-control" id="company_description" rows="4" style="height: 115px;"></textarea>
-              </div>
-
-              <div class="form-group">
-                <label for="company_size">Company Size</label>
-                <select class="form-select" name="company_size" id="company_size">
-                  <option value="">Hide company size</option>
-                  <option value="ONE">1 employee (just me)</option>
-                  <option value="FROM2TO15">2-15 employees</option>
-                  <option value="FROM16TO49">16-49 employees</option>
-                  <option value="FROM50TO99">50-99 employees</option>
-                  <option value="FROM100TO249">100-249 employees</option>
-                  <option value="FROM250TO499">250-499 employees</option>
-                  <option value="FROM500TO999">500-999 employees</option>
-                  <option value="FROM1000TO4999">1000-4999 employees</option>
-                  <option value="FROM5000TO9999">5000-9999 employees</option>
-                  <option value="FROM10000">10,000 or more employees</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label for="share_capital">Share Capital</label>
-                <div class="input-group">
-                  <span class="input-group-text">PHP</span>
-                  <input type="text" class="form-control" id="share_capital" placeholder="Enter share capital">
+      <%= form_with(model: @company, local: true) do |f| %>
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5>Company Profile</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <%= f.label :name, "Company Name" %>
+                  <%= f.text_field :name, class: "form-control", value: @company.name %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :website %>
+                  <%= f.text_field :website, class: "form-control" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :industry %>
+                  <%= f.select :industry, Company::INDUSTRIES, { include_blank: "Hide industry" }, class: "form-select" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :ownership, "Company Ownership" %>
+                  <%= f.select :ownership, Company::OWNERSHIPS, { include_blank: "Hide ownership" }, class: "form-select" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :address, "Company Address" %>
+                  <%= f.text_field :address, class: "form-control" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :phone %>
+                  <%= f.text_field :phone, class: "form-control" %>
                 </div>
               </div>
-
-              <div class="form-group">
-                <label for="registration_address">Registration Address</label>
-                <input type="text" class="form-control" id="registration_address">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <%= f.label :description, "Company Description" %>
+                  <%= f.text_area :description, class: "form-control", rows: 4, style: "height: 115px;" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :size, "Company Size" %>
+                  <%= f.select :size, Company::SIZES, { include_blank: "Hide company size" }, class: "form-select" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :share_capital %>
+                  <div class="input-group">
+                    <span class="input-group-text">PHP</span>
+                    <%= f.text_field :share_capital, class: "form-control", placeholder: "Enter share capital" %>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <%= f.label :registration_address %>
+                  <%= f.text_field :registration_address, class: "form-control" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :email_address, "Company Email Address" %>
+                  <%= f.text_field :email_address, class: "form-control" %>
+                </div>
               </div>
-
-              <div class="form-group">
-                <label for="company_email_address">Company Email Address</label>
-                <input type="text" class="form-control" id="company_email_address">
-              </div>
-
             </div>
           </div>
-
         </div>
-      </div>
 
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5>Company Identifiers</h5>
-
-          <div class="row">
-            <div class="col-md-6">
-
-              <div class="form-group">
-                <label for="company_id_type">Company ID Type</label>
-                <select class="form-select" name="company_id_type" id="company_id_type">
-                  <option value="">Select company ID type</option>
-                  <option value="ACN">ACN</option>
-                  <option value="BN">BN</option>
-                  <option value="CN">CN</option>
-                  <option value="CPR">CPR</option>
-                  <option value="CVR">CVR</option>
-                  <option value="DIN">DIN</option>
-                  <option value="KT">KT</option>
-                  <option value="ORG">ORG</option>
-                  <option value="SEC">SEC</option>
-                  <option value="OTHER">Other</option>
-                </select>
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5>Company Identifiers</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <%= f.label :company_id_type, "Company ID Type" %>
+                  <%= f.select :company_id_type, Company::ID_TYPES, { include_blank: "Select company ID type" }, class: "form-select" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :tax_id_type, "Tax ID Type" %>
+                  <%= f.select :tax_id_type, Company::TAX_ID_TYPES, { include_blank: "Select tax ID type" }, class: "form-select" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :gln, "GLN" %>
+                  <%= f.text_field :gln, class: "form-control" %>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="tax_id_type">Tax ID Type</label>
-                <select class="form-select" name="tax_id_type" id="tax_id_type">
-                  <option value="">Select tax ID type</option>
-                  <option value="ABN">ABN</option>
-                  <option value="BN">BN</option>
-                  <option value="CST">CST</option>
-                  <option value="ORG">ORG</option>
-                  <option value="TAX">TAX</option>
-                  <option value="TIN">TIN</option>
-                  <option value="VAT">VAT</option>
-                  <option value="VSK">VSK</option>
-                  <option value="OTHER">Other</option>
-                </select>
+              <div class="col-md-6">
+                <div class="form-group">
+                  <%= f.label :company_id_number, "Company ID Number" %>
+                  <%= f.text_field :company_id_number, class: "form-control" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :tax_id_number, "Tax ID Number" %>
+                  <%= f.text_field :tax_id_number, class: "form-control" %>
+                </div>
+                <div class="form-group">
+                  <%= f.label :internal_identifier, "Internal Identifier" %>
+                  <%= f.text_field :internal_identifier, class: "form-control" %>
+                </div>
               </div>
-              <div class="form-group">
-                <label for="gln">GLN</label>
-                <input type="text" class="form-control" id="gln">
-              </div>
-
-            </div>
-            <div class="col-md-6">
-
-              <div class="form-group">
-                <label for="company_id_number" id="company_id_number_label">Company ID Number</label>
-                <input type="text" class="form-control" id="company_id_number">
-              </div>
-              <div class="form-group">
-                <label for="tax_id_number" id="tax_id_number_label">Tax ID Number</label>
-                <input type="text" class="form-control" id="tax_id_number">
-              </div>
-              <div class="form-group">
-                <label for="internal_identifier">Internal Identifier</label>
-                <input type="text" class="form-control" id="internal_identifier">
-              </div>
-
             </div>
           </div>
-
         </div>
-      </div>
+        <div class="mt-3">
+          <%= f.submit "Save Changes", class: "btn btn-primary" %>
+        </div>
+      <% end %>
     </div>
-
   </div>
-
 </div>

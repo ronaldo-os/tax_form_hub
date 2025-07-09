@@ -1,11 +1,16 @@
 class User < ApplicationRecord
+  # Virtual attribute for sign-up (not stored in DB)
+  attr_accessor :company_name
+
   # Devise modules
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
+
   # Associations
-  has_many :tax_submissions
+  belongs_to :company, optional: true
   has_many :companies
+  has_many :tax_submissions
   has_many :locations, dependent: :destroy
   has_one_attached :profile_image
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_01_035430) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_09_073216) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -44,17 +44,25 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_035430) do
 
   create_table "companies", force: :cascade do |t|
     t.string "name"
-    t.string "address_line1"
-    t.string "address_line2"
-    t.string "address_line3"
-    t.string "country"
-    t.string "company_number"
-    t.string "tax_number"
+    t.string "website"
+    t.string "industry"
+    t.string "ownership"
+    t.string "address"
+    t.string "phone"
+    t.text "description"
+    t.string "size"
+    t.string "share_capital"
+    t.string "registration_address"
+    t.string "email_address"
+    t.string "company_id_type"
+    t.string "tax_id_type"
+    t.string "gln"
+    t.string "company_id_number"
+    t.string "tax_id_number"
+    t.string "internal_identifier"
+    t.bigint "user_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "zip_code"
-    t.string "city"
-    t.bigint "user_id"
     t.index ["user_id"], name: "index_companies_on_user_id"
   end
 
@@ -114,6 +122,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_035430) do
   end
 
   create_table "tax_submissions", force: :cascade do |t|
+    t.string "email"
     t.text "details"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
@@ -121,7 +130,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_035430) do
     t.boolean "processed"
     t.boolean "archived"
     t.string "company_name"
-    t.string "email"
   end
 
   create_table "users", force: :cascade do |t|
@@ -132,8 +140,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_01_035430) do
     t.datetime "remember_created_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "role"
-    t.string "company_name"
+    t.string "role", default: "user"
+    t.integer "company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

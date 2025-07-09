@@ -3,7 +3,9 @@ class CompaniesController < ApplicationController
 
   def index
     @companies = current_user.companies
+    @company = current_user.companies.first
   end
+
 
   def show
   end
@@ -21,7 +23,6 @@ class CompaniesController < ApplicationController
       render :index
     end
   end
-
 
   def update
     @company = Company.find(params[:id])
@@ -47,13 +48,22 @@ class CompaniesController < ApplicationController
   def company_params
     params.require(:company).permit(
       :name,
-      :address_line1,
-      :address_line2,
-      :zip_code,
-      :city,
-      :country,
-      :company_number,
-      :tax_number
+      :website,
+      :industry,
+      :ownership,
+      :address,
+      :phone,
+      :description,
+      :size,
+      :share_capital,
+      :registration_address,
+      :email_address,
+      :company_id_type,
+      :tax_id_type,
+      :gln,
+      :company_id_number,
+      :tax_id_number,
+      :internal_identifier
     )
   end
 end
