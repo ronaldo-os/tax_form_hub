@@ -1,4 +1,6 @@
 class Company < ApplicationRecord
+  has_one_attached :profile_image
+
   INDUSTRIES = [
     [ "Agriculture", "AGRICULTURE" ],
     [ "Academia", "ACADEMIA" ],

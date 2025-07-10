@@ -27,7 +27,7 @@ class CompaniesController < ApplicationController
   def update
     @company = Company.find(params[:id])
     if @company.update(company_params)
-      redirect_to companies_path, notice: "Company updated successfully."
+      redirect_to companies_path(@company), notice: "Company profile updated."
     else
       redirect_to companies_path, alert: "Failed to update company."
     end
@@ -47,23 +47,11 @@ class CompaniesController < ApplicationController
 
   def company_params
     params.require(:company).permit(
-      :name,
-      :website,
-      :industry,
-      :ownership,
-      :address,
-      :phone,
-      :description,
-      :size,
-      :share_capital,
-      :registration_address,
-      :email_address,
-      :company_id_type,
-      :tax_id_type,
-      :gln,
-      :company_id_number,
-      :tax_id_number,
-      :internal_identifier
+      :name, :website, :industry, :ownership, :address, :phone,
+      :description, :size, :share_capital, :registration_address,
+      :email_address, :company_id_type, :company_id_number,
+      :tax_id_type, :tax_id_number, :internal_identifier,
+      :profile_image
     )
   end
 end

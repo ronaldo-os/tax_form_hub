@@ -76,3 +76,8 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 .form-group label {
   margin-bottom: 5px;
 }
+
+#company_info_list .fa-solid, #company_contact_list_2 .fa-solid {
+  max-width: 10px;
+  margin-right: 15px;
+}

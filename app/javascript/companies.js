@@ -1,12 +1,43 @@
 if (window.location.pathname.includes("/companies")) {
     $(document).ready(function () {
         function updateLabel(selectId, labelId, defaultText) {
-            $(selectId).on('change', function () {
-                const text = $(this).val() ? $(this).find('option:selected').text() + ' Number' : defaultText;
-                $(labelId).text(text);
-            });
+        var $select = $(selectId);
+        var $label = $(labelId);
+
+        function setLabel() {
+            var selectedText = $select.find("option:selected").text();
+            if (selectedText) {
+            $label.text(selectedText + " Number");
+            } else {
+            $label.text(defaultText);
+            }
         }
-        updateLabel('#company_id_type', '#company_id_number_label', '');
-        updateLabel('#tax_id_type', '#tax_id_number_label', '');
+
+        $select.on("change", setLabel);
+        setLabel();
+        }
+
+        updateLabel('#company_id_type', '#company_id_number_label', 'Company ID Number');
+        updateLabel('#tax_id_type', '#tax_id_number_label', 'Tax ID Number');
+
+        $('#image-preview').on('click', function () {
+            $('#profile_image_input').click();
+        });
+        
+        $('#profile_image_input').on('change', function (e) {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                $('#image-preview').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
+            }
+        });
+
+
+
+
+
     });
 }
