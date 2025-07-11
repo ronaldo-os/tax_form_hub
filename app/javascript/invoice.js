@@ -853,5 +853,31 @@ if (window.location.pathname.includes("/invoices")) {
     }
   );
 
+  $('#recipient_company_id').on('change', function () {
+    const selected = $(this).find('option:selected');
+
+    $('#company_name').text(selected.data('name') || '');
+    $('#company_address').text(selected.data('address') || '');
+    $('#company_location').text(selected.data('registration-address') || '');
+    $('#company_country').text("Philippines");
+
+    $('#company_number').text('Company number : ' + (selected.data('company-id-number') || '-'));
+    $('#company_tax_number').text('Tax number : ' + (selected.data('tax-id-number') || '-'));
+
+    $('#recipient-preview').removeClass('d-none');
+    $('#recipient_company_id').addClass('d-none');
+  });
+
+  $('#change-recipient').on('click', function (e) {
+    e.preventDefault();
+    $('#recipient-preview').addClass('d-none');
+    $('#recipient_company_id').removeClass('d-none');
+    $('#recipient_company_id').val('');
+  });
+
+
+
+
+
 
 }

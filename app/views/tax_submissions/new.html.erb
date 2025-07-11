@@ -6,20 +6,28 @@
         <%= form_with model: @tax_submission, local: true, html: { multipart: true } do |f| %>
           <div class="mb-3">
             <%= f.label :company_name, "Company Name", class: "form-label" %>
-            <%= f.text_field :company_name, class: "form-control", value: current_user.company_name %>
+            <%= f.text_field :company_name, class: "form-control", value: current_user.company_name, required: true %>
           </div>
               
           <div class="mb-3">
             <%= f.label :form_2307, "Form 2307", class: "form-label" %>
-            <%= f.file_field :form_2307, class: "form-control", required: true, accept: "image/*,application/pdf" %>
+            <%= f.file_field :form_2307, class: "form-control", required: true, accept: "image/*,application/pdf", id: "form_2307_input" %>
             <small class="form-text text-muted">Only image files (like JPG, JPEG or PNG) and PDFs are allowed.</small>
+
+            <!-- File display -->
+            <ul id="form_2307_list" class="list-group mt-2"></ul>
           </div>
+
 
           <div class="mb-3">
             <%= f.label :deposit_slip, "Deposit Slip or Bank Transfer Details", class: "form-label" %>
-            <%= f.file_field :deposit_slip, class: "form-control", required: true, accept: "image/*,application/pdf" %>
-            <small class="form-text text-muted">Only image files (like JPG, JPEG or PNG) and PDFs are allowed.</small>
+            <%= f.file_field :deposit_slip, multiple: true, class: "form-control", required: true, accept: "image/*,application/pdf", id: "deposit_slip_input" %>
+            <small class="form-text text-muted">You can upload multiple images or PDFs.</small>
+
+            <!-- File List Display -->
+            <ul id="deposit_slip_list" class="list-group mt-2"></ul>
           </div>
+
 
           <div class="mb-5">
             <%= f.label :details, "Additional Notes", class: "form-label" %>

@@ -5,6 +5,7 @@ class InvoicesController < ApplicationController
 
   def new
     @invoice = Invoice.new
+    @recipient_companies = Company.where.not(user_id: current_user.id)
     @locations_by_type = Location.all.group_by(&:location_type)
   end
 
@@ -30,7 +31,7 @@ class InvoicesController < ApplicationController
       :bank_name, :bank_sort_code, :bank_account_number, :bank_account_holder,
       :bank_street_name, :bank_builder_number, :bank_city, :bank_zip_code,
       :bank_region, :bank_addresss_line, :bank_country, :bank_payment_note,
-      :attachment
+      :attachment, :recipient_company_id
     )
   end
 end

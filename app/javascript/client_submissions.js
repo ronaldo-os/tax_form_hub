@@ -27,5 +27,31 @@ if (window.location.pathname.includes("")) {
             });
         });
 
+        // Show the selected file and its size in a list format
+        $(function () {
+            function updateFileList(inputSelector, listSelector, multiple = true) {
+                $(inputSelector).on('change', function () {
+                    const $list = $(listSelector).empty();
+                    const files = Array.from(this.files);
+
+                    if (!files.length) return;
+
+                    const displayFiles = multiple ? files : [files[0]];
+                    displayFiles.forEach(file => {
+                    const size = Math.round(file.size / 1024);
+                    $list.append(`
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                        ${file.name}
+                        <span class="badge bg-secondary rounded-pill">${size} KB</span>
+                        </li>
+                    `);
+                    });
+                });
+            }
+
+            updateFileList('#deposit_slip_input', '#deposit_slip_list', true);
+            updateFileList('#form_2307_input', '#form_2307_list', false);
+        });
+
     });
 }

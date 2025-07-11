@@ -36,7 +36,7 @@ class TaxSubmissionsController < ApplicationController
     params.require(:tax_submission).permit(
       :company_name,
       :form_2307,
-      :deposit_slip,
+      { deposit_slip: [] },
       :details
     )
   end

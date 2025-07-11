@@ -7,10 +7,52 @@
         
         <div class="row">
 
-          <div class="col-md-6">
-            <%= f.label :to, class: "form-label" %>
-            <%= f.text_field :to, class: "form-control" %>
+          <div class="col-md-6 mb-3">
+            <%= f.label :To, class: "form-label" %>
+            <%= select_tag "invoice[recipient_company_id]",
+              options_for_select(@recipient_companies.map { |c|
+                [
+                  c.name,
+                  c.id,
+                  {
+                    'data-name': c.name,
+                    'data-website': c.website,
+                    'data-industry': c.industry,
+                    'data-ownership': c.ownership,
+                    'data-address': c.address,
+                    'data-phone': c.phone,
+                    'data-description': c.description,
+                    'data-size': c.size,
+                    'data-share-capital': c.share_capital,
+                    'data-registration-address': c.registration_address,
+                    'data-email-address': c.email_address,
+                    'data-company-id-type': c.company_id_type,
+                    'data-company-id-number': c.company_id_number,
+                    'data-tax-id-type': c.tax_id_type,
+                    'data-tax-id-number': c.tax_id_number,
+                    'data-internal-identifier': c.internal_identifier
+                  }
+                ]
+              }),
+              prompt: "Select a company",
+              class: "form-select",
+              id: "recipient_company_id"
+            %>
+
+
+            <!-- Company preview will be inserted here -->
+            <div id="recipient-preview" class="border p-3 rounded d-none">
+              <p class="mb-1" id="company_name"></p>
+              <p class="mb-1" id="company_address"></p>
+              <p class="mb-1" id="company_location"></p>
+              <p class="mb-1" id="company_country"></p>
+              <br>
+              <p class="mb-1" id="company_number"></p>
+              <p class="mb-1" id="company_tax_number"></p>
+              <a href="#" class="text-primary small" id="change-recipient">Change recipient</a>
+            </div>
           </div>
+
 
           <div class="col-md-6">
             <%= f.label :invoice_number, class: "form-label" %>
