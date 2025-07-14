@@ -394,22 +394,33 @@ if (window.location.pathname.includes("/invoices")) {
       return options.map(opt => `<option value="${opt}">${opt.replace(/([a-z])([A-Z])/g, '$1 $2')}</option>`).join('');
     }
 
-    function getLineItemHTML(index) {
+    function getLineItemHTML(new_record_id) {
       return `
-        <tr class="line-item" data-line-index="${index}">
+        <tr class="line-item" data-line-index="${new_record_id}">
           <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-          <td><input type="text" class="form-control item-id"></td>
-          <td><input type="text" class="form-control description"></td>
-          <td><input type="number" class="form-control quantity" value="1"></td>
-          <td><input type="text" class="form-control unit" value="pcs"></td>
-          <td><input type="number" class="form-control price" step="0.01"></td>
-          <td><input type="number" class="form-control tax" step="0.01"></td>
+          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][item_id]" class="form-control item-id"></td>
+          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][description]" class="form-control description"></td>
+          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][quantity]" class="form-control quantity" value="1"></td>
+          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][unit]" class="form-control unit" value="pcs"></td>
+          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][price]" class="form-control price" step="0.01"></td>
+          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][tax]" class="form-control tax" step="0.01"></td>
+          <td>
+            <select name="invoice[line_items_attributes][${new_record_id}][recurring]" class="form-select recurring">
+              <option value="no">No</option>
+              <option value="every_month">Every month</option>
+              <option value="every_quarter">Every quarter</option>
+              <option value="every_year">Every year</option>
+            </select>
+          </td>
           <td class="text-end total">0.00</td>
-          <td><button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button></td>
+          <td>
+            <input type="hidden" name="invoice[line_items_attributes][${new_record_id}][_destroy]" value="false">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
+          </td>
         </tr>
         <tr class="dropdown_per_line hidden">
           <td colspan="3">
-            <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select">
+            <select name="additional_field_${new_record_id}" id="additional_field_${new_record_id}" class="no-label form-select">
               <option value="">Add optional field</option>
               ${getDropdownOptions()}
             </select>
@@ -419,10 +430,10 @@ if (window.location.pathname.includes("/invoices")) {
       `;
     }
 
-    
-    // Event Listeners
+    // In your event listener for adding a line
     $('#add-line').on('click', function () {
-      $('#line-items').append(getLineItemHTML(lineIndex++));
+      const new_record_id = new Date().getTime(); // Generate a unique ID
+      $('#line-items').append(getLineItemHTML(new_record_id));
       updateRemoveButtons();
     });
 

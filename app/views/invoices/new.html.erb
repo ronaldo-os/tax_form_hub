@@ -141,12 +141,13 @@
               <th>Unit</th>
               <th>Price per unit</th>
               <th>Tax (%)</th>
+              <th>Recurring</th>
               <th>Total excl. tax</th>
               <th></th>
             </tr>
           </thead>
           <tbody id="line-items">
-            <tr class="line-item" data-line-index="0">
+            <tr class="line-item" data-line-index="<%= (Time.now.to_f * 1000).to_i %>">
               <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
               <td><input type="text" class="form-control item-id"></td>
               <td><input type="text" class="form-control description"></td>
@@ -154,6 +155,15 @@
               <td><input type="text" class="form-control unit" value="pcs"></td>
               <td><input type="number" class="form-control price" step="0.01"></td>
               <td><input type="number" class="form-control tax" step="0.01"></td>
+              <td>
+                <select name="recurring" class="form-select recurring">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                  <option value="every_month">Every month</option>
+                  <option value="every_quarter">Every quarter</option>
+                  <option value="every_year">Every year</option>
+                </select>
+              </td>
               <td class="text-end total">0.00</td>
               <td><button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button></td>
             </tr>
