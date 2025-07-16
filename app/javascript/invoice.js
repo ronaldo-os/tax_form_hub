@@ -432,8 +432,7 @@ if (window.location.pathname.includes("/invoices")) {
 
     // In your event listener for adding a line
     $('#add-line').on('click', function () {
-      const new_record_id = new Date().getTime(); // Generate a unique ID
-      $('#line-items').append(getLineItemHTML(new_record_id));
+      $('#line-items').append(getLineItemHTML(lineIndex++));
       updateRemoveButtons();
     });
 
@@ -595,53 +594,65 @@ if (window.location.pathname.includes("/invoices")) {
     const selectedKey = $select.val();
     const selectedText = $select.find("option:selected").text();
     if (!selectedKey) return;
-
+    
     const $dropdownRow = $select.closest('tr.dropdown_per_line');
-    const $lineItemRow = $dropdownRow.prev('.line-item');
+    const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
+      return $(this).data('line-index') === parseInt($select.attr('id').split('_').pop());
+    });
     const rowIndex = $lineItemRow.data('line-index');
+    if (rowIndex === undefined) {
+      console.warn("Missing data-line-index for optional field");
+      return;
+    }
 
     const fields = discount_fieldTypeMap[selectedKey];
     if (!Array.isArray(fields)) return;
 
+    // Prevent duplicate optional fields of the same type for the same line
+    const existing = $(`#line-items .optional-field-row[data-line-index="${rowIndex}"][data-optional-group="${selectedKey}"]`);
+    if (existing.length > 0) return;
+
     let newRowHtml = `
-        <tr class="optional-field-row" data-optional-group="${selectedKey}" data-line-index="${rowIndex}">
+      <tr class="optional-field-row" data-optional-group="${selectedKey}" data-line-index="${rowIndex}">
         <td colspan="9">
-            <div class="p-2 border rounded bg-light mb-2">
+          <div class="p-2 border rounded bg-light mb-2">
             <p class="fs-5 mb-3 d-flex justify-content-between align-items-center">
-                ${selectedText.toUpperCase()}
-                <button type="button" class="btn btn-sm btn-outline-danger remove-group ms-2">×</button>
+              ${selectedText.toUpperCase()}
+              <button type="button" class="btn btn-sm btn-outline-danger remove-group ms-2">×</button>
             </p>
             <div class="row g-3">`;
 
     fields.forEach(field => {
-        const colClass = `col-md-${field.cols || 6} ${field.class || ''}`.trim();
-        let inputHtml = '';
+      const colClass = `col-md-${field.cols || 6} ${field.class || ''}`.trim();
+      let inputHtml = '';
 
-        if (field.type === "select") {
-            const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
-            inputHtml = `<select name="optional_fields[${rowIndex}][${field.name}]" class="form-select"${field.disabled ? ' disabled' : ''}>${optionsHtml}</select>`;
-        } else if (field.type === "textarea") {
-            inputHtml = `<textarea name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}></textarea>`;
-        } else if (field.type === "text_only") {
-            // Render a span for displaying the computed total
-            inputHtml = `<span class="form-control-plaintext optional-total" data-total-type="${selectedKey}" data-line-index="${rowIndex}">0.00</span>`;
-        } else {
-            inputHtml = `<input type="${field.type}" name="optional_fields[${rowIndex}][${field.name}]" class="form-control"${field.disabled ? ' disabled' : ''}>`;
-        }
+      const inputName = `invoice[line_items_attributes][${rowIndex}][optional_fields][${field.name}]`;
 
-        newRowHtml += `
+      if (field.type === "select") {
+        const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+        inputHtml = `<select name="${inputName}" class="form-select"${field.disabled ? ' disabled' : ''}>${optionsHtml}</select>`;
+      } else if (field.type === "textarea") {
+        inputHtml = `<textarea name="${inputName}" class="form-control"${field.disabled ? ' disabled' : ''}></textarea>`;
+      } else if (field.type === "text_only") {
+        inputHtml = `<span class="form-control-plaintext optional-total" data-total-type="${selectedKey}" data-line-index="${rowIndex}">0.00</span>`;
+      } else {
+        inputHtml = `<input type="${field.type}" name="${inputName}" class="form-control"${field.disabled ? ' disabled' : ''}>`;
+      }
+
+      newRowHtml += `
         <div class="${colClass}">
-            <div class="d-flex flex-column">
+          <div class="d-flex flex-column">
             <label class="form-label text-start w-100">${field.label}</label>
             ${inputHtml}
-            </div>
+          </div>
         </div>`;
     });
+
     newRowHtml += `
             </div>
-            </div>
+          </div>
         </td>
-        </tr>`;
+      </tr>`;
 
     $dropdownRow.before(newRowHtml);
     $select.val('');

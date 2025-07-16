@@ -147,27 +147,30 @@
             </tr>
           </thead>
           <tbody id="line-items">
-            <tr class="line-item" data-line-index="<%= (Time.now.to_f * 1000).to_i %>">
+            <tr class="line-item" data-line-index="0">
               <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-              <td><input type="text" name="invoice[item_id]" class="form-control item-id"></td>
-              <td><input type="text" name="invoice[description]" class="form-control description"></td>
-              <td><input type="number" name="invoice[quantity]" class="form-control quantity" value="1"></td>
-              <td><input type="text" name="invoice[unit]" class="form-control unit" value="pcs"></td>
-              <td><input type="number" name="invoice[price_per_unit]" class="form-control price" step="0.01"></td>
-              <td><input type="number" name="invoice[tax]" class="form-control tax" step="0.01"></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id"></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description"></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1"></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs"></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01"></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01"></td>
               <td>
-                <select name="invoice[recurring]" class="form-select recurring">
+                <select name="invoice[line_items_attributes][0][recurring]" class="form-select recurring">
                   <option value="no">No</option>
-                  <option value="yes">Yes</option>
                   <option value="every_month">Every month</option>
                   <option value="every_quarter">Every quarter</option>
                   <option value="every_year">Every year</option>
                 </select>
               </td>
               <td class="text-end total">0.00</td>
-              <td><button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button></td>
+              <td>
+                <input type="hidden" name="invoice[line_items_attributes][0][_destroy]" value="false">
+                <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
+              </td>
             </tr>
-            <tr class="dropdown_per_line hidden">
+
+            <tr class="dropdown_per_line hidden" data-line-index="0">
               <td colspan="3">
                 <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
                   <option value="">Add optional field</option>
@@ -200,6 +203,9 @@
               </td>
               <td colspan="6"></td>
             </tr>
+
+
+
           </tbody>
         </table>
 

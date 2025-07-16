@@ -28,18 +28,9 @@ class InvoicesController < ApplicationController
 
   def invoice_params
     params.require(:invoice).permit(
-      :invoice_number,
-      :issue_date,
-      :currency,
-      :payment_due_date,
-      :delivery_date,
-      :recipient_company_id,
-      :message,
-      :footer_notes,
-      :save_notes_for_future,
-      :save_footer_notes_for_future,
-      :save_payment_terms_for_future,
-      :attachment,
+      :invoice_number, :issue_date, :currency, :payment_due_date, :delivery_date,
+      :item_id, :description, :quantity, :unit, :price_per_unit, :tax, :recurring,
+      :recipient_note, :footer_notes, :attachment,
 
       # delivery details...
       :delivery_details_postbox,
@@ -77,8 +68,12 @@ class InvoicesController < ApplicationController
       :header_total,
       :pricing_discount,
 
-      # Accept a dynamic hash for line items
-      line_items_attributes: {}
+      # line items and their optional fields...
+      line_items_attributes: [
+        :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :_destroy,
+        { optional_fields: {} }
+      ]
     )
   end
+
 end
