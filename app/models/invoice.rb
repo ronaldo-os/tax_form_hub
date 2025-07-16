@@ -1,21 +1,28 @@
 class Invoice < ApplicationRecord
-  has_one_attached :attachment
+  belongs_to :user
+  belongs_to :recipient_company, class_name: 'Company', optional: true
 
-  validate :attachment_type_allowed
+  has_many_attached :attachments
 
-  def new
-    @invoice = Invoice.new
-    @ship_from_locations = Location.where(location_type: "Ship From")
+  validate :attachments_type_allowed
+
+  def line_items
+    line_items_data || []
   end
+
+
 
   private
 
-  def attachment_type_allowed
-    return unless attachment.attached?
+  def attachments_type_allowed
+    return unless attachments.attached?
 
-    acceptable_types = ["application/pdf", "image/jpeg", "image/png"]
-    unless acceptable_types.include?(attachment.blob.content_type)
-      errors.add(:attachment, "must be a PDF or image file (JPEG, PNG).")
+    allowed_types = ["application/pdf", "image/jpeg", "image/png"]
+
+    attachments.each do |file|
+      unless allowed_types.include?(file.blob.content_type)
+        errors.add(:attachments, "must be PDF or image files (JPEG, PNG).")
+      end
     end
   end
 end

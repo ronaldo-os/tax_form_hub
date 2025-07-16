@@ -660,7 +660,7 @@ if (window.location.pathname.includes("/invoices")) {
         <tr class="discount-item">
           <td class="align-top"></td>
           <td class="align-top">
-            <select name="price_adjustment_discount" class="form-select">
+            <select name="invoice[price_adjustment_discount]" class="form-select">
               <option value="true">Discount</option>
               <option value="false">Charge</option>
               <option value="fixedtax">Fixed Tax</option>
@@ -668,7 +668,7 @@ if (window.location.pathname.includes("/invoices")) {
           </td>
           <td class="align-top">
             <input type="text" class="form-control description mb-2">
-            <select name="price_adjustment_discount_type" class="form-select">
+            <select name="invoice[price_adjustment_discount_type]" class="form-select">
               <option value="Choose reason code" disabled selected>Choose reason code</option>
               <option value="Bank Charges">Bank Charges</option>
               <option value="Customs Duties">Customs Duties</option>
@@ -692,7 +692,7 @@ if (window.location.pathname.includes("/invoices")) {
             <input type="number" class="form-control quantity" value="1">
           </td>
           <td class="align-top">
-            <select name="price_adjustment_unit_type" class="form-select">
+            <select name="invoice[price_adjustment_unit_type]" class="form-select">
               <option value="true">%</option>
               <option value="false">PHP</option>
             </select>
@@ -747,7 +747,7 @@ if (window.location.pathname.includes("/invoices")) {
       $('<th class="base-quantity-header">Price per Quantity</th>').insertAfter($headerCells.eq(5));
 
       $('.line-item').each(function () {
-        $('<td class="base-quantity-cell"><input type="number" name="price_per_quantity" class="form-control price-per-quantity" step="0.01"></td>')
+        $('<td class="base-quantity-cell"><input type="number" name="invoice[price_per_quantity]" class="form-control price-per-quantity" step="0.01"></td>')
           .insertAfter($(this).find('td').eq(5));
       });
 
@@ -763,7 +763,7 @@ if (window.location.pathname.includes("/invoices")) {
     recalculateTotals();
   });
 
-  $(document).on('change', 'select[name="price_adjustment_discount_type"]', function () {
+  $(document).on('change', 'select[name="invoice[price_adjustment_discount_type]"]', function () {
     const selectedText = $(this).find('option:selected').text();
     const $descriptionInput = $(this).siblings('input.description');
 
@@ -831,8 +831,8 @@ if (window.location.pathname.includes("/invoices")) {
     $('#line-items .discount-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 1;
-      const type = $row.find('select[name="price_adjustment_discount"]').val();
-      const isPercent = $row.find('select[name="price_adjustment_unit_type"]').val() === "true";
+      const type = $row.find('select[name="invoice[price_adjustment_discount]"]').val();
+      const isPercent = $row.find('select[name="invoice[price_adjustment_unit_type]"]').val() === "true";
 
       let value = isPercent ? subtotal * (qty / 100) : qty;
 

@@ -67,17 +67,14 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_09_073216) do
   end
 
   create_table "invoices", force: :cascade do |t|
+    t.bigint "user_id"
     t.string "invoice_number"
     t.date "issue_date"
     t.string "currency"
     t.date "payment_due_date"
-    t.integer "item_id"
-    t.text "description"
-    t.integer "quantity"
-    t.string "unit"
-    t.decimal "price_per_unit"
-    t.decimal "tax"
-    t.decimal "total"
+    t.date "delivery_date"
+    t.string "recipient_company_id"
+    t.jsonb "line_items_data", default: []
     t.text "recipient_note"
     t.string "header_type"
     t.text "header_description"
@@ -98,9 +95,26 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_09_073216) do
     t.string "bank_address_line"
     t.string "bank_country"
     t.text "bank_payment_note"
+    t.string "delivery_details_country"
+    t.string "delivery_details_postbox"
+    t.string "delivery_details_street"
+    t.string "delivery_details_number"
+    t.string "delivery_details_locality_name"
+    t.string "delivery_details_zip_code"
+    t.string "delivery_details_city"
+    t.string "delivery_details_gln"
+    t.string "delivery_details_company_name"
+    t.string "delivery_details_tax_id"
+    t.string "delivery_details_tax_number"
+    t.text "message"
+    t.text "footer_notes"
+    t.boolean "save_notes_for_future", default: false
+    t.boolean "save_footer_notes_for_future", default: false
+    t.boolean "save_payment_terms_for_future", default: false
     t.string "attachment"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_invoices_on_user_id"
   end
 
   create_table "locations", force: :cascade do |t|
@@ -149,5 +163,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_09_073216) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "companies", "users"
+  add_foreign_key "invoices", "users"
   add_foreign_key "locations", "users"
 end

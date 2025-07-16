@@ -11,6 +11,7 @@ class User < ApplicationRecord
   belongs_to :company, optional: true
   has_many :companies
   has_many :tax_submissions
+  has_many :invoices
   has_many :locations, dependent: :destroy
   has_one_attached :profile_image
 
