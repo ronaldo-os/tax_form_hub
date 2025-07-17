@@ -55,6 +55,9 @@
 
 
           <div class="col-md-6">
+
+            <%= f.hidden_field :optional_fields, id: 'optional_fields_json' %>
+
             <%= f.label :invoice_number, class: "form-label" %>
             <%= f.text_field :invoice_number, class: "form-control" %>
 
@@ -237,6 +240,7 @@
 
         <div class="row">
           <div class="col-md-6">
+              <%= f.hidden_field :payment_terms, id: 'payment_terms_json' %>
             <div id="payment_terms_parent_div">
             </div>
             <select name="payment_terms_select" id="payment_terms_select" class="form-select mb-3" data-optional-group="0">
@@ -272,7 +276,7 @@
                   <div class="row">
                     <div class="col-md-12 mb-3">
                       <label class="form-label">Country/Region</label>
-                      <select name="invoice[delivery_details_country" id="initial_delivery_details_country]" class="form-select">
+                      <select name="invoice[delivery_details_country" id="initial_delivery_details_country" class="form-select">
                       </select>
                     </div>
 
@@ -428,6 +432,11 @@
 
                 </div>
             </div>
+
+            <%# include selected option to db %>
+            <%= f.text_field :ship_from_location_id, id: "ship_from_location_id" %>
+            <%= f.text_field :remit_to_location_id, id: "remit_to_location_id" %>
+            <%= f.text_field :tax_representative_location_id, id: "tax_representative_location_id" %>
 
             <%= render partial: "locations/location_selector", locals: { type: "Ship From", locations: @locations_by_type["Ship From"] || [] } %>
             <%= render partial: "locations/location_selector", locals: { type: "Remit To", locations: @locations_by_type["Remit To"] || [] } %>

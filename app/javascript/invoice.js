@@ -100,61 +100,93 @@ if (window.location.pathname.includes("/invoices")) {
         };
 
         $('#optionalField').on('change', function () {
-            const key = $(this).val();
-            if (!key) return;
+          const key = $(this).val();
+          if (!key) return;
 
-            if ($(`[data-optional-group="${key}"]`).length > 0) {
+          if ($(`[data-optional-group="${key}"]`).length > 0) {
             alert("This group is already added.");
             $(this).val('');
             return;
-            }
+          }
 
-            const fields = fieldTypeMap[key];
-            if (!fields || !Array.isArray(fields)) return;
+          const fields = fieldTypeMap[key];
+          if (!fields || !Array.isArray(fields)) return;
 
-            let rowsHtml = `
-            <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="${key}">
-                <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
-            `;
+          let groupHtml = `
+            <div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${key}">
+              <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
+              <div class="row">
+          `;
 
-            // Render fields in Bootstrap rows
-            for (let i = 0; i < fields.length; i += 12) {
-            rowsHtml += `<div class="row">`;
+          fields.forEach(field => {
+            const colClass = `col-md-${field.cols || 6} ${field.class || ""}`;
+            let inputHtml = "";
 
-            const subFields = fields.slice(i, i + 12);
-            subFields.forEach(field => {
-                const fieldClass = field.class || "";
-                const colClass = `col-md-${field.cols || 6} ${fieldClass}`;
-                let inputHtml = "";
-
-                if (field.type === "select") {
-                inputHtml = `<select name="optional_fields[${field.name}]" class="form-select">
-                    ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+            if (field.type === "select") {
+              inputHtml = `
+                <select class="form-select optional-input" data-field-name="${field.name}">
+                  ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
                 </select>`;
-                } else if (field.type === "textarea") {
-                inputHtml = `<textarea name="optional_fields[${field.name}]" class="form-control"></textarea>`;
-                } else {
-                inputHtml = `<input type="${field.type}" name="optional_fields[${field.name}]" class="form-control">`;
-                }
-
-                rowsHtml += `
-                <div class="${colClass}">
-                    <label class="form-label">${field.label}</label>
-                    ${inputHtml}
-                </div>
-                `;
-            });
-
-            rowsHtml += `</div>`;
+            } else if (field.type === "textarea") {
+              inputHtml = `<textarea class="form-control optional-input" data-field-name="${field.name}"></textarea>`;
+            } else {
+              inputHtml = `<input type="${field.type}" class="form-control optional-input" data-field-name="${field.name}">`;
             }
 
-            $('#optional_fields_container').append(rowsHtml);
-            $(this).val('');
+            groupHtml += `
+              <div class="${colClass}">
+                <label class="form-label">${field.label}</label>
+                ${inputHtml}
+              </div>
+            `;
+          });
+
+          groupHtml += `
+              </div>
+            </div>
+          `;
+
+          $('#invoice_details_parent_div').append(groupHtml);
+          $(this).val('');
+          updateOptionalFieldsJSON();
         });
 
+        // Remove group
         $(document).on('click', '.remove-group', function () {
-            $(this).closest('[data-optional-group]').remove();
+          $(this).closest('[data-optional-group]').remove();
+          updateOptionalFieldsJSON();
         });
+
+        // Track input changes in optional fields
+        $(document).on('input change', '.optional-input', function () {
+          updateOptionalFieldsJSON();
+        });
+
+        // Also track hardcoded fields (date fields, etc.)
+        $(document).on('input change', '[data-optional-group] input, [data-optional-group] select, [data-optional-group] textarea', function () {
+          updateOptionalFieldsJSON();
+        });
+
+        // Update hidden field
+        function updateOptionalFieldsJSON() {
+          const data = {};
+
+          $('[data-optional-group]').each(function () {
+            const groupKey = $(this).data('optional-group');
+            const inputs = $(this).find('input, select, textarea');
+            inputs.each(function () {
+              const name = $(this).data('field-name') || $(this).attr('name');
+              const value = $(this).val();
+
+              if (name) {
+                data[name] = value;
+              }
+            });
+          });
+
+          $('#optional_fields_json').val(JSON.stringify(data));
+        }
+
     });
 
 
@@ -217,69 +249,96 @@ if (window.location.pathname.includes("/invoices")) {
     };
 
     $('#payment_terms_select').on('change', function () {
-        const key = $(this).val();
-        const key_text = $(this).find('option:selected').text().trim();
-        if (!key) return;
+      const key = $(this).val();
+      const keyText = $(this).find('option:selected').text().trim();
+      if (!key) return;
 
-        if ($(`#payment_terms_parent_div [data-optional-group="${key}"]`).length > 0) {
+      // Prevent duplicates
+      if ($(`#payment_terms_parent_div [data-group-key="${key}"]`).length > 0) {
         alert("This payment term group is already added.");
         $(this).val('');
         return;
-        }
+      }
 
-        const fields = payment_terms_fieldTypeMap[key];
-        if (!fields || !Array.isArray(fields)) return;
+      const fields = payment_terms_fieldTypeMap[key];
+      if (!fields || !Array.isArray(fields)) return;
 
-        let groupHtml = `
-        <div class="mb-3 border rounded p-3 pt-3" data-optional-group="${key}">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">${key_text}</h5>
-                <button type="button" class="btn btn-sm btn-outline-danger remove-group">×</button>
-            </div>
-        `;
+      let groupHtml = `
+        <div class="mb-3 border rounded p-3 pt-3 payment-term-group" data-group-key="${key}">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="mb-0">${keyText}</h5>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-group">×</button>
+          </div>
+          <div class="row">
+      `;
 
-        for (let i = 0; i < fields.length; i += 12) {
-        groupHtml += `<div class="row">`;
-
-        const subFields = fields.slice(i, i + 12);
-        subFields.forEach(field => {
+      fields.forEach(field => {
         const colClass = `col-md-${field.cols || 6} ${field.class || ""}`;
         let inputHtml = "";
 
         if (field.type === "text_only") {
-            inputHtml = `<p class="mb-0">${field.label}</p>`;
+          inputHtml = `<p class="mb-0">${field.label}</p>`;
         } else {
-            if (field.type === "select") {
-            inputHtml = `<select name="optional_fields[${field.name}]" class="form-select">
+          if (field.type === "select") {
+            inputHtml = `
+              <select class="form-select payment-term-input" data-field-name="${field.name}">
                 ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-            </select>`;
-            } else if (field.type === "textarea") {
-            inputHtml = `<textarea name="optional_fields[${field.name}]" class="form-control"></textarea>`;
-            } else {
-            inputHtml = `<input type="${field.type}" name="optional_fields[${field.name}]" class="form-control">`;
-            }
+              </select>`;
+          } else if (field.type === "textarea") {
+            inputHtml = `<textarea class="form-control payment-term-input" data-field-name="${field.name}"></textarea>`;
+          } else {
+            inputHtml = `<input type="${field.type}" class="form-control payment-term-input" data-field-name="${field.name}">`;
+          }
 
-            groupHtml += `
+          groupHtml += `
             <div class="${colClass} mb-3">
-                <label class="form-label">${field.label}</label>
-                ${inputHtml}
+              <label class="form-label">${field.label}</label>
+              ${inputHtml}
             </div>
-            `;
+          `;
         }
+      });
+
+      groupHtml += `
+          </div>
+        </div>
+      `;
+
+      $('#payment_terms_parent_div').append(groupHtml);
+      $(this).val('');
+      updatePaymentTermsJSON();
+    });
+
+    // Handle input changes in payment term fields
+    $(document).on('input change', '.payment-term-input', function () {
+      updatePaymentTermsJSON();
+    });
+
+    // Remove group
+    $(document).on('click', '.remove-group', function () {
+      $(this).closest('.payment-term-group').remove();
+      updatePaymentTermsJSON();
+    });
+
+    // Update hidden JSON field
+    function updatePaymentTermsJSON() {
+      const result = {};
+
+      $('.payment-term-group').each(function () {
+        const groupKey = $(this).data('group-key');
+        const fields = {};
+
+        $(this).find('.payment-term-input').each(function () {
+          const name = $(this).data('field-name');
+          const value = $(this).val();
+          if (name) fields[name] = value;
         });
 
+        result[groupKey] = fields;
+      });
 
-        groupHtml += `</div>`; 
-        }
-
-        groupHtml += `</div>`; 
-        $('#payment_terms_parent_div').append(groupHtml);
-        $(this).val('');
-    });
-
-    $(document).on('click', '.remove-group', function () {
-        $(this).closest('[data-optional-group]').remove();
-    });
+      $('#payment_terms_json').val(JSON.stringify(result));
+    }
 
     // ----------------------------------------------------- DELIVERY DETAILS BUTTON TOGGLE
 
@@ -897,7 +956,16 @@ if (window.location.pathname.includes("/invoices")) {
     $('#recipient_company_id').val('');
   });
 
+  // Handle location selection changes
+  $(".location-select").on("change", function () {
+    const type = $(this).data("type");
+    const selectedId = $(this).val();
+    const hiddenField = $(`#${type}_location_id`);
 
+    if (hiddenField.length) {
+      hiddenField.val(selectedId);
+    }
+  });
 
 
 

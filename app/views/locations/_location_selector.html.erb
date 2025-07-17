@@ -6,10 +6,12 @@
 
   <div class="mt-3 mb-3 location-selector-wrapper" id="<%= type.parameterize.underscore %>_selector_wrapper" style="display: none;">
     <%= select_tag "#{type.parameterize.underscore}_select",
-      options_from_collection_for_select(locations, :id, :location_name),
-      include_blank: true,
-      class: "form-select location-select",
-      data: { type: type } %>
+        options_from_collection_for_select(locations, :id, :location_name),
+        include_blank: true,
+        class: "form-select location-select",
+        id: "#{type.parameterize.underscore}_select",
+        data: { type: type.parameterize.underscore } %>
+
 
     <div class="mt-3">
       <%= link_to "Go to Locations App to add a new #{type} Location", locations_path, class: 'text-primary text-decoration-none' %>
