@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_09_073216) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_18_100038) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -68,33 +68,15 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_09_073216) do
 
   create_table "invoices", force: :cascade do |t|
     t.bigint "user_id"
+    t.string "recipient_company_id"
     t.string "invoice_number"
     t.date "issue_date"
     t.string "currency"
-    t.date "payment_due_date"
-    t.date "delivery_date"
-    t.string "recipient_company_id"
     t.jsonb "line_items_data", default: []
+    t.jsonb "payment_terms", default: []
+    t.jsonb "header_charge_discount_tax", default: []
+    t.jsonb "price_adjustments", default: []
     t.text "recipient_note"
-    t.string "header_type"
-    t.text "header_description"
-    t.integer "header_qty"
-    t.string "header_unit"
-    t.decimal "header_tax"
-    t.decimal "header_total"
-    t.decimal "pricing_discount"
-    t.string "bank_name"
-    t.string "bank_sort_code"
-    t.string "bank_account_number"
-    t.string "bank_account_holder"
-    t.string "bank_street_name"
-    t.string "bank_builder_number"
-    t.string "bank_city"
-    t.string "bank_zip_code"
-    t.string "bank_region"
-    t.string "bank_address_line"
-    t.string "bank_country"
-    t.text "bank_payment_note"
     t.string "delivery_details_country"
     t.string "delivery_details_postbox"
     t.string "delivery_details_street"
@@ -106,14 +88,19 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_09_073216) do
     t.string "delivery_details_company_name"
     t.string "delivery_details_tax_id"
     t.string "delivery_details_tax_number"
+    t.bigint "ship_from_location_id"
+    t.bigint "remit_to_location_id"
+    t.bigint "tax_representative_location_id"
     t.text "message"
     t.text "footer_notes"
     t.boolean "save_notes_for_future", default: false
     t.boolean "save_footer_notes_for_future", default: false
     t.boolean "save_payment_terms_for_future", default: false
-    t.string "attachment"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
+    t.index ["ship_from_location_id"], name: "index_invoices_on_ship_from_location_id"
+    t.index ["tax_representative_location_id"], name: "index_invoices_on_tax_representative_location_id"
     t.index ["user_id"], name: "index_invoices_on_user_id"
   end
 
@@ -163,6 +150,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_09_073216) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "companies", "users"
+  add_foreign_key "invoices", "locations", column: "remit_to_location_id"
+  add_foreign_key "invoices", "locations", column: "ship_from_location_id"
+  add_foreign_key "invoices", "locations", column: "tax_representative_location_id"
   add_foreign_key "invoices", "users"
   add_foreign_key "locations", "users"
 end

@@ -28,11 +28,19 @@ class InvoicesController < ApplicationController
 
   def invoice_params
     params.require(:invoice).permit(
-      :invoice_number, :issue_date, :currency, :payment_due_date, :delivery_date,
-      :item_id, :description, :quantity, :unit, :price_per_unit, :tax, :recurring,
-      :recipient_note, :footer_notes, :attachment,
+      :user_id,
+      :recipient_company_id,
+      :invoice_number,
+      :issue_date,
+      :currency,
+      :recipient_note,
+      :message,
+      :footer_notes,
+      :save_notes_for_future,
+      :save_footer_notes_for_future,
+      :save_payment_terms_for_future,
 
-      # delivery details...
+      # delivery details
       :delivery_details_postbox,
       :delivery_details_street,
       :delivery_details_number,
@@ -45,29 +53,16 @@ class InvoicesController < ApplicationController
       :delivery_details_tax_id,
       :delivery_details_tax_number,
 
-      # bank details...
-      :bank_name,
-      :bank_sort_code,
-      :bank_account_number,
-      :bank_account_holder,
-      :bank_street_name,
-      :bank_builder_number,
-      :bank_city,
-      :bank_zip_code,
-      :bank_region,
-      :bank_address_line,
-      :bank_country,
-      :bank_payment_note,
+      # location references
+      :ship_from_location_id,
+      :remit_to_location_id,
+      :tax_representative_location_id,
 
-      # invoice headers...
-      :header_type,
-      :header_description,
-      :header_qty,
-      :header_unit,
-      :header_tax,
-      :header_total,
-      :pricing_discount,
-
+      # JSON fields (expected to be handled via hidden inputs or JS)
+      :line_items_data,
+      :payment_terms,
+      :header_charge_discount_tax,
+      :price_adjustments,
       # line items and their optional fields...
       line_items_attributes: [
         :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :_destroy,
@@ -75,5 +70,6 @@ class InvoicesController < ApplicationController
       ]
     )
   end
+
 
 end

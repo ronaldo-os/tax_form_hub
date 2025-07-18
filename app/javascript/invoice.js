@@ -373,8 +373,10 @@ if (window.location.pathname.includes("/invoices")) {
     $('.clear-location-details').on('click', function (e) {
       e.preventDefault();
       const type = $(this).data('type').toLowerCase().replace(/\s+/g, '_');
+
       $(`#${type}_select`).val('');
       $(`#${type}_details`).hide();
+      $(`#${type}_location_id`).val('');
     });
 
     $('.location-select').on('change', function () {
@@ -436,9 +438,22 @@ if (window.location.pathname.includes("/invoices")) {
 
     // Utility Functions
     function updateRemoveButtons() {
-      const isSingleRow = $('#line-items .line-item, #line-items .discount-item').length <= 1;
-      $('#line-items .remove-line').toggle(!isSingleRow);
+      const lineItemCount = $('#line-items .line-item').length;
+      const discountItemCount = $('#line-items .discount-item').length;
+
+      // Hide all remove buttons by default
+      $('#line-items .remove-line').hide();
+
+      // If there is more than one item in total, show all remove buttons
+      if (lineItemCount + discountItemCount > 1) {
+        if (lineItemCount === 1 && discountItemCount) {
+          $('#line-items .discount-item .remove-line').show();
+        } else {
+          $('#line-items .remove-line').show();
+        }
+      }
     }
+
 
     function getDropdownOptions() {
       const options = [
@@ -723,8 +738,6 @@ if (window.location.pathname.includes("/invoices")) {
     $(this).closest('tr.optional-field-row').remove();
   });
 
-
-  // Add header button 
   $('#add-discount-row').on('click', function () {
       const newRow = `
         <tr class="discount-item">
@@ -737,9 +750,9 @@ if (window.location.pathname.includes("/invoices")) {
             </select>
           </td>
           <td class="align-top">
-            <input type="text" class="form-control description mb-2">
+            <input type="text" class="form-control description mb-2" placeholder="Description" data-field="description">
             <select name="invoice[price_adjustment_discount_type]" class="form-select">
-              <option value="Choose reason code" disabled selected>Choose reason code</option>
+              <option value="" disabled selected>Choose reason code</option>
               <option value="Bank Charges">Bank Charges</option>
               <option value="Customs Duties">Customs Duties</option>
               <option value="Repair Costs">Repair Costs</option>
@@ -759,10 +772,10 @@ if (window.location.pathname.includes("/invoices")) {
             </select>
           </td>
           <td class="align-top">
-            <input type="number" class="form-control quantity" value="1">
+            <input type="number" class="form-control quantity" value="1" data-field="amount">
           </td>
           <td class="align-top">
-            <select name="invoice[price_adjustment_unit_type]" class="form-select">
+            <select class="form-select unit-type" data-field="unit_type">
               <option value="true">%</option>
               <option value="false">PHP</option>
             </select>
@@ -777,7 +790,8 @@ if (window.location.pathname.includes("/invoices")) {
       `;
 
       $('#line-items').append(newRow);
-      updateRemoveButtons(); 
+      updateRemoveButtons();
+      updateDiscountsJSON();
     });
 
     $('#line-items').on('click', '.remove-line', function () {
@@ -798,9 +812,40 @@ if (window.location.pathname.includes("/invoices")) {
 
       updateRemoveButtons();
       recalculateTotals();
+      updateDiscountsJSON();
     });
 
+    // Track changes to discount inputs
+    $('#line-items').on('input change', '.discount-item input, .discount-item select', function () {
+      updateDiscountsJSON();
+    });
   });
+
+  // Update hidden field for price_adjustments
+  function updateDiscountsJSON() {
+    const discounts = [];
+
+    $('.discount-item').each(function () {
+      const row = $(this);
+      const item = {};
+
+      row.find('[data-field]').each(function () {
+        const field = $(this).data('field');
+        let value = $(this).val();
+
+        if (field === 'amount') {
+          value = parseFloat(value || 0);
+        }
+
+        item[field] = value;
+      });
+
+      discounts.push(item);
+    });
+
+    $('#price_adjustments_json').val(JSON.stringify(discounts));
+  }
+
 
   // Toggle base quantity column button 
   let baseQuantityVisible = false;

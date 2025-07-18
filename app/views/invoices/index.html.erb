@@ -12,9 +12,6 @@
             <th>Invoice #</th>
             <th>Issue Date</th>
             <th>Currency</th>
-            <th>Total</th>
-            <th>Due Date</th>
-            <th>Bank Name</th>
             <th>Attachment</th>
             <th>Actions</th>
           </tr>
@@ -26,23 +23,18 @@
               <td><%= invoice.issue_date&.strftime('%Y-%m-%d') || '—' %></td>
               <td><%= invoice.currency %></td>
 
-              <!-- Display header_total or calculate from line_items_data -->
               <td>
-                <% total = invoice.header_total || invoice.line_items_data.sum { |item| item['total'].to_f rescue 0 } %>
-                <%= number_to_currency(total, unit: invoice.currency) %>
-              </td>
+                <% if invoice.attachments.attached? %>
+                  <%= link_to 'Download', url_for(invoice.attachments), target: "_blank" %><br>
 
-              <td><%= invoice.payment_due_date&.strftime('%Y-%m-%d') || '—' %></td>
-              <td><%= invoice.bank_name.presence || '—' %></td>
-              <td>
-                <% if invoice.respond_to?(:attachment) && invoice.attachment.respond_to?(:attached?) && invoice.attachment.attached? %>
-                  <%= link_to 'Download', url_for(invoice.attachment), target: "_blank" %>
-                <% elsif invoice.attachment.present? %>
-                  <%= link_to 'Download', invoice.attachment, target: "_blank" %>
+                  <% if invoice.attachments.image? %>
+                    <%= image_tag invoice.attachments.variant(resize_to_limit: [150, 150]) %>
+                  <% end %>
                 <% else %>
                   No File
                 <% end %>
               </td>
+
               <td>
                 <%= link_to 'View', invoice_path(invoice), class: 'btn btn-sm btn-outline-primary' %>
               </td>

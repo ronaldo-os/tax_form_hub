@@ -214,6 +214,7 @@
 
         <div class="row g-3 mb-3 mt-0">
           <div class="col-md-4 d-grid">
+            <%= f.hidden_field :price_adjustments, id: 'price_adjustments_json' %>
             <button type="button" id="add-discount-row" class="btn btn-outline-primary">
               Add Header Charge / Discount / Tax
             </button>
@@ -276,7 +277,7 @@
                   <div class="row">
                     <div class="col-md-12 mb-3">
                       <label class="form-label">Country/Region</label>
-                      <select name="invoice[delivery_details_country" id="initial_delivery_details_country" class="form-select">
+                      <select name="invoice[delivery_details_country]" id="initial_delivery_details_country" class="form-select">
                       </select>
                     </div>
 
@@ -322,7 +323,7 @@
 
                     <div class="col-md-4 mb-3">
                       <label class="form-label">Tax ID</label>
-                      <select name="invoice[delivery_details_tax_id]" class="form-select">
+                        <select name="invoice[delivery_details_tax_id]" class="form-select">
                         <option value="">Tax ID</option>
                         <option value="AE:TRN">AE:TRN</option>
                         <option value="AO:VAT">AO:VAT</option>
@@ -434,9 +435,9 @@
             </div>
 
             <%# include selected option to db %>
-            <%= f.text_field :ship_from_location_id, id: "ship_from_location_id" %>
-            <%= f.text_field :remit_to_location_id, id: "remit_to_location_id" %>
-            <%= f.text_field :tax_representative_location_id, id: "tax_representative_location_id" %>
+            <%= f.hidden_field :ship_from_location_id, id: "ship_from_location_id" %>
+            <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id" %>
+            <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id" %>
 
             <%= render partial: "locations/location_selector", locals: { type: "Ship From", locations: @locations_by_type["Ship From"] || [] } %>
             <%= render partial: "locations/location_selector", locals: { type: "Remit To", locations: @locations_by_type["Remit To"] || [] } %>
@@ -446,8 +447,8 @@
           
           <div class="col-md-6">
             <div class="mb-3">
-              <%= f.label :message, "Write a message to the recipient", class: "form-label" %>
-              <%= f.text_area :message, class: "form-control", rows: 5, placeholder: "Enter your message..." %>
+              <%= f.label :recipient_note, "Write a message to the recipient", class: "form-label" %>
+              <%= f.text_area :recipient_note, class: "form-control", rows: 5, placeholder: "Enter your message..." %>
             </div>
 
             <div class="form-check mb-4">
@@ -457,7 +458,7 @@
 
             <div class="mb-3">
               <%= f.label :attachments, class: "form-label" %>
-              <%= file_field_tag "invoice[attachment]", class: "form-control", accept: "image/*,application/pdf" %>
+              <%= f.file_field :attachments, class: "form-control", multiple: true, accept: "image/*,application/pdf" %>
               <div id="fileHelp" class="form-text">Only images and PDFs allowed. Max file size is 10 MB.</div>
             </div>
           </div>
