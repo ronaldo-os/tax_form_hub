@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_18_100038) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_21_075344) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -74,7 +74,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_18_100038) do
     t.string "currency"
     t.jsonb "line_items_data", default: []
     t.jsonb "payment_terms", default: []
-    t.jsonb "header_charge_discount_tax", default: []
     t.jsonb "price_adjustments", default: []
     t.text "recipient_note"
     t.string "delivery_details_country"

@@ -10,10 +10,27 @@ class InvoicesController < ApplicationController
   end
 
   def create
+    # Build invoice without line_items_attributes
     @invoice = current_user.invoices.build(invoice_params.except(:line_items_attributes))
 
+    # Assign line items JSON
     if params[:invoice][:line_items_attributes].present?
       @invoice.line_items_data = params[:invoice][:line_items_attributes].values
+    end
+
+    # Parse all JSON string fields
+    %i[
+      payment_terms
+      price_adjustments
+    ].each do |field|
+      raw_value = params[:invoice][field]
+      if raw_value.present?
+        begin
+          @invoice.send("#{field}=", JSON.parse(raw_value))
+        rescue JSON::ParserError
+          @invoice.send("#{field}=", [])
+        end
+      end
     end
 
     if @invoice.save
@@ -22,7 +39,6 @@ class InvoicesController < ApplicationController
       render :new
     end
   end
-
 
   private
 
@@ -58,11 +74,14 @@ class InvoicesController < ApplicationController
       :remit_to_location_id,
       :tax_representative_location_id,
 
-      # JSON fields (expected to be handled via hidden inputs or JS)
+      # JSON fields
       :line_items_data,
       :payment_terms,
-      :header_charge_discount_tax,
       :price_adjustments,
+
+      # attachments
+      attachments: [],
+
       # line items and their optional fields...
       line_items_attributes: [
         :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :_destroy,
@@ -70,6 +89,5 @@ class InvoicesController < ApplicationController
       ]
     )
   end
-
 
 end

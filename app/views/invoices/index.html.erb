@@ -25,16 +25,50 @@
 
               <td>
                 <% if invoice.attachments.attached? %>
-                  <%= link_to 'Download', url_for(invoice.attachments), target: "_blank" %><br>
-
-                  <% if invoice.attachments.image? %>
-                    <%= image_tag invoice.attachments.variant(resize_to_limit: [150, 150]) %>
-                  <% end %>
+                  <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#attachmentModal-<%= invoice.id %>">
+                    View Files
+                  </button>
                 <% else %>
-                  No File
+                  <span class="text-muted">No File</span>
+                <% end %>
+
+                <% if invoice.attachments.attached? %>
+                  <div class="modal fade" id="attachmentModal-<%= invoice.id %>" tabindex="-1" aria-labelledby="attachmentModalLabel-<%= invoice.id %>" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="attachmentModalLabel-<%= invoice.id %>">Attachments</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <div class="row">
+                            <% invoice.attachments.each do |file| %>
+                              <div class="col-md-6 mb-3">
+                                <% if file.content_type.start_with?("image/") %>
+                                  <%= link_to url_for(file), target: "_blank" do %>
+                                    <img src="<%= url_for(file) %>" class="img-fluid rounded border" alt="Attachment">
+                                  <% end %>
+                                <% elsif file.content_type == "application/pdf" %>
+                                  <div class="d-flex align-items-center justify-content-between border p-2 rounded">
+                                    <span><%= file.filename.to_s %></span>
+                                    <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
+                                  </div>
+                                <% else %>
+                                  <div class="border p-2 rounded">
+                                    <span><%= file.filename.to_s %></span>
+                                    <%= link_to "Download", url_for(file), class: "btn btn-sm btn-outline-secondary", target: "_blank" %>
+                                  </div>
+                                <% end %>
+                              </div>
+                            <% end %>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 <% end %>
               </td>
-
+              
               <td>
                 <%= link_to 'View', invoice_path(invoice), class: 'btn btn-sm btn-outline-primary' %>
               </td>
