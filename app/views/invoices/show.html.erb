@@ -8,127 +8,58 @@
         <div class="row">
 
           <div class="col-md-6 mb-3">
-            <%= f.label :To, class: "form-label" %>
-            <%= select_tag "invoice[recipient_company_id]",
-              options_for_select(@recipient_companies.map { |c|
-                [
-                  c.name,
-                  c.id,
-                  {
-                    'data-name': c.name,
-                    'data-website': c.website,
-                    'data-industry': c.industry,
-                    'data-ownership': c.ownership,
-                    'data-address': c.address,
-                    'data-phone': c.phone,
-                    'data-description': c.description,
-                    'data-size': c.size,
-                    'data-share-capital': c.share_capital,
-                    'data-registration-address': c.registration_address,
-                    'data-email-address': c.email_address,
-                    'data-company-id-type': c.company_id_type,
-                    'data-company-id-number': c.company_id_number,
-                    'data-tax-id-type': c.tax_id_type,
-                    'data-tax-id-number': c.tax_id_number,
-                    'data-internal-identifier': c.internal_identifier
-                  }
-                ]
-              }),
-              prompt: "Select a company",
-              class: "form-select",
-              id: "recipient_company_id"
-            %>
-
-
-            <!-- Company preview will be inserted here -->
-            <div id="recipient-preview" class="border p-3 rounded d-none">
-              <p class="mb-1" id="company_name"></p>
-              <p class="mb-1" id="company_address"></p>
-              <p class="mb-1" id="company_location"></p>
-              <p class="mb-1" id="company_country"></p>
-              <br>
-              <p class="mb-1" id="company_number"></p>
-              <p class="mb-1" id="company_tax_number"></p>
-              <a href="#" class="text-primary small" id="change-recipient">Change recipient</a>
+            <% if @recipient_company.present? %>
+            <div id="recipient-preview" class="p-3 rounded">
+                <p class="mb-1 fw-bold" id="company_name"><%= @recipient_company.name %></p>
+                <p class="mb-1" id="company_address"><%= @recipient_company.address %></p>
+                <p class="mb-1" id="company_location"><%= @recipient_company.registration_address %></p>
+                <p class="mb-1" id="company_country">Philippines</p>
+                <br>
+                <p class="mb-1" id="company_number">
+                Company number: <%= @recipient_company.company_id_number.presence || '-' %>
+                </p>
+                <p class="mb-1" id="company_tax_number">
+                Tax number: <%= @recipient_company.tax_id_number.presence || '-' %>
+                </p>
             </div>
+            <% end %>
           </div>
 
 
           <div class="col-md-6">
 
+            <%= f.hidden_field :optional_fields, id: 'optional_fields_json' %>
 
-            <%= f.label :invoice_number, class: "form-label" %>
-            <%= f.text_field :invoice_number, class: "form-control" %>
-
-            <div class="row mt-3">
-              <div class="col-md-6">
-                <%= f.label :issue_date, class: "form-label" %>
-                <%= f.date_field :issue_date, class: "form-control" %>
-              </div>
-
-              <div class="col-md-6">
-                <%= f.label :currency, class: "form-label" %>
-                <%= f.text_field :currency, class: "form-control" %>
-              </div>
-            </div>
-
-            <div id="invoice_details_parent_div" class="mt-3">
-              <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="payment_due_date">
-                <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
-                <div class="row">
-                  <div class="col-md-12">
-                    <%= f.label :payment_due_date, class: "form-label" %>
-                    <%= f.date_field :payment_due_date, class: "form-control" %>
-                  </div>
+            <div class="row mt-3 mb-3">
+                <div class="col-md-6 mb-2">
+                    <%= f.label :invoice_number, class: "form-label fw-bold" %>
+                    <p class="mb-1" id="company_country"><%= @invoice.invoice_number %></p>
                 </div>
-              </div>
 
-              <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="delivery_date">
-                <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
-                <div class="row">
-                  <div class="col-md-12">
-                    <%= f.label :delivery_date, class: "form-label" %>
-                    <%= f.date_field :delivery_date, class: "form-control" %>
-                  </div>
+                <div class="col-md-6 mb-2">
+                    <%= f.label :issue_date, class: "form-labe fw-bold" %>
+                    <p class="mb-1" id="company_country"><%= @invoice.issue_date %></p>
                 </div>
-              </div>
 
-              <div id="optional_fields_container"></div>
+                <%= f.label :currency, class: "form-label fw-bold" %>
+                <p class="mb-1" id="company_country"><%= @invoice.currency %></p>
 
-              <div class="mt-4 mb-4">
-                <select id="optionalField" class="form-select">
-                  <option value="">Add optional field</option>
-                  <option value="customsDeclarations">Customs Declarations</option>
-                  <option value="taxExchangeRateFields">Exchange rate</option>
-                  <option value="transactionVatType">Transaction VAT Type</option>
-                  <option value="orderReferenceId">Purchase order number</option>
-                  <option value="orderReferenceIssueDate">Purchase order issue date</option>
-                  <option value="billingReferenceId">Billing reference</option>
-                  <option value="contractDocumentReferenceId">Contract number</option>
-                  <option value="despatchDocumentReference.id">Shipping Notice Reference</option>
-                  <option value="despatchDocumentReference.issueDate">Shipping Notice Issue Date</option>
-                  <option value="receiptDocumentReference.id">Goods Receipt Reference</option>
-                  <option value="receiptDocumentReference.issueDate">Goods Receipt Issue Date</option>
-                  <option value="accountingCost">Cost center</option>
-                  <option value="customerPartyContactName">Person reference</option>
-                  <option value="additionalReferences[BOL ID]">Transport Reference</option>
-                  <option value="BOLIssueDate">Transport Reference Issue Date</option>
-                  <option value="additionalReferences[File ID]">File Id</option>
-                  <option value="customerAssignedId">Customer account ID</option>
-                  <option value="taxPointDate">Tax point date</option>
-                  <option value="supplierCommissionNumber">Commission number of seller</option>
-                  <option value="supplierPhysicalLocationValue">Data universal numbering system</option>
-                  <option value="deliveryTerms">Delivery Terms</option>
-                  <option value="additionalReferences[Interim Hours]">Interim Hours</option>
-                  <option value="additionalReferences[BookingNumber]">Booking Number</option>
-                  <option value="additionalReferences[PaymentReference]">Payment Reference</option>
-                  <option value="additionalReferences[TS Clearance]">Tradeshift Clearance</option>
-                  <option value="promisedDeliveryPeriod">Delivery period</option>
-                  <option value="additionalReferences[Clearance Clave]">Clearance Clave</option>
-                </select>
-              </div>
+                <% @invoice.invoice_info.each do |key, value| %>
+                    <%  raw_label = if key.include?(".")
+                                        key.split(".").last
+                                    elsif key.include?("[")
+                                        key[/\[(.*?)\]/, 1] || key
+                                    else
+                                        key
+                                    end
 
-
+                        label = raw_label.to_s.gsub('_', ' ').titleize
+                    %>
+                    <div class="col-md-12 mb-2">
+                        <label class="form-label fw-bold"><%= label %></label>
+                        <p class="mb-1"><%= value.presence || "-" %></p>
+                    </div>
+                <% end %>
             </div>
 
           </div>
@@ -151,85 +82,49 @@
             </tr>
           </thead>
           <tbody id="line-items">
-            <tr class="line-item" data-line-index="0">
-              <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id"></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1"></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01"></td>
-              <td>
-                <select name="invoice[line_items_attributes][0][recurring]" class="form-select recurring">
-                  <option value="no">No</option>
-                  <option value="every_month">Every month</option>
-                  <option value="every_quarter">Every quarter</option>
-                  <option value="every_year">Every year</option>
-                </select>
-              </td>
-              <td class="text-end total">0.00</td>
-              <td>
-                <input type="hidden" name="invoice[line_items_attributes][0][_destroy]" value="false">
-                <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
-              </td>
-            </tr>
+            <% @invoice.line_items_data.each_with_index do |item, index| %>
+                <tr class="line-item">
+                    <td><%= index + 1 %></td>
+                    <td><%= item["item_id"] %></td>
+                    <td><%= item["description"] %></td>
+                    <td><%= item["quantity"] %></td>
+                    <td><%= item["unit"] %></td>
+                    <td><%= item["price"] %></td>
+                    <td><%= item["tax"] %></td>
+                    <td><%= item["recurring"] %></td>
+                    <td><%= item["quantity"].to_f * item["price"].to_f %></td>
+                    <td></td>
+                </tr>
 
-            <tr class="dropdown_per_line hidden" data-line-index="0">
-              <td colspan="3">
-                <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
-                  <option value="">Add optional field</option>
-                  <option value="discount">Discount</option>
-                  <option value="charge">Charge (e.g. freight)</option>
-                  <option value="bolid">Transport Reference</option>
-                  <option value="fileid">File Id</option>
-                  <option value="taxexemptionreason">Tax exemption reason</option>
-                  <option value="modelname">Model name</option>
-                  <option value="hsnsac">HSN/SAC</option>
-                  <option value="documentreference">Purchase order number</option>
-                  <option value="documentlinereference">Purchase order line number</option>
-                  <option value="accountingcost">Cost center</option>
-                  <option value="deliveryaddress">Delivery Address</option>
-                  <option value="actualdeliverydate">Delivery Date</option>
-                  <option value="buyersitemidentification">Buyer material number</option>
-                  <option value="origincountry">Country of origin</option>
-                  <option value="eccn">Commodity classification: ECCN</option>
-                  <option value="eangtin">EAN/GTIN</option>
-                  <option value="incoterms">Delivery Terms</option>
-                  <option value="manufacturename">Manufacture name</option>
-                  <option value="trackingid">Freight order number</option>
-                  <option value="serialID">Serial number</option>
-                  <option value="linenote">Notes</option>
-                  <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
-                  <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
-                  <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
-                  <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
-                </select>
-              </td>
-              <td colspan="6"></td>
-            </tr>
-
-
+                <% if item["optional_fields"].present? %>
+                    <% grouped = item["optional_fields"]
+                                .reject { |k, _| k.end_with?("_edit") }
+                                .group_by { |k, _| k.split(".").first } %>
+                    <tr class="bg-light">
+                    <td colspan="10">
+                        <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <% grouped.each do |group_name, fields| %>
+                            <% fields.each do |key, value| %>
+                                <% next if key.end_with?("_edit") || value.blank? %>
+                                <% label = key.split(".").last.titleize %>
+                                <tr>
+                                <td class="text-start" style="width: 30%;">
+                                    <strong><%= group_name.titleize %> <%= label %></strong>
+                                </td>
+                                <td class="text-start"><%= value %></td>
+                                </tr>
+                            <% end %>
+                            <% end %>
+                        </tbody>
+                        </table>
+                    </td>
+                    </tr>
+                <% end %>
+            <% end %>
 
           </tbody>
         </table>
-
-        <div class="row g-3 mb-3 mt-0">
-          <div class="col-md-4 d-grid">
-            <button type="button" id="add-discount-row" class="btn btn-outline-primary">
-              Add Header Charge / Discount / Tax
-            </button>
-          </div>
-          <div class="col-md-4 d-grid">
-            <button type="button" id="add-base-quantity" class="btn btn-outline-secondary">
-              Show Base Quantity Column
-            </button>
-          </div>
-          <div class="col-md-4 d-grid">
-            <button type="button" id="add-line" class="btn btn-success">
-              <i class="bi bi-plus-square me-1"></i> Add New Line
-            </button>
-          </div>
-        </div>
 
         <div class="text-end mt-3">
           <p>Subtotal excl. taxes: <span class="subtotal-amount">0.00</span></p>
@@ -241,6 +136,7 @@
 
         <div class="row">
           <div class="col-md-6">
+              <%= f.hidden_field :payment_terms, id: 'payment_terms_json' %>
             <div id="payment_terms_parent_div">
             </div>
             <select name="payment_terms_select" id="payment_terms_select" class="form-select mb-3" data-optional-group="0">
@@ -433,7 +329,10 @@
                 </div>
             </div>
 
-            
+            <%# include selected option to db %>
+            <%= f.hidden_field :ship_from_location_id, id: "ship_from_location_id" %>
+            <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id" %>
+            <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id" %>
 
             <%= render partial: "locations/location_selector", locals: { type: "Ship From", locations: @locations_by_type["Ship From"] || [] } %>
             <%= render partial: "locations/location_selector", locals: { type: "Remit To", locations: @locations_by_type["Remit To"] || [] } %>
@@ -464,13 +363,6 @@
         <div class="d-flex justify-content-between gap-2 mt-5">
             <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
             <%= f.submit "Create Invoice", class: "btn btn-primary" %>
-            <%= f.hidden_field :price_adjustments, id: 'price_adjustments_json' %>
-            <%= f.hidden_field :payment_terms, id: 'payment_terms_json' %>
-            <%= f.hidden_field :invoice_info, id: 'optional_fields_json' %>
-            <%= f.hidden_field :ship_from_location_id, id: "ship_from_location_id" %>
-            <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id" %>
-            <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id" %>
-
         </div>
     </div>
     <div class="card-footer bg-white pb-3">

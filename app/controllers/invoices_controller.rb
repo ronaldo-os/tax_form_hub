@@ -3,6 +3,12 @@ class InvoicesController < ApplicationController
     @invoices = Invoice.order(issue_date: :desc)
   end
 
+  def show
+    @invoice = Invoice.find(params[:id])
+    @recipient_company = @invoice.recipient_company
+    @locations_by_type = Location.all.group_by(&:location_type)
+  end
+
   def new
     @invoice = Invoice.new
     @recipient_companies = Company.where.not(user_id: current_user.id)
@@ -22,6 +28,7 @@ class InvoicesController < ApplicationController
     %i[
       payment_terms
       price_adjustments
+      invoice_info
     ].each do |field|
       raw_value = params[:invoice][field]
       if raw_value.present?
@@ -78,6 +85,7 @@ class InvoicesController < ApplicationController
       :line_items_data,
       :payment_terms,
       :price_adjustments,
+      :invoice_info,
 
       # attachments
       attachments: [],

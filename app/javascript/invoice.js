@@ -146,7 +146,7 @@ if (window.location.pathname.includes("/invoices")) {
             </div>
           `;
 
-          $('#invoice_details_parent_div').append(groupHtml);
+          $('#optional_fields_container').append(groupHtml);
           $(this).val('');
           updateOptionalFieldsJSON();
         });
