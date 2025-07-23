@@ -1,10 +1,10 @@
 <div class="container mt-5">
+  <div class="d-flex justify-content-between gap-2 mt-5 mb-3">
+    <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
+  </div>
   <div class="card shadow-sm mb-5">
     <div class="card-body">
       <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
-
-        <h5 class="text-secondary">Invoice Details</h5>
-        
         <div class="row">
 
           <div class="col-md-6 mb-3">
@@ -33,32 +33,35 @@
             <div class="row mt-3 mb-3">
                 <div class="col-md-6 mb-2">
                     <%= f.label :invoice_number, class: "form-label fw-bold" %>
-                    <p class="mb-1" id="company_country"><%= @invoice.invoice_number %></p>
+                    <p class="mb-1"><%= @invoice.invoice_number %></p>
                 </div>
 
                 <div class="col-md-6 mb-2">
                     <%= f.label :issue_date, class: "form-labe fw-bold" %>
-                    <p class="mb-1" id="company_country"><%= @invoice.issue_date %></p>
+                    <p class="mb-1"><%= @invoice.issue_date %></p>
                 </div>
 
                 <%= f.label :currency, class: "form-label fw-bold" %>
-                <p class="mb-1" id="company_country"><%= @invoice.currency %></p>
+                <p class="mb-1"><%= @invoice.currency %></p>
 
-                <% @invoice.invoice_info.each do |key, value| %>
-                    <%  raw_label = if key.include?(".")
-                                        key.split(".").last
-                                    elsif key.include?("[")
-                                        key[/\[(.*?)\]/, 1] || key
-                                    else
-                                        key
-                                    end
+                <% if @invoice.invoice_info.is_a?(Hash) %>
+                  <% @invoice.invoice_info.each do |key, value| %>
+                    <% 
+                      raw_label = if key.include?(".")
+                                    key.split(".").last
+                                  elsif key.include?("[")
+                                    key[/\[(.*?)\]/, 1] || key
+                                  else
+                                    key
+                                  end
 
-                        label = raw_label.to_s.gsub('_', ' ').titleize
+                      label = raw_label.to_s.gsub('_', ' ').titleize
                     %>
                     <div class="col-md-12 mb-2">
-                        <label class="form-label fw-bold"><%= label %></label>
-                        <p class="mb-1"><%= value.presence || "-" %></p>
+                      <label class="form-label fw-bold"><%= label %></label>
+                      <p class="mb-1"><%= value.presence || "-" %></p>
                     </div>
+                  <% end %>
                 <% end %>
             </div>
 
@@ -127,260 +130,140 @@
         </table>
 
         <div class="text-end mt-3">
-          <p>Subtotal excl. taxes: <span class="subtotal-amount">0.00</span></p>
-          <p><strong>Total PHP: <span class="grand-total-amount">0.00</span></strong></p>
-          <p>Total taxes: <span class="total-tax-amount">0.00</span> PHP</p>
+          <p>
+            Subtotal excl. taxes:
+            <span>
+              <%= number_with_precision(@invoice.total.dig("subtotal").to_f, precision: 2) %>
+            </span>
+          </p>
+
+          <p>
+            <strong>Total PHP:
+              <span class="fw-biold">
+                <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2) %>
+              </span>
+            </strong>
+          </p>
+
+          <p>
+            Total taxes:
+            <span>
+              <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2) %>
+            </span>
+          </p>
         </div>
+
 
         <hr>
 
         <div class="row">
           <div class="col-md-6">
-              <%= f.hidden_field :payment_terms, id: 'payment_terms_json' %>
-            <div id="payment_terms_parent_div">
-            </div>
-            <select name="payment_terms_select" id="payment_terms_select" class="form-select mb-3" data-optional-group="0">
-              <option value="">Add payment terms and means</option>
-              <option value="paymentterms">Payment Terms</option>
-              <option value="cash">Cash payment</option>
-              <option value="check">Check</option>
-              <option value="bank">Bank Account</option>
-              <option value="bank_card">Bank Card</option>
-              <option value="debit">Direct Debit</option>
-              <option value="bic_iban">BIC + IBAN</option>
-            </select>
-            <div class="form-check mb-4">
-              <%= f.check_box :save_payment_terms_for_future, class: "form-check-input" %>
-              <%= f.label :save_payment_terms_for_future, "Save payment terms and means for future invoices", class: "form-check-label" %>
-            </div>
+          <% if @invoice.payment_terms.present? %>
+              <h5 class="mb-3">Payment Terms</h5>
 
-            <hr>
-
-            <button type="button" class="btn btn-primary btn-sm"
-              data-bs-toggle="collapse"
-              data-bs-target="#delivery_details_parent_div"
-              aria-expanded="false"
-              aria-controls="delivery_details_parent_div">
-              + Delivery Details
-            </button>
-
-            <div class="collapse mt-3 border rounded p-3 pt-3" id="delivery_details_parent_div">
-              <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Delivery details</h5>
-              </div>
-              <div class="row">
-                  <div class="row">
-                    <div class="col-md-12 mb-3">
-                      <label class="form-label">Country/Region</label>
-                      <select name="invoice[delivery_details_country]" id="initial_delivery_details_country" class="form-select">
-                      </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Postbox</label>
-                      <input type="text" name="invoice[delivery_details_postbox]" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Street</label>
-                      <input type="text" name="invoice[delivery_details_street]" class="form-control">
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Number</label>
-                      <input type="text" name="invoice[delivery_details_number]" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Locality name</label>
-                      <input type="text" name="invoice[delivery_details_locality_name]" class="form-control">
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Postal/ZIP</label>
-                      <input type="text" name="invoice[delivery_details_zip_code]" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">City</label>
-                      <input type="text" name="invoice[delivery_details_city]" class="form-control">
-                    </div>
-
-                    <div class="col-md-12 mb-3">
-                      <label class="form-label">GLN</label>
-                      <input type="text" name="invoice[delivery_details_gln]" class="form-control">
-                      <div class="form-text">
-                        <a href="https://en.wikipedia.org/wiki/Global_Location_Number" target="_blank">What is a GLN?</a>
-                      </div>
-                    </div>
-
-                    <div class="col-md-12 mb-3">
-                      <label class="form-label">Company Name</label>
-                      <input type="text" name="invoice[delivery_details_company_name]" class="form-control">
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                      <label class="form-label">Tax ID</label>
-                        <select name="invoice[delivery_details_tax_id]" class="form-select">
-                        <option value="">Tax ID</option>
-                        <option value="AE:TRN">AE:TRN</option>
-                        <option value="AO:VAT">AO:VAT</option>
-                        <option value="AR:CUIT">AR:CUIT</option>
-                        <option value="AT:MWST">AT:MWST</option>
-                        <option value="AU:TFN">AU:TFN</option>
-                        <option value="BB:TIN">BB:TIN</option>
-                        <option value="BD:TIN">BD:TIN</option>
-                        <option value="BE:BTW">BE:BTW</option>
-                        <option value="BF:IFU">BF:IFU</option>
-                        <option value="BG:DDS">BG:DDS</option>
-                        <option value="BH:TIN">BH:TIN</option>
-                        <option value="BJ:IFU">BJ:IFU</option>
-                        <option value="BR:CNPJ">BR:CNPJ</option>
-                        <option value="BW:VAT">BW:VAT</option>
-                        <option value="CA:GST">CA:GST</option>
-                        <option value="CA:QST">CA:QST</option>
-                        <option value="CD:VAT">CD:VAT</option>
-                        <option value="CG:VAT">CG:VAT</option>
-                        <option value="CH:UID">CH:UID</option>
-                        <option value="CI:VAT">CI:VAT</option>
-                        <option value="CL:RUT">CL:RUT</option>
-                        <option value="CM:VAT">CM:VAT</option>
-                        <option value="CN:VAT">CN:VAT</option>
-                        <option value="CO:NIT">CO:NIT</option>
-                        <option value="CR:CJ">CR:CJ</option>
-                        <option value="CY:FPA">CY:FPA</option>
-                        <option value="CZ:DPH">CZ:DPH</option>
-                        <option value="DE:MWST">DE:MWST</option>
-                        <option value="DK:CVR">DK:CVR</option>
-                        <option value="DZ:NIF">DZ:NIF</option>
-                        <option value="EC:RUC">EC:RUC</option>
-                        <option value="EE:KMKR">EE:KMKR</option>
-                        <option value="EG:TIN">EG:TIN</option>
-                        <option value="ES:IVA">ES:IVA</option>
-                        <option value="FI:ALV">FI:ALV</option>
-                        <option value="FR:VAT">FR:VAT</option>
-                        <option value="GB:VAT">GB:VAT</option>
-                        <option value="GH:VAT">GH:VAT</option>
-                        <option value="GQ:VAT">GQ:VAT</option>
-                        <option value="GR:FPA">GR:FPA</option>
-                        <option value="GT:NIT">GT:NIT</option>
-                        <option value="HR:OIB">HR:OIB</option>
-                        <option value="HU:AFA">HU:AFA</option>
-                        <option value="ID:VAT">ID:VAT</option>
-                        <option value="IE:VAT">IE:VAT</option>
-                        <option value="IL:VAT">IL:VAT</option>
-                        <option value="IN:GST">IN:GST</option>
-                        <option value="IS:VSK">IS:VSK</option>
-                        <option value="IT:IVA">IT:IVA</option>
-                        <option value="JP:CT">JP:CT</option>
-                        <option value="JP:VAT">JP:VAT</option>
-                        <option value="KE:VAT">KE:VAT</option>
-                        <option value="KR:VAT">KR:VAT</option>
-                        <option value="KW:TIN">KW:TIN</option>
-                        <option value="LI:VAT">LI:VAT</option>
-                        <option value="LK:TIN">LK:TIN</option>
-                        <option value="LT:PVM">LT:PVM</option>
-                        <option value="LU:TVA">LU:TVA</option>
-                        <option value="LV:VAT">LV:VAT</option>
-                        <option value="MA:IF">MA:IF</option>
-                        <option value="MC:TVA">MC:TVA</option>
-                        <option value="MU:TAN">MU:TAN</option>
-                        <option value="MX:RFC">MX:RFC</option>
-                        <option value="MY:GST">MY:GST</option>
-                        <option value="MY:SST">MY:SST</option>
-                        <option value="MY:TIN">MY:TIN</option>
-                        <option value="MY:TTX">MY:TTX</option>
-                        <option value="NG:TIN">NG:TIN</option>
-                        <option value="NL:BTW">NL:BTW</option>
-                        <option value="NO:VAT">NO:VAT</option>
-                        <option value="NZ:GST">NZ:GST</option>
-                        <option value="PE:RUC">PE:RUC</option>
-                        <option value="PK:NTN">PK:NTN</option>
-                        <option value="PL:NIP">PL:NIP</option>
-                        <option value="PR:EIN">PR:EIN</option>
-                        <option value="PT:NIF">PT:NIF</option>
-                        <option value="QA:TIN">QA:TIN</option>
-                        <option value="RO:CIF">RO:CIF</option>
-                        <option value="RW:TIN">RW:TIN</option>
-                        <option value="SA:TIN">SA:TIN</option>
-                        <option value="SE:VAT">SE:VAT</option>
-                        <option value="SG:GSTN">SG:GSTN</option>
-                        <option value="SI:DDV">SI:DDV</option>
-                        <option value="SK:DPH">SK:DPH</option>
-                        <option value="SZ:VAT">SZ:VAT</option>
-                        <option value="TD:VAT">TD:VAT</option>
-                        <option value="TH:VAT">TH:VAT</option>
-                        <option value="TN:TVA">TN:TVA</option>
-                        <option value="TR:VKN">TR:VKN</option>
-                        <option value="TS:VAT">TS:VAT</option>
-                        <option value="TW:GUI">TW:GUI</option>
-                        <option value="TW:TIN">TW:TIN</option>
-                        <option value="UG:VAT">UG:VAT</option>
-                        <option value="US:EIN">US:EIN</option>
-                        <option value="UY:RUT">UY:RUT</option>
-                        <option value="VE:RIF">VE:RIF</option>
-                        <option value="ZA:VAT">ZA:VAT</option>
-                        <option value="ZW:VAT">ZW:VAT</option>                      
-                      </select>
-                    </div>
-                    <div class="col-md-8 mb-3">
-                      <label class="form-label">Tax Number</label>
-                      <input type="text" name="invoice[delivery_details_tax_number]" class="form-control">
-                    </div>
+              <% @invoice.payment_terms.each do |group_key, fields| %>
+                <% if fields.present? %>
+                  <div class="mb-3">
+                    <h6 class="fw-bold"><%= group_key.titleize %></h6>
+                    <table class="table table-sm table-borderless">
+                      <tbody>
+                        <% fields.each do |field_key, field_value| %>
+                          <% next if field_key.ends_with?("_edit") || field_value.blank? %>
+                          <% label = field_key.split('.').last.titleize %>
+                          <tr>
+                            <td class="text-start" style="width: 25%;"><%= label %></td>
+                            <td class="text-start"><%= field_value %></td>
+                          </tr>
+                        <% end %>
+                      </tbody>
+                    </table>
                   </div>
+                <% end %>
+              <% end %>
+          <% end %>
 
-                </div>
+          
+
+        <div id="delivery_details_parent_div">
+          <% if [
+                @invoice.delivery_details_postbox,
+                @invoice.delivery_details_street,
+                @invoice.delivery_details_number,
+                @invoice.delivery_details_locality_name,
+                @invoice.delivery_details_zip_code,
+                @invoice.delivery_details_city,
+                @invoice.delivery_details_country,
+                @invoice.delivery_details_gln,
+                @invoice.delivery_details_company_name,
+                @invoice.delivery_details_tax_id,
+                @invoice.delivery_details_tax_number
+              ].any?(&:present?) %>
+            <hr>
+            <h5 class="mb-0">Delivery details</h5>
+
+            <div class="row">
+              <!-- Full Address in One or Two Lines -->
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Address</label>
+                <p class="form-control-plaintext">
+                  <%= [
+                        @invoice.delivery_details_postbox,
+                        @invoice.delivery_details_street,
+                        @invoice.delivery_details_number,
+                        @invoice.delivery_details_locality_name,
+                        @invoice.delivery_details_zip_code,
+                        @invoice.delivery_details_city,
+                        @invoice.delivery_details_country
+                      ].compact.reject(&:blank?).join(', ') %>
+                </p>
+              </div>
+
+              <!-- GLN -->
+              <div class="col-md-12 mb-3">
+                <label class="form-label">GLN</label>
+                <p class="form-control-plaintext"><%= @invoice.delivery_details_gln %></p>
+              </div>
+
+              <!-- Company Name -->
+              <div class="col-md-12 mb-3">
+                <label class="form-label">Company Name</label>
+                <p class="form-control-plaintext"><%= @invoice.delivery_details_company_name %></p>
+              </div>
+
+              <!-- Tax Info -->
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Tax ID</label>
+                <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_id %></p>
+              </div>
+
+              <div class="col-md-8 mb-3">
+                <label class="form-label">Tax Number</label>
+                <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_number %></p>
+              </div>
             </div>
 
-            <%# include selected option to db %>
-            <%= f.hidden_field :ship_from_location_id, id: "ship_from_location_id" %>
-            <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id" %>
-            <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id" %>
+          <% end %>
 
-            <%= render partial: "locations/location_selector", locals: { type: "Ship From", locations: @locations_by_type["Ship From"] || [] } %>
-            <%= render partial: "locations/location_selector", locals: { type: "Remit To", locations: @locations_by_type["Remit To"] || [] } %>
-            <%= render partial: "locations/location_selector", locals: { type: "Tax Representative", locations: @locations_by_type["Tax Representative"] || [] } %>
 
+            <!-- Location Partials -->
+            <%= render partial: "partial_location_details", locals: { location: @ship_from_location, type_name: "Ship From Location" } if @ship_from_location.present? %>
+            <%= render partial: "partial_location_details", locals: { location: @remit_to_location_id, type_name: "Remit To Location" } if @remit_to_location_id.present? %>
+            <%= render partial: "partial_location_details", locals: { location: @tax_representative_location_id, type_name: "Tax Representative Location" } if @tax_representative_location_id.present? %>
           </div>
+        </div>
+
           
           <div class="col-md-6">
             <div class="mb-3">
-              <%= f.label :recipient_note, "Write a message to the recipient", class: "form-label" %>
-              <%= f.text_area :recipient_note, class: "form-control", rows: 5, placeholder: "Enter your message..." %>
-            </div>
-
-            <div class="form-check mb-4">
-              <%= f.check_box :save_notes_for_future, class: "form-check-input" %>
-              <%= f.label :save_notes_for_future, "Save notes for future Invoices", class: "form-check-label" %>
-            </div>
-
-            <div class="mb-3">
-              <%= f.label :attachments, class: "form-label" %>
-              <%= f.file_field :attachments, class: "form-control", multiple: true, accept: "image/*,application/pdf" %>
-              <div id="fileHelp" class="form-text">Only images and PDFs allowed. Max file size is 10 MB.</div>
+              <h5 class="mb-1">Message:</h5>
+              <p class="mb-1"><%= simple_format(@invoice.recipient_note) %></p>
             </div>
           </div>
-        </div>
 
-
-        <div class="d-flex justify-content-between gap-2 mt-5">
-            <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
-            <%= f.submit "Create Invoice", class: "btn btn-primary" %>
         </div>
     </div>
-    <div class="card-footer bg-white pb-3">
-        <button type="button" class="btn btn-primary btn-sm add-footer-toggle-btn mt-3">
-          + Add footer notes
-        </button>
-
-        <div id="footer_wrapper_parent_div" class="mt-3" style="display:none">
-          <div class="mb-3">
-              <%= f.label :footer_notes, class: "form-label" %>
-              <%= f.text_area :footer_notes, class: "form-control", rows: 5, placeholder: "Enter your message..." %>
-            </div>
-
-            <div class="form-check mb-4">
-              <%= f.check_box :save_footer_notes_for_future, class: "form-check-input" %>
-              <%= f.label :save_footer_notes_for_future, "Save notes for future Invoices", class: "form-check-label" %>
-            </div>
-        </div>
+    <div class="card-footer bg-white">
+      <p><%= simple_format(@invoice.footer_notes) %></p>
     </div>
     <% end %>
   </div>

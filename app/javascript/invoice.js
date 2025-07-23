@@ -1,6 +1,6 @@
 import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS } from "./long_select_options/options";
 
-if (window.location.pathname.includes("/invoices")) {
+if ( window.location.pathname === "/invoices" || window.location.pathname === "/invoices/new") {
 
     $(document).ready(function () {
 
@@ -966,9 +966,16 @@ if (window.location.pathname.includes("/invoices")) {
     const adjustedSubtotal = subtotal - discountAmount + chargeAmount;
     const grandTotal = adjustedSubtotal + totalTax + fixedTax;
 
-    $('.subtotal-amount').text(adjustedSubtotal.toFixed(2));
-    $('.total-tax-amount').text((totalTax + fixedTax).toFixed(2));
-    $('.grand-total-amount').text(grandTotal.toFixed(2));
+    const totalsJson = {
+      subtotal: adjustedSubtotal.toFixed(2),
+      tax: (totalTax + fixedTax).toFixed(2),
+      grand_total: grandTotal.toFixed(2)
+    };
+
+    $('#total_amount_json').val(JSON.stringify(totalsJson));
+    $('.subtotal-amount').text(totalsJson.subtotal);
+    $('.total-tax-amount').text(totalsJson.tax);
+    $('.grand-total-amount').text(totalsJson.grand_total);
   }
 
   $(document).on(

@@ -1,0 +1,18 @@
+<% type = type_name %>
+<div class="location-details" id="<%= type.parameterize.underscore %>_details">
+  <hr>
+  <h6><%= type %> Details</h6>
+  <hr>
+  <p class="fw-bold mb-1 location_name"><%= location.location_name %></p>
+  <p class="company_name mb-1"><%= location.company_name %></p>
+  <p class="tax_number mb-1 text-muted"><%= location.tax_number %></p>
+  <p class="street mb-0">
+    <%= [
+      location.street,
+      location.building,
+      location.additional_street
+    ].compact.join(", ") %>
+  </p>
+  <p class="city mb-0"><%= location.city %> <%= location.zip_code %></p>
+  <p class="country mb-0"><%= location.country %></p>
+</div>

@@ -7,7 +7,12 @@ class InvoicesController < ApplicationController
     @invoice = Invoice.find(params[:id])
     @recipient_company = @invoice.recipient_company
     @locations_by_type = Location.all.group_by(&:location_type)
+
+    @ship_from_location = Location.find(@invoice.ship_from_location_id) if @invoice.ship_from_location_id.present?
+    @remit_to_location_id = Location.find(@invoice.remit_to_location_id) if @invoice.remit_to_location_id.present?
+    @tax_representative_location_id = Location.find(@invoice.tax_representative_location_id) if @invoice.tax_representative_location_id.present?
   end
+
 
   def new
     @invoice = Invoice.new
@@ -29,6 +34,7 @@ class InvoicesController < ApplicationController
       payment_terms
       price_adjustments
       invoice_info
+      total
     ].each do |field|
       raw_value = params[:invoice][field]
       if raw_value.present?
@@ -86,6 +92,7 @@ class InvoicesController < ApplicationController
       :payment_terms,
       :price_adjustments,
       :invoice_info,
+      :total,
 
       # attachments
       attachments: [],
