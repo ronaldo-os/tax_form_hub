@@ -433,11 +433,9 @@
                 </div>
             </div>
 
-            
-
-            <%= render partial: "locations/location_selector", locals: { type: "Ship From", locations: @locations_by_type["Ship From"] || [] } %>
-            <%= render partial: "locations/location_selector", locals: { type: "Remit To", locations: @locations_by_type["Remit To"] || [] } %>
-            <%= render partial: "locations/location_selector", locals: { type: "Tax Representative", locations: @locations_by_type["Tax Representative"] || [] } %>
+            <%= render partial: "invoices/partials/create_invoice_location_selector", locals: { type: "Ship From", locations: @locations_by_type["Ship From"] || [] } %>
+            <%= render partial: "invoices/partials/create_invoice_location_selector", locals: { type: "Remit To", locations: @locations_by_type["Remit To"] || [] } %>
+            <%= render partial: "invoices/partials/create_invoice_location_selector", locals: { type: "Tax Representative", locations: @locations_by_type["Tax Representative"] || [] } %>
 
           </div>
           

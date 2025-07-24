@@ -81,7 +81,7 @@
                 &#8942;
               </button>
               <ul class="dropdown-menu" aria-labelledby="actionsDropdown_<%= submission.id %>">
-                <li>
+              <li>
                 <% if archived_table %>
                   <%= form_with model: submission, url: update_tax_submission_path(submission), method: :patch, local: true do |f| %>
                     <%= f.hidden_field :archived, value: false %>
@@ -95,10 +95,13 @@
                 <% end %>
               </li>
 
+              <% unless submission.processed? || submission.reviewed? %>
                 <li>
                   <%= link_to "Delete", tax_submission_path(submission), method: :delete, data: { confirm: "Are you sure you want to delete this submission?" }, class: "dropdown-item text-danger" %>
                 </li>
-              </ul>
+              <% end %>
+            </ul>
+
             </div>
           </td>
         </tr>

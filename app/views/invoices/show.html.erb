@@ -246,9 +246,9 @@
 
 
             <!-- Location Partials -->
-            <%= render partial: "partial_location_details", locals: { location: @ship_from_location, type_name: "Ship From Location" } if @ship_from_location.present? %>
-            <%= render partial: "partial_location_details", locals: { location: @remit_to_location_id, type_name: "Remit To Location" } if @remit_to_location_id.present? %>
-            <%= render partial: "partial_location_details", locals: { location: @tax_representative_location_id, type_name: "Tax Representative Location" } if @tax_representative_location_id.present? %>
+            <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @ship_from_location, type_name: "Ship From Location" } if @ship_from_location.present? %>
+            <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @remit_to_location_id, type_name: "Remit To Location" } if @remit_to_location_id.present? %>
+            <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @tax_representative_location_id, type_name: "Tax Representative Location" } if @tax_representative_location_id.present? %>
           </div>
         </div>
 

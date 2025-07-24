@@ -20,6 +20,12 @@ class InvoicesController < ApplicationController
     @locations_by_type = Location.all.group_by(&:location_type)
   end
 
+  def destroy
+    @invoice = Invoice.find(params[:id])
+    @invoice.destroy
+    redirect_to invoices_path, notice: "Invoice deleted successfully."
+  end
+
   def create
     # Build invoice without line_items_attributes
     @invoice = current_user.invoices.build(invoice_params.except(:line_items_attributes))

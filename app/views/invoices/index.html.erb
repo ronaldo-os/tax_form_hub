@@ -19,7 +19,7 @@
         <tbody>
           <% @invoices&.each do |invoice| %>
             <tr>
-              <td><%= invoice.invoice_number %></td>
+              <td><%= link_to invoice.invoice_number, invoice_path(invoice), class: '' %></td>
               <td><%= invoice.issue_date&.strftime('%Y-%m-%d') || '—' %></td>
               <td><%= invoice.currency %></td>
 
@@ -68,9 +68,22 @@
                   </div>
                 <% end %>
               </td>
-              
               <td>
-                <%= link_to 'View', invoice_path(invoice), class: 'btn btn-sm btn-outline-primary' %>
+                <div class="dropdown text-center">
+                  <button class="btn btn-link text-dark p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_" data-bs-toggle="dropdown" aria-expanded="false">
+                    &#8942;
+                  </button>
+                  <ul class="dropdown-menu" aria-labelledby="actionsDropdown_">
+                    <li>
+                      <%= link_to "Delete", invoice_path(invoice), 
+                          method: :delete, 
+                          data: { confirm: "Are you sure you want to delete this invoice?" }, 
+                          class: "dropdown-item text-danger" %>
+                    </li>
+                  </ul>
+
+
+                </div>
               </td>
             </tr>
           <% end %>
