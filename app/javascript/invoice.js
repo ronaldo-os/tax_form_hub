@@ -4,7 +4,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
     $(document).ready(function () {
 
-        $('#invoice-table').DataTable();
+        $('#sales-table').DataTable();
+        $('#purchases-table').DataTable();
         recalculateTotals();
 
         //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field

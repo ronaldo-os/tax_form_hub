@@ -4,6 +4,8 @@ class Invoice < ApplicationRecord
 
   has_many_attached :attachments
 
+  enum invoice_type: { sale: 'sale', purchase: 'purchase' }
+
   validate :attachments_type_allowed
 
   def line_items

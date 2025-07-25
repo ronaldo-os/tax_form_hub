@@ -1,8 +1,14 @@
 <div class="container mt-5">
   <div class="d-flex justify-content-between gap-2 mt-5 mb-3">
     <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
+    <% if @invoice.invoice_type == "sale" %>
+      <%= button_to "Send", duplicate_as_purchase_invoice_path(@invoice), method: :post, class: "btn btn-success btn-md" %>
+    <% end %>
   </div>
   <div class="card shadow-sm mb-5">
+    <div class="card-header bg-secondary">
+      <p class="mb-0 float-end text-light">STATUS: <span class="fw-bold"><%= @invoice.status.to_s.upcase %></span></p>
+    </div>
     <div class="card-body">
       <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
         <div class="row">

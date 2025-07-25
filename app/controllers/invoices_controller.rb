@@ -1,7 +1,9 @@
 class InvoicesController < ApplicationController
   def index
-    @invoices = Invoice.order(issue_date: :desc)
+    @invoices_sale = Invoice.where(user_id: current_user.id, invoice_type: "sale").order(issue_date: :desc)
+    @invoices_purchase = Invoice.where(user_id: current_user.id, invoice_type: "purchase").order(issue_date: :desc)
   end
+
 
   def show
     @invoice = Invoice.find(params[:id])
@@ -12,7 +14,6 @@ class InvoicesController < ApplicationController
     @remit_to_location_id = Location.find(@invoice.remit_to_location_id) if @invoice.remit_to_location_id.present?
     @tax_representative_location_id = Location.find(@invoice.tax_representative_location_id) if @invoice.tax_representative_location_id.present?
   end
-
 
   def new
     @invoice = Invoice.new
@@ -26,16 +27,43 @@ class InvoicesController < ApplicationController
     redirect_to invoices_path, notice: "Invoice deleted successfully."
   end
 
+  def duplicate_as_purchase
+    original = Invoice.find(params[:id])
+
+    recipient_company_id = original.recipient_company_id
+    recipient_user = Company.find_by(id: recipient_company_id)&.user
+
+    if recipient_user.nil?
+      redirect_to invoice_path(original), alert: "Recipient user not found."
+      return
+    end
+
+    duplicated_invoice = original.dup
+    duplicated_invoice.user_id = recipient_user.id
+    duplicated_invoice.sale_from_id = original.user_id
+    duplicated_invoice.status = "pending"
+    duplicated_invoice.invoice_type = "purchase"
+
+    if duplicated_invoice.save
+      redirect_to invoice_path(duplicated_invoice), notice: "Invoice duplicated as purchase."
+    else
+      redirect_to invoice_path(original), alert: "Failed to duplicate invoice."
+    end
+  end
+
+
+
+
   def create
-    # Build invoice without line_items_attributes
     @invoice = current_user.invoices.build(invoice_params.except(:line_items_attributes))
 
-    # Assign line items JSON
+    @invoice.invoice_type ||= "sale"
+    @invoice.status ||= "draft"
+
     if params[:invoice][:line_items_attributes].present?
       @invoice.line_items_data = params[:invoice][:line_items_attributes].values
     end
 
-    # Parse all JSON string fields
     %i[
       payment_terms
       price_adjustments
@@ -74,6 +102,7 @@ class InvoicesController < ApplicationController
       :save_notes_for_future,
       :save_footer_notes_for_future,
       :save_payment_terms_for_future,
+      :invoice_type,
 
       # delivery details
       :delivery_details_postbox,
@@ -103,12 +132,11 @@ class InvoicesController < ApplicationController
       # attachments
       attachments: [],
 
-      # line items and their optional fields...
+      # nested line items
       line_items_attributes: [
         :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :_destroy,
         { optional_fields: {} }
       ]
     )
   end
-
 end

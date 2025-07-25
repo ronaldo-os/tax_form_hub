@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_22_112855) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_24_142440) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -99,6 +99,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_22_112855) do
     t.datetime "updated_at", null: false
     t.jsonb "invoice_info", default: {}, null: false
     t.jsonb "total", default: {}, null: false
+    t.string "invoice_type"
+    t.string "status", default: "draft"
     t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
     t.index ["ship_from_location_id"], name: "index_invoices_on_ship_from_location_id"
     t.index ["tax_representative_location_id"], name: "index_invoices_on_tax_representative_location_id"
