@@ -62,12 +62,42 @@
               &#8942;
             </button>
             <ul class="dropdown-menu" aria-labelledby="actionsDropdown_">
-              <li>
-                <%= link_to "Delete", invoice_path(invoice),
-                    method: :delete,
-                    data: { confirm: "Are you sure you want to delete this invoice?" },
-                    class: "dropdown-item text-danger" %>
-              </li>
+
+              <% if invoice.status == "approved" %>
+                <li>
+                  <%= link_to "Mark as Paid", mark_as_paid_invoice_path(invoice),
+                      method: :patch,
+                      data: { confirm: "Mark this invoice as paid?" },
+                      class: "dropdown-item text-success" %>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+              <% end %>
+
+              <% if invoice.invoice_type == "purchase" && invoice.status == "pending" %>
+                <li>
+                  <%= link_to "Approve", approve_invoice_path(invoice),
+                      method: :patch,
+                      data: { confirm: "Approve this purchase invoice?" },
+                      class: "dropdown-item" %>
+                </li>
+                <li>
+                  <%= link_to "Deny", deny_invoice_path(invoice),
+                      method: :patch,
+                      data: { confirm: "Deny this purchase invoice?" },
+                      class: "dropdown-item" %>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+              <% end %>
+
+              <% if invoice.status == "draft" %>
+                <li>
+                  <%= link_to "Delete", invoice_path(invoice),
+                      method: :delete,
+                      data: { confirm: "Are you sure you want to delete this invoice?" },
+                      class: "dropdown-item text-danger" %>
+                </li>
+              <% end %>
+
             </ul>
           </div>
         </td>

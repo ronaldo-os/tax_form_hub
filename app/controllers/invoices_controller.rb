@@ -40,19 +40,17 @@ class InvoicesController < ApplicationController
 
     duplicated_invoice = original.dup
     duplicated_invoice.user_id = recipient_user.id
-    duplicated_invoice.sale_from_id = original.user_id
+    duplicated_invoice.sale_from_id = original.id
     duplicated_invoice.status = "pending"
     duplicated_invoice.invoice_type = "purchase"
 
     if duplicated_invoice.save
-      redirect_to invoice_path(duplicated_invoice), notice: "Invoice duplicated as purchase."
+      original.update(status: "sent")
+      redirect_to invoices_path, notice: "Invoice duplicated as purchase."
     else
-      redirect_to invoice_path(original), alert: "Failed to duplicate invoice."
+      redirect_to invoices_path, alert: "Failed to duplicate invoice."
     end
   end
-
-
-
 
   def create
     @invoice = current_user.invoices.build(invoice_params.except(:line_items_attributes))
@@ -87,7 +85,49 @@ class InvoicesController < ApplicationController
     end
   end
 
+  def approve
+    invoice = current_user.invoices.find(params[:id])
+
+    if invoice.update(status: "approved")
+      update_original_sale_status(invoice, "approved")
+      redirect_to invoices_path, notice: "Invoice approved."
+    else
+      redirect_to invoices_path, alert: "Failed to approve invoice."
+    end
+  end
+
+  def deny
+    invoice = current_user.invoices.find(params[:id])
+
+    if invoice.update(status: "denied")
+      update_original_sale_status(invoice, "denied")
+      redirect_to invoices_path, notice: "Invoice denied."
+    else
+      redirect_to invoices_path, alert: "Failed to deny invoice."
+    end
+  end
+
+  def mark_as_paid
+    sale_invoice = current_user.invoices.find(params[:id])
+
+    if sale_invoice.update(status: "paid")
+      purchase_invoice = Invoice.find_by(sale_from_id: sale_invoice.id, invoice_type: "purchase")
+      purchase_invoice&.update(status: "paid")
+
+      redirect_to invoices_path, notice: "Invoice marked as paid."
+    else
+      redirect_to invoices_path, alert: "Failed to update invoice."
+    end
+  end
+
   private
+
+  def update_original_sale_status(purchase_invoice, status)
+    return unless purchase_invoice.sale_from_id.present?
+    original_sale_invoice = Invoice.find_by(id: purchase_invoice.sale_from_id, invoice_type: "sale")
+    original_sale_invoice&.update(status: status)
+  end
+
 
   def invoice_params
     params.require(:invoice).permit(

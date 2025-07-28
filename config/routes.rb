@@ -24,6 +24,9 @@ Rails.application.routes.draw do
   resources :invoices do
     member do
       post :duplicate_as_purchase
+      patch :approve
+      patch :deny
+      patch :mark_as_paid
     end
   end
 
