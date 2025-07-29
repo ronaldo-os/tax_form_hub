@@ -89,6 +89,16 @@
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 
+              <% if invoice.archived? %>
+                <li>
+                  <%= link_to "Unarchive", unarchive_invoice_path(invoice), method: :patch, class: "dropdown-item" %>
+                </li>
+              <% else %>
+                <li>
+                  <%= link_to "Archive", archive_invoice_path(invoice), method: :patch, data: { confirm: "Archive this invoice?" }, class: "dropdown-item" %>
+                </li>
+              <% end %>
+
               <% if invoice.status == "draft" %>
                 <li>
                   <%= link_to "Delete", invoice_path(invoice),

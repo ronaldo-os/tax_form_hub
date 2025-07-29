@@ -6,6 +6,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
         $('#sales-table').DataTable();
         $('#purchases-table').DataTable();
+        $('#sales-archived-table').DataTable();
+        $('#purchases-archived-table').DataTable();
         recalculateTotals();
 
         //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
@@ -160,12 +162,16 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
         // Track input changes in optional fields
         $(document).on('input change', '.optional-input', function () {
-          updateOptionalFieldsJSON();
+          if ($(this).closest('#line-items').length === 0) {
+            updateOptionalFieldsJSON();
+          }
         });
 
         // Also track hardcoded fields (date fields, etc.)
         $(document).on('input change', '[data-optional-group] input, [data-optional-group] select, [data-optional-group] textarea', function () {
-          updateOptionalFieldsJSON();
+          if ($(this).closest('#line-items').length === 0) {
+            updateOptionalFieldsJSON();
+          }
         });
 
         // Update hidden field
@@ -174,7 +180,12 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
           $('[data-optional-group]').each(function () {
             const groupKey = $(this).data('optional-group');
-            const inputs = $(this).find('input, select, textarea');
+            const inputs = $(this)
+              .find('input, select, textarea')
+              .filter(function () {
+                return $(this).closest('#line-items').length === 0;
+              });
+
             inputs.each(function () {
               const name = $(this).data('field-name') || $(this).attr('name');
               const value = $(this).val();
@@ -643,22 +654,23 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     ],
   };
 
-  $(document).on('change', 'select[name^="optional_fields"]', function () {
+  $(document).on('change', 'select[name*="[optional_fields][discount.discount_type]"], select[name*="[optional_fields][charge.charge_type]"]', function () {
     const $select = $(this);
     const selectedValue = $select.val();
     const $rowGroup = $select.closest('tr.optional-field-row');
 
+    let targetName = '';
+
     if ($select.attr('name').includes('discount.discount_type')) {
-      const $editInput = $rowGroup.find('input[name^="optional_fields"][name*="discount.discount_type_edit"]');
-      if ($editInput.length > 0) {
-        $editInput.val(selectedValue);
-      }
+      targetName = 'discount.discount_type_edit';
+    } else if ($select.attr('name').includes('charge.charge_type')) {
+      targetName = 'charge.charge_type_edit';
     }
 
-    if ($select.attr('name').includes('charge.charge_type')) {
-      const $editInput = $rowGroup.find('input[name^="optional_fields"][name*="charge.charge_type_edit"]');
+    if (targetName !== '') {
+      const $editInput = $rowGroup.find(`input[name*="[optional_fields][${targetName}]"]`);
       if ($editInput.length > 0) {
-        $editInput.val(selectedValue);
+        $editInput.val(selectedValue).trigger('input');
       }
     }
   });
@@ -777,8 +789,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           </td>
           <td class="align-top">
             <select class="form-select unit-type" data-field="unit_type">
-              <option value="true">%</option>
               <option value="false">PHP</option>
+              <option value="true">%</option>
             </select>
           </td>
           <td class="align-top"></td>

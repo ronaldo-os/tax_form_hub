@@ -1,14 +1,16 @@
 class InvoicesController < ApplicationController
   def index
-    @invoices_sale = Invoice.where(user_id: current_user.id, invoice_type: "sale").order(issue_date: :desc)
-    @invoices_purchase = Invoice.where(user_id: current_user.id, invoice_type: "purchase").order(issue_date: :desc)
-  end
+    @invoices_sale = Invoice.where(user_id: current_user.id, invoice_type: "sale", archived: false).order(issue_date: :desc)
+    @invoices_sale_archived = Invoice.where(user_id: current_user.id, invoice_type: "sale", archived: true).order(issue_date: :desc)
 
+    @invoices_purchase = Invoice.where(user_id: current_user.id, invoice_type: "purchase", archived: false).order(issue_date: :desc)
+    @invoices_purchase_archived = Invoice.where(user_id: current_user.id, invoice_type: "purchase", archived: true).order(issue_date: :desc)
+  end
 
   def show
     @invoice = Invoice.find(params[:id])
     @recipient_company = @invoice.recipient_company
-    @locations_by_type = Location.all.group_by(&:location_type)
+    @locations_by_type = Location.where(user_id: current_user.id).group_by(&:location_type)
 
     @ship_from_location = Location.find(@invoice.ship_from_location_id) if @invoice.ship_from_location_id.present?
     @remit_to_location_id = Location.find(@invoice.remit_to_location_id) if @invoice.remit_to_location_id.present?
@@ -53,8 +55,10 @@ class InvoicesController < ApplicationController
   end
 
   def create
-    @invoice = current_user.invoices.build(invoice_params.except(:line_items_attributes))
+    clean_params = invoice_params.deep_dup
+    clean_params.delete(:line_items_attributes)
 
+    @invoice = current_user.invoices.build(clean_params)
     @invoice.invoice_type ||= "sale"
     @invoice.status ||= "draft"
 
@@ -62,27 +66,27 @@ class InvoicesController < ApplicationController
       @invoice.line_items_data = params[:invoice][:line_items_attributes].values
     end
 
-    %i[
-      payment_terms
-      price_adjustments
-      invoice_info
-      total
-    ].each do |field|
-      raw_value = params[:invoice][field]
-      if raw_value.present?
-        begin
-          @invoice.send("#{field}=", JSON.parse(raw_value))
-        rescue JSON::ParserError
-          @invoice.send("#{field}=", [])
+      %i[
+        payment_terms
+        price_adjustments
+        invoice_info
+        total
+      ].each do |field|
+        raw_value = params[:invoice][field]
+        if raw_value.present?
+          begin
+            @invoice.send("#{field}=", JSON.parse(raw_value))
+          rescue JSON::ParserError
+            @invoice.send("#{field}=", [])
+          end
         end
       end
-    end
 
-    if @invoice.save
-      redirect_to invoices_path, notice: "Invoice created successfully."
-    else
-      render :new
-    end
+      if @invoice.save
+        redirect_to invoices_path, notice: "Invoice created successfully."
+      else
+        render :new
+      end
   end
 
   def approve
@@ -106,6 +110,19 @@ class InvoicesController < ApplicationController
       redirect_to invoices_path, alert: "Failed to deny invoice."
     end
   end
+
+  def archive
+    invoice = current_user.invoices.find(params[:id])
+    invoice.update(archived: true)
+    redirect_to invoices_path, notice: "Invoice archived."
+  end
+
+  def unarchive
+    invoice = current_user.invoices.find(params[:id])
+    invoice.update(archived: false)
+    redirect_to invoices_path, notice: "Invoice unarchived."
+  end
+
 
   def mark_as_paid
     sale_invoice = current_user.invoices.find(params[:id])

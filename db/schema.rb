@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_28_095900) do
+ActiveRecord::Schema[7.2].define(version: 2025_07_29_073751) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -102,6 +102,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_28_095900) do
     t.string "invoice_type"
     t.string "status", default: "draft"
     t.integer "sale_from_id"
+    t.boolean "archived", default: false
     t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
     t.index ["ship_from_location_id"], name: "index_invoices_on_ship_from_location_id"
     t.index ["tax_representative_location_id"], name: "index_invoices_on_tax_representative_location_id"

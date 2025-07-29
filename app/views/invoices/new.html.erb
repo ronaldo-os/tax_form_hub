@@ -58,7 +58,7 @@
 
 
             <%= f.label :invoice_number, class: "form-label" %>
-            <%= f.text_field :invoice_number, class: "form-control" %>
+            <%= f.text_field :invoice_number, class: "form-control", required: true %>
 
             <div class="row mt-3">
               <div class="col-md-6">
@@ -68,7 +68,10 @@
 
               <div class="col-md-6">
                 <%= f.label :currency, class: "form-label" %>
-                <%= f.text_field :currency, class: "form-control" %>
+                <%= f.select :currency, 
+                  options_for_select([["PHP - Philippine Peso", "PHP"],["USD - US Dollar", "USD"], ["EUR - Euro", "EUR"], ["JPY - Japanese Yen", "JPY"]], f.object.currency), 
+                  { prompt: "Select Currency" }, 
+                  class: "form-control" %>
               </div>
             </div>
 

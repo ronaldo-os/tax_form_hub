@@ -27,6 +27,8 @@ Rails.application.routes.draw do
       patch :approve
       patch :deny
       patch :mark_as_paid
+      patch :archive
+      patch :unarchive
     end
   end
 

@@ -22,17 +22,24 @@
 
       <!-- Tab Content -->
       <div class="tab-content" id="invoiceTabsContent">
-        <!-- Sales Tab -->
-        <div class="tab-pane fade show active" id="sales" role="tabpanel" aria-labelledby="sales-tab">
+        <!-- Sales -->
+        <div class="tab-pane fade show active" id="sales" role="tabpanel">
+          <h5>Active Sales</h5>
           <%= render partial: 'invoices/partials/index_invoice_table', locals: { invoices: @invoices_sale, table_id: 'sales-table' } %>
+
+          <h5 class="mt-4">Archived Sales</h5>
+          <%= render partial: 'invoices/partials/index_invoice_table', locals: { invoices: @invoices_sale_archived, table_id: 'sales-archived-table' } %>
         </div>
 
-        <!-- Purchases Tab -->
-        <div class="tab-pane fade" id="purchases" role="tabpanel" aria-labelledby="purchases-tab">
+        <!-- Purchases -->
+        <div class="tab-pane fade" id="purchases" role="tabpanel">
+          <h5>Active Purchases</h5>
           <%= render partial: 'invoices/partials/index_invoice_table', locals: { invoices: @invoices_purchase, table_id: 'purchases-table' } %>
+
+          <h5 class="mt-4">Archived Purchases</h5>
+          <%= render partial: 'invoices/partials/index_invoice_table', locals: { invoices: @invoices_purchase_archived, table_id: 'purchases-archived-table' } %>
         </div>
       </div>
-
 
     </div>
   </div>

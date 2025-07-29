@@ -40,7 +40,12 @@
           </div>
 
             <h4 class="text-center"><%= @company.name %></h4>
-            <p class="text-center"><a href="<%= @company.website %>"><%= @company.website %></a></p>
+            <% full_url = @company.website =~ /\Ahttp(s)?:\/\// ? @company.website : "https://#{@company.website}" %>
+            <p class="text-center">
+              <a href="<%= full_url %>" target="_blank" rel="noopener noreferrer">
+                <%= @company.website %>
+              </a>
+            </p>
             
             <small class="text-uppercase text-muted">About</small>
             <ul class="list-unstyled mt-3 mb-0" id="company_info_list">
