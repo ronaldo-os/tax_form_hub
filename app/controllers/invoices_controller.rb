@@ -10,12 +10,53 @@ class InvoicesController < ApplicationController
   def show
     @invoice = Invoice.find(params[:id])
     @recipient_company = @invoice.recipient_company
+    @recipient_companies = Company.where.not(user_id: current_user.id)
     @locations_by_type = Location.where(user_id: current_user.id).group_by(&:location_type)
 
     @ship_from_location = Location.find(@invoice.ship_from_location_id) if @invoice.ship_from_location_id.present?
     @remit_to_location_id = Location.find(@invoice.remit_to_location_id) if @invoice.remit_to_location_id.present?
     @tax_representative_location_id = Location.find(@invoice.tax_representative_location_id) if @invoice.tax_representative_location_id.present?
   end
+
+  def edit
+    @invoice = current_user.invoices.find(params[:id])
+    @recipient_companies = Company.where.not(user_id: current_user.id)
+    @locations_by_type = Location.where(user_id: current_user.id).group_by(&:location_type)
+  end
+
+  def update
+    @invoice = current_user.invoices.find(params[:id])
+
+    clean_params = invoice_params.deep_dup
+    clean_params.delete(:line_items_attributes)
+
+    if params[:invoice][:line_items_attributes].present?
+      @invoice.line_items_data = params[:invoice][:line_items_attributes].values
+    end
+
+    %i[
+      payment_terms
+      price_adjustments
+      invoice_info
+      total
+    ].each do |field|
+      raw_value = params[:invoice][field]
+      if raw_value.present?
+        begin
+          @invoice.send("#{field}=", JSON.parse(raw_value))
+        rescue JSON::ParserError
+          @invoice.send("#{field}=", [])
+        end
+      end
+    end
+
+    if @invoice.update(clean_params)
+      redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
+    else
+      render :edit
+    end
+  end
+
 
   def new
     @invoice = Invoice.new

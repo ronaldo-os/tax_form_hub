@@ -1,7 +1,10 @@
 import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS } from "./long_select_options/options";
 
-if ( window.location.pathname === "/invoices" || window.location.pathname === "/invoices/new") {
-
+if (
+      window.location.pathname === "/invoices" ||
+      window.location.pathname === "/invoices/new" ||
+      window.location.pathname.match(/^\/invoices\/\d+\/edit$/)
+    ) {
     $(document).ready(function () {
 
         $('#sales-table').DataTable();
@@ -33,9 +36,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
             ],
             "orderReferenceIssueDate": [
                 { name: "orderReferenceIssueDate.issue_date", label: "Purchase order number", type: "date", cols: 12, class: "mb-3" },
-            ],
-            "billingReferenceId": [
-                { name: "billingReferenceId.reference_id", label: "Billing reference", type: "text", cols: 12, class: "mb-3" },
             ],
             "billingReferenceId": [
                 { name: "billingReferenceId.reference_id", label: "Billing reference", type: "text", cols: 12, class: "mb-3" },
@@ -1032,6 +1032,79 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     }
   });
 
+
+  // INVOICE EDIT PAGE JS 
+
+    const selected = $('#recipient_company_id option:selected');
+    if (selected.val()) {
+      $('#recipient_company_id').trigger('change');
+    }
+
+    $('.location-select').each(function () {
+      const $select = $(this);
+      const type = $select.data('type');
+
+      if ($select.val()) {
+        $select.trigger('change');
+        $(`.location-toggle-btn[data-type="${type}"]`).hide();
+      }
+    });
+
+    $('.location-toggle-btn').each(function () {
+      const $btn = $(this);
+      const type = $btn.data('type');
+      const selectId = `#${type.toLowerCase().replace(/ /g, '_')}_select`;
+      const wrapperId = `#${type.toLowerCase().replace(/ /g, '_')}_selector_wrapper`;
+      const $select = $(selectId);
+
+      if ($select.length && $select.val() && !$(`${wrapperId}`).is(':visible')) {
+        $btn.trigger('click');
+      }
+    });
+
+    $(function () {
+      const rawData = $('#optional_fields_container').attr('data-invoice-info');
+      let invoiceInfo;
+
+      try {
+        invoiceInfo = JSON.parse(rawData);
+      } catch (e) {
+        console.error("Failed to parse invoice_info", e);
+        return;
+      }
+
+      const targetContainer = $('#invoice_details_parent_div');
+
+      Object.entries(invoiceInfo).forEach(([fullKey, value]) => {
+        const match = fullKey.match(/^invoice\[(.+)\]$/);
+        if (!match) return;
+
+        const key = match[1];
+        const label = key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        
+        // Infer input type from value (basic)
+        let type = "text";
+        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+          type = "date";
+        }
+
+        let groupHtml = `
+          <div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${key}">
+            <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">${label}</label>
+                <input type="${type}" class="form-control optional-input" data-field-name="${key}" value="${value}">
+              </div>
+            </div>
+          </div>
+        `;
+
+        targetContainer.append(groupHtml);
+      });
+
+      updateOptionalFieldsJSON();
+    });
 
 
 

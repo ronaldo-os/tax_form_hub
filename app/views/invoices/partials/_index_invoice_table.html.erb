@@ -63,6 +63,14 @@
             </button>
             <ul class="dropdown-menu" aria-labelledby="actionsDropdown_">
 
+              <% if invoice.status == "draft" %>
+                <li>
+                  <%= link_to "Edit", edit_invoice_path(invoice), class: "dropdown-item" %>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+              <% end %>
+
+
               <% if invoice.status == "approved" %>
                 <li>
                   <%= link_to "Mark as Paid", mark_as_paid_invoice_path(invoice),
@@ -111,6 +119,7 @@
             </ul>
           </div>
         </td>
+
       </tr>
     <% end %>
   </tbody>

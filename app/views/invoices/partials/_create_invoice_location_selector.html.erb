@@ -5,30 +5,30 @@
 
 
   <div class="mt-3 mb-3 location-selector-wrapper" id="<%= type.parameterize.underscore %>_selector_wrapper" style="display: none;">
+    <% selected_id = defined?(selected_location_id) ? selected_location_id : nil %>
     <%= select_tag "#{type.parameterize.underscore}_select",
-        options_from_collection_for_select(locations, :id, :location_name),
-        include_blank: true,
-        class: "form-select location-select",
-        id: "#{type.parameterize.underscore}_select",
-        data: { type: type.parameterize.underscore } %>
-
+      options_from_collection_for_select(locations, :id, :location_name, selected_id),
+      include_blank: true,
+      class: "form-select location-select",
+      id: "#{type.parameterize.underscore}_select",
+      data: { type: type.parameterize.underscore } %>
 
     <div class="mt-3">
       <%= link_to "Go to Locations App to add a new #{type} Location", locations_path, class: 'text-primary text-decoration-none' %>
     </div>
-  </div>
 
-  <div class="location-details" id="<%= type.parameterize.underscore %>_details" style="display: none;">
-    <h6><%= type %> details</h6>
-    <hr>
-    <p class="fw-bold mb-1 location_name"></p>
-    <p class="company_name mb-1"></p>
-    <p class="tax_number mb-1 text-muted"></p>
-    <p class="street mb-0"></p>
-    <p class="city mb-0"></p>
-    <p class="country mb-0"></p>
-    <div class="mt-2">
-      <a href="#" class="text-primary text-decoration-none clear-location-details" data-type="<%= type %>">Clear <%= type %> details</a>
+    <div class="location-details mt-3" id="<%= type.parameterize.underscore %>_details" style="display: none;">
+      <h6><%= type %> details</h6>
+      <hr>
+      <p class="fw-bold mb-1 location_name"></p>
+      <p class="company_name mb-1"></p>
+      <p class="tax_number mb-1 text-muted"></p>
+      <p class="street mb-0"></p>
+      <p class="city mb-0"></p>
+      <p class="country mb-0"></p>
+      <div class="mt-2">
+        <a href="#" class="text-primary text-decoration-none clear-location-details" data-type="<%= type %>">Clear <%= type %> details</a>
+      </div>
     </div>
   </div>
 </div>
