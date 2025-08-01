@@ -157,66 +157,65 @@
               <th></th>
             </tr>
           </thead>
-          <tbody id="line-items">
-            <tr class="line-item" data-line-index="0">
-              <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id"></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1"></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01"></td>
-              <td>
-                <select name="invoice[line_items_attributes][0][recurring]" class="form-select recurring">
-                  <option value="no">No</option>
-                  <option value="every_month">Every month</option>
-                  <option value="every_quarter">Every quarter</option>
-                  <option value="every_year">Every year</option>
-                </select>
-              </td>
-              <td class="text-end total">0.00</td>
-              <td>
-                <input type="hidden" name="invoice[line_items_attributes][0][_destroy]" value="false">
-                <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
-              </td>
-            </tr>
+          <tbody id="line-items" data-line-items='<%= raw(@invoice.line_items_data.to_json) %>'></tbody>
+            <% if @invoice.new_record? %>
+              <tr class="line-item" data-line-index="0">
+                <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+                <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id"></td>
+                <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description"></td>
+                <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1"></td>
+                <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs"></td>
+                <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01"></td>
+                <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01"></td>
+                <td>
+                  <select name="invoice[line_items_attributes][0][recurring]" class="form-select recurring">
+                    <option value="no">No</option>
+                    <option value="every_month">Every month</option>
+                    <option value="every_quarter">Every quarter</option>
+                    <option value="every_year">Every year</option>
+                  </select>
+                </td>
+                <td class="text-end total">0.00</td>
+                <td>
+                  <input type="hidden" name="invoice[line_items_attributes][0][_destroy]" value="false">
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
+                </td>
+              </tr>
 
-            <tr class="dropdown_per_line hidden" data-line-index="0">
-              <td colspan="3">
-                <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
-                  <option value="">Add optional field</option>
-                  <option value="discount">Discount</option>
-                  <option value="charge">Charge (e.g. freight)</option>
-                  <option value="bolid">Transport Reference</option>
-                  <option value="fileid">File Id</option>
-                  <option value="taxexemptionreason">Tax exemption reason</option>
-                  <option value="modelname">Model name</option>
-                  <option value="hsnsac">HSN/SAC</option>
-                  <option value="documentreference">Purchase order number</option>
-                  <option value="documentlinereference">Purchase order line number</option>
-                  <option value="accountingcost">Cost center</option>
-                  <option value="deliveryaddress">Delivery Address</option>
-                  <option value="actualdeliverydate">Delivery Date</option>
-                  <option value="buyersitemidentification">Buyer material number</option>
-                  <option value="origincountry">Country of origin</option>
-                  <option value="eccn">Commodity classification: ECCN</option>
-                  <option value="eangtin">EAN/GTIN</option>
-                  <option value="incoterms">Delivery Terms</option>
-                  <option value="manufacturename">Manufacture name</option>
-                  <option value="trackingid">Freight order number</option>
-                  <option value="serialID">Serial number</option>
-                  <option value="linenote">Notes</option>
-                  <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
-                  <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
-                  <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
-                  <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
-                </select>
-              </td>
-              <td colspan="6"></td>
-            </tr>
-
-
-
+              <tr class="dropdown_per_line hidden" data-line-index="0">
+                <td colspan="3">
+                  <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
+                    <option value="">Add optional field</option>
+                    <option value="discount">Discount</option>
+                    <option value="charge">Charge (e.g. freight)</option>
+                    <option value="bolid">Transport Reference</option>
+                    <option value="fileid">File Id</option>
+                    <option value="taxexemptionreason">Tax exemption reason</option>
+                    <option value="modelname">Model name</option>
+                    <option value="hsnsac">HSN/SAC</option>
+                    <option value="documentreference">Purchase order number</option>
+                    <option value="documentlinereference">Purchase order line number</option>
+                    <option value="accountingcost">Cost center</option>
+                    <option value="deliveryaddress">Delivery Address</option>
+                    <option value="actualdeliverydate">Delivery Date</option>
+                    <option value="buyersitemidentification">Buyer material number</option>
+                    <option value="origincountry">Country of origin</option>
+                    <option value="eccn">Commodity classification: ECCN</option>
+                    <option value="eangtin">EAN/GTIN</option>
+                    <option value="incoterms">Delivery Terms</option>
+                    <option value="manufacturename">Manufacture name</option>
+                    <option value="trackingid">Freight order number</option>
+                    <option value="serialID">Serial number</option>
+                    <option value="linenote">Notes</option>
+                    <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
+                    <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
+                    <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
+                    <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
+                  </select>
+                </td>
+                <td colspan="6"></td>
+              </tr>
+            <% end %>
           </tbody>
         </table>
 
@@ -279,166 +278,93 @@
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="mb-0">Delivery details</h5>
               </div>
+
               <div class="row">
-                  <div class="row">
-                    <div class="col-md-12 mb-3">
-                      <label class="form-label">Country/Region</label>
-                      <select name="invoice[delivery_details_country]" id="initial_delivery_details_country" class="form-select">
-                      </select>
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Postbox</label>
-                      <input type="text" name="invoice[delivery_details_postbox]" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Street</label>
-                      <input type="text" name="invoice[delivery_details_street]" class="form-control">
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Number</label>
-                      <input type="text" name="invoice[delivery_details_number]" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Locality name</label>
-                      <input type="text" name="invoice[delivery_details_locality_name]" class="form-control">
-                    </div>
-
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">Postal/ZIP</label>
-                      <input type="text" name="invoice[delivery_details_zip_code]" class="form-control">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">City</label>
-                      <input type="text" name="invoice[delivery_details_city]" class="form-control">
-                    </div>
-
-                    <div class="col-md-12 mb-3">
-                      <label class="form-label">GLN</label>
-                      <input type="text" name="invoice[delivery_details_gln]" class="form-control">
-                      <div class="form-text">
-                        <a href="https://en.wikipedia.org/wiki/Global_Location_Number" target="_blank">What is a GLN?</a>
-                      </div>
-                    </div>
-
-                    <div class="col-md-12 mb-3">
-                      <label class="form-label">Company Name</label>
-                      <input type="text" name="invoice[delivery_details_company_name]" class="form-control">
-                    </div>
-
-                    <div class="col-md-4 mb-3">
-                      <label class="form-label">Tax ID</label>
-                        <select name="invoice[delivery_details_tax_id]" class="form-select">
-                        <option value="">Tax ID</option>
-                        <option value="AE:TRN">AE:TRN</option>
-                        <option value="AO:VAT">AO:VAT</option>
-                        <option value="AR:CUIT">AR:CUIT</option>
-                        <option value="AT:MWST">AT:MWST</option>
-                        <option value="AU:TFN">AU:TFN</option>
-                        <option value="BB:TIN">BB:TIN</option>
-                        <option value="BD:TIN">BD:TIN</option>
-                        <option value="BE:BTW">BE:BTW</option>
-                        <option value="BF:IFU">BF:IFU</option>
-                        <option value="BG:DDS">BG:DDS</option>
-                        <option value="BH:TIN">BH:TIN</option>
-                        <option value="BJ:IFU">BJ:IFU</option>
-                        <option value="BR:CNPJ">BR:CNPJ</option>
-                        <option value="BW:VAT">BW:VAT</option>
-                        <option value="CA:GST">CA:GST</option>
-                        <option value="CA:QST">CA:QST</option>
-                        <option value="CD:VAT">CD:VAT</option>
-                        <option value="CG:VAT">CG:VAT</option>
-                        <option value="CH:UID">CH:UID</option>
-                        <option value="CI:VAT">CI:VAT</option>
-                        <option value="CL:RUT">CL:RUT</option>
-                        <option value="CM:VAT">CM:VAT</option>
-                        <option value="CN:VAT">CN:VAT</option>
-                        <option value="CO:NIT">CO:NIT</option>
-                        <option value="CR:CJ">CR:CJ</option>
-                        <option value="CY:FPA">CY:FPA</option>
-                        <option value="CZ:DPH">CZ:DPH</option>
-                        <option value="DE:MWST">DE:MWST</option>
-                        <option value="DK:CVR">DK:CVR</option>
-                        <option value="DZ:NIF">DZ:NIF</option>
-                        <option value="EC:RUC">EC:RUC</option>
-                        <option value="EE:KMKR">EE:KMKR</option>
-                        <option value="EG:TIN">EG:TIN</option>
-                        <option value="ES:IVA">ES:IVA</option>
-                        <option value="FI:ALV">FI:ALV</option>
-                        <option value="FR:VAT">FR:VAT</option>
-                        <option value="GB:VAT">GB:VAT</option>
-                        <option value="GH:VAT">GH:VAT</option>
-                        <option value="GQ:VAT">GQ:VAT</option>
-                        <option value="GR:FPA">GR:FPA</option>
-                        <option value="GT:NIT">GT:NIT</option>
-                        <option value="HR:OIB">HR:OIB</option>
-                        <option value="HU:AFA">HU:AFA</option>
-                        <option value="ID:VAT">ID:VAT</option>
-                        <option value="IE:VAT">IE:VAT</option>
-                        <option value="IL:VAT">IL:VAT</option>
-                        <option value="IN:GST">IN:GST</option>
-                        <option value="IS:VSK">IS:VSK</option>
-                        <option value="IT:IVA">IT:IVA</option>
-                        <option value="JP:CT">JP:CT</option>
-                        <option value="JP:VAT">JP:VAT</option>
-                        <option value="KE:VAT">KE:VAT</option>
-                        <option value="KR:VAT">KR:VAT</option>
-                        <option value="KW:TIN">KW:TIN</option>
-                        <option value="LI:VAT">LI:VAT</option>
-                        <option value="LK:TIN">LK:TIN</option>
-                        <option value="LT:PVM">LT:PVM</option>
-                        <option value="LU:TVA">LU:TVA</option>
-                        <option value="LV:VAT">LV:VAT</option>
-                        <option value="MA:IF">MA:IF</option>
-                        <option value="MC:TVA">MC:TVA</option>
-                        <option value="MU:TAN">MU:TAN</option>
-                        <option value="MX:RFC">MX:RFC</option>
-                        <option value="MY:GST">MY:GST</option>
-                        <option value="MY:SST">MY:SST</option>
-                        <option value="MY:TIN">MY:TIN</option>
-                        <option value="MY:TTX">MY:TTX</option>
-                        <option value="NG:TIN">NG:TIN</option>
-                        <option value="NL:BTW">NL:BTW</option>
-                        <option value="NO:VAT">NO:VAT</option>
-                        <option value="NZ:GST">NZ:GST</option>
-                        <option value="PE:RUC">PE:RUC</option>
-                        <option value="PK:NTN">PK:NTN</option>
-                        <option value="PL:NIP">PL:NIP</option>
-                        <option value="PR:EIN">PR:EIN</option>
-                        <option value="PT:NIF">PT:NIF</option>
-                        <option value="QA:TIN">QA:TIN</option>
-                        <option value="RO:CIF">RO:CIF</option>
-                        <option value="RW:TIN">RW:TIN</option>
-                        <option value="SA:TIN">SA:TIN</option>
-                        <option value="SE:VAT">SE:VAT</option>
-                        <option value="SG:GSTN">SG:GSTN</option>
-                        <option value="SI:DDV">SI:DDV</option>
-                        <option value="SK:DPH">SK:DPH</option>
-                        <option value="SZ:VAT">SZ:VAT</option>
-                        <option value="TD:VAT">TD:VAT</option>
-                        <option value="TH:VAT">TH:VAT</option>
-                        <option value="TN:TVA">TN:TVA</option>
-                        <option value="TR:VKN">TR:VKN</option>
-                        <option value="TS:VAT">TS:VAT</option>
-                        <option value="TW:GUI">TW:GUI</option>
-                        <option value="TW:TIN">TW:TIN</option>
-                        <option value="UG:VAT">UG:VAT</option>
-                        <option value="US:EIN">US:EIN</option>
-                        <option value="UY:RUT">UY:RUT</option>
-                        <option value="VE:RIF">VE:RIF</option>
-                        <option value="ZA:VAT">ZA:VAT</option>
-                        <option value="ZW:VAT">ZW:VAT</option>                      
-                      </select>
-                    </div>
-                    <div class="col-md-8 mb-3">
-                      <label class="form-label">Tax Number</label>
-                      <input type="text" name="invoice[delivery_details_tax_number]" class="form-control">
-                    </div>
-                  </div>
-
+                <div class="col-md-12 mb-3">
+                  <label class="form-label">Country/Region</label>
+                  <select name="invoice[delivery_details_country]" id="initial_delivery_details_country" class="form-select">
+                    <% if @invoice&.delivery_details_country.present? %>
+                      <option value="<%= @invoice.delivery_details_country %>" selected><%= @invoice.delivery_details_country %></option>
+                    <% else %>
+                      <option value="">Select country</option>
+                    <% end %>
+                  </select>
                 </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Postbox</label>
+                  <input type="text" name="invoice[delivery_details_postbox]" class="form-control" value="<%= @invoice&.delivery_details_postbox %>">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Street</label>
+                  <input type="text" name="invoice[delivery_details_street]" class="form-control" value="<%= @invoice&.delivery_details_street %>">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Number</label>
+                  <input type="text" name="invoice[delivery_details_number]" class="form-control" value="<%= @invoice&.delivery_details_number %>">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Locality name</label>
+                  <input type="text" name="invoice[delivery_details_locality_name]" class="form-control" value="<%= @invoice&.delivery_details_locality_name %>">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Postal/ZIP</label>
+                  <input type="text" name="invoice[delivery_details_zip_code]" class="form-control" value="<%= @invoice&.delivery_details_zip_code %>">
+                </div>
+
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">City</label>
+                  <input type="text" name="invoice[delivery_details_city]" class="form-control" value="<%= @invoice&.delivery_details_city %>">
+                </div>
+
+                <div class="col-md-12 mb-3">
+                  <label class="form-label">GLN</label>
+                  <input type="text" name="invoice[delivery_details_gln]" class="form-control" value="<%= @invoice&.delivery_details_gln %>">
+                  <div class="form-text">
+                    <a href="https://en.wikipedia.org/wiki/Global_Location_Number" target="_blank">What is a GLN?</a>
+                  </div>
+                </div>
+
+                <div class="col-md-12 mb-3">
+                  <label class="form-label">Company Name</label>
+                  <input type="text" name="invoice[delivery_details_company_name]" class="form-control" value="<%= @invoice&.delivery_details_company_name %>">
+                </div>
+
+                <div class="col-md-4 mb-3">
+                  <label class="form-label">Tax ID</label>
+                  <select name="invoice[delivery_details_tax_id]" class="form-select">
+                    <option value="">Tax ID</option>
+                    <% tax_id_options = [
+                      "AE:TRN", "AO:VAT", "AR:CUIT", "AT:MWST", "AU:TFN", "BB:TIN", "BD:TIN", "BE:BTW", "BF:IFU", "BG:DDS",
+                      "BH:TIN", "BJ:IFU", "BR:CNPJ", "BW:VAT", "CA:GST", "CA:QST", "CD:VAT", "CG:VAT", "CH:UID", "CI:VAT",
+                      "CL:RUT", "CM:VAT", "CN:VAT", "CO:NIT", "CR:CJ", "CY:FPA", "CZ:DPH", "DE:MWST", "DK:CVR", "DZ:NIF",
+                      "EC:RUC", "EE:KMKR", "EG:TIN", "ES:IVA", "FI:ALV", "FR:VAT", "GB:VAT", "GH:VAT", "GQ:VAT", "GR:FPA",
+                      "GT:NIT", "HR:OIB", "HU:AFA", "ID:VAT", "IE:VAT", "IL:VAT", "IN:GST", "IS:VSK", "IT:IVA", "JP:CT",
+                      "JP:VAT", "KE:VAT", "KR:VAT", "KW:TIN", "LI:VAT", "LK:TIN", "LT:PVM", "LU:TVA", "LV:VAT", "MA:IF",
+                      "MC:TVA", "MU:TAN", "MX:RFC", "MY:GST", "MY:SST", "MY:TIN", "MY:TTX", "NG:TIN", "NL:BTW", "NO:VAT",
+                      "NZ:GST", "PE:RUC", "PK:NTN", "PL:NIP", "PR:EIN", "PT:NIF", "QA:TIN", "RO:CIF", "RW:TIN", "SA:TIN",
+                      "SE:VAT", "SG:GSTN", "SI:DDV", "SK:DPH", "SZ:VAT", "TD:VAT", "TH:VAT", "TN:TVA", "TR:VKN", "TS:VAT",
+                      "TW:GUI", "TW:TIN", "UG:VAT", "US:EIN", "UY:RUT", "VE:RIF", "ZA:VAT", "ZW:VAT"
+                    ] %>
+
+                    <% tax_id_options.each do |code| %>
+                      <option value="<%= code %>" <%= "selected" if @invoice.delivery_details_tax_id == code %>><%= code %></option>
+                    <% end %>
+                  </select>
+                </div>
+
+
+                <div class="col-md-8 mb-3">
+                  <label class="form-label">Tax Number</label>
+                  <input type="text" name="invoice[delivery_details_tax_number]" class="form-control" value="<%= @invoice&.delivery_details_tax_number %>">
+                </div>
+              </div>
             </div>
+
 
             <%= render partial: "invoices/partials/create_invoice_location_selector",
             locals: {
@@ -480,6 +406,50 @@
               <%= f.file_field :attachments, class: "form-control", multiple: true, accept: "image/*,application/pdf" %>
               <div id="fileHelp" class="form-text">Only images and PDFs allowed. Max file size is 10 MB.</div>
             </div>
+
+            <% if @invoice.attachments.attached? %>
+              <div class="mb-3">
+                <label class="form-label">Existing Attachments</label>
+                <div class="row">
+                  <% @invoice.attachments.each_with_index do |attachment, index| %>
+                    <div class="col-md-6 mb-2">
+                      <div class="border p-2 rounded bg-light text-center">
+
+                        <div class="mx-auto mb-2 rounded overflow-hidden" style="width: 170px; height: 170px; display: flex; align-items: center; justify-content: center; background-color: #f9f9f9;">
+                          <% if attachment.image? %>
+                            <% begin %>
+                              <%= image_tag attachment.variant(resize_to_limit: [200, 200]).processed,
+                                    style: "max-width: 170px; max-height: 170px; object-fit: contain;",
+                                    class: "d-block",
+                                    alt: attachment.filename.to_s %>
+                            <% rescue => e %>
+                              <span class="text-danger small">Image preview failed</span>
+                            <% end %>
+                          <% else %>
+                            <%= link_to attachment.filename.to_s, url_for(attachment), target: "_blank", class: "text-truncate small text-primary" %>
+                          <% end %>
+                        </div>
+
+                        <div class="btn-group" role="group" aria-label="Remove Attachment Toggle" style="width: 170px;">
+                          <input type="checkbox"
+                                class="btn-check"
+                                name="invoice[remove_attachment_ids][]"
+                                value="<%= attachment.id %>"
+                                id="remove_attachment_<%= index %>"
+                                autocomplete="off">
+                          <label class="btn btn-outline-danger" for="remove_attachment_<%= index %>">Remove</label>
+                        </div>
+
+
+                      </div>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+
+
+
           </div>
         </div>
 

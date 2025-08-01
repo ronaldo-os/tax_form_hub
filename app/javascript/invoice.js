@@ -1,10 +1,6 @@
 import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS } from "./long_select_options/options";
 
-if (
-      window.location.pathname === "/invoices" ||
-      window.location.pathname === "/invoices/new" ||
-      window.location.pathname.match(/^\/invoices\/\d+\/edit$/)
-    ) {
+if ( window.location.pathname === "/invoices" || window.location.pathname === "/invoices/new" || window.location.pathname.match(/^\/invoices\/\d+\/edit$/) ) {
     $(document).ready(function () {
 
         $('#sales-table').DataTable();
@@ -17,89 +13,90 @@ if (
         
         const fieldTypeMap = {
             "customsDeclarations": [
-                { name: "customsDeclarations.number_1", label: "Reference Number of Customs Form No.1,9", type: "text", cols: 12, class: "mb-3" },
-                { name: "customsDeclarations.number_2", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
+                { name: "customsDeclarations.number_1.text.12", label: "Reference Number of Customs Form No.1,9", type: "text", cols: 12, class: "mb-3" },
+                { name: "customsDeclarations.number_2.text.12", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
             ],
             "taxExchangeRateFields": [
-                { name: "taxExchangeRateFields.rate", label: "Exchange rate", type: "text", cols: 6, class: "mb-3" },
-                { name: "taxExchangeRateFields.currency", label: "Currency", type: "select", cols: 6, options: ["PHP", "USD"], class: "mb-3" },
-                { name: "taxExchangeRateFields.date_of_rate", label: "Date of exchange rate", type: "date", cols: 6, class: "mb-3" },
-                { name: "taxExchangeRateFields.converted_tax_total", label: "Converted tax total", type: "text", cols: 6, class: "mb-3" },
-                { name: "taxExchangeRateFields.converted_doc_total_incl", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
-                { name: "taxExchangeRateFields.converted_doc_total_excl", label: "Converted Document Total (excl taxes)", type: "text", cols: 12, class: "mb-3" },
+                { name: "taxExchangeRateFields.rate.text.6", label: "Exchange rate", type: "text", cols: 6, class: "mb-3" },
+                { name: "taxExchangeRateFields.currency.select(php,usd).6", label: "Currency", type: "select", cols: 6, options: ["PHP", "USD"], class: "mb-3" },
+                { name: "taxExchangeRateFields.date_of_rate.text.6", label: "Date of exchange rate", type: "date", cols: 6, class: "mb-3" },
+                { name: "taxExchangeRateFields.converted_tax_total.text.6", label: "Converted tax total", type: "text", cols: 6, class: "mb-3" },
+                { name: "taxExchangeRateFields.converted_doc_total_inc.text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
+                { name: "taxExchangeRateFields.converted_doc_total_excl.text.12", label: "Converted Document Total (excl taxes)", type: "text", cols: 12, class: "mb-3" },
             ],
             "transactionVatType": [
-                { name: "transactionVatType.vat_type", label: "Transaction VAT Type", type: "select", cols: 12, options: ["Collection", "Debit"], class: "mb-3" },
+              { name: "transactionVatType.vat_type.select(collection,debit).12", label: "Transaction VAT Type", type: "select", cols: 12, options: ["Collection", "Debit"], class: "mb-3" }
             ],
             "orderReferenceId": [
-                { name: "orderReferenceId.order_number", label: "Purchase order number", type: "text", cols: 12, class: "mb-3" },
+              { name: "orderReferenceId.order_number.text.12", label: "Purchase order number", type: "text", cols: 12, class: "mb-3" }
             ],
             "orderReferenceIssueDate": [
-                { name: "orderReferenceIssueDate.issue_date", label: "Purchase order number", type: "date", cols: 12, class: "mb-3" },
+              { name: "orderReferenceIssueDate.issue_date.date.12", label: "Purchase order number", type: "date", cols: 12, class: "mb-3" }
             ],
             "billingReferenceId": [
-                { name: "billingReferenceId.reference_id", label: "Billing reference", type: "text", cols: 12, class: "mb-3" },
+              { name: "billingReferenceId.reference_id.text.12", label: "Billing reference", type: "text", cols: 12, class: "mb-3" }
             ],
             "contractDocumentReferenceId": [
-                { name: "contractDocumentReferenceId.contract_number", label: "Contract number", type: "text", cols: 12, class: "mb-3" },
+              { name: "contractDocumentReferenceId.contract_number.text.12", label: "Contract number", type: "text", cols: 12, class: "mb-3" }
             ],
             "despatchDocumentReference.id": [
-                { name: "despatchDocumentReference.id.shipping_reference", label: "Shipping Notice Reference", type: "text", cols: 12, class: "mb-3" },
+              { name: "despatchDocumentReference.id.shipping_reference.text.12", label: "Shipping Notice Reference", type: "text", cols: 12, class: "mb-3" }
             ],
             "despatchDocumentReference.issueDate": [
-                { name: "despatchDocumentReference.issueDate.issue_date", label: "Shipping Notice Issue Date", type: "date", cols: 12, class: "mb-3" },
+              { name: "despatchDocumentReference.issueDate.issue_date.date.12", label: "Shipping Notice Issue Date", type: "date", cols: 12, class: "mb-3" }
             ],
             "receiptDocumentReference.id": [
-                { name: "receiptDocumentReference.id.receipt_reference", label: "Goods Receipt Reference", type: "text", cols: 12, class: "mb-3" },
+              { name: "receiptDocumentReference.id.receipt_reference.text.12", label: "Goods Receipt Reference", type: "text", cols: 12, class: "mb-3" }
             ],
             "receiptDocumentReference.issueDate": [
-                { name: "receiptDocumentReference.issueDate.receipt_reference_date", label: "Goods Receipt Issue Date", type: "date", cols: 12, class: "mb-3" },
+              { name: "receiptDocumentReference.issueDate.receipt_reference_date.date.12", label: "Goods Receipt Issue Date", type: "date", cols: 12, class: "mb-3" }
             ],
             "accountingCost": [
-                { name: "accountingCost.cost_center", label: "Cost center", type: "text", cols: 12, class: "mb-3" },
+              { name: "accountingCost.cost_center.text.12", label: "Cost center", type: "text", cols: 12, class: "mb-3" }
             ],
             "customerPartyContactName": [
-                { name: "customerPartyContactName.person_reference", label: "Person reference", type: "text", cols: 12, class: "mb-3" },
+              { name: "customerPartyContactName.person_reference.text.12", label: "Person reference", type: "text", cols: 12, class: "mb-3" }
             ],
             "additionalReferences[BOL ID]": [
-                { name: "additionalReferences[BOL ID].transport_reference", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" },
+              { name: "additionalReferences[BOL ID].transport_reference.text.12", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" }
             ],
             "BOLIssueDate": [
-                { name: "BOLIssueDate.transport_reference_date", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" },
+              { name: "BOLIssueDate.transport_reference_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
             ],
             "additionalReferences[File ID]": [
-                { name: "additionalReferences[File ID].file_id", label: "File Id", type: "text", cols: 12, class: "mb-3" },
+              { name: "additionalReferences[File ID].file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
             ],
             "customerAssignedId": [
-                { name: "customerAssignedId.customer_id", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" },
+              { name: "customerAssignedId.customer_id.text.12", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" }
             ],
             "taxPointDate": [
-                { name: "taxPointDate.tax_point_date", label: "Tax point date", type: "date", cols: 12, class: "mb-3" },
+              { name: "taxPointDate.tax_point_date.date.12", label: "Tax point date", type: "date", cols: 12, class: "mb-3" }
             ],
             "supplierCommissionNumber": [
-                { name: "supplierCommissionNumber.number_of_seller", label: "Commission number of seller", type: "text", cols: 12, class: "mb-3" },
+              { name: "supplierCommissionNumber.number_of_seller.text.12", label: "Commission number of seller", type: "text", cols: 12, class: "mb-3" }
             ],
             "supplierPhysicalLocationValue": [
-                { name: "supplierPhysicalLocationValue.data_universal_numbering_system", label: "Data universal numbering system", type: "text", cols: 12, class: "mb-3" },
+              { name: "supplierPhysicalLocationValue.data_universal_numbering_system.text.12", label: "Data universal numbering system", type: "text", cols: 12, class: "mb-3" }
             ],
             "deliveryTerms": [
-                { name: "deliveryTerms.delivery_terms", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" },
+              { name: "deliveryTerms.delivery_terms.text.12", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" }
             ],
             "additionalReferences[Interim Hours]": [
-                { name: "additionalReferences[Interim Hours].interim_hours", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" },
+              { name: "additionalReferences[Interim Hours].interim_hours.text.12", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" }
             ],
             "additionalReferences[BookingNumber]": [
-                { name: "additionalReferences[BookingNumber].booking_number", label: "Booking Number", type: "text", cols: 12, class: "mb-3" },
+              { name: "additionalReferences[BookingNumber].booking_number.text.12", label: "Booking Number", type: "text", cols: 12, class: "mb-3" }
             ],
             "additionalReferences[PaymentReference]": [
-                { name: "additionalReferences[PaymentReference].payment_reference", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" },
+              { name: "additionalReferences[PaymentReference].payment_reference.text.12", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" }
             ],
             "promisedDeliveryPeriod": [
-                { name: "promisedDeliveryPeriod.delivery_period", label: "Delivery period", type: "text", cols: 12, class: "mb-3" },
+              { name: "promisedDeliveryPeriod.delivery_period.text.12", label: "Delivery period", type: "text", cols: 12, class: "mb-3" }
             ],
             "additionalReferences[Clearance Clave]": [
-                { name: "additionalReferences[Clearance Clave].clearance_clave", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" },
-            ],
+              { name: "additionalReferences[Clearance Clave].clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
+            ]
+
         };
 
         $('#optionalField').on('change', function () {
@@ -205,59 +202,59 @@ if (
     //----------------------------------------------------- PAYMENT TERMS FIELD 
 
     const payment_terms_fieldTypeMap = {
-        paymentterms: [
-            { name: "paymentterms.discount_percent", label: "Discount Percent", type: "text", cols: 6},
-            { name: "paymentterms.surcharge_percent", label: "Surcharge Percent", type: "text", cols: 6},
-            { name: "paymentterms.settelement_start_date", label: "Settlement Start Date", type: "date", cols: 6},
-            { name: "paymentterms.penalty_start_date", label: "Penalty Start Date", type: "date", cols: 6},
-            { name: "paymentterms.settlement_end_date", label: "Settlement End Date", type: "date", cols: 6},
-            { name: "paymentterms.penalty_end_date", label: "Penalty End Date", type: "date", cols: 6},
-            { name: "paymentterms.note", label: "Note", type: "textarea", cols: 12 },
-        ],
-        cash: [
-            { name: "cash.cash", label: "Cash Payment", type: "text_only", cols: 12 }
-        ],
-        check: [
-            { name: "check.check", label: "Check Payment", type: "text_only", cols: 12 },
-        ],
-        bank: [
-            { name: "bank.name", label: "Bank name", type: "text", cols: 12 },
-            { name: "bank.sortcode", label: "Sort Code", type: "text", cols: 6 },
-            { name: "bank.account_number", label: "Account number", type: "text", cols: 6 },
-            { name: "bank.account_holder_name", label: "Account holder name (optional) ", type: "text", cols: 12 },
-            { name: "bank.street_name", label: "Street name (optional)", type: "text", cols: 12 },
-            { name: "bank.additional_street_name", label: "Additional street name (optional)", type: "text", cols: 12 },
-            { name: "bank.building_number", label: "Building number (optional)", type: "text", cols: 6 },
-            { name: "bank.city", label: "City (optional)", type: "text", cols: 6 },
-            { name: "bank.zip_code", label: "Postal/Zip code (optional)", type: "text", cols: 12 },
-            { name: "bank.state", label: "State/Region (optional)", type: "text", cols: 12 },
-            { name: "bank.address_line", label: "Address line (optional)", type: "text", cols: 12 },
-            { name: "bank.country", label: "Country (optional)", type: "text", cols: 12 },
-            { name: "bank.note", label: "Payment note", type: "text", cols: 12 },
-        ],
-        bank_card: [
-            { name: "bank_card.bank_card", label: "Bank Card", type: "text_only", cols: 6 },
-        ],
-        debit: [
-            { name: "debit.name", label: "Bank name", type: "text", cols: 12 },
-            { name: "debit.sortcode", label: "Sort Code", type: "text", cols: 6 },
-            { name: "debit.account_number", label: "Account number", type: "text", cols: 6 },
-            { name: "debit.account_holder_name", label: "Account holder name (optional) ", type: "text", cols: 12 },
-            { name: "debit.street_name", label: "Street name (optional)", type: "text", cols: 12 },
-            { name: "debit.additional_street_name", label: "Additional street name (optional)", type: "text", cols: 12 },
-            { name: "debit.building_number", label: "Building number (optional)", type: "text", cols: 6 },
-            { name: "debit.city", label: "City (optional)", type: "text", cols: 6 },
-            { name: "debit.zip_code", label: "Postal/Zip code (optional)", type: "text", cols: 12 },
-            { name: "debit.state", label: "State/Region (optional)", type: "text", cols: 12 },
-            { name: "debit.address_line", label: "Address line (optional)", type: "text", cols: 12 },
-            { name: "debit.country", label: "Country (optional)", type: "text", cols: 12 },
-            { name: "debit.note", label: "Payment note", type: "text", cols: 12 },
-        ],
-        bic_iban: [
-            { name: "bic_iban.bic_swift", label: "BIC/SWIFT", type: "text", cols: 4 },
-            { name: "bic_iban.iban", label: "IBAN", type: "text", cols: 8 },
-            { name: "bic_iban.note", label: "Payment note", type: "text", cols: 12 },
-        ],
+    paymentterms: [
+        { name: "paymentterms.discount_percent.text.6", label: "Discount Percent", type: "text", cols: 6 },
+        { name: "paymentterms.surcharge_percent.text.6", label: "Surcharge Percent", type: "text", cols: 6 },
+        { name: "paymentterms.settelement_start_date.date.6", label: "Settlement Start Date", type: "date", cols: 6 },
+        { name: "paymentterms.penalty_start_date.date.6", label: "Penalty Start Date", type: "date", cols: 6 },
+        { name: "paymentterms.settlement_end_date.date.6", label: "Settlement End Date", type: "date", cols: 6 },
+        { name: "paymentterms.penalty_end_date.date.6", label: "Penalty End Date", type: "date", cols: 6 },
+        { name: "paymentterms.note.textarea.12", label: "Note", type: "textarea", cols: 12 },
+    ],
+    cash: [
+        { name: "cash.cash.text_only.12", label: "Cash Payment", type: "text_only", cols: 12 }
+    ],
+    check: [
+        { name: "check.check.text_only.12", label: "Check Payment", type: "text_only", cols: 12 },
+    ],
+    bank: [
+        { name: "bank.name.text.12", label: "Bank name", type: "text", cols: 12 },
+        { name: "bank.sortcode.text.6", label: "Sort Code", type: "text", cols: 6 },
+        { name: "bank.account_number.text.6", label: "Account number", type: "text", cols: 6 },
+        { name: "bank.account_holder_name.text.12", label: "Account holder name (optional) ", type: "text", cols: 12 },
+        { name: "bank.street_name.text.12", label: "Street name (optional)", type: "text", cols: 12 },
+        { name: "bank.additional_street_name.text.12", label: "Additional street name (optional)", type: "text", cols: 12 },
+        { name: "bank.building_number.text.6", label: "Building number (optional)", type: "text", cols: 6 },
+        { name: "bank.city.text.6", label: "City (optional)", type: "text", cols: 6 },
+        { name: "bank.zip_code.text.12", label: "Postal/Zip code (optional)", type: "text", cols: 12 },
+        { name: "bank.state.text.12", label: "State/Region (optional)", type: "text", cols: 12 },
+        { name: "bank.address_line.text.12", label: "Address line (optional)", type: "text", cols: 12 },
+        { name: "bank.country.text.12", label: "Country (optional)", type: "text", cols: 12 },
+        { name: "bank.note.text.12", label: "Payment note", type: "text", cols: 12 },
+    ],
+    bank_card: [
+        { name: "bank_card.bank_card.text_only.6", label: "Bank Card", type: "text_only", cols: 6 },
+    ],
+    debit: [
+        { name: "debit.name.text.12", label: "Bank name", type: "text", cols: 12 },
+        { name: "debit.sortcode.text.6", label: "Sort Code", type: "text", cols: 6 },
+        { name: "debit.account_number.text.6", label: "Account number", type: "text", cols: 6 },
+        { name: "debit.account_holder_name.text.12", label: "Account holder name (optional) ", type: "text", cols: 12 },
+        { name: "debit.street_name.text.12", label: "Street name (optional)", type: "text", cols: 12 },
+        { name: "debit.additional_street_name.text.12", label: "Additional street name (optional)", type: "text", cols: 12 },
+        { name: "debit.building_number.text.6", label: "Building number (optional)", type: "text", cols: 6 },
+        { name: "debit.city.text.6", label: "City (optional)", type: "text", cols: 6 },
+        { name: "debit.zip_code.text.12", label: "Postal/Zip code (optional)", type: "text", cols: 12 },
+        { name: "debit.state.text.12", label: "State/Region (optional)", type: "text", cols: 12 },
+        { name: "debit.address_line.text.12", label: "Address line (optional)", type: "text", cols: 12 },
+        { name: "debit.country.text.12", label: "Country (optional)", type: "text", cols: 12 },
+        { name: "debit.note.text.12", label: "Payment note", type: "text", cols: 12 },
+    ],
+    bic_iban: [
+        { name: "bic_iban.bic_swift.text.4", label: "BIC/SWIFT", type: "text", cols: 4 },
+        { name: "bic_iban.iban.text.8", label: "IBAN", type: "text", cols: 8 },
+        { name: "bic_iban.note.text.12", label: "Payment note", type: "text", cols: 12 },
+    ],
     };
 
     $('#payment_terms_select').on('change', function () {
@@ -543,114 +540,101 @@ if (
 
 
 
-    
-    // Initialization   
-    updateRemoveButtons();
+  
+  // Initialization   
+  updateRemoveButtons();
 
-   const discount_fieldTypeMap = {
+  const discount_fieldTypeMap = {
     discount: [
-      { name: "discount.discount_type", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
-      { name: "discount.discount_type_edit", label: "Edit type (if needed)", type: "text", cols: 4 },
-      { name: "discount.qty", label: "Quantity", type: "text", cols: 2 },
-      { name: "discount.unit", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
-      { name: "discount.total", label: "Total", type: "text_only", cols: 2 },
-
+      { name: "discount.discount_type.select(DISCOUNT_OPTIONS).2", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
+      { name: "discount.discount_type_edit.text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
+      { name: "discount.qty.text.2", label: "Quantity", type: "text", cols: 2 },
+      { name: "discount.unit.select(php,%).2", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
+      { name: "discount.total.text_only.2", label: "Total", type: "text_only", cols: 2 },
     ],
     charge: [
-      { name: "charge.charge_type", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
-      { name: "charge.charge_type_edit", label: "Edit type (if needed)", type: "text", cols: 4 },
-      { name: "charge.qty", label: "Quantity", type: "text", cols: 2 },
-      { name: "charge.unit", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
-      { name: "charge.total", label: "Total", type: "text_only", cols: 2 },
+      { name: "charge.charge_type.select(DISCOUNT_OPTIONS).2", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
+      { name: "charge.charge_type_edit.text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
+      { name: "charge.qty.text.2", label: "Quantity", type: "text", cols: 2 },
+      { name: "charge.unit.select(php,%).2", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
+      { name: "charge.total.text_only.2", label: "Total", type: "text_only", cols: 2 },
     ],
     bolid: [
-      { name: "bolid.transport_reference", label: "Transport Reference", type: "text", cols: 4 }
+      { name: "bolid.transport_reference.text.4", label: "Transport Reference", type: "text", cols: 4 }
     ],
     fileid: [
-      { name: "fileid.file_id", label: "File ID", type: "text", cols: 4 }
+      { name: "fileid.file_id.text.4", label: "File ID", type: "text", cols: 4 }
     ],
     taxexemptionreason: [
-      { name: "taxexemptionreason.tax_exemption_reason", label: "Tax exemption reason", type: "text", cols: 4 }
+      { name: "taxexemptionreason.tax_exemption_reason.text.4", label: "Tax exemption reason", type: "text", cols: 4 }
     ],
     modelname: [
-      { name: "modelname.model_name", label: "Model name", type: "text", cols: 4 }
+      { name: "modelname.model_name.text.4", label: "Model name", type: "text", cols: 4 }
     ],
     hsnsac: [
-      { name: "hsnsac.hsn_sac", label: "HSN/SAC", type: "select" , options: ["HSN", "SAC"], cols: 4 },
-      { name: "hsnsac.qty", label: "Quantity", type: "text", cols: 4 },
+      { name: "hsnsac.hsn_sac.select(hsn,sac).4", label: "HSN/SAC", type: "select", options: ["HSN", "SAC"], cols: 4 },
+      { name: "hsnsac.qty.text.4", label: "Quantity", type: "text", cols: 4 },
     ],
     documentreference: [
-      { name: "documentreference.purchase_order_number", label: "Purchase order number", type: "text", cols: 4 }
+      { name: "documentreference.purchase_order_number.text.4", label: "Purchase order number", type: "text", cols: 4 }
     ],
     documentlinereference: [
-      { name: "documentlinereference.purchase_order_line_number", label: "Purchase order line number", type: "text", cols: 4 }
+      { name: "documentlinereference.purchase_order_line_number.text.4", label: "Purchase order line number", type: "text", cols: 4 }
     ],
     accountingcost: [
-      { name: "accountingcost.cost_center", label: "Cost center", type: "text", cols: 4 }
+      { name: "accountingcost.cost_center.text.4", label: "Cost center", type: "text", cols: 4 }
     ],
     deliveryaddress: [
-      {
-        name: "deliveryaddress.country_origin",
-        label: "Country/Region",
-        type: "select",
-        options: COUNTRY_OPTIONS,
-        cols: 4
-      },
-      { name: "deliveryaddress.postbox", label: "Postbox", type: "text", cols: 4 },
-      { name: "deliveryaddress.street", label: "Street", type: "text", cols: 4 },
-      { name: "deliveryaddress.number", label: "Number", type: "text", cols: 4 },
-      { name: "deliveryaddress.locality_name", label: "Locality name", type: "text", cols: 4 },
-      { name: "deliveryaddress.postal_zipcode", label: "Postal/ZIP", type: "text", cols: 4 },
-      { name: "deliveryaddress.city", label: "City", type: "text", cols: 4 },
-      { name: "deliveryaddress.location_id", label: "Location Id", type: "text", cols: 4 },
+      { name: "deliveryaddress.country_origin.select(COUNTRY_OPTIONS).4", label: "Country/Region", type: "select", options: COUNTRY_OPTIONS, cols: 4 },
+      { name: "deliveryaddress.postbox.text.4", label: "Postbox", type: "text", cols: 4 },
+      { name: "deliveryaddress.street.text.4", label: "Street", type: "text", cols: 4 },
+      { name: "deliveryaddress.number.text.4", label: "Number", type: "text", cols: 4 },
+      { name: "deliveryaddress.locality_name.text.4", label: "Locality name", type: "text", cols: 4 },
+      { name: "deliveryaddress.postal_zipcode.text.4", label: "Postal/ZIP", type: "text", cols: 4 },
+      { name: "deliveryaddress.city.text.4", label: "City", type: "text", cols: 4 },
+      { name: "deliveryaddress.location_id.text.4", label: "Location Id", type: "text", cols: 4 },
     ],
     actualdeliverydate: [
-      { name: "actualdeliverydate.delivery_date", label: "Delivery Date", type: "date", cols: 4 }
+      { name: "actualdeliverydate.delivery_date.date.4", label: "Delivery Date", type: "date", cols: 4 }
     ],
     buyersitemidentification: [
-      { name: "buyersitemidentification.buyer_material_number", label: "Buyer material number", type: "text", cols: 4 }
+      { name: "buyersitemidentification.buyer_material_number.text.4", label: "Buyer material number", type: "text", cols: 4 }
     ],
     origincountry: [
-      {
-        name: "origincountry.country_origin",
-        label: "Country of origin",
-        type: "select",
-        options: COUNTRY_OPTIONS,
-        cols: 4
-      }
+      { name: "origincountry.country_origin.select(COUNTRY_OPTIONS).4", label: "Country of origin", type: "select", options: COUNTRY_OPTIONS, cols: 4 }
     ],
     eccn: [
-      { name: "eccn.commodity_classification", label: "Commodity classification: ECCN", type: "text", cols: 4 }
+      { name: "eccn.commodity_classification.text.4", label: "Commodity classification: ECCN", type: "text", cols: 4 }
     ],
     eangtin: [
-      { name: "eangtin.ean_gtin", label: "EAN/GTIN", type: "text", cols: 4 }
+      { name: "eangtin.ean_gtin.text.4", label: "EAN/GTIN", type: "text", cols: 4 }
     ],
     incoterms: [
-      { name: "incoterms.delivery_terms", label: "Delivery Terms", type: "text", cols: 4 }
+      { name: "incoterms.delivery_terms.text.4", label: "Delivery Terms", type: "text", cols: 4 }
     ],
     manufacturename: [
-      { name: "manufacturename.manufacture_name", label: "Manufacture name", type: "text", cols: 4 }
+      { name: "manufacturename.manufacture_name.text.4", label: "Manufacture name", type: "text", cols: 4 }
     ],
     trackingid: [
-      { name: "trackingid.freight_order_number", label: "Freight order number", type: "text", cols: 4 }
+      { name: "trackingid.freight_order_number.text.4", label: "Freight order number", type: "text", cols: 4 }
     ],
     serialID: [
-      { name: "serialID.serial_id", label: "Serial number", type: "text", cols: 4 }
+      { name: "serialID.serial_id.text.4", label: "Serial number", type: "text", cols: 4 }
     ],
     linenote: [
-      { name: "linenote.note", label: "Notes", type: "text", cols: 4 }
+      { name: "linenote.note.text.4", label: "Notes", type: "text", cols: 4 }
     ],
     despatchlinedocumentreference: [
-      { name: "despatchlinedocumentreference.shipping_notice_reference", label: "Shipping Notice Reference", type: "text", cols: 4 }
+      { name: "despatchlinedocumentreference.shipping_notice_reference.text.4", label: "Shipping Notice Reference", type: "text", cols: 4 }
     ],
     despatchlineiddocumentreference: [
-      { name: "despatchlineiddocumentreference.shipping_notice_line_reference", label: "Shipping Notice Line Reference", type: "text", cols: 4 }
+      { name: "despatchlineiddocumentreference.shipping_notice_line_reference.text.4", label: "Shipping Notice Line Reference", type: "text", cols: 4 }
     ],
     receiptlinedocumentreference: [
-      { name: "receiptlinedocumentreference.receipt_reference", label: "Goods Receipt Reference", type: "text", cols: 4 }
+      { name: "receiptlinedocumentreference.receipt_reference.text.4", label: "Goods Receipt Reference", type: "text", cols: 4 }
     ],
     receiptlineiddocumentreference: [
-      { name: "receiptlineiddocumentreference.receipt_line_reference", label: "Goods Receipt Line Reference", type: "text", cols: 4 }
+      { name: "receiptlineiddocumentreference.receipt_line_reference.text.4", label: "Goods Receipt Line Reference", type: "text", cols: 4 }
     ],
   };
 
@@ -1062,6 +1046,7 @@ if (
       }
     });
 
+    // Display Invoice Info
     $(function () {
       const rawData = $('#optional_fields_container').attr('data-invoice-info');
       let invoiceInfo;
@@ -1102,9 +1087,151 @@ if (
 
         targetContainer.append(groupHtml);
       });
-
-      updateOptionalFieldsJSON();
     });
+
+    // Display Delivery Details if any input has value
+    $(function () {
+      const $collapse = $('#delivery_details_parent_div');
+      if (!$collapse.length) return;
+
+      const hasValue = $collapse.find('input, select').filter(function () {
+        return $(this).val()?.trim();
+      }).length > 0;
+
+      if (hasValue) {
+        $collapse.collapse('show');
+        $('[data-bs-target="#delivery_details_parent_div"]').attr('aria-expanded', 'true');
+      }
+    });
+
+    // Display Footer Notes if textarea has value
+    $(function () {
+      const $footerCollapse = $('#footer_wrapper_parent_div');
+      if (!$footerCollapse.length) return;
+
+      const hasFooterNote = $footerCollapse.find('textarea').filter(function () {
+        return $(this).val()?.trim();
+      }).length > 0;
+
+      if (hasFooterNote) {
+        $footerCollapse.show();
+      }
+    });
+
+    function getLineItemHTML(index) {
+      return `
+        <tr class="line-item" data-line-index="${index}">
+          <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][item_id]" class="form-control item-id"></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description"></td>
+          <td><input type="number" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1"></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][unit]" class="form-control unit" value="pcs"></td>
+          <td><input type="number" name="invoice[line_items_attributes][${index}][price]" class="form-control price" step="0.01"></td>
+          <td><input type="number" name="invoice[line_items_attributes][${index}][tax]" class="form-control tax" step="0.01"></td>
+          <td>
+            <select name="invoice[line_items_attributes][${index}][recurring]" class="form-select recurring">
+              <option value="no">No</option>
+              <option value="every_month">Every month</option>
+              <option value="every_quarter">Every quarter</option>
+              <option value="every_year">Every year</option>
+            </select>
+          </td>
+          <td class="text-end total">0.00</td>
+          <td>
+            <input type="hidden" name="invoice[line_items_attributes][${index}][_destroy]" value="false">
+            <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
+          </td>
+        </tr>
+        <tr class="dropdown_per_line" data-line-index="${index}">
+          <td colspan="3">
+            <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select optional-type">
+              <option value="">Add optional field</option>
+              <option value="discount">Discount</option>
+              <option value="charge">Charge (e.g. freight)</option>
+              <option value="bolid">Transport Reference</option>
+              <option value="fileid">File Id</option>
+              <option value="taxexemptionreason">Tax exemption reason</option>
+              <option value="modelname">Model name</option>
+              <option value="hsnsac">HSN/SAC</option>
+              <option value="documentreference">Purchase order number</option>
+              <option value="documentlinereference">Purchase order line number</option>
+              <option value="accountingcost">Cost center</option>
+              <option value="deliveryaddress">Delivery Address</option>
+              <option value="actualdeliverydate">Delivery Date</option>
+              <option value="buyersitemidentification">Buyer material number</option>
+              <option value="origincountry">Country of origin</option>
+              <option value="eccn">Commodity classification: ECCN</option>
+              <option value="eangtin">EAN/GTIN</option>
+              <option value="incoterms">Delivery Terms</option>
+              <option value="manufacturename">Manufacture name</option>
+              <option value="trackingid">Freight order number</option>
+              <option value="serialID">Serial number</option>
+              <option value="linenote">Notes</option>
+              <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
+              <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
+              <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
+              <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
+            </select>
+          </td>
+          <td colspan="6" class="optional-fields-container"></td>
+        </tr>
+      `;
+    }
+
+    $(function () {
+      const $lineItems = $('#line-items');
+      const rawJson = $lineItems.attr('data-line-items');
+      if (!rawJson) return;
+
+      let data;
+      try {
+        data = JSON.parse(rawJson);
+      } catch (err) {
+        console.error("Line items JSON parsing failed:", err);
+        return;
+      }
+
+      $lineItems.empty();
+
+      data.forEach((item, i) => {
+        const $html = $(getLineItemHTML(i));
+        $lineItems.append($html);
+
+        $html.find('.item-id').val(item.item_id);
+        $html.find('.description').val(item.description);
+        $html.find('.quantity').val(item.quantity);
+        $html.find('.unit').val(item.unit);
+        $html.find('.price').val(item.price);
+        $html.find('.tax').val(item.tax);
+        $html.find('.recurring').val(item.recurring);
+        $html.find('input[name$="[_destroy]"]').val(item._destroy);
+
+        // Optional fields logic
+        if (item.optional_fields) {
+          const dropdownRow = $lineItems.find(`.dropdown_per_line[data-line-index="${i}"]`);
+          const optionalType = Object.keys(item.optional_fields)[0]?.split('.')[0];
+          dropdownRow.find('.optional-type').val(optionalType);
+
+          const $container = dropdownRow.find('.optional-fields-container');
+          let fieldsHTML = '';
+
+          for (const [key, val] of Object.entries(item.optional_fields)) {
+            const name = `invoice[line_items_attributes][${i}][optional_fields][${key}]`;
+            fieldsHTML += `
+              <div class="mb-2">
+                <label class="form-label form-label-sm">${key}</label>
+                <input type="text" name="${name}" class="form-control form-control-sm" value="${val}">
+              </div>
+            `;
+          }
+
+          $container.html(fieldsHTML);
+        }
+      });
+    });
+
+
+
 
 
 

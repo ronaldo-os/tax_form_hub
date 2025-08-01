@@ -27,6 +27,14 @@ class InvoicesController < ApplicationController
   def update
     @invoice = current_user.invoices.find(params[:id])
 
+    # Remove selected attachments before update
+    if params[:invoice][:remove_attachment_ids].present?
+      params[:invoice][:remove_attachment_ids].each do |attach_id|
+        attachment = @invoice.attachments.find_by(id: attach_id)
+        attachment&.purge
+      end
+    end
+
     clean_params = invoice_params.deep_dup
     clean_params.delete(:line_items_attributes)
 
@@ -229,6 +237,7 @@ class InvoicesController < ApplicationController
 
       # attachments
       attachments: [],
+      remove_attachment_ids: [],
 
       # nested line items
       line_items_attributes: [
