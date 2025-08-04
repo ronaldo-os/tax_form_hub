@@ -27,7 +27,6 @@ class InvoicesController < ApplicationController
   def update
     @invoice = current_user.invoices.find(params[:id])
 
-    # Remove selected attachments before update
     if params[:invoice][:remove_attachment_ids].present?
       params[:invoice][:remove_attachment_ids].each do |attach_id|
         attachment = @invoice.attachments.find_by(id: attach_id)
@@ -39,7 +38,20 @@ class InvoicesController < ApplicationController
     clean_params.delete(:line_items_attributes)
 
     if params[:invoice][:line_items_attributes].present?
-      @invoice.line_items_data = params[:invoice][:line_items_attributes].values
+      processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
+        if line_item[:optional_fields].present?
+          line_item[:optional_fields] = line_item[:optional_fields].transform_values do |group_fields|
+            group_fields.transform_keys do |inner_key|
+              inner_key
+            end.transform_values do |value|
+              value
+            end
+          end
+        end
+        line_item
+      end
+
+      @invoice.line_items_data = processed_items
     end
 
     %i[
@@ -112,30 +124,39 @@ class InvoicesController < ApplicationController
     @invoice.status ||= "draft"
 
     if params[:invoice][:line_items_attributes].present?
-      @invoice.line_items_data = params[:invoice][:line_items_attributes].values
+      processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
+        if line_item[:optional_fields].present?
+          line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
+        end
+        line_item
+      end
+
+      @invoice.line_items_data = processed_items
     end
 
-      %i[
-        payment_terms
-        price_adjustments
-        invoice_info
-        total
-      ].each do |field|
-        raw_value = params[:invoice][field]
-        if raw_value.present?
-          begin
-            @invoice.send("#{field}=", JSON.parse(raw_value))
-          rescue JSON::ParserError
-            @invoice.send("#{field}=", [])
-          end
-        end
-      end
+    %i[
+      payment_terms
+      price_adjustments
+      invoice_info
+      total
+    ].each do |field|
+      next unless params[:invoice].key?(field)
 
-      if @invoice.save
-        redirect_to invoices_path, notice: "Invoice created successfully."
-      else
-        render :new
+      begin
+        raw_value = params[:invoice][field]
+        parsed_value = raw_value.is_a?(String) ? JSON.parse(raw_value) : raw_value
+        @invoice.send("#{field}=", parsed_value)
+      rescue JSON::ParserError => e
+        Rails.logger.warn "Failed to parse #{field}: #{e.message}"
+        @invoice.send("#{field}=", [])
       end
+    end
+
+    if @invoice.save
+      redirect_to invoices_path, notice: "Invoice created successfully."
+    else
+      render :new
+    end
   end
 
   def approve
@@ -187,6 +208,23 @@ class InvoicesController < ApplicationController
   end
 
   private
+
+  def process_optional_fields(fields)
+    grouped = {}
+
+    fields.each do |flat_key, data|
+      next unless flat_key.include?(".")
+      parts = flat_key.split(".")
+      group_key = parts[0]
+      field_key = parts[1..].join(".")
+
+      grouped[group_key] ||= {}
+      grouped[group_key][field_key] = data
+    end
+
+    grouped
+  end
+
 
   def update_original_sale_status(purchase_invoice, status)
     return unless purchase_invoice.sale_from_id.present?

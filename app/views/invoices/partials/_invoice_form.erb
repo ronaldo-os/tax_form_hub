@@ -142,82 +142,81 @@
 
         </div>
 
-        <table class="table text-center align-middle invoice-table">
-          <thead class="table-light">
-            <tr>
-              <th></th>
-              <th>Item ID</th>
-              <th>Description</th>
-              <th>Quantity</th>
-              <th>Unit</th>
-              <th>Price per unit</th>
-              <th>Tax (%)</th>
-              <th>Recurring</th>
-              <th>Total excl. tax</th>
-              <th></th>
+      <table class="table text-center align-middle invoice-table">
+        <thead class="table-light">
+          <tr>
+            <th></th>
+            <th>Item ID</th>
+            <th>Description</th>
+            <th>Quantity</th>
+            <th>Unit</th>
+            <th>Price per unit</th>
+            <th>Tax (%)</th>
+            <th>Recurring</th>
+            <th>Total excl. tax</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="line-items" data-line-items='<%= raw(@invoice.line_items_data.to_json) %>'>
+          <% unless action_name == "edit" %>
+            <tr class="line-item" data-line-index="0">
+              <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id"></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description"></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1"></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs"></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01"></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01"></td>
+              <td>
+                <select name="invoice[line_items_attributes][0][recurring]" class="form-select recurring">
+                  <option value="no">No</option>
+                  <option value="every_month">Every month</option>
+                  <option value="every_quarter">Every quarter</option>
+                  <option value="every_year">Every year</option>
+                </select>
+              </td>
+              <td class="text-end total">0.00</td>
+              <td>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
+              </td>
             </tr>
-          </thead>
-          <tbody id="line-items" data-line-items='<%= raw(@invoice.line_items_data.to_json) %>'></tbody>
-            <% if @invoice.new_record? %>
-              <tr class="line-item" data-line-index="0">
-                <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-                <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id"></td>
-                <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description"></td>
-                <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1"></td>
-                <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs"></td>
-                <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01"></td>
-                <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01"></td>
-                <td>
-                  <select name="invoice[line_items_attributes][0][recurring]" class="form-select recurring">
-                    <option value="no">No</option>
-                    <option value="every_month">Every month</option>
-                    <option value="every_quarter">Every quarter</option>
-                    <option value="every_year">Every year</option>
-                  </select>
-                </td>
-                <td class="text-end total">0.00</td>
-                <td>
-                  <input type="hidden" name="invoice[line_items_attributes][0][_destroy]" value="false">
-                  <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
-                </td>
-              </tr>
 
-              <tr class="dropdown_per_line hidden" data-line-index="0">
-                <td colspan="3">
-                  <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
-                    <option value="">Add optional field</option>
-                    <option value="discount">Discount</option>
-                    <option value="charge">Charge (e.g. freight)</option>
-                    <option value="bolid">Transport Reference</option>
-                    <option value="fileid">File Id</option>
-                    <option value="taxexemptionreason">Tax exemption reason</option>
-                    <option value="modelname">Model name</option>
-                    <option value="hsnsac">HSN/SAC</option>
-                    <option value="documentreference">Purchase order number</option>
-                    <option value="documentlinereference">Purchase order line number</option>
-                    <option value="accountingcost">Cost center</option>
-                    <option value="deliveryaddress">Delivery Address</option>
-                    <option value="actualdeliverydate">Delivery Date</option>
-                    <option value="buyersitemidentification">Buyer material number</option>
-                    <option value="origincountry">Country of origin</option>
-                    <option value="eccn">Commodity classification: ECCN</option>
-                    <option value="eangtin">EAN/GTIN</option>
-                    <option value="incoterms">Delivery Terms</option>
-                    <option value="manufacturename">Manufacture name</option>
-                    <option value="trackingid">Freight order number</option>
-                    <option value="serialID">Serial number</option>
-                    <option value="linenote">Notes</option>
-                    <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
-                    <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
-                    <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
-                    <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
-                  </select>
-                </td>
-                <td colspan="6"></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+            <tr class="dropdown_per_line hidden" data-line-index="0">
+              <td colspan="3">
+                <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
+                  <option value="">Add optional field</option>
+                  <option value="discount">Discount</option>
+                  <option value="charge">Charge (e.g. freight)</option>
+                  <option value="bolid">Transport Reference</option>
+                  <option value="fileid">File Id</option>
+                  <option value="taxexemptionreason">Tax exemption reason</option>
+                  <option value="modelname">Model name</option>
+                  <option value="hsnsac">HSN/SAC</option>
+                  <option value="documentreference">Purchase order number</option>
+                  <option value="documentlinereference">Purchase order line number</option>
+                  <option value="accountingcost">Cost center</option>
+                  <option value="deliveryaddress">Delivery Address</option>
+                  <option value="actualdeliverydate">Delivery Date</option>
+                  <option value="buyersitemidentification">Buyer material number</option>
+                  <option value="origincountry">Country of origin</option>
+                  <option value="eccn">Commodity classification: ECCN</option>
+                  <option value="eangtin">EAN/GTIN</option>
+                  <option value="incoterms">Delivery Terms</option>
+                  <option value="manufacturename">Manufacture name</option>
+                  <option value="trackingid">Freight order number</option>
+                  <option value="serialID">Serial number</option>
+                  <option value="linenote">Notes</option>
+                  <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
+                  <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
+                  <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
+                  <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
+                </select>
+              </td>
+              <td colspan="6"></td>
+            </tr>
+          <% end %>
+      </table>
+
 
         <div class="row g-3 mb-3 mt-0">
           <div class="col-md-4 d-grid">
@@ -465,6 +464,7 @@
             <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id" %>
             <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id" %>
 
+            <%= hidden_field_tag :payment_terms_json, @invoice.payment_terms.to_json, id: "payment_terms_json" %>
         </div>
     </div>
     <div class="card-footer bg-white pb-3">

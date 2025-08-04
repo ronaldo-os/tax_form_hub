@@ -3,198 +3,188 @@ import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS } from "./long_select_options/options
 if ( window.location.pathname === "/invoices" || window.location.pathname === "/invoices/new" || window.location.pathname.match(/^\/invoices\/\d+\/edit$/) ) {
     $(document).ready(function () {
 
-        $('#sales-table').DataTable();
-        $('#purchases-table').DataTable();
-        $('#sales-archived-table').DataTable();
-        $('#purchases-archived-table').DataTable();
-        recalculateTotals();
+      $('#sales-table').DataTable();
+      $('#purchases-table').DataTable();
+      $('#sales-archived-table').DataTable();
+      $('#purchases-archived-table').DataTable();
+      recalculateTotals();
 
-        //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
-        
-        const fieldTypeMap = {
-            "customsDeclarations": [
-                { name: "customsDeclarations.number_1.text.12", label: "Reference Number of Customs Form No.1,9", type: "text", cols: 12, class: "mb-3" },
-                { name: "customsDeclarations.number_2.text.12", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
-            ],
-            "taxExchangeRateFields": [
-                { name: "taxExchangeRateFields.rate.text.6", label: "Exchange rate", type: "text", cols: 6, class: "mb-3" },
-                { name: "taxExchangeRateFields.currency.select(php,usd).6", label: "Currency", type: "select", cols: 6, options: ["PHP", "USD"], class: "mb-3" },
-                { name: "taxExchangeRateFields.date_of_rate.text.6", label: "Date of exchange rate", type: "date", cols: 6, class: "mb-3" },
-                { name: "taxExchangeRateFields.converted_tax_total.text.6", label: "Converted tax total", type: "text", cols: 6, class: "mb-3" },
-                { name: "taxExchangeRateFields.converted_doc_total_inc.text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
-                { name: "taxExchangeRateFields.converted_doc_total_excl.text.12", label: "Converted Document Total (excl taxes)", type: "text", cols: 12, class: "mb-3" },
-            ],
-            "transactionVatType": [
-              { name: "transactionVatType.vat_type.select(collection,debit).12", label: "Transaction VAT Type", type: "select", cols: 12, options: ["Collection", "Debit"], class: "mb-3" }
-            ],
-            "orderReferenceId": [
-              { name: "orderReferenceId.order_number.text.12", label: "Purchase order number", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "orderReferenceIssueDate": [
-              { name: "orderReferenceIssueDate.issue_date.date.12", label: "Purchase order number", type: "date", cols: 12, class: "mb-3" }
-            ],
-            "billingReferenceId": [
-              { name: "billingReferenceId.reference_id.text.12", label: "Billing reference", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "contractDocumentReferenceId": [
-              { name: "contractDocumentReferenceId.contract_number.text.12", label: "Contract number", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "despatchDocumentReference.id": [
-              { name: "despatchDocumentReference.id.shipping_reference.text.12", label: "Shipping Notice Reference", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "despatchDocumentReference.issueDate": [
-              { name: "despatchDocumentReference.issueDate.issue_date.date.12", label: "Shipping Notice Issue Date", type: "date", cols: 12, class: "mb-3" }
-            ],
-            "receiptDocumentReference.id": [
-              { name: "receiptDocumentReference.id.receipt_reference.text.12", label: "Goods Receipt Reference", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "receiptDocumentReference.issueDate": [
-              { name: "receiptDocumentReference.issueDate.receipt_reference_date.date.12", label: "Goods Receipt Issue Date", type: "date", cols: 12, class: "mb-3" }
-            ],
-            "accountingCost": [
-              { name: "accountingCost.cost_center.text.12", label: "Cost center", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "customerPartyContactName": [
-              { name: "customerPartyContactName.person_reference.text.12", label: "Person reference", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "additionalReferences[BOL ID]": [
-              { name: "additionalReferences[BOL ID].transport_reference.text.12", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "BOLIssueDate": [
-              { name: "BOLIssueDate.transport_reference_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
-            ],
-            "additionalReferences[File ID]": [
-              { name: "additionalReferences[File ID].file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "customerAssignedId": [
-              { name: "customerAssignedId.customer_id.text.12", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "taxPointDate": [
-              { name: "taxPointDate.tax_point_date.date.12", label: "Tax point date", type: "date", cols: 12, class: "mb-3" }
-            ],
-            "supplierCommissionNumber": [
-              { name: "supplierCommissionNumber.number_of_seller.text.12", label: "Commission number of seller", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "supplierPhysicalLocationValue": [
-              { name: "supplierPhysicalLocationValue.data_universal_numbering_system.text.12", label: "Data universal numbering system", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "deliveryTerms": [
-              { name: "deliveryTerms.delivery_terms.text.12", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "additionalReferences[Interim Hours]": [
-              { name: "additionalReferences[Interim Hours].interim_hours.text.12", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "additionalReferences[BookingNumber]": [
-              { name: "additionalReferences[BookingNumber].booking_number.text.12", label: "Booking Number", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "additionalReferences[PaymentReference]": [
-              { name: "additionalReferences[PaymentReference].payment_reference.text.12", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "promisedDeliveryPeriod": [
-              { name: "promisedDeliveryPeriod.delivery_period.text.12", label: "Delivery period", type: "text", cols: 12, class: "mb-3" }
-            ],
-            "additionalReferences[Clearance Clave]": [
-              { name: "additionalReferences[Clearance Clave].clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
-            ]
+      //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
+      
+      const fieldTypeMap = {
+          "customsDeclarations": [
+              { name: "customsDeclarations.number_1.text.12", label: "Reference Number of Customs Form No.1,9", type: "text", cols: 12, class: "mb-3" },
+              { name: "customsDeclarations.number_2.text.12", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
+          ],
+          "taxExchangeRateFields": [
+              { name: "taxExchangeRateFields.rate.text.6", label: "Exchange rate", type: "text", cols: 6, class: "mb-3" },
+              { name: "taxExchangeRateFields.currency.select(php,usd).6", label: "Currency", type: "select", cols: 6, options: ["PHP", "USD"], class: "mb-3" },
+              { name: "taxExchangeRateFields.date_of_rate.text.6", label: "Date of exchange rate", type: "date", cols: 6, class: "mb-3" },
+              { name: "taxExchangeRateFields.converted_tax_total.text.6", label: "Converted tax total", type: "text", cols: 6, class: "mb-3" },
+              { name: "taxExchangeRateFields.converted_doc_total_inc.text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
+              { name: "taxExchangeRateFields.converted_doc_total_excl.text.12", label: "Converted Document Total (excl taxes)", type: "text", cols: 12, class: "mb-3" },
+          ],
+          "transactionVatType": [
+            { name: "transactionVatType.vat_type.select(collection,debit).12", label: "Transaction VAT Type", type: "select", cols: 12, options: ["Collection", "Debit"], class: "mb-3" }
+          ],
+          "orderReferenceId": [
+            { name: "orderReferenceId.order_number.text.12", label: "Purchase order number", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "orderReferenceIssueDate": [
+            { name: "orderReferenceIssueDate.issue_date.date.12", label: "Purchase order number", type: "date", cols: 12, class: "mb-3" }
+          ],
+          "billingReferenceId": [
+            { name: "billingReferenceId.reference_id.text.12", label: "Billing reference", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "contractDocumentReferenceId": [
+            { name: "contractDocumentReferenceId.contract_number.text.12", label: "Contract number", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "despatchDocumentReference.id": [
+            { name: "despatchDocumentReference.id.shipping_reference.text.12", label: "Shipping Notice Reference", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "despatchDocumentReference.issueDate": [
+            { name: "despatchDocumentReference.issueDate.issue_date.date.12", label: "Shipping Notice Issue Date", type: "date", cols: 12, class: "mb-3" }
+          ],
+          "receiptDocumentReference.id": [
+            { name: "receiptDocumentReference.id.receipt_reference.text.12", label: "Goods Receipt Reference", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "receiptDocumentReference.issueDate": [
+            { name: "receiptDocumentReference.issueDate.receipt_reference_date.date.12", label: "Goods Receipt Issue Date", type: "date", cols: 12, class: "mb-3" }
+          ],
+          "accountingCost": [
+            { name: "accountingCost.cost_center.text.12", label: "Cost center", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "customerPartyContactName": [
+            { name: "customerPartyContactName.person_reference.text.12", label: "Person reference", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "additionalReferences[BOL ID]": [
+            { name: "additionalReferences[BOL ID].transport_reference.text.12", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "BOLIssueDate": [
+            { name: "BOLIssueDate.transport_reference_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
+          ],
+          "additionalReferences[File ID]": [
+            { name: "additionalReferences[File ID].file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "customerAssignedId": [
+            { name: "customerAssignedId.customer_id.text.12", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "taxPointDate": [
+            { name: "taxPointDate.tax_point_date.date.12", label: "Tax point date", type: "date", cols: 12, class: "mb-3" }
+          ],
+          "supplierCommissionNumber": [
+            { name: "supplierCommissionNumber.number_of_seller.text.12", label: "Commission number of seller", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "supplierPhysicalLocationValue": [
+            { name: "supplierPhysicalLocationValue.data_universal_numbering_system.text.12", label: "Data universal numbering system", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "deliveryTerms": [
+            { name: "deliveryTerms.delivery_terms.text.12", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "additionalReferences[Interim Hours]": [
+            { name: "additionalReferences[Interim Hours].interim_hours.text.12", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "additionalReferences[BookingNumber]": [
+            { name: "additionalReferences[BookingNumber].booking_number.text.12", label: "Booking Number", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "additionalReferences[PaymentReference]": [
+            { name: "additionalReferences[PaymentReference].payment_reference.text.12", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "promisedDeliveryPeriod": [
+            { name: "promisedDeliveryPeriod.delivery_period.text.12", label: "Delivery period", type: "text", cols: 12, class: "mb-3" }
+          ],
+          "additionalReferences[Clearance Clave]": [
+            { name: "additionalReferences[Clearance Clave].clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
+          ]
 
-        };
+      };
 
-        $('#optionalField').on('change', function () {
-          const key = $(this).val();
-          if (!key) return;
+      $('#optionalField').on('change', function () {
+        const key = $(this).val();
+        if (!key) return;
 
-          if ($(`[data-optional-group="${key}"]`).length > 0) {
-            alert("This group is already added.");
-            $(this).val('');
-            return;
+        const $container = $('#invoice_details_parent_div #optional_fields_container');
+
+        if ($container.find(`[data-optional-group="${key}"]`).length > 0) {
+          alert("This group is already added.");
+          $(this).val('');
+          return;
+        }
+
+        const fields = fieldTypeMap[key];
+        if (!fields || !Array.isArray(fields)) return;
+
+        let groupHtml = `
+          <div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${key}">
+            <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
+            <div class="row">
+        `;
+
+        fields.forEach(field => {
+          const colClass = `col-md-${field.cols || 6} ${field.class || ""}`;
+          let inputHtml = "";
+
+          if (field.type === "select") {
+            inputHtml = `
+              <select class="form-select optional-input" data-field-name="${field.name}">
+                ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
+              </select>`;
+          } else if (field.type === "textarea") {
+            inputHtml = `<textarea class="form-control optional-input" data-field-name="${field.name}"></textarea>`;
+          } else {
+            inputHtml = `<input type="${field.type}" class="form-control optional-input" data-field-name="${field.name}">`;
           }
-
-          const fields = fieldTypeMap[key];
-          if (!fields || !Array.isArray(fields)) return;
-
-          let groupHtml = `
-            <div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${key}">
-              <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
-              <div class="row">
-          `;
-
-          fields.forEach(field => {
-            const colClass = `col-md-${field.cols || 6} ${field.class || ""}`;
-            let inputHtml = "";
-
-            if (field.type === "select") {
-              inputHtml = `
-                <select class="form-select optional-input" data-field-name="${field.name}">
-                  ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
-                </select>`;
-            } else if (field.type === "textarea") {
-              inputHtml = `<textarea class="form-control optional-input" data-field-name="${field.name}"></textarea>`;
-            } else {
-              inputHtml = `<input type="${field.type}" class="form-control optional-input" data-field-name="${field.name}">`;
-            }
-
-            groupHtml += `
-              <div class="${colClass}">
-                <label class="form-label">${field.label}</label>
-                ${inputHtml}
-              </div>
-            `;
-          });
 
           groupHtml += `
-              </div>
+            <div class="${colClass}">
+              <label class="form-label">${field.label}</label>
+              ${inputHtml}
             </div>
           `;
-
-          $('#optional_fields_container').append(groupHtml);
-          $(this).val('');
-          updateOptionalFieldsJSON();
         });
 
-        // Remove group
-        $(document).on('click', '.remove-group', function () {
-          $(this).closest('[data-optional-group]').remove();
-          updateOptionalFieldsJSON();
-        });
+        groupHtml += `
+            </div>
+          </div>
+        `;
 
-        // Track input changes in optional fields
-        $(document).on('input change', '.optional-input', function () {
-          if ($(this).closest('#line-items').length === 0) {
-            updateOptionalFieldsJSON();
-          }
-        });
+        $container.append(groupHtml);
+        $(this).val('');
+        updateInvoiceInfoJSON();
+      });
 
-        // Also track hardcoded fields (date fields, etc.)
-        $(document).on('input change', '[data-optional-group] input, [data-optional-group] select, [data-optional-group] textarea', function () {
-          if ($(this).closest('#line-items').length === 0) {
-            updateOptionalFieldsJSON();
-          }
-        });
 
-        // Update hidden field
-        function updateOptionalFieldsJSON() {
-          const data = {};
+      // Remove group inside #invoice_details_parent_div
+      $(document).on('click', '#invoice_details_parent_div .remove-group', function () {
+        $(this).closest('[data-optional-group]').remove();
+        updateInvoiceInfoJSON();
+      });
 
-          $('[data-optional-group]').each(function () {
-            const groupKey = $(this).data('optional-group');
-            const inputs = $(this)
-              .find('input, select, textarea')
-              .filter(function () {
-                return $(this).closest('#line-items').length === 0;
-              });
+      // Track input changes in optional fields inside #invoice_details_parent_div
+      $(document).on('input change', '#invoice_details_parent_div .optional-input, #invoice_details_parent_div [data-optional-group] input, #invoice_details_parent_div [data-optional-group] select, #invoice_details_parent_div [data-optional-group] textarea', function () {
+        updateInvoiceInfoJSON();
+      });
 
-            inputs.each(function () {
-              const name = $(this).data('field-name') || $(this).attr('name');
-              const value = $(this).val();
+      // Update hidden field from fields inside #invoice_details_parent_div
+      function updateInvoiceInfoJSON() {
+        const data = {};
 
-              if (name) {
-                data[name] = value;
-              }
-            });
+        $('#invoice_details_parent_div [data-optional-group]').each(function () {
+          const groupKey = $(this).data('optional-group');
+          const inputs = $(this).find('input, select, textarea');
+
+          inputs.each(function () {
+            const name = $(this).data('field-name') || $(this).attr('name');
+            const value = $(this).val();
+
+            if (name) {
+              data[name] = value;
+            }
           });
+        });
 
-          $('#optional_fields_json').val(JSON.stringify(data));
-        }
+        $('#optional_fields_json').val(JSON.stringify(data));
+      }
 
     });
 
@@ -738,7 +728,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
   $('#add-discount-row').on('click', function () {
       const newRow = `
         <tr class="discount-item">
-          <td class="align-top"></td>
           <td class="align-top">
             <select name="invoice[price_adjustment_discount]" class="form-select">
               <option value="true">Discount</option>
@@ -890,7 +879,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     let chargeAmount = 0;
     let fixedTax = 0;
 
-    // Calculate each line-item total
     $('#line-items .line-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 0;
@@ -898,48 +886,47 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       const pricePerQty = parseFloat($row.find('.price-per-quantity').val()) || 0;
       const taxRate = parseFloat($row.find('.tax').val()) || 0;
 
-      // Find related discount/charge rows for this line
       const lineIndex = $row.data('line-index');
-      let $discountRow = $(`#line-items .optional-field-row[data-optional-group="discount"][data-line-index="${lineIndex}"]`);
-      let $chargeRow = $(`#line-items .optional-field-row[data-optional-group="charge"][data-line-index="${lineIndex}"]`);
 
-      let discount = 0;
-      if ($discountRow.length) {
-        const dval = parseFloat($discountRow.find('input[name*="discount.qty"]').val()) || 0;
-        const unit = $discountRow.find('select[name*="discount.unit"]').val();
-        const base = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
-          ? (qty * price) / pricePerQty
-          : qty * price;
-        discount = (unit === "%") ? base * (dval / 100) : dval;
-        $discountRow.find('.optional-total[data-total-type="discount"]').text(discount.toFixed(2));
-      }
-
-      let charge = 0;
-      if ($chargeRow.length) {
-        const cval = parseFloat($chargeRow.find('input[name*="charge.qty"]').val()) || 0;
-        const unit = $chargeRow.find('select[name*="charge.unit"]').val();
-        const base = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
-          ? (qty * price) / pricePerQty
-          : qty * price;
-        charge = (unit === "%") ? base * (cval / 100) : cval;
-        $chargeRow.find('.optional-total[data-total-type="charge"]').text(charge.toFixed(2));
-      }
-
-      // Calculate line total
-      let lineTotal = (pricePerQty && !isNaN(pricePerQty) && pricePerQty !== 0)
+      // Base line value before adjustments
+      let base = (pricePerQty && pricePerQty !== 0)
         ? (qty * price) / pricePerQty
         : qty * price;
-      lineTotal = lineTotal + charge - discount;
 
-      // Update the .total cell for this line
+      // --- Discount Calculation ---
+      let discount = 0;
+      const $discountRows = $(`.optional-field-row[data-optional-group="discount"][data-line-index="${lineIndex}"]`);
+      $discountRows.each(function () {
+        const $dRow = $(this);
+        const dval = parseFloat($dRow.find('input[name*="discount.qty"]').val()) || 0;
+        const unit = $dRow.find('select[name*="discount.unit"]').val();
+        const dAmount = (unit === "%") ? base * (dval / 100) : dval;
+        discount += dAmount;
+        $dRow.find('.optional-total[data-total-type="discount"]').text(dAmount.toFixed(2));
+      });
+
+      // --- Charge Calculation ---
+      let charge = 0;
+      const $chargeRows = $(`.optional-field-row[data-optional-group="charge"][data-line-index="${lineIndex}"]`);
+      $chargeRows.each(function () {
+        const $cRow = $(this);
+        const cval = parseFloat($cRow.find('input[name*="charge.qty"]').val()) || 0;
+        const unit = $cRow.find('select[name*="charge.unit"]').val();
+        const cAmount = (unit === "%") ? base * (cval / 100) : cval;
+        charge += cAmount;
+        $cRow.find('.optional-total[data-total-type="charge"]').text(cAmount.toFixed(2));
+      });
+
+      // Final line total
+      let lineTotal = base + charge - discount;
       $row.find('.total').text(lineTotal.toFixed(2));
 
-      // Add to subtotal and tax
+      // Accumulate overall totals
       subtotal += lineTotal;
       totalTax += lineTotal * (taxRate / 100);
     });
 
-    // Global discount/charge/fixed tax items
+    // --- Global price adjustments ---
     $('#line-items .discount-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 1;
@@ -1118,6 +1105,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       }
     });
 
+    // Function to generate line item HTML
     function getLineItemHTML(index) {
       return `
         <tr class="line-item" data-line-index="${index}">
@@ -1138,7 +1126,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           </td>
           <td class="text-end total">0.00</td>
           <td>
-            <input type="hidden" name="invoice[line_items_attributes][${index}][_destroy]" value="false">
             <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
           </td>
         </tr>
@@ -1178,6 +1165,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       `;
     }
 
+    // Initialize line items from JSON data and show optional fields
     $(function () {
       const $lineItems = $('#line-items');
       const rawJson = $lineItems.attr('data-line-items');
@@ -1190,8 +1178,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         console.error("Line items JSON parsing failed:", err);
         return;
       }
-
-      $lineItems.empty();
 
       data.forEach((item, i) => {
         const $html = $(getLineItemHTML(i));
@@ -1206,26 +1192,100 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         $html.find('.recurring').val(item.recurring);
         $html.find('input[name$="[_destroy]"]').val(item._destroy);
 
-        // Optional fields logic
+        if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
+
         if (item.optional_fields) {
-          const dropdownRow = $lineItems.find(`.dropdown_per_line[data-line-index="${i}"]`);
-          const optionalType = Object.keys(item.optional_fields)[0]?.split('.')[0];
-          dropdownRow.find('.optional-type').val(optionalType);
+          Object.entries(item.optional_fields).forEach(([groupKey, fields]) => {
+            const $optionalRow = $(`
+              <tr class="optional-field-row" data-optional-group="${groupKey}" data-line-index="${i}">
+                <td colspan="9">
+                  <div class="p-2 border rounded bg-light mb-2">
+                    <p class="fs-5 mb-3 d-flex justify-content-between align-items-center text-uppercase">
+                      ${groupKey.replace(/_/g, ' ')}
+                      <button type="button" class="btn btn-sm btn-outline-danger remove-group ms-2">×</button>
+                    </p>
+                    <div class="row g-3"></div>
+                  </div>
+                </td>
+              </tr>
+            `);
 
-          const $container = dropdownRow.find('.optional-fields-container');
-          let fieldsHTML = '';
+            const $fieldRow = $optionalRow.find('.row');
+            const entries = Object.entries(fields).reverse();
+            const isTotalGroup = ['charge', 'discount'].includes(groupKey);
 
-          for (const [key, val] of Object.entries(item.optional_fields)) {
-            const name = `invoice[line_items_attributes][${i}][optional_fields][${key}]`;
-            fieldsHTML += `
-              <div class="mb-2">
-                <label class="form-label form-label-sm">${key}</label>
-                <input type="text" name="${name}" class="form-control form-control-sm" value="${val}">
-              </div>
-            `;
-          }
+            entries.forEach(([rawKey, val], index, array) => {
+              const name = `invoice[line_items_attributes][${i}][optional_fields][${groupKey}.${rawKey}]`;
 
-          $container.html(fieldsHTML);
+              // Determine value type
+              let value = '';
+              let type = 'text';
+              let cols = 4;
+
+              if (typeof val === 'string') {
+                value = val;
+              } else if (typeof val === 'object') {
+                value = val.value || '';
+                type = val.type || 'text';
+                cols = val.columns || 4;
+              }
+
+              // Get columns from .N suffix
+              const colMatch = rawKey.match(/\.(\d+)$/);
+              if (colMatch) cols = parseInt(colMatch[1]);
+
+              // Extract label (second segment only)
+              const labelSegment = rawKey.split('.')[0] || '';
+              const formattedLabel = labelSegment.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+              const colClass = `col-md-${cols}`;
+
+              if (rawKey.includes('select(')) {
+                const match = rawKey.match(/select\((.*?)\)/);
+                const optionSource = match?.[1] || '';
+                let options = [];
+
+                if (optionSource === "DISCOUNT_OPTIONS") {
+                  options = DISCOUNT_OPTIONS;
+                } else if (optionSource === "COUNTRY_OPTIONS") {
+                  options = COUNTRY_OPTIONS;
+                } else {
+                  options = optionSource.split(',').map(opt => opt.trim());
+                }
+
+                $fieldRow.append(`
+                  <div class="${colClass} mb-3">
+                    <label class="form-label">${formattedLabel}</label>
+                    <select name="${name}" class="form-select">
+                      ${options.map(opt => `<option value="${opt}" ${opt === value ? 'selected' : ''}>${opt}</option>`).join('')}
+                    </select>
+                  </div>
+                `);
+              } else {
+                $fieldRow.append(`
+                  <div class="${colClass} mb-3">
+                    <label class="form-label">${formattedLabel}</label>
+                    <input type="${type}" name="${name}" class="form-control" value="${value}">
+                  </div>
+                `);
+              }
+
+              // Add TOTAL field if it's the last in charge/discount
+              const isLast = index === array.length - 1;
+              if (isLast && isTotalGroup) {
+                $fieldRow.append(`
+                  <div class="col-md-2 mb-3">
+                    <label class="form-label text-start w-100">Total</label>
+                    <span class="form-control-plaintext optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
+                  </div>
+                `);
+              }
+            });
+
+            $lineItems.find(`.dropdown_per_line[data-line-index="${i}"]`).before($optionalRow);
+          });
+
+          recalculateTotals();
         }
       });
     });
@@ -1233,6 +1293,5 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
 
 
-
-
+    
 }
