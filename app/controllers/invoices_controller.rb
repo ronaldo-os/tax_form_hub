@@ -1,27 +1,58 @@
 class InvoicesController < ApplicationController
   def index
-    @invoices_sale = Invoice.where(user_id: current_user.id, invoice_type: "sale", archived: false).order(issue_date: :desc)
-    @invoices_sale_archived = Invoice.where(user_id: current_user.id, invoice_type: "sale", archived: true).order(issue_date: :desc)
-
-    @invoices_purchase = Invoice.where(user_id: current_user.id, invoice_type: "purchase", archived: false).order(issue_date: :desc)
-    @invoices_purchase_archived = Invoice.where(user_id: current_user.id, invoice_type: "purchase", archived: true).order(issue_date: :desc)
+    @invoices_sale = current_user.invoices.where(invoice_type: "sale", archived: false).order(issue_date: :desc)
+    @invoices_sale_archived = current_user.invoices.where(invoice_type: "sale", archived: true).order(issue_date: :desc)
+    @invoices_purchase = current_user.invoices.where(invoice_type: "purchase", archived: false).order(issue_date: :desc)
+    @invoices_purchase_archived = current_user.invoices.where(invoice_type: "purchase", archived: true).order(issue_date: :desc)
   end
 
   def show
     @invoice = Invoice.find(params[:id])
     @recipient_company = @invoice.recipient_company
     @recipient_companies = Company.where.not(user_id: current_user.id)
-    @locations_by_type = Location.where(user_id: current_user.id).group_by(&:location_type)
+    @locations_by_type = current_user.locations.group_by(&:location_type)
 
     @ship_from_location = Location.find(@invoice.ship_from_location_id) if @invoice.ship_from_location_id.present?
     @remit_to_location_id = Location.find(@invoice.remit_to_location_id) if @invoice.remit_to_location_id.present?
     @tax_representative_location_id = Location.find(@invoice.tax_representative_location_id) if @invoice.tax_representative_location_id.present?
   end
 
+  def new
+    @invoice = Invoice.new
+    @recipient_companies = Company.where.not(user_id: current_user.id)
+    @locations_by_type = Location.all.group_by(&:location_type)
+  end
+
   def edit
     @invoice = current_user.invoices.find(params[:id])
     @recipient_companies = Company.where.not(user_id: current_user.id)
-    @locations_by_type = Location.where(user_id: current_user.id).group_by(&:location_type)
+    @locations_by_type = current_user.locations.group_by(&:location_type)
+  end
+
+  def create
+    clean_params = invoice_params.deep_dup
+    clean_params.delete(:line_items_attributes)
+    %w[payment_terms price_adjustments invoice_info total].each { |field| clean_params.delete(field) }
+
+    @invoice = current_user.invoices.build(clean_params)
+    @invoice.invoice_type ||= "sale"
+    @invoice.status ||= "draft"
+
+    if params[:invoice][:line_items_attributes].present?
+      processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
+        line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
+        line_item
+      end
+      @invoice.line_items_data = processed_items
+    end
+
+    parse_json_fields(@invoice)
+
+    if @invoice.save
+      redirect_to invoices_path, notice: "Invoice created successfully."
+    else
+      render :new
+    end
   end
 
   def update
@@ -36,52 +67,23 @@ class InvoicesController < ApplicationController
 
     clean_params = invoice_params.deep_dup
     clean_params.delete(:line_items_attributes)
+    %w[payment_terms price_adjustments invoice_info total].each { |field| clean_params.delete(field) }
 
     if params[:invoice][:line_items_attributes].present?
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
-        if line_item[:optional_fields].present?
-          line_item[:optional_fields] = line_item[:optional_fields].transform_values do |group_fields|
-            group_fields.transform_keys do |inner_key|
-              inner_key
-            end.transform_values do |value|
-              value
-            end
-          end
-        end
+        line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
         line_item
       end
-
       @invoice.line_items_data = processed_items
     end
 
-    %i[
-      payment_terms
-      price_adjustments
-      invoice_info
-      total
-    ].each do |field|
-      raw_value = params[:invoice][field]
-      if raw_value.present?
-        begin
-          @invoice.send("#{field}=", JSON.parse(raw_value))
-        rescue JSON::ParserError
-          @invoice.send("#{field}=", [])
-        end
-      end
-    end
+    parse_json_fields(@invoice)
 
     if @invoice.update(clean_params)
       redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
     else
       render :edit
     end
-  end
-
-
-  def new
-    @invoice = Invoice.new
-    @recipient_companies = Company.where.not(user_id: current_user.id)
-    @locations_by_type = Location.all.group_by(&:location_type)
   end
 
   def destroy
@@ -92,20 +94,20 @@ class InvoicesController < ApplicationController
 
   def duplicate_as_purchase
     original = Invoice.find(params[:id])
-
     recipient_company_id = original.recipient_company_id
     recipient_user = Company.find_by(id: recipient_company_id)&.user
 
-    if recipient_user.nil?
-      redirect_to invoice_path(original), alert: "Recipient user not found."
-      return
+    unless recipient_user
+      redirect_to invoice_path(original), alert: "Recipient user not found." and return
     end
 
     duplicated_invoice = original.dup
-    duplicated_invoice.user_id = recipient_user.id
-    duplicated_invoice.sale_from_id = original.id
-    duplicated_invoice.status = "pending"
-    duplicated_invoice.invoice_type = "purchase"
+    duplicated_invoice.assign_attributes(
+      user_id: recipient_user.id,
+      sale_from_id: original.id,
+      status: "pending",
+      invoice_type: "purchase"
+    )
 
     if duplicated_invoice.save
       original.update(status: "sent")
@@ -115,53 +117,8 @@ class InvoicesController < ApplicationController
     end
   end
 
-  def create
-    clean_params = invoice_params.deep_dup
-    clean_params.delete(:line_items_attributes)
-
-    @invoice = current_user.invoices.build(clean_params)
-    @invoice.invoice_type ||= "sale"
-    @invoice.status ||= "draft"
-
-    if params[:invoice][:line_items_attributes].present?
-      processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
-        if line_item[:optional_fields].present?
-          line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
-        end
-        line_item
-      end
-
-      @invoice.line_items_data = processed_items
-    end
-
-    %i[
-      payment_terms
-      price_adjustments
-      invoice_info
-      total
-    ].each do |field|
-      next unless params[:invoice].key?(field)
-
-      begin
-        raw_value = params[:invoice][field]
-        parsed_value = raw_value.is_a?(String) ? JSON.parse(raw_value) : raw_value
-        @invoice.send("#{field}=", parsed_value)
-      rescue JSON::ParserError => e
-        Rails.logger.warn "Failed to parse #{field}: #{e.message}"
-        @invoice.send("#{field}=", [])
-      end
-    end
-
-    if @invoice.save
-      redirect_to invoices_path, notice: "Invoice created successfully."
-    else
-      render :new
-    end
-  end
-
   def approve
     invoice = current_user.invoices.find(params[:id])
-
     if invoice.update(status: "approved")
       update_original_sale_status(invoice, "approved")
       redirect_to invoices_path, notice: "Invoice approved."
@@ -172,7 +129,6 @@ class InvoicesController < ApplicationController
 
   def deny
     invoice = current_user.invoices.find(params[:id])
-
     if invoice.update(status: "denied")
       update_original_sale_status(invoice, "denied")
       redirect_to invoices_path, notice: "Invoice denied."
@@ -193,14 +149,11 @@ class InvoicesController < ApplicationController
     redirect_to invoices_path, notice: "Invoice unarchived."
   end
 
-
   def mark_as_paid
     sale_invoice = current_user.invoices.find(params[:id])
-
     if sale_invoice.update(status: "paid")
       purchase_invoice = Invoice.find_by(sale_from_id: sale_invoice.id, invoice_type: "purchase")
       purchase_invoice&.update(status: "paid")
-
       redirect_to invoices_path, notice: "Invoice marked as paid."
     else
       redirect_to invoices_path, alert: "Failed to update invoice."
@@ -211,7 +164,6 @@ class InvoicesController < ApplicationController
 
   def process_optional_fields(fields)
     grouped = {}
-
     fields.each do |flat_key, data|
       next unless flat_key.include?(".")
       parts = flat_key.split(".")
@@ -221,8 +173,32 @@ class InvoicesController < ApplicationController
       grouped[group_key] ||= {}
       grouped[group_key][field_key] = data
     end
-
     grouped
+  end
+
+  def parse_json_fields(invoice)
+    %i[payment_terms price_adjustments invoice_info total].each do |field|
+      next unless params[:invoice].key?(field)
+
+      raw = params[:invoice][field]
+
+      parsed =
+        if raw.is_a?(String)
+          begin
+            cleaned = raw.gsub(/=>/, ':')
+            json = JSON.parse(cleaned)
+            json
+          rescue JSON::ParserError
+            Rails.logger.warn "Failed to parse #{field}: #{raw.inspect}"
+            {}
+          end
+        else
+          raw
+        end
+
+      Rails.logger.debug "[DEBUG] Parsed #{field}: #{parsed.inspect}"
+      invoice.send("#{field}=", parsed)
+    end
   end
 
 
@@ -231,7 +207,6 @@ class InvoicesController < ApplicationController
     original_sale_invoice = Invoice.find_by(id: purchase_invoice.sale_from_id, invoice_type: "sale")
     original_sale_invoice&.update(status: status)
   end
-
 
   def invoice_params
     params.require(:invoice).permit(

@@ -86,7 +86,7 @@
                   <div class="row">
                     <div class="col-md-12">
                       <%= f.label :payment_due_date, class: "form-label" %>
-                      <%= f.date_field :payment_due_date, class: "form-control" %>
+                      <%= f.date_field :payment_due_date, name: "Payment_Due_Date.date.12", class: "form-control" %>
                     </div>
                   </div>
                 </div>
@@ -96,7 +96,7 @@
                   <div class="row">
                     <div class="col-md-12">
                       <%= f.label :delivery_date, class: "form-label" %>
-                      <%= f.date_field :delivery_date, class: "form-control" %>
+                      <%= f.date_field :delivery_date, name: "Delivery_Date.date.12", class: "form-control" %>
                     </div>
                   </div>
                 </div>
@@ -107,6 +107,8 @@
               <div class="mt-4 mb-4">
                 <select id="optionalField" class="form-select">
                   <option value="">Add optional field</option>
+                  <option value="DeliveryDate">Delivery Date</option>
+                  <option value="PaymentDueDate">Payment Due Date</option>
                   <option value="customsDeclarations">Customs Declarations</option>
                   <option value="taxExchangeRateFields">Exchange rate</option>
                   <option value="transactionVatType">Transaction VAT Type</option>
@@ -455,7 +457,7 @@
 
         <div class="d-flex justify-content-between gap-2 mt-5">
             <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
-            <%= f.submit "Create Invoice", class: "btn btn-primary" %>
+            <%= f.submit(action_name == "edit" ? "Update Invoice" : "Create Invoice", class: "btn btn-primary") %>
             <%= f.hidden_field :total, id: 'total_amount_json' %>
             <%= f.hidden_field :price_adjustments, id: 'price_adjustments_json' %>
             <%= f.hidden_field :payment_terms, id: 'payment_terms_json' %>
@@ -464,7 +466,8 @@
             <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id" %>
             <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id" %>
 
-            <%= hidden_field_tag :payment_terms_json, @invoice.payment_terms.to_json, id: "payment_terms_json" %>
+            <%= hidden_field_tag :payment_terms_json_edit, @invoice.payment_terms.to_json.html_safe, id: 'payment_terms_json_edit' %>
+            <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit' %>
         </div>
     </div>
     <div class="card-footer bg-white pb-3">

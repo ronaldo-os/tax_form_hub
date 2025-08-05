@@ -12,6 +12,12 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
       
       const fieldTypeMap = {
+          "DeliveryDate": [
+            { name: "Delivery_Date.date.12", label: "Delivery Date", type: "date", cols: 12, class: "mb-3" }
+          ],
+          "PaymentDueDate": [
+            { name: "Payment_Due_Date.date.12", label: "Payment Due Date", type: "date", cols: 12, class: "mb-3" }
+          ],
           "customsDeclarations": [
               { name: "customsDeclarations.number_1.text.12", label: "Reference Number of Customs Form No.1,9", type: "text", cols: 12, class: "mb-3" },
               { name: "customsDeclarations.number_2.text.12", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
@@ -96,7 +102,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           "additionalReferences[Clearance Clave]": [
             { name: "additionalReferences[Clearance Clave].clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
           ]
-
       };
 
       $('#optionalField').on('change', function () {
@@ -726,85 +731,84 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
   });
 
   $('#add-discount-row').on('click', function () {
-      const newRow = `
-        <tr class="discount-item">
-          <td class="align-top">
-            <select name="invoice[price_adjustment_discount]" class="form-select">
-              <option value="true">Discount</option>
-              <option value="false">Charge</option>
-              <option value="fixedtax">Fixed Tax</option>
-            </select>
-          </td>
-          <td class="align-top">
-            <input type="text" class="form-control description mb-2" placeholder="Description" data-field="description">
-            <select name="invoice[price_adjustment_discount_type]" class="form-select">
-              <option value="" disabled selected>Choose reason code</option>
-              <option value="Bank Charges">Bank Charges</option>
-              <option value="Customs Duties">Customs Duties</option>
-              <option value="Repair Costs">Repair Costs</option>
-              <option value="Attorney Fees">Attorney Fees</option>
-              <option value="Taxes">Taxes</option>
-              <option value="Late Delivery">Late Delivery</option>
-              <option value="Freight Costs">Freight Costs</option>
-              <option value="Reason Unknown">Reason Unknown</option>
-              <option value="Price Change">Price Change</option>
-              <option value="Early payment allowance adjustment">Early payment allowance adjustment</option>
-              <option value="Quantity Discount">Quantity Discount</option>
-              <option value="Pricing Discount">Pricing Discount</option>
-              <option value="Volume Discount">Volume Discount</option>
-              <option value="Agreed Discount">Agreed Discount</option>
-              <option value="Expediting fee">Expediting fee</option>
-              <option value="Currency exchange differences">Currency exchange differences</option>
-            </select>
-          </td>
-          <td class="align-top">
-            <input type="number" class="form-control quantity" value="1" data-field="amount">
-          </td>
-          <td class="align-top">
-            <select class="form-select unit-type" data-field="unit_type">
-              <option value="false">PHP</option>
-              <option value="true">%</option>
-            </select>
-          </td>
-          <td class="align-top"></td>
-          <td class="align-top"></td>
-          <td class="align-top text-end total">0.00</td>
-          <td class="align-top">
-            <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
-          </td>
-        </tr>
-      `;
+    const newRow = `
+      <tr class="discount-item">
+        <td class="align-top" colspan="2">
+          <select class="form-select price-adjustment-unit" data-field="unit">
+            <option value="discount">Discount</option>
+            <option value="charge">Charge</option>
+            <option value="fixedtax">Fixed Tax</option>
+          </select>
+        </td>
+        <td class="align-top" colspan="2">
+          <input type="text" class="form-control description-edit mb-2" placeholder="Description" data-field="description_edit">
+          <select class="form-select reason-code" data-field="description">
+            <option value="" disabled selected>Choose reason code</option>
+            <option value="Bank Charges">Bank Charges</option>
+            <option value="Customs Duties">Customs Duties</option>
+            <option value="Repair Costs">Repair Costs</option>
+            <option value="Attorney Fees">Attorney Fees</option>
+            <option value="Taxes">Taxes</option>
+            <option value="Late Delivery">Late Delivery</option>
+            <option value="Freight Costs">Freight Costs</option>
+            <option value="Reason Unknown">Reason Unknown</option>
+            <option value="Price Change">Price Change</option>
+            <option value="Early payment allowance adjustment">Early payment allowance adjustment</option>
+            <option value="Quantity Discount">Quantity Discount</option>
+            <option value="Pricing Discount">Pricing Discount</option>
+            <option value="Volume Discount">Volume Discount</option>
+            <option value="Agreed Discount">Agreed Discount</option>
+            <option value="Expediting fee">Expediting fee</option>
+            <option value="Currency exchange differences">Currency exchange differences</option>
+          </select>
+        </td>
+        <td class="align-top">
+          <input type="number" class="form-control amount" value="1" data-field="amount">
+        </td>
+        <td class="align-top">
+          <select class="form-select unit-type" data-field="unit_type">
+            <option value="false">PHP</option>
+            <option value="true">%</option>
+          </select>
+        </td>
+        <td class="align-top"></td>
+        <td class="align-top"></td>
+        <td class="align-top text-end total">0.00</td>
+        <td class="align-top">
+          <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
+        </td>
+      </tr>
+    `;
 
-      $('#line-items').append(newRow);
-      updateRemoveButtons();
-      updateDiscountsJSON();
-    });
+    $('#line-items').append(newRow);
+    updateRemoveButtons();
+    updateDiscountsJSON();
+  });
 
-    $('#line-items').on('click', '.remove-line', function () {
-      const $lineItem = $(this).closest('tr');
+  $('#line-items').on('click', '.remove-line', function () {
+    const $lineItem = $(this).closest('tr');
 
-      let $next = $lineItem.next();
-      const $relatedRows = [];
+    let $next = $lineItem.next();
+    const $relatedRows = [];
 
-      while ($next.length && !$next.hasClass('line-item')) {
-        if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
-          $relatedRows.push($next);
-        }
-        $next = $next.next();
+    while ($next.length && !$next.hasClass('line-item')) {
+      if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
+        $relatedRows.push($next);
       }
+      $next = $next.next();
+    }
 
-      $lineItem.remove();
-      $relatedRows.forEach($row => $row.remove());
+    $lineItem.remove();
+    $relatedRows.forEach($row => $row.remove());
 
-      updateRemoveButtons();
-      recalculateTotals();
-      updateDiscountsJSON();
-    });
+    updateRemoveButtons();
+    recalculateTotals();
+    updateDiscountsJSON();
+  });
 
-    // Track changes to discount inputs
-    $('#line-items').on('input change', '.discount-item input, .discount-item select', function () {
-      updateDiscountsJSON();
-    });
+  // Track changes
+  $('#line-items').on('input change', '.discount-item input, .discount-item select', function () {
+    updateDiscountsJSON();
   });
 
   // Update hidden field for price_adjustments
@@ -812,25 +816,27 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     const discounts = [];
 
     $('.discount-item').each(function () {
-      const row = $(this);
-      const item = {};
+      const $row = $(this);
 
-      row.find('[data-field]').each(function () {
-        const field = $(this).data('field');
-        let value = $(this).val();
+      const unit = $row.find('.price-adjustment-unit').val();
+      const description = $row.find('.reason-code').val();
+      const description_edit = $row.find('.description-edit').val();
+      const amount = parseFloat($row.find('.amount').val()) || 0;
+      const unit_type_raw = $row.find('.unit-type').val();
+      const unit_type = unit_type_raw === "true" ? "%" : "PHP";
 
-        if (field === 'amount') {
-          value = parseFloat(value || 0);
-        }
-
-        item[field] = value;
+      discounts.push({
+        unit,
+        description,
+        description_edit,
+        amount,
+        unit_type
       });
-
-      discounts.push(item);
     });
 
     $('#price_adjustments_json').val(JSON.stringify(discounts));
   }
+  });
 
 
   // Toggle base quantity column button 
@@ -1045,36 +1051,67 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         return;
       }
 
-      const targetContainer = $('#invoice_details_parent_div');
+      const $container = $('#invoice_details_parent_div #optional_fields_container');
+      const groups = {};
 
       Object.entries(invoiceInfo).forEach(([fullKey, value]) => {
-        const match = fullKey.match(/^invoice\[(.+)\]$/);
-        if (!match) return;
+        // Parse the group key (e.g., before first dot)
+        const parts = fullKey.split('.');
+        const groupKey = parts[0]; // e.g., Delivery_Date or additionalReferences[File ID]
+        const inputType = parts[1] || 'text';
+        const cols = parts[2] || '12';
 
-        const key = match[1];
-        const label = key.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-        
-        // Infer input type from value (basic)
-        let type = "text";
-        if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-          type = "date";
+        if (!groups[groupKey]) {
+          groups[groupKey] = [];
         }
 
+        // Extract human label
+        let label;
+        const bracketMatch = fullKey.match(/\[(.*?)\]/);
+        if (bracketMatch) {
+          label = bracketMatch[1];
+        } else {
+          const baseKey = fullKey.split('.')[0]; // fallback
+          label = baseKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        groups[groupKey].push({
+          fullKey,
+          label,
+          type: inputType === 'text' || inputType === 'date' || inputType === 'number' ? inputType : 'text',
+          cols,
+          value
+        });
+      });
+
+      // Render
+      Object.entries(groups).forEach(([groupKey, fields]) => {
+        if ($container.find(`[data-optional-group="${groupKey}"]`).length > 0) return;
+
         let groupHtml = `
-          <div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${key}">
+          <div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${groupKey}">
             <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
             <div class="row">
-              <div class="col-md-6">
-                <label class="form-label">${label}</label>
-                <input type="${type}" class="form-control optional-input" data-field-name="${key}" value="${value}">
-              </div>
+        `;
+
+        fields.forEach(field => {
+          groupHtml += `
+            <div class="col-md-${field.cols}">
+              <label class="form-label">${field.label}</label>
+              <input type="${field.type}" class="form-control optional-input" data-field-name="${field.fullKey}" value="${field.value}">
+            </div>
+          `;
+        });
+
+        groupHtml += `
             </div>
           </div>
         `;
 
-        targetContainer.append(groupHtml);
+        $container.append(groupHtml);
       });
     });
+
 
     // Display Delivery Details if any input has value
     $(function () {
@@ -1293,5 +1330,165 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
 
 
-    
+    // Render payment terms from JSON
+    $(function () {
+      let raw = $('#payment_terms_json_edit').val();
+      let data;
+
+      try {
+        data = JSON.parse(raw);
+        renderPaymentTerms(data);
+      } catch (e) {
+        console.error("Invalid JSON in payment_terms_json:", e.message, raw);
+      }
+    });
+
+    function renderPaymentTerms(data) {
+      const $container = $('#payment_terms_parent_div');
+      if ($container.length === 0) {
+        console.warn('#payment_terms_parent_div not found');
+        return;
+      }
+
+      $container.empty();
+
+      Object.entries(data).forEach(([groupKey, fields]) => {
+        const layout = payment_terms_fieldTypeMap[groupKey];
+        if (!layout) return;
+
+        const $group = $(`
+          <div class="mb-3 border rounded p-3 pt-3 payment-term-group" data-group-key="${groupKey}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0">${formatGroupName(groupKey)}</h5>
+              <button type="button" class="btn btn-sm btn-outline-danger remove-group">×</button>
+            </div>
+            <div class="row"></div>
+          </div>
+        `);
+
+        const $row = $group.find('.row');
+
+        layout.forEach(field => {
+          const value = fields[field.name] || '';
+          const colClass = `col-md-${field.cols} mb-3`;
+
+          let $inputGroup;
+          if (field.type === 'text_only') {
+            $inputGroup = $(`
+              <div class="${colClass}">
+                <label class="form-label">${field.label}</label>
+                <div class="form-control-plaintext payment-term-text-only" data-field-name="${field.name}">${value}</div>
+              </div>
+            `);
+          } else if (field.type === 'textarea') {
+            $inputGroup = $(`
+              <div class="${colClass}">
+                <label class="form-label">${field.label}</label>
+                <textarea class="form-control payment-term-input" data-field-name="${field.name}">${value}</textarea>
+              </div>
+            `);
+          } else {
+            $inputGroup = $(`
+              <div class="${colClass}">
+                <label class="form-label">${field.label}</label>
+                <input type="${field.type}" class="form-control payment-term-input" data-field-name="${field.name}" value="${value}">
+              </div>
+            `);
+          }
+
+          $row.append($inputGroup);
+        });
+
+        $container.append($group);
+      });
+    }
+
+    function formatGroupName(key) {
+      return key === 'bank' ? 'Bank Account' : (key === 'cash' ? 'Cash payment' : key.charAt(0).toUpperCase() + key.slice(1));
+    }
+
+    // Render price adjustments from JSON
+    $(function () {
+      const reasonOptions = [
+        "Bank Charges", "Customs Duties", "Repair Costs", "Attorney Fees", "Taxes",
+        "Late Delivery", "Freight Costs", "Reason Unknown", "Price Change",
+        "Early payment allowance adjustment", "Quantity Discount", "Pricing Discount",
+        "Volume Discount", "Agreed Discount", "Expediting fee", "Currency exchange differences"
+      ];
+
+      function buildReasonOptions(selected) {
+        let options = '<option value="" disabled>Choose reason code</option>';
+        reasonOptions.forEach(reason => {
+          const isSelected = reason === selected ? ' selected' : '';
+          options += `<option value="${reason}"${isSelected}>${reason}</option>`;
+        });
+        return options;
+      }
+
+      function renderAdjustmentRow(adjustment) {
+        const amount = adjustment.amount ?? 0;
+        const unit = adjustment.unit ?? "discount"; // new: maps to discount/charge/fixedtax
+        const unitType = adjustment.unit_type === "%" ? "true" : "false"; // maps to % or PHP
+        const description = adjustment.description ?? "";
+        const descriptionEdit = adjustment.description_edit ?? "";
+        const totalFormatted = `${unitType === "true" ? "+" : "+"}${parseFloat(amount).toFixed(2)}`;
+
+        return `
+          <tr class="discount-item">
+            <td class="align-top" colspan="2">
+              <select class="form-select price-adjustment-unit" data-field="unit">
+                <option value="discount"${unit === "discount" ? " selected" : ""}>Discount</option>
+                <option value="charge"${unit === "charge" ? " selected" : ""}>Charge</option>
+                <option value="fixedtax"${unit === "fixedtax" ? " selected" : ""}>Fixed Tax</option>
+              </select>
+            </td>
+            <td class="align-top" colspan="2">
+              <input type="text" class="form-control description-edit mb-2" placeholder="Description" data-field="description_edit" value="${descriptionEdit}">
+              <select class="form-select reason-code" data-field="description">
+                ${buildReasonOptions(description)}
+              </select>
+            </td>
+            <td class="align-top">
+              <input type="number" class="form-control amount" value="${amount}" data-field="amount">
+            </td>
+            <td class="align-top">
+              <select class="form-select unit-type" data-field="unit_type">
+                <option value="false"${unitType === "false" ? " selected" : ""}>PHP</option>
+                <option value="true"${unitType === "true" ? " selected" : ""}>%</option>
+              </select>
+            </td>
+            <td class="align-top"></td>
+            <td class="align-top"></td>
+            <td class="align-top text-end total">${totalFormatted}</td>
+            <td class="align-top">
+              <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
+            </td>
+          </tr>
+        `;
+      }
+
+      // Fetch JSON and render
+      let price_adjustments_raw = $('#price_adjustments_json_edit').val();
+      let priceAdjustments = [];
+
+      try {
+        if (price_adjustments_raw) {
+          priceAdjustments = JSON.parse(price_adjustments_raw);
+        }
+      } catch (e) {
+        console.error("Invalid JSON in #price_adjustments_json_edit:", e.message, price_adjustments_raw);
+        return;
+      }
+
+      let $lastRow = $(".line-item, .optional-field-row").last();
+
+      priceAdjustments.forEach(adjustment => {
+        const html = renderAdjustmentRow(adjustment);
+        $lastRow.after(html);
+        $lastRow = $lastRow.next();
+      });
+    });
+
+
+
 }
