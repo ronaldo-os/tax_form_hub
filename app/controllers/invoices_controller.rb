@@ -54,7 +54,6 @@ class InvoicesController < ApplicationController
       render :new
     end
   end
-
   def update
     @invoice = current_user.invoices.find(params[:id])
 
@@ -66,15 +65,27 @@ class InvoicesController < ApplicationController
     end
 
     clean_params = invoice_params.deep_dup
-    clean_params.delete(:line_items_attributes)
-    %w[payment_terms price_adjustments invoice_info total].each { |field| clean_params.delete(field) }
 
-    if params[:invoice][:line_items_attributes].present?
-      processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
-        line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
+    %w[payment_terms price_adjustments invoice_info total].each do |field|
+      next unless clean_params[field].present?
+
+      begin
+        clean_params[field] = JSON.parse(clean_params[field]) if clean_params[field].is_a?(String)
+      rescue JSON::ParserError => e
+        Rails.logger.warn("Invalid JSON for #{field}: #{e.message}")
+        clean_params[field] = {}
+      end
+    end
+
+    if clean_params[:line_items_attributes].present?
+      processed_items = clean_params[:line_items_attributes].values.map do |line_item|
+        if line_item[:optional_fields].present?
+          line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
+        end
         line_item
       end
       @invoice.line_items_data = processed_items
+      clean_params.delete(:line_items_attributes)
     end
 
     parse_json_fields(@invoice)
@@ -85,6 +96,8 @@ class InvoicesController < ApplicationController
       render :edit
     end
   end
+
+
 
   def destroy
     @invoice = Invoice.find(params[:id])

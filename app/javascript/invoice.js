@@ -69,8 +69,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           "BOLIssueDate": [
             { name: "BOLIssueDate.transport_reference_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
           ],
-          "additionalReferences[File ID]": [
-            { name: "additionalReferences[File ID].file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
+          "FileID": [
+            { name: "FileID.file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
           ],
           "customerAssignedId": [
             { name: "customerAssignedId.customer_id.text.12", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" }
@@ -87,20 +87,20 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           "deliveryTerms": [
             { name: "deliveryTerms.delivery_terms.text.12", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" }
           ],
-          "additionalReferences[Interim Hours]": [
-            { name: "additionalReferences[Interim Hours].interim_hours.text.12", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" }
+          "InternimHours": [
+            { name: "InternimHours.interim_hours.text.12", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" }
           ],
-          "additionalReferences[BookingNumber]": [
-            { name: "additionalReferences[BookingNumber].booking_number.text.12", label: "Booking Number", type: "text", cols: 12, class: "mb-3" }
+          "BookingNumber": [
+            { name: "BookingNumber.booking_number.text.12", label: "Booking Number", type: "text", cols: 12, class: "mb-3" }
           ],
-          "additionalReferences[PaymentReference]": [
-            { name: "additionalReferences[PaymentReference].payment_reference.text.12", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" }
+          "PaymentReference": [
+            { name: "PaymentReference.payment_reference.text.12", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" }
           ],
           "promisedDeliveryPeriod": [
             { name: "promisedDeliveryPeriod.delivery_period.text.12", label: "Delivery period", type: "text", cols: 12, class: "mb-3" }
           ],
-          "additionalReferences[Clearance Clave]": [
-            { name: "additionalReferences[Clearance Clave].clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
+          "ClearanceClave": [
+            { name: "ClearanceClave.clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
           ]
       };
 
@@ -811,6 +811,9 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     updateDiscountsJSON();
   });
 
+
+  });
+
   // Update hidden field for price_adjustments
   function updateDiscountsJSON() {
     const discounts = [];
@@ -836,6 +839,19 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
     $('#price_adjustments_json').val(JSON.stringify(discounts));
   }
+
+  $(window).on('load', function () {
+    recalculateTotals();
+    updatePaymentTermsJSON();
+    updateDiscountsJSON();
+    $('#optional_fields_json').val(function(_, val) {
+      const parts = val.match(/(?:[^\s"]+|"[^"]*")+/g);
+      const obj = {};
+      for (let i = 0; i < parts.length; i += 2)
+        obj[parts[i]] = parts[i + 1];
+      return JSON.stringify(obj);
+    });
+
   });
 
 
@@ -870,10 +886,32 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     recalculateTotals();
   });
 
-  $(document).on('change', 'select[name="invoice[price_adjustment_discount_type]"]', function () {
-    const selectedText = $(this).find('option:selected').text();
-    const $descriptionInput = $(this).siblings('input.description');
+  // Update discount type input when select changes
+  $(document).on('change', 'select[name*="[optional_fields][discount.discount_type.select"], select[name*="[optional_fields][charge.charge_type.select"]', function () {
+    const selectedValue = $(this).val();
+    const selectName = $(this).attr('name');
 
+    const match = selectName.match(/invoice\[line_items_attributes\]\[(\d+)\]/);
+    if (!match) return;
+    const index = match[1];
+
+    let inputName = '';
+
+    if (selectName.includes('discount.discount_type.select')) {
+      inputName = `invoice[line_items_attributes][${index}][optional_fields][discount.discount_type_edit.text.4]`;
+    } else if (selectName.includes('charge.charge_type.select')) {
+      inputName = `invoice[line_items_attributes][${index}][optional_fields][charge.charge_type_edit.text.4]`;
+    } else {
+      return; 
+    }
+
+    $(`input[name="${inputName}"]`).val(selectedValue);
+  });
+  
+  // Update description input when reason code is selected
+  $(document).on('change', 'select.reason-code', function () {
+    const selectedText = $(this).find('option:selected').text();
+    const $descriptionInput = $(this).siblings('input.description-edit');
     $descriptionInput.val(selectedText);
   });
 
@@ -935,21 +973,25 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     // --- Global price adjustments ---
     $('#line-items .discount-item').each(function () {
       const $row = $(this);
-      const qty = parseFloat($row.find('.quantity').val()) || 1;
-      const type = $row.find('select[name="invoice[price_adjustment_discount]"]').val();
-      const isPercent = $row.find('select[name="invoice[price_adjustment_unit_type]"]').val() === "true";
+
+      const type = $row.find('select.price-adjustment-unit').val(); 
+      const isPercent = $row.find('select.unit-type').val() === "true";
+      const qty = parseFloat($row.find('.amount').val()) || 0;
 
       let value = isPercent ? subtotal * (qty / 100) : qty;
 
-      if (type === "true") {
+      if (type === "discount") {
         discountAmount += value;
         $row.find('.total').text(`-${value.toFixed(2)}`);
-      } else if (type === "false") {
+      } else if (type === "charge") {
         chargeAmount += value;
         $row.find('.total').text(`+${value.toFixed(2)}`);
       } else if (type === "fixedtax") {
         fixedTax += value;
         $row.find('.total').text(`+${value.toFixed(2)}`);
+      } else {
+        // fallback for unexpected values
+        $row.find('.total').text(value.toFixed(2));
       }
     });
 
@@ -1057,7 +1099,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       Object.entries(invoiceInfo).forEach(([fullKey, value]) => {
         // Parse the group key (e.g., before first dot)
         const parts = fullKey.split('.');
-        const groupKey = parts[0]; // e.g., Delivery_Date or additionalReferences[File ID]
+        const groupKey = parts[0]; // e.g., Delivery_Date or FileID
         const inputType = parts[1] || 'text';
         const cols = parts[2] || '12';
 
@@ -1111,7 +1153,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         $container.append(groupHtml);
       });
     });
-
 
     // Display Delivery Details if any input has value
     $(function () {
@@ -1327,9 +1368,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       });
     });
 
-
-
-
     // Render payment terms from JSON
     $(function () {
       let raw = $('#payment_terms_json_edit').val();
@@ -1490,5 +1528,5 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     });
 
 
-
+  
 }
