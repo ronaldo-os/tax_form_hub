@@ -36,39 +36,77 @@
           <div class="col-md-6">
             <div class="row mt-3 mb-3">
                 <div class="col-md-6 mb-2">
-                    <%= f.label :invoice_number, class: "form-label fw-bold" %>
+                    <%= f.label :invoice_number, "Invoice Number", class: "h6 form-label" %>
                     <p class="mb-1"><%= @invoice.invoice_number %></p>
                 </div>
 
                 <div class="col-md-6 mb-2">
-                    <%= f.label :issue_date, class: "form-labe fw-bold" %>
+                    <%= f.label :issue_date, class: "h6 form-label" %>
                     <p class="mb-1"><%= @invoice.issue_date %></p>
                 </div>
 
-                <%= f.label :currency, class: "form-label fw-bold" %>
-                <p class="mb-1"><%= @invoice.currency %></p>
+                <%= f.label :currency, class: "h6 form-label" %>
+                <p class="mb-3"><%= @invoice.currency %></p>
 
                 <% if @invoice.invoice_info.is_a?(Hash) %>
-                  <% @invoice.invoice_info.each do |key, value| %>
-                    <% 
-                      raw_label = if key.include?(".")
-                                    key.split(".").last
-                                  elsif key.include?("[")
-                                    key[/\[(.*?)\]/, 1] || key
-                                  else
-                                    key
-                                  end
+                  <% 
+                    input_types = %w[text date select number checkbox radio textarea]
+                    grouped = @invoice.invoice_info.group_by { |k, _| k.split('.').first }
+                  %>
 
-                      label = raw_label.to_s.gsub('_', ' ').titleize
+                  <% grouped.each do |group_name, fields| %>
+                    <% 
+                      clean_group_name = group_name.to_s
+                                                  .gsub('_', ' ')
+                                                  .titleize
+                                                  .gsub('Id', 'ID')
                     %>
-                    <div class="col-md-12 mb-2">
-                      <label class="form-label fw-bold"><%= label %></label>
-                      <p class="mb-1"><%= value.presence || "-" %></p>
-                    </div>
+
+                    <% if fields.size == 1 %>
+                      <% key, value = fields.first %>
+                      <% parts = key.split('.') %>
+                      <% second_part = parts[1] %>
+                      <% col_size = key[/\.(\d+)$/, 1] || "12" %>
+
+                      <% 
+                        label = if input_types.include?(second_part.downcase)
+                                  clean_group_name
+                                else
+                                  second_part.to_s.gsub('_', ' ').titleize
+                                end
+                      %>
+
+                      <div class="row">
+                        <div class="col-md-<%= col_size %>">
+                          <h6><%= label %></h6>
+                          <p><%= value.presence || "-" %></p>
+                        </div>
+                      </div>
+                    <% else %>
+                      <div class="row">
+                        <h6><%= clean_group_name %></h6>
+                        <% fields.each do |key, value| %>
+                          <% 
+                            parts = key.split('.')
+                            second_part = parts[1]
+                            col_size = key[/\.(\d+)$/, 1] || "12"
+
+                            label = if input_types.include?(second_part.downcase)
+                                      parts[1].to_s.gsub('_', ' ').titleize
+                                    else
+                                      second_part.to_s.gsub('_', ' ').titleize
+                                    end
+                          %>
+                          <div class="col-md-<%= col_size %>">
+                            <label class="form-label"><%= label %></label>
+                            <p><%= value.presence || "-" %></p>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
                   <% end %>
                 <% end %>
             </div>
-
           </div>
 
         </div>
@@ -85,49 +123,62 @@
               <th>Tax (%)</th>
               <th>Recurring</th>
               <th>Total excl. tax</th>
-              <th></th>
             </tr>
           </thead>
           <tbody id="line-items">
-            <% @invoice.line_items_data.each_with_index do |item, index| %>
-                <tr class="line-item">
-                    <td><%= index + 1 %></td>
-                    <td><%= item["item_id"] %></td>
-                    <td><%= item["description"] %></td>
-                    <td><%= item["quantity"] %></td>
-                    <td><%= item["unit"] %></td>
-                    <td><%= item["price"] %></td>
-                    <td><%= item["tax"] %></td>
-                    <td><%= item["recurring"] %></td>
-                    <td><%= item["quantity"].to_f * item["price"].to_f %></td>
-                    <td></td>
-                </tr>
+           <% @invoice.line_items_data.each_with_index do |item, index| %>
+              <tr class="line-item">
+                <td><%= index + 1 %></td>
+                <td><%= item["item_id"] %></td>
+                <td><%= item["description"] %></td>
+                <td><%= item["quantity"] %></td>
+                <td><%= item["unit"] %></td>
+                <td><%= item["price"] %></td>
+                <td><%= item["tax"] %></td>
+                <td><%= item["recurring"] %></td>
+                <td class="line_item_total_excl_tax"><%= item["total"] || "" %></td>
+              </tr>
 
-                <% if item["optional_fields"].present? %>
-                    <% grouped = item["optional_fields"]
-                                .reject { |k, _| k.end_with?("_edit") }
-                                .group_by { |k, _| k.split(".").first } %>
-                    <tr class="bg-light">
-                    <td colspan="10">
-                        <table class="table table-sm table-borderless mb-0">
-                        <tbody>
-                            <% grouped.each do |group_name, fields| %>
-                            <% fields.each do |key, value| %>
-                                <% next if key.end_with?("_edit") || value.blank? %>
-                                <% label = key.split(".").last.titleize %>
-                                <tr>
-                                <td class="text-start" style="width: 30%;">
-                                    <strong><%= group_name.titleize %> <%= label %></strong>
-                                </td>
-                                <td class="text-start"><%= value %></td>
-                                </tr>
-                            <% end %>
-                            <% end %>
-                        </tbody>
-                        </table>
-                    </td>
-                    </tr>
+              <% if item["optional_fields"].present? %>
+                <% item["optional_fields"].each do |group_name, fields| %>
+                  <% visible_fields = fields.reject { |_, value| value.blank? } %>
+                  <tr>
+                    <% visible_fields.each do |key, value| %>
+                      <% raw_label = key.split(".").first %>
+                      <% label = raw_label.to_s.humanize %>
+                      <td style="text-align: left;">
+                        <label class="fw-bold"><%= label %></label>
+                        <p class="text-muted mb-0"><%= value %></p>
+                      </td>
+                    <% end %>
+
+                    <% empty_cells = 9 - visible_fields.size %>
+                    <% empty_cells.times { %><td></td><% } %>
+                  </tr>
                 <% end %>
+              <% end %>
+            <% end %>
+
+            <% if @invoice.price_adjustments.present? %>
+              <tr>
+                <td colspan="10" class="text-center text-muted fw-bold table-light">HEADERS</td>
+              </tr>
+              <% @invoice.price_adjustments.each do |adjustment| %>
+                <% visible_fields = adjustment.reject { |_, value| value.blank? } %>
+                <tr>
+                  <% visible_fields.each do |key, value| %>
+                    <% raw_label = key.to_s.split(".").first %>
+                    <% label = raw_label.to_s.humanize %>
+                    <td style="text-align: left;">
+                      <label class="fw-bold"><%= label %></label>
+                      <p class="text-muted mb-0"><%= value %></p>
+                    </td>
+                  <% end %>
+
+                  <% empty_cells = 9 - visible_fields.size %>
+                  <% empty_cells.times { %><td></td><% } %>
+                </tr>
+              <% end %>
             <% end %>
 
           </tbody>
@@ -160,33 +211,46 @@
 
         <hr>
 
-        <div class="row">
-          <div class="col-md-6">
-          <% if @invoice.payment_terms.present? %>
-              <h5 class="mb-3">Payment Terms</h5>
+    <div class="row">
+      <div class="col-md-6">
+        <% if @invoice.payment_terms.present? %>
+        <h5 class="mb-3">Payment Terms</h5>
 
-              <% @invoice.payment_terms.each do |group_key, fields| %>
+        <% payment_labels = {
+          "cash" => "Cash Payment",
+          "check" => "Check Payment",
+          "bank_card" => "Bank Card Payment"
+        } %>
+
+        <ol class="ps-3 mb-0">
+          <% @invoice.payment_terms.each do |group_key, fields| %>
+            <% if fields.present? || payment_labels.key?(group_key) %>
+              <li class="mb-3">
+                <h6 class="fw-bold d-inline"><%= payment_labels[group_key] || group_key.titleize %></h6>
+
                 <% if fields.present? %>
-                  <div class="mb-3">
-                    <h6 class="fw-bold"><%= group_key.titleize %></h6>
-                    <table class="table table-sm table-borderless">
-                      <tbody>
-                        <% fields.each do |field_key, field_value| %>
-                          <% next if field_key.ends_with?("_edit") || field_value.blank? %>
-                          <% label = field_key.split('.').last.titleize %>
-                          <tr>
-                            <td class="text-start" style="width: 25%;"><%= label %></td>
-                            <td class="text-start"><%= field_value %></td>
-                          </tr>
-                        <% end %>
-                      </tbody>
-                    </table>
-                  </div>
-                <% end %>
-              <% end %>
-          <% end %>
+                  <table class="table table-sm table-borderless mt-2">
+                    <tbody>
+                      <% fields.each do |field_key, field_value| %>
+                        <% next if field_key.ends_with?("_edit") || field_value.blank? %>
 
-          
+                        <% parts = field_key.split('.') %>
+                        <% label_part = parts.detect { |p| p !~ /^\d+$/ && !%w[text date select].include?(p) && p != group_key } %>
+                        <% label = label_part.present? ? label_part.titleize : field_key.titleize %>
+
+                        <tr>
+                          <td class="text-start" style="width: 40%;"><%= label %></td>
+                          <td class="text-start"><%= field_value %></td>
+                        </tr>
+                      <% end %>
+                    </tbody>
+                  </table>
+                <% end %>
+              </li>
+            <% end %>
+          <% end %>
+        </ol>
+        <% end %>
 
         <div id="delivery_details_parent_div">
           <% if [
@@ -203,12 +267,12 @@
                 @invoice.delivery_details_tax_number
               ].any?(&:present?) %>
             <hr>
-            <h5 class="mb-0">Delivery details</h5>
+            <h5 class="mb-3">Delivery details</h5>
 
             <div class="row">
               <!-- Full Address in One or Two Lines -->
               <div class="col-md-12 mb-3">
-                <label class="form-label">Address</label>
+                <label class="form-label h6">Address</label>
                 <p class="form-control-plaintext">
                   <%= [
                         @invoice.delivery_details_postbox,
@@ -224,24 +288,24 @@
 
               <!-- GLN -->
               <div class="col-md-12 mb-3">
-                <label class="form-label">GLN</label>
+                <label class="form-label h6">GLN</label>
                 <p class="form-control-plaintext"><%= @invoice.delivery_details_gln %></p>
               </div>
 
               <!-- Company Name -->
               <div class="col-md-12 mb-3">
-                <label class="form-label">Company Name</label>
+                <label class="form-label h6">Company Name</label>
                 <p class="form-control-plaintext"><%= @invoice.delivery_details_company_name %></p>
               </div>
 
               <!-- Tax Info -->
               <div class="col-md-4 mb-3">
-                <label class="form-label">Tax ID</label>
+                <label class="form-label h6">Tax ID</label>
                 <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_id %></p>
               </div>
 
               <div class="col-md-8 mb-3">
-                <label class="form-label">Tax Number</label>
+                <label class="form-label h6">Tax Number</label>
                 <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_number %></p>
               </div>
             </div>
@@ -259,7 +323,7 @@
           
           <div class="col-md-6">
             <div class="mb-3">
-              <h5 class="mb-1">Message:</h5>
+              <h5 class="mb-3">Message:</h5>
               <p class="mb-1"><%= simple_format(@invoice.recipient_note) %></p>
             </div>
           </div>

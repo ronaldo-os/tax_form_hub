@@ -133,7 +133,6 @@
                   <option value="InternimHours">Interim Hours</option>
                   <option value="BookingNumber">Booking Number</option>
                   <option value="PaymentReference">Payment Reference</option>
-                  <option value="additionalReferences[TS Clearance]">Tradeshift Clearance</option>
                   <option value="promisedDeliveryPeriod">Delivery period</option>
                   <option value="ClearanceClave">Clearance Clave</option>
                 </select>
@@ -179,6 +178,7 @@
               </td>
               <td class="text-end total">0.00</td>
               <td>
+                <input type="hidden" name="invoice[line_items_attributes][0][total]" value="0.00">
                 <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
               </td>
             </tr>
@@ -207,7 +207,7 @@
                   <option value="manufacturename">Manufacture name</option>
                   <option value="trackingid">Freight order number</option>
                   <option value="serialID">Serial number</option>
-                  <option value="linenote">Notes</option>
+                  <option value="note">Notes</option>
                   <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
                   <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
                   <option value="receiptlinedocumentreference">Goods Receipt Reference</option>

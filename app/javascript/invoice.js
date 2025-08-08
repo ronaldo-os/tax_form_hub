@@ -197,14 +197,14 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     //----------------------------------------------------- PAYMENT TERMS FIELD 
 
     const payment_terms_fieldTypeMap = {
-    paymentterms: [
-        { name: "paymentterms.discount_percent.text.6", label: "Discount Percent", type: "text", cols: 6 },
-        { name: "paymentterms.surcharge_percent.text.6", label: "Surcharge Percent", type: "text", cols: 6 },
-        { name: "paymentterms.settelement_start_date.date.6", label: "Settlement Start Date", type: "date", cols: 6 },
-        { name: "paymentterms.penalty_start_date.date.6", label: "Penalty Start Date", type: "date", cols: 6 },
-        { name: "paymentterms.settlement_end_date.date.6", label: "Settlement End Date", type: "date", cols: 6 },
-        { name: "paymentterms.penalty_end_date.date.6", label: "Penalty End Date", type: "date", cols: 6 },
-        { name: "paymentterms.note.textarea.12", label: "Note", type: "textarea", cols: 12 },
+    payment_terms: [
+        { name: "payment_terms.discount_percent.text.6", label: "Discount Percent", type: "text", cols: 6 },
+        { name: "payment_terms.surcharge_percent.text.6", label: "Surcharge Percent", type: "text", cols: 6 },
+        { name: "payment_terms.settelement_start_date.date.6", label: "Settlement Start Date", type: "date", cols: 6 },
+        { name: "payment_terms.penalty_start_date.date.6", label: "Penalty Start Date", type: "date", cols: 6 },
+        { name: "payment_terms.settlement_end_date.date.6", label: "Settlement End Date", type: "date", cols: 6 },
+        { name: "payment_terms.penalty_end_date.date.6", label: "Penalty End Date", type: "date", cols: 6 },
+        { name: "payment_terms.note.textarea.12", label: "Note", type: "textarea", cols: 12 },
     ],
     cash: [
         { name: "cash.cash.text_only.12", label: "Cash Payment", type: "text_only", cols: 12 }
@@ -465,7 +465,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         'modelname', 'hsnsac', 'documentreference', 'documentlinereference',
         'accountingcost', 'deliveryaddress', 'actualdeliverydate', 'buyersitemidentification',
         'origincountry', 'eccn', 'eangtin', 'incoterms', 'manufacturename',
-        'trackingid', 'serialID', 'linenote', 'despatchlinedocumentreference',
+        'trackingid', 'serialID', 'note', 'despatchlinedocumentreference',
         'despatchlineiddocumentreference', 'receiptlinedocumentreference', 'receiptlineiddocumentreference'
       ];
 
@@ -616,8 +616,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     serialID: [
       { name: "serialID.serial_id.text.4", label: "Serial number", type: "text", cols: 4 }
     ],
-    linenote: [
-      { name: "linenote.note.text.4", label: "Notes", type: "text", cols: 4 }
+    note: [
+      { name: "note.linenote.text.4", label: "Notes", type: "text", cols: 4 }
     ],
     despatchlinedocumentreference: [
       { name: "despatchlinedocumentreference.shipping_notice_reference.text.4", label: "Shipping Notice Reference", type: "text", cols: 4 }
@@ -700,7 +700,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       } else if (field.type === "textarea") {
         inputHtml = `<textarea name="${inputName}" class="form-control"${field.disabled ? ' disabled' : ''}></textarea>`;
       } else if (field.type === "text_only") {
-        inputHtml = `<span class="form-control-plaintext optional-total" data-total-type="${selectedKey}" data-line-index="${rowIndex}">0.00</span>`;
+        inputHtml = `<span class="form-control-plaintext optional-total" data-total-type="${selectedKey}" data-line-index="${rowIndex}">0.00</span>
+        <input type="hidden" name="${inputName}" class="form-control optional-total-input"${field.disabled ? ' disabled' : ''}>`;
       } else {
         inputHtml = `<input type="${field.type}" name="${inputName}" class="form-control"${field.disabled ? ' disabled' : ''}>`;
       }
@@ -821,36 +822,52 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     $('.discount-item').each(function () {
       const $row = $(this);
 
-      const unit = $row.find('.price-adjustment-unit').val();
+      const type = $row.find('.price-adjustment-unit').val();
       const description = $row.find('.reason-code').val();
       const description_edit = $row.find('.description-edit').val();
       const amount = parseFloat($row.find('.amount').val()) || 0;
-      const unit_type_raw = $row.find('.unit-type').val();
-      const unit_type = unit_type_raw === "true" ? "%" : "PHP";
+      const unit_raw = $row.find('.unit-type').val();
+      const unit = unit_raw === "true" ? "%" : "PHP";
+      const total = $row.find('.total').text().trim() || "0.00";
 
-      discounts.push({
-        unit,
-        description,
-        description_edit,
-        amount,
-        unit_type
-      });
+      const ordered = {
+        type: type,
+        description: description,
+        description_edit: description_edit,
+        amount: amount,
+        unit: unit,
+        total: total
+      };
+
+      discounts.push(ordered);
     });
 
-    $('#price_adjustments_json').val(JSON.stringify(discounts));
+    $('#price_adjustments_json').val(JSON.stringify(discounts, null, 2));
   }
 
   $(window).on('load', function () {
     recalculateTotals();
     updatePaymentTermsJSON();
     updateDiscountsJSON();
-    $('#optional_fields_json').val(function(_, val) {
-      const parts = val.match(/(?:[^\s"]+|"[^"]*")+/g);
-      const obj = {};
-      for (let i = 0; i < parts.length; i += 2)
-        obj[parts[i]] = parts[i + 1];
-      return JSON.stringify(obj);
-    });
+    if ($('#optional_fields_json').length) {
+      $('#optional_fields_json').val(function(_, val) {
+          if (!val || typeof val !== 'string' || val.trim() === '') {
+              return JSON.stringify({});
+          }
+
+          const parts = val.match(/(?:[^\s"]+|"[^"]*")+/g);
+          if (!parts || parts.length < 2) {
+              return JSON.stringify({});
+          }
+
+          const obj = {};
+          for (let i = 0; i < parts.length; i += 2) {
+              obj[parts[i]] = parts[i + 1] || '';
+          }
+          return JSON.stringify(obj);
+      });
+    }
+
 
   });
 
@@ -947,6 +964,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         const dAmount = (unit === "%") ? base * (dval / 100) : dval;
         discount += dAmount;
         $dRow.find('.optional-total[data-total-type="discount"]').text(dAmount.toFixed(2));
+        $dRow.find('.optional-total-input').val(dAmount.toFixed(2));
       });
 
       // --- Charge Calculation ---
@@ -959,11 +977,24 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         const cAmount = (unit === "%") ? base * (cval / 100) : cval;
         charge += cAmount;
         $cRow.find('.optional-total[data-total-type="charge"]').text(cAmount.toFixed(2));
+        $cRow.find('.optional-total-input').val(cAmount.toFixed(2));
       });
 
       // Final line total
       let lineTotal = base + charge - discount;
       $row.find('.total').text(lineTotal.toFixed(2));
+
+
+      let $totalInput = $row.find('input[name*="[total]"]');
+      if ($totalInput.length === 0) {
+          $totalInput = $('<input>', {
+              type: 'hidden',
+              name: `invoice[line_items_attributes][${lineIndex}][total]`,
+              class: 'line-total-input'
+          });
+          $row.append($totalInput);
+      }
+      $totalInput.val(lineTotal.toFixed(2));
 
       // Accumulate overall totals
       subtotal += lineTotal;
@@ -1096,31 +1127,35 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       const $container = $('#invoice_details_parent_div #optional_fields_container');
       const groups = {};
 
+      const inputTypes = ['text', 'date', 'number', 'select', 'checkbox', 'radio', 'textarea'];
+
       Object.entries(invoiceInfo).forEach(([fullKey, value]) => {
-        // Parse the group key (e.g., before first dot)
         const parts = fullKey.split('.');
-        const groupKey = parts[0]; // e.g., Delivery_Date or FileID
-        const inputType = parts[1] || 'text';
-        const cols = parts[2] || '12';
+
+        const groupKey = parts[0]; 
+        const colsMatch = fullKey.match(/\.(\d+)$/);
+        const cols = colsMatch ? colsMatch[1] : '12';
+        const secondPart = parts[1] || '';
+
+        let label;
+        if (inputTypes.includes(secondPart.toLowerCase())) {
+          label = groupKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        } else {
+          label = secondPart.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        if (groupKey.toLowerCase() === 'fileid' && parts.length === 2) {
+          label = 'File';
+        }
 
         if (!groups[groupKey]) {
           groups[groupKey] = [];
         }
 
-        // Extract human label
-        let label;
-        const bracketMatch = fullKey.match(/\[(.*?)\]/);
-        if (bracketMatch) {
-          label = bracketMatch[1];
-        } else {
-          const baseKey = fullKey.split('.')[0]; // fallback
-          label = baseKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        }
-
         groups[groupKey].push({
           fullKey,
           label,
-          type: inputType === 'text' || inputType === 'date' || inputType === 'number' ? inputType : 'text',
+          type: inputTypes.includes(secondPart.toLowerCase()) ? secondPart.toLowerCase() : 'text',
           cols,
           value
         });
@@ -1130,26 +1165,35 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       Object.entries(groups).forEach(([groupKey, fields]) => {
         if ($container.find(`[data-optional-group="${groupKey}"]`).length > 0) return;
 
-        let groupHtml = `
-          <div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${groupKey}">
-            <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
-            <div class="row">
-        `;
+        let groupHtml = `<div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${groupKey}">`;
+        groupHtml += `<button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>`;
 
-        fields.forEach(field => {
-          groupHtml += `
-            <div class="col-md-${field.cols}">
-              <label class="form-label">${field.label}</label>
-              <input type="${field.type}" class="form-control optional-input" data-field-name="${field.fullKey}" value="${field.value}">
-            </div>
-          `;
-        });
+        if (fields.length === 1) {
+          // Unique field: use <h6> label, value in <p>
+          const f = fields[0];
+          groupHtml += `<div class="row"><div class="col-md-${f.cols} mb-3">`;
+          groupHtml += `<h6>${f.label}</h6><p>${f.value || '-'}</p>`;
+          groupHtml += `</div></div>`;
+        } else {
+          // Multiple fields: show group heading, then fields with labels & inputs
+          const cleanGroupName = groupKey
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, l => l.toUpperCase())
+            .replace(/Id\b/, 'ID');
 
-        groupHtml += `
-            </div>
-          </div>
-        `;
+          groupHtml += `<h6>${cleanGroupName}</h6><div class="row">`;
+          fields.forEach(field => {
+            groupHtml += `
+              <div class="col-md-${field.cols} mb-1">
+                <label class="form-label">${field.label}</label>
+                <input type="${field.type}" class="form-control optional-input" data-field-name="${field.fullKey}" value="${field.value}">
+              </div>
+            `;
+          });
+          groupHtml += `</div>`;
+        }
 
+        groupHtml += `</div>`;
         $container.append(groupHtml);
       });
     });
@@ -1231,7 +1275,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
               <option value="manufacturename">Manufacture name</option>
               <option value="trackingid">Freight order number</option>
               <option value="serialID">Serial number</option>
-              <option value="linenote">Notes</option>
+              <option value="note">Notes</option>
               <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
               <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
               <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
@@ -1268,7 +1312,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         $html.find('.price').val(item.price);
         $html.find('.tax').val(item.tax);
         $html.find('.recurring').val(item.recurring);
-        $html.find('input[name$="[_destroy]"]').val(item._destroy);
 
         if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
 
@@ -1289,7 +1332,14 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
             `);
 
             const $fieldRow = $optionalRow.find('.row');
-            const entries = Object.entries(fields).reverse();
+            const entries = Object.entries(fields)
+            .reverse()
+            .sort(([keyA], [keyB]) => {
+              const aIsTotal = keyA.toLowerCase().includes('total') ? 1 : 0;
+              const bIsTotal = keyB.toLowerCase().includes('total') ? 1 : 0;
+              return aIsTotal - bIsTotal;
+            });
+
             const isTotalGroup = ['charge', 'discount'].includes(groupKey);
 
             entries.forEach(([rawKey, val], index, array) => {
@@ -1318,7 +1368,16 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
               const colClass = `col-md-${cols}`;
 
-              if (rawKey.includes('select(')) {
+              // *** NEW: Check if this is a "total" field - render text_only style ***
+              if (rawKey.toLowerCase().includes('total')) {
+                $fieldRow.append(`
+                  <div class="${colClass} mb-3">
+                    <label class="form-label text-start w-100">Total</label>
+                    <span class="form-control-plaintext optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
+                    <input type="hidden" name="${name}" class="form-control optional-total-input" value="${value}">
+                  </div>
+                `);
+              } else if (rawKey.includes('select(')) {
                 const match = rawKey.match(/select\((.*?)\)/);
                 const optionSource = match?.[1] || '';
                 let options = [];
@@ -1347,17 +1406,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
                   </div>
                 `);
               }
-
-              // Add TOTAL field if it's the last in charge/discount
-              const isLast = index === array.length - 1;
-              if (isLast && isTotalGroup) {
-                $fieldRow.append(`
-                  <div class="col-md-2 mb-3">
-                    <label class="form-label text-start w-100">Total</label>
-                    <span class="form-control-plaintext optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
-                  </div>
-                `);
-              }
             });
 
             $lineItems.find(`.dropdown_per_line[data-line-index="${i}"]`).before($optionalRow);
@@ -1367,6 +1415,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         }
       });
     });
+
 
     // Render payment terms from JSON
     $(function () {
@@ -1465,8 +1514,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
       function renderAdjustmentRow(adjustment) {
         const amount = adjustment.amount ?? 0;
-        const unit = adjustment.unit ?? "discount"; // new: maps to discount/charge/fixedtax
-        const unitType = adjustment.unit_type === "%" ? "true" : "false"; // maps to % or PHP
+        const unit = adjustment.type ?? "discount";
+        const unitType = adjustment.unit_type === "%" ? "true" : "false";
         const description = adjustment.description ?? "";
         const descriptionEdit = adjustment.description_edit ?? "";
         const totalFormatted = `${unitType === "true" ? "+" : "+"}${parseFloat(amount).toFixed(2)}`;
@@ -1518,7 +1567,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         return;
       }
 
-      let $lastRow = $(".line-item, .optional-field-row").last();
+      let $lastRow = $(".line-item, .dropdown_per_line").last();
 
       priceAdjustments.forEach(adjustment => {
         const html = renderAdjustmentRow(adjustment);

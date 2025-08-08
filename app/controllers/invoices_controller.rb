@@ -54,9 +54,11 @@ class InvoicesController < ApplicationController
       render :new
     end
   end
+
   def update
     @invoice = current_user.invoices.find(params[:id])
 
+    # Purge attachments ONLY if removal IDs are present
     if params[:invoice][:remove_attachment_ids].present?
       params[:invoice][:remove_attachment_ids].each do |attach_id|
         attachment = @invoice.attachments.find_by(id: attach_id)
@@ -88,7 +90,12 @@ class InvoicesController < ApplicationController
       clean_params.delete(:line_items_attributes)
     end
 
-    parse_json_fields(@invoice)
+    # Attach new uploaded files if any
+    if params[:invoice][:attachments].present?
+      params[:invoice][:attachments].each do |attachment|
+        @invoice.attachments.attach(attachment)
+      end
+    end
 
     if @invoice.update(clean_params)
       redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
@@ -96,6 +103,7 @@ class InvoicesController < ApplicationController
       render :edit
     end
   end
+
 
 
 
@@ -267,7 +275,7 @@ class InvoicesController < ApplicationController
 
       # nested line items
       line_items_attributes: [
-        :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :_destroy,
+        :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :total,
         { optional_fields: {} }
       ]
     )
