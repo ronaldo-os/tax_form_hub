@@ -808,7 +808,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
   });
 
   // Track changes
-  $('#line-items').on('input change', '.discount-item input, .discount-item select', function () {
+  $('#line-items').on('input change', 'input, select, textarea', function () {
     updateDiscountsJSON();
   });
 
@@ -822,54 +822,29 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     $('.discount-item').each(function () {
       const $row = $(this);
 
-      const type = $row.find('.price-adjustment-unit').val();
-      const description = $row.find('.reason-code').val();
-      const description_edit = $row.find('.description-edit').val();
+      const type = ($row.find('.price-adjustment-unit').val() || "").trim();
+      const description = ($row.find('.reason-code').val() || "").trim();
+      const description_edit = ($row.find('.description-edit').val() || "").trim();
       const amount = parseFloat($row.find('.amount').val()) || 0;
+
       const unit_raw = $row.find('.unit-type').val();
       const unit = unit_raw === "true" ? "%" : "PHP";
-      const total = $row.find('.total').text().trim() || "0.00";
 
-      const ordered = {
-        type: type,
-        description: description,
-        description_edit: description_edit,
-        amount: amount,
-        unit: unit,
-        total: total
-      };
+      const total = ($row.find('.total').text().trim() || "0.00").replace(/[^\d.-]/g, "");
 
-      discounts.push(ordered);
+      discounts.push({
+        type,
+        description: description || null,
+        description_edit: description_edit || "",
+        amount,
+        unit,
+        total
+      });
     });
 
-    $('#price_adjustments_json').val(JSON.stringify(discounts, null, 2));
+    $('#price_adjustments_json').val(JSON.stringify(discounts));
   }
 
-  $(window).on('load', function () {
-    recalculateTotals();
-    updatePaymentTermsJSON();
-    updateDiscountsJSON();
-    if ($('#optional_fields_json').length) {
-      $('#optional_fields_json').val(function(_, val) {
-          if (!val || typeof val !== 'string' || val.trim() === '') {
-              return JSON.stringify({});
-          }
-
-          const parts = val.match(/(?:[^\s"]+|"[^"]*")+/g);
-          if (!parts || parts.length < 2) {
-              return JSON.stringify({});
-          }
-
-          const obj = {};
-          for (let i = 0; i < parts.length; i += 2) {
-              obj[parts[i]] = parts[i + 1] || '';
-          }
-          return JSON.stringify(obj);
-      });
-    }
-
-
-  });
 
 
   // Toggle base quantity column button 
@@ -930,6 +905,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     const selectedText = $(this).find('option:selected').text();
     const $descriptionInput = $(this).siblings('input.description-edit');
     $descriptionInput.val(selectedText);
+    UpdteDiscountsJSON();
   });
 
 
@@ -1419,15 +1395,28 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
     // Render payment terms from JSON
     $(function () {
-      let raw = $('#payment_terms_json_edit').val();
-      let data;
+      const $input = $('#payment_terms_json_edit');
+      let raw = $input.val().trim();
+      let data = {};
 
-      try {
-        data = JSON.parse(raw);
-        renderPaymentTerms(data);
-      } catch (e) {
-        console.error("Invalid JSON in payment_terms_json:", e.message, raw);
+      // If value is empty, try reading from name attribute
+      if (!raw) {
+        const nameAttr = $input.attr('name') || "";
+        const match = nameAttr.match(/\[(\{.*\})\]$/); // capture JSON inside []
+        raw = match ? match[1] : "";
       }
+
+      if (raw) {
+        try {
+          data = JSON.parse(raw);
+        } catch (e) {
+          console.error("Invalid JSON in payment_terms_json:", e.message, raw);
+        }
+      } else {
+        console.warn("payment_terms_json_edit JSON is empty, using default {}");
+      }
+
+      renderPaymentTerms(data);
     });
 
     function renderPaymentTerms(data) {
@@ -1574,6 +1563,26 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         $lastRow.after(html);
         $lastRow = $lastRow.next();
       });
+    });
+
+    // Check if form has hidden inputs with space-separated key-value pairs
+    $('[data-field-type="invoice_form_fields"]').each(function() {
+      let val = $(this).val();
+
+      try {
+        JSON.parse(val);
+      } catch (err) {
+        let obj = {};
+        let parts = val.trim().split(/\s+/);
+
+        for (let i = 0; i < parts.length; i += 2) {
+          let key = parts[i];
+          let value = parts[i + 1] || "";
+          obj[key] = value;
+        }
+
+        $(this).val(JSON.stringify(obj));
+      }
     });
 
 

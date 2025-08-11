@@ -458,16 +458,16 @@
         <div class="d-flex justify-content-between gap-2 mt-5">
             <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
             <%= f.submit(action_name == "edit" ? "Update Invoice" : "Create Invoice", class: "btn btn-primary") %>
-            <%= f.hidden_field :total, id: 'total_amount_json' %>
-            <%= f.hidden_field :price_adjustments, id: 'price_adjustments_json' %>
-            <%= f.hidden_field :payment_terms, id: 'payment_terms_json' %>
-            <%= f.hidden_field :invoice_info, id: 'optional_fields_json' %>
-            <%= f.hidden_field :ship_from_location_id, id: "ship_from_location_id" %>
-            <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id" %>
-            <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id" %>
+            <%= f.hidden_field :total, id: 'total_amount_json', data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :price_adjustments, value: @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json', data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :payment_terms, value: @invoice.payment_terms.to_json.html_safe, id: 'payment_terms_json', data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :invoice_info, value: @invoice.invoice_info.to_json.html_safe, id: 'optional_fields_json', data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :ship_from_location_id, id: "ship_from_location_id", data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id", data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id", data: { field_type: 'invoice_form_fields' } %>
 
-            <%= hidden_field_tag :payment_terms_json_edit, @invoice.payment_terms.to_json.html_safe, id: 'payment_terms_json_edit' %>
-            <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit' %>
+            <%= hidden_field_tag :payment_terms_json_edit, @invoice.payment_terms.to_json.html_safe, id: 'payment_terms_json_edit', data: { field_type: 'invoice_form_fields' } %>
+            <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit', data: { field_type: 'invoice_form_fields' } %>
         </div>
     </div>
     <div class="card-footer bg-white pb-3">

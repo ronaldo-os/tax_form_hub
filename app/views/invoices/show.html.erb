@@ -126,7 +126,7 @@
             </tr>
           </thead>
           <tbody id="line-items">
-           <% @invoice.line_items_data.each_with_index do |item, index| %>
+            <% @invoice.line_items_data.each_with_index do |item, index| %>
               <tr class="line-item">
                 <td><%= index + 1 %></td>
                 <td><%= item["item_id"] %></td>
@@ -141,45 +141,88 @@
 
               <% if item["optional_fields"].present? %>
                 <% item["optional_fields"].each do |group_name, fields| %>
-                  <% visible_fields = fields.reject { |_, value| value.blank? } %>
                   <tr>
-                    <% visible_fields.each do |key, value| %>
-                      <% raw_label = key.split(".").first %>
-                      <% label = raw_label.to_s.humanize %>
-                      <td style="text-align: left;">
-                        <label class="fw-bold"><%= label %></label>
-                        <p class="text-muted mb-0"><%= value %></p>
-                      </td>
-                    <% end %>
+                    <% if group_name == "charge" || group_name == "discount" %>
+                      <% ordered_keys = [
+                        "#{group_name}_type.select(DISCOUNT_OPTIONS).2",
+                        "#{group_name}_type_edit.text.4",
+                        "qty.text.2",
+                        "unit.select(php,%).2"
+                      ] %>
 
-                    <% empty_cells = 9 - visible_fields.size %>
-                    <% empty_cells.times { %><td></td><% } %>
+                      <% # Render all except total first %>
+                      <% cell_count = 0 %>
+                      <% ordered_keys.each do |key| %>
+                        <td style="text-align: left;">
+                          <% if fields[key].present? %>
+                            <label class="fw-bold"><%= key.split(".").first.humanize %></label>
+                            <p class="text-muted mb-0"><%= fields[key] %></p>
+                          <% end %>
+                        </td>
+                        <% cell_count += 1 %>
+                      <% end %>
+
+                      <% # Fill empty cells before total %>
+                      <% total_key = "total.text_only.2" %>
+                      <% empty_cells_before_total = 8 - cell_count %> 
+                      <% empty_cells_before_total.times { %><td></td><% } %>
+
+                      <% # Render total last %>
+                      <td class="text-center">
+                        <% if fields[total_key].present? %>
+                          <label class="fw-bold">Total</label>
+                          <p class="text-muted mb-0"><%= fields[total_key] %></p>
+                        <% end %>
+                      </td>
+
+                    <% else %>
+                      <% visible_fields = fields.reject { |_, value| value.blank? } %>
+                      <% visible_fields.each do |key, value| %>
+                        <td style="text-align: left;">
+                          <label class="fw-bold"><%= key.split(".").first.humanize %></label>
+                          <p class="text-muted mb-0"><%= value %></p>
+                        </td>
+                      <% end %>
+                      <% (9 - visible_fields.size).times { %><td></td><% } %>
+                    <% end %>
                   </tr>
                 <% end %>
               <% end %>
             <% end %>
 
+
+
             <% if @invoice.price_adjustments.present? %>
               <tr>
                 <td colspan="10" class="text-center text-muted fw-bold table-light">HEADERS</td>
               </tr>
+
               <% @invoice.price_adjustments.each do |adjustment| %>
-                <% visible_fields = adjustment.reject { |_, value| value.blank? } %>
                 <tr>
-                  <% visible_fields.each do |key, value| %>
-                    <% raw_label = key.to_s.split(".").first %>
-                    <% label = raw_label.to_s.humanize %>
+                  <% # Iterate through all fields except total %>
+                  <% ["type", "description", "description_edit", "amount", "unit"].each do |field| %>
+                    <% value = adjustment[field] %>
                     <td style="text-align: left;">
-                      <label class="fw-bold"><%= label %></label>
-                      <p class="text-muted mb-0"><%= value %></p>
+                      <% unless value.blank? %>
+                        <label class="fw-bold"><%= field.humanize %></label>
+                        <p class="text-muted mb-0"><%= value %></p>
+                      <% end %>
                     </td>
                   <% end %>
 
-                  <% empty_cells = 9 - visible_fields.size %>
+                  <% empty_cells = 9 - 6 %>
                   <% empty_cells.times { %><td></td><% } %>
+                  
+                  <td class="text-center">
+                    <% unless adjustment["total"].blank? %>
+                      <label class="fw-bold">Total</label>
+                      <p class="text-muted mb-0"><%= adjustment["total"] %></p>
+                    <% end %>
+                  </td>
                 </tr>
               <% end %>
             <% end %>
+
 
           </tbody>
         </table>

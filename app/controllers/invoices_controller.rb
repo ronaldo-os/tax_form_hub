@@ -72,7 +72,14 @@ class InvoicesController < ApplicationController
       next unless clean_params[field].present?
 
       begin
-        clean_params[field] = JSON.parse(clean_params[field]) if clean_params[field].is_a?(String)
+        parsed = JSON.parse(clean_params[field]) if clean_params[field].is_a?(String)
+        if parsed.is_a?(Hash)
+          parsed.each do |k, v|
+            parsed[k] = {} if v == "{}"
+          end
+        end
+
+        clean_params[field] = parsed
       rescue JSON::ParserError => e
         Rails.logger.warn("Invalid JSON for #{field}: #{e.message}")
         clean_params[field] = {}
