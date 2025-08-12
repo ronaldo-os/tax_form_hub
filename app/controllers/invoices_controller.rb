@@ -282,7 +282,7 @@ def invoice_params
 
     # nested line items
     line_items_attributes: [
-      :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :total,
+      :item_id, :description, :quantity, :unit, :price, :tax, :total,
       { optional_fields: {} }
     ]
   )

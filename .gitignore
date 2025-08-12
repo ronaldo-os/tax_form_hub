@@ -43,3 +43,4 @@
 /public/packs
 /public/packs-test
 /node_modules
+.vscode/settings.json

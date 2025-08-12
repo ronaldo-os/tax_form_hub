@@ -482,14 +482,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][unit]" class="form-control unit" value="pcs"></td>
           <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][price]" class="form-control price" step="0.01"></td>
           <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][tax]" class="form-control tax" step="0.01"></td>
-          <td>
-            <select name="invoice[line_items_attributes][${new_record_id}][recurring]" class="form-select recurring">
-              <option value="no">No</option>
-              <option value="every_month">Every month</option>
-              <option value="every_quarter">Every quarter</option>
-              <option value="every_year">Every year</option>
-            </select>
-          </td>
           <td class="text-end total">0.00</td>
           <td>
             <input type="hidden" name="invoice[line_items_attributes][${new_record_id}][_destroy]" value="false">
@@ -1214,14 +1206,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           <td><input type="text" name="invoice[line_items_attributes][${index}][unit]" class="form-control unit" value="pcs"></td>
           <td><input type="number" name="invoice[line_items_attributes][${index}][price]" class="form-control price" step="0.01"></td>
           <td><input type="number" name="invoice[line_items_attributes][${index}][tax]" class="form-control tax" step="0.01"></td>
-          <td>
-            <select name="invoice[line_items_attributes][${index}][recurring]" class="form-select recurring">
-              <option value="no">No</option>
-              <option value="every_month">Every month</option>
-              <option value="every_quarter">Every quarter</option>
-              <option value="every_year">Every year</option>
-            </select>
-          </td>
           <td class="text-end total">0.00</td>
           <td>
             <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
@@ -1287,7 +1271,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         $html.find('.unit').val(item.unit);
         $html.find('.price').val(item.price);
         $html.find('.tax').val(item.tax);
-        $html.find('.recurring').val(item.recurring);
 
         if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
 

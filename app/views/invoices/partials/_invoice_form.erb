@@ -153,7 +153,6 @@
             <th>Unit</th>
             <th>Price per unit</th>
             <th>Tax (%)</th>
-            <th>Recurring</th>
             <th>Total excl. tax</th>
             <th></th>
           </tr>
@@ -168,14 +167,6 @@
               <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs"></td>
               <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01"></td>
               <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01"></td>
-              <td>
-                <select name="invoice[line_items_attributes][0][recurring]" class="form-select recurring">
-                  <option value="no">No</option>
-                  <option value="every_month">Every month</option>
-                  <option value="every_quarter">Every quarter</option>
-                  <option value="every_year">Every year</option>
-                </select>
-              </td>
               <td class="text-end total">0.00</td>
               <td>
                 <input type="hidden" name="invoice[line_items_attributes][0][total]" value="0.00">
