@@ -236,55 +236,63 @@ class InvoicesController < ApplicationController
     original_sale_invoice&.update(status: status)
   end
 
-  def invoice_params
-    params.require(:invoice).permit(
-      :user_id,
-      :recipient_company_id,
-      :invoice_number,
-      :issue_date,
-      :currency,
-      :recipient_note,
-      :message,
-      :footer_notes,
-      :save_notes_for_future,
-      :save_footer_notes_for_future,
-      :save_payment_terms_for_future,
-      :invoice_type,
+def invoice_params
+  permitted = params.require(:invoice).permit(
+    :user_id,
+    :recipient_company_id,
+    :invoice_number,
+    :issue_date,
+    :currency,
+    :recipient_note,
+    :message,
+    :footer_notes,
+    :save_notes_for_future,
+    :save_footer_notes_for_future,
+    :save_payment_terms_for_future,
+    :invoice_type,
 
-      # delivery details
-      :delivery_details_postbox,
-      :delivery_details_street,
-      :delivery_details_number,
-      :delivery_details_locality_name,
-      :delivery_details_zip_code,
-      :delivery_details_city,
-      :delivery_details_country,
-      :delivery_details_gln,
-      :delivery_details_company_name,
-      :delivery_details_tax_id,
-      :delivery_details_tax_number,
+    # delivery details
+    :delivery_details_postbox,
+    :delivery_details_street,
+    :delivery_details_number,
+    :delivery_details_locality_name,
+    :delivery_details_zip_code,
+    :delivery_details_city,
+    :delivery_details_country,
+    :delivery_details_gln,
+    :delivery_details_company_name,
+    :delivery_details_tax_id,
+    :delivery_details_tax_number,
 
-      # location references
-      :ship_from_location_id,
-      :remit_to_location_id,
-      :tax_representative_location_id,
+    # location references
+    :ship_from_location_id,
+    :remit_to_location_id,
+    :tax_representative_location_id,
 
-      # JSON fields
-      :line_items_data,
-      :payment_terms,
-      :price_adjustments,
-      :invoice_info,
-      :total,
+    # JSON fields
+    :line_items_data,
+    :payment_terms,
+    :price_adjustments,
+    :invoice_info,
+    :total,
 
-      # attachments
-      attachments: [],
-      remove_attachment_ids: [],
+    # attachments
+    attachments: [],
+    remove_attachment_ids: [],
 
-      # nested line items
-      line_items_attributes: [
-        :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :total,
-        { optional_fields: {} }
-      ]
-    )
+    # nested line items
+    line_items_attributes: [
+      :item_id, :description, :quantity, :unit, :price, :tax, :recurring, :total,
+      { optional_fields: {} }
+    ]
+  )
+
+  # Convert blank or zero location IDs to nil
+  %i[ship_from_location_id remit_to_location_id tax_representative_location_id].each do |field|
+    permitted[field] = nil if permitted[field].blank? || permitted[field].to_i.zero?
   end
+
+  permitted
+end
+
 end
