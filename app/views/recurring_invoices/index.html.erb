@@ -1,0 +1,43 @@
+<div class="container py-2 py-md-5">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <h1 class="display-2 mb-0">Recurring Line Items</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-3">
+        <table id="recurring-items-table" class="table table-hover table-striped table-bordered table_text_centered align-middle nowrap w-100">
+        <thead>
+            <tr>
+            <th>Invoice #</th>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Price</th>
+            <th>Total</th>
+            <th>Every</th>
+            <th>Interval</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% @recurring_items.each do |item| %>
+            <tr>
+                <td><%= item[:invoice_number] %></td>
+                <td><%= item[:description] %></td>
+                <td><%= item[:quantity] %></td>
+                <td><%= item[:unit] %></td>
+                <td><%= item[:price] %></td>
+                <td><%= item[:total] %></td>
+                <td><%= item[:every] %></td>
+                <td><%= item[:interval] %></td>
+                <td><%= item[:start_date] %></td>
+                <td><%= item[:end_date] %></td>
+                <td></td>
+            </tr>
+            <% end %>
+        </tbody>
+        </table>
+    </div>
+</div>

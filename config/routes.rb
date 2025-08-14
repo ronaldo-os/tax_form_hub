@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  get "recurring_invoices/index"
+  get "recurring_invoices/disable"
   resources :locations
   get "invoices/index"
   devise_for :users, controllers: {
@@ -33,6 +35,13 @@ Rails.application.routes.draw do
   end
 
   resources :companies
+
+  resources :recurring_invoices, only: [:index] do
+    member do
+      patch :disable
+    end
+  end
+
 
   patch '/tax_submissions/:id', to: 'pages#update', as: 'update_tax_submission'
 

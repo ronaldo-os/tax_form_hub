@@ -5,6 +5,7 @@ import "./edit_profile";
 import "./invoice";
 import "./locations";
 import "./companies.js";
+import "./recurring_line_items.js";
 
 
 import Rails from "@rails/ujs";
