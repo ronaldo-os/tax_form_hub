@@ -55,5 +55,6 @@ end
 # ADDED GEMS
 gem "devise"
 gem "dotenv-rails"
+gem "whenever", require: false
 
 gem "jsbundling-rails", "~> 1.3"

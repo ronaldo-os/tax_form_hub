@@ -532,6 +532,14 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
   updateRemoveButtons();
 
   const discount_fieldTypeMap = {
+    recurring: [
+      { name: "recurring.mode.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
+      { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"], cols: 2 },
+      { name: "recurring.every.number.2", label: "Every", type: "number", cols: 2 },
+      { name: "recurring.start_date.date.2", label: "Start Date", type: "date", cols: 2 },
+      { name: "recurring.end_date.date.2", label: "End Date", type: "date", cols: 2 },
+      { name: "recurring.count.number.2", label: "Occurrences", type: "number", cols: 2 },
+    ],
     discount: [
       { name: "discount.discount_type.select(DISCOUNT_OPTIONS).2", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
       { name: "discount.discount_type_edit.text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
@@ -1215,6 +1223,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           <td colspan="3">
             <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select optional-type">
               <option value="">Add optional field</option>
+              <option value="recurring">Recurring</option>
               <option value="discount">Discount</option>
               <option value="charge">Charge (e.g. freight)</option>
               <option value="bolid">Transport Reference</option>
