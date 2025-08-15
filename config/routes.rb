@@ -36,11 +36,10 @@ Rails.application.routes.draw do
 
   resources :companies
 
-  resources :recurring_invoices, only: [:index] do
-    member do
-      patch :disable
-    end
+  resources :recurring_invoices, only: [:index, :update, :destroy] do
+    patch :disable, on: :collection
   end
+
 
 
   patch '/tax_submissions/:id', to: 'pages#update', as: 'update_tax_submission'
