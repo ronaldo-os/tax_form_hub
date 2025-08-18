@@ -7,7 +7,7 @@ class RecurringInvoicesController < ApplicationController
     Invoice.find_each do |invoice|
       invoice.line_items_data.each_with_index do |item, index|
         recurring = recurring_fields(item)
-        next unless recurring && recurring["mode.select(yes,no).2"] == "yes"
+        next unless recurring && recurring["recurring.select(yes,no).2"] == "yes"
 
         @recurring_items << {
           invoice_id: invoice.id,
@@ -22,7 +22,7 @@ class RecurringInvoicesController < ApplicationController
           end_date: recurring["end_date.date.2"],
           every: recurring["every.number.2"],
           interval: recurring["interval.select(daily,weekly,monthly,yearly).2"],
-          count: recurring["count.number.2"]
+          count: recurring["occurrences.number.2"]
         }
       end
     end
@@ -30,12 +30,12 @@ class RecurringInvoicesController < ApplicationController
 
   def update
     recurring_fields = @line_item["optional_fields"]["recurring"]
-    recurring_fields["mode.select(yes,no).2"] = params[:mode]
+    recurring_fields["recurring.select(yes,no).2"] = params[:mode]
     recurring_fields["interval.select(daily,weekly,monthly,yearly).2"] = params[:interval]
     recurring_fields["every.number.2"] = params[:every]
     recurring_fields["start_date.date.2"] = params[:start_date]
     recurring_fields["end_date.date.2"] = params[:end_date]
-    recurring_fields["count.number.2"] = params[:count]
+    recurring_fields["occurrences.number.2"] = params[:count]
 
     save_invoice_changes
 
@@ -49,7 +49,7 @@ class RecurringInvoicesController < ApplicationController
   end
 
   def disable
-    recurring_fields(@line_item)["mode.select(yes,no).2"] = "no"
+    recurring_fields(@line_item)["recurring.select(yes,no).2"] = "no"
     save_invoice_changes
 
     respond_to do |format|

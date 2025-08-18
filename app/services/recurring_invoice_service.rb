@@ -10,7 +10,7 @@ class RecurringInvoiceService
           next false
         end
 
-        unless recurring["mode.select(yes,no).2"] == "yes"
+        unless recurring["recurring.select(yes,no).2"] == "yes"
           Rails.logger.debug "Invoice ##{invoice.invoice_number} skipped: recurring mode is not 'yes'."
           next false
         end

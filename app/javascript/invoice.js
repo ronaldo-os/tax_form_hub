@@ -533,12 +533,12 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
   const discount_fieldTypeMap = {
     recurring: [
-      { name: "recurring.mode.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
+      { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
       { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"], cols: 2 },
       { name: "recurring.every.number.2", label: "Every", type: "number", cols: 2 },
       { name: "recurring.start_date.date.2", label: "Start Date", type: "date", cols: 2 },
       { name: "recurring.end_date.date.2", label: "End Date", type: "date", cols: 2 },
-      { name: "recurring.count.number.2", label: "Occurrences", type: "number", cols: 2 },
+      { name: "recurring.occurrences.number.2", label: "Occurrences", type: "number", cols: 2 },
     ],
     discount: [
       { name: "discount.discount_type.select(DISCOUNT_OPTIONS).2", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
@@ -1282,7 +1282,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         $html.find('.tax').val(item.tax);
 
         if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
-
         if (item.optional_fields) {
           Object.entries(item.optional_fields).forEach(([groupKey, fields]) => {
             const $optionalRow = $(`
@@ -1300,81 +1299,116 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
             `);
 
             const $fieldRow = $optionalRow.find('.row');
-            const entries = Object.entries(fields)
-            .reverse()
-            .sort(([keyA], [keyB]) => {
-              const aIsTotal = keyA.toLowerCase().includes('total') ? 1 : 0;
-              const bIsTotal = keyB.toLowerCase().includes('total') ? 1 : 0;
-              return aIsTotal - bIsTotal;
-            });
 
-            const isTotalGroup = ['charge', 'discount'].includes(groupKey);
+            // Field order definition for recurring
+            const RECURRING_FIELDS_ORDER = [
+              { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
+              { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"], cols: 2 },
+              { name: "recurring.every.number.2", label: "Every", type: "number", cols: 2 },
+              { name: "recurring.start_date.date.2", label: "Start Date", type: "date", cols: 2 },
+              { name: "recurring.end_date.date.2", label: "End Date", type: "date", cols: 2 },
+              { name: "recurring.occurrences.number.2", label: "Occurrences", type: "number", cols: 2 },
+            ];
 
-            entries.forEach(([rawKey, val], index, array) => {
-              const name = `invoice[line_items_attributes][${i}][optional_fields][${groupKey}.${rawKey}]`;
+            if (groupKey === "recurring") {
+              RECURRING_FIELDS_ORDER.forEach(fieldDef => {
+                const rawKey = fieldDef.name.replace(/^recurring\./, "");
+                const value = fields[rawKey] || "";
 
-              // Determine value type
-              let value = '';
-              let type = 'text';
-              let cols = 4;
+                const colClass = `col-md-${fieldDef.cols}`;
 
-              if (typeof val === 'string') {
-                value = val;
-              } else if (typeof val === 'object') {
-                value = val.value || '';
-                type = val.type || 'text';
-                cols = val.columns || 4;
-              }
-
-              // Get columns from .N suffix
-              const colMatch = rawKey.match(/\.(\d+)$/);
-              if (colMatch) cols = parseInt(colMatch[1]);
-
-              // Extract label (second segment only)
-              const labelSegment = rawKey.split('.')[0] || '';
-              const formattedLabel = labelSegment.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-              const colClass = `col-md-${cols}`;
-
-              // *** NEW: Check if this is a "total" field - render text_only style ***
-              if (rawKey.toLowerCase().includes('total')) {
-                $fieldRow.append(`
-                  <div class="${colClass} mb-3">
-                    <label class="form-label text-start w-100">Total</label>
-                    <span class="form-control-plaintext optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
-                    <input type="hidden" name="${name}" class="form-control optional-total-input" value="${value}">
-                  </div>
-                `);
-              } else if (rawKey.includes('select(')) {
-                const match = rawKey.match(/select\((.*?)\)/);
-                const optionSource = match?.[1] || '';
-                let options = [];
-
-                if (optionSource === "DISCOUNT_OPTIONS") {
-                  options = DISCOUNT_OPTIONS;
-                } else if (optionSource === "COUNTRY_OPTIONS") {
-                  options = COUNTRY_OPTIONS;
+                if (fieldDef.type === "select") {
+                  $fieldRow.append(`
+                    <div class="${colClass} mb-3">
+                      <label class="form-label">${fieldDef.label}</label>
+                      <select name="invoice[line_items_attributes][${i}][optional_fields][${fieldDef.name}]" class="form-select">
+                        ${fieldDef.options.map(opt => `<option value="${opt}" ${opt === value ? "selected" : ""}>${opt}</option>`).join("")}
+                      </select>
+                    </div>
+                  `);
                 } else {
-                  options = optionSource.split(',').map(opt => opt.trim());
+                  $fieldRow.append(`
+                    <div class="${colClass} mb-3">
+                      <label class="form-label">${fieldDef.label}</label>
+                      <input type="${fieldDef.type}" name="invoice[line_items_attributes][${i}][optional_fields][${fieldDef.name}]" class="form-control" value="${value}">
+                    </div>
+                  `);
+                }
+              });
+            } else {
+              // fallback for other groups (your original logic)
+              const entries = Object.entries(fields).reverse().sort(([keyA], [keyB]) => {
+                const aIsTotal = keyA.toLowerCase().includes("total") ? 1 : 0;
+                const bIsTotal = keyB.toLowerCase().includes("total") ? 1 : 0;
+                return aIsTotal - bIsTotal;
+              });
+
+              entries.forEach(([rawKey, val], index, array) => {
+                const name = `invoice[line_items_attributes][${i}][optional_fields][${groupKey}.${rawKey}]`;
+
+                // Determine value type
+                let value = '';
+                let type = 'text';
+                let cols = 4;
+
+                if (typeof val === 'string') {
+                  value = val;
+                } else if (typeof val === 'object') {
+                  value = val.value || '';
+                  type = val.type || 'text';
+                  cols = val.columns || 4;
                 }
 
-                $fieldRow.append(`
-                  <div class="${colClass} mb-3">
-                    <label class="form-label">${formattedLabel}</label>
-                    <select name="${name}" class="form-select">
-                      ${options.map(opt => `<option value="${opt}" ${opt === value ? 'selected' : ''}>${opt}</option>`).join('')}
-                    </select>
-                  </div>
-                `);
-              } else {
-                $fieldRow.append(`
-                  <div class="${colClass} mb-3">
-                    <label class="form-label">${formattedLabel}</label>
-                    <input type="${type}" name="${name}" class="form-control" value="${value}">
-                  </div>
-                `);
-              }
-            });
+                // Get columns from .N suffix
+                const colMatch = rawKey.match(/\.(\d+)$/);
+                if (colMatch) cols = parseInt(colMatch[1]);
+
+                // Extract label (second segment only)
+                const labelSegment = rawKey.split('.')[0] || '';
+                const formattedLabel = labelSegment.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                const colClass = `col-md-${cols}`;
+
+                // *** NEW: Check if this is a "total" field - render text_only style ***
+                if (rawKey.toLowerCase().includes('total')) {
+                  $fieldRow.append(`
+                    <div class="${colClass} mb-3">
+                      <label class="form-label text-start w-100">Total</label>
+                      <span class="form-control-plaintext optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
+                      <input type="hidden" name="${name}" class="form-control optional-total-input" value="${value}">
+                    </div>
+                  `);
+                } else if (rawKey.includes('select(')) {
+                  const match = rawKey.match(/select\((.*?)\)/);
+                  const optionSource = match?.[1] || '';
+                  let options = [];
+
+                  if (optionSource === "DISCOUNT_OPTIONS") {
+                    options = DISCOUNT_OPTIONS;
+                  } else if (optionSource === "COUNTRY_OPTIONS") {
+                    options = COUNTRY_OPTIONS;
+                  } else {
+                    options = optionSource.split(',').map(opt => opt.trim());
+                  }
+
+                  $fieldRow.append(`
+                    <div class="${colClass} mb-3">
+                      <label class="form-label">${formattedLabel}</label>
+                      <select name="${name}" class="form-select">
+                        ${options.map(opt => `<option value="${opt}" ${opt === value ? 'selected' : ''}>${opt}</option>`).join('')}
+                      </select>
+                    </div>
+                  `);
+                } else {
+                  $fieldRow.append(`
+                    <div class="${colClass} mb-3">
+                      <label class="form-label">${formattedLabel}</label>
+                      <input type="${type}" name="${name}" class="form-control" value="${value}">
+                    </div>
+                  `);
+                }
+              });
+            }
 
             $lineItems.find(`.dropdown_per_line[data-line-index="${i}"]`).before($optionalRow);
           });
