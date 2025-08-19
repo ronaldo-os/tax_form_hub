@@ -105,36 +105,7 @@
 
             <div id="optional_fields_container" data-invoice-info='<%= @invoice.invoice_info.to_json %>'></div>
               <div class="mt-4 mb-4">
-                <select id="optionalField" class="form-select">
-                  <option value="">Add optional field</option>
-                  <option value="DeliveryDate">Delivery Date</option>
-                  <option value="PaymentDueDate">Payment Due Date</option>
-                  <option value="customsDeclarations">Customs Declarations</option>
-                  <option value="taxExchangeRateFields">Exchange rate</option>
-                  <option value="transactionVatType">Transaction VAT Type</option>
-                  <option value="orderReferenceId">Purchase order number</option>
-                  <option value="orderReferenceIssueDate">Purchase order issue date</option>
-                  <option value="billingReferenceId">Billing reference</option>
-                  <option value="contractDocumentReferenceId">Contract number</option>
-                  <option value="despatchDocumentReference.id">Shipping Notice Reference</option>
-                  <option value="despatchDocumentReference.issueDate">Shipping Notice Issue Date</option>
-                  <option value="receiptDocumentReference.id">Goods Receipt Reference</option>
-                  <option value="receiptDocumentReference.issueDate">Goods Receipt Issue Date</option>
-                  <option value="accountingCost">Cost center</option>
-                  <option value="customerPartyContactName">Person reference</option>
-                  <option value="additionalReferences[BOL ID]">Transport Reference</option>
-                  <option value="BOLIssueDate">Transport Reference Issue Date</option>
-                  <option value="FileID">File Id</option>
-                  <option value="customerAssignedId">Customer account ID</option>
-                  <option value="taxPointDate">Tax point date</option>
-                  <option value="supplierCommissionNumber">Commission number of seller</option>
-                  <option value="supplierPhysicalLocationValue">Data universal numbering system</option>
-                  <option value="deliveryTerms">Delivery Terms</option>
-                  <option value="InternimHours">Interim Hours</option>
-                  <option value="BookingNumber">Booking Number</option>
-                  <option value="PaymentReference">Payment Reference</option>
-                  <option value="promisedDeliveryPeriod">Delivery period</option>
-                  <option value="ClearanceClave">Clearance Clave</option>
+                <select id="optionalField" class="form-select invoice_info_select">
                 </select>
               </div>
             </div>
@@ -177,33 +148,6 @@
             <tr class="dropdown_per_line hidden" data-line-index="0">
               <td colspan="3">
                 <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
-                  <option value="">Add optional field</option>
-                  <option value="discount">Discount</option>
-                  <option value="recurring">Recurring</option>
-                  <option value="charge">Charge (e.g. freight)</option>
-                  <option value="bolid">Transport Reference</option>
-                  <option value="fileid">File Id</option>
-                  <option value="taxexemptionreason">Tax exemption reason</option>
-                  <option value="modelname">Model name</option>
-                  <option value="hsnsac">HSN/SAC</option>
-                  <option value="documentreference">Purchase order number</option>
-                  <option value="documentlinereference">Purchase order line number</option>
-                  <option value="accountingcost">Cost center</option>
-                  <option value="deliveryaddress">Delivery Address</option>
-                  <option value="actualdeliverydate">Delivery Date</option>
-                  <option value="buyersitemidentification">Buyer material number</option>
-                  <option value="origincountry">Country of origin</option>
-                  <option value="eccn">Commodity classification: ECCN</option>
-                  <option value="eangtin">EAN/GTIN</option>
-                  <option value="incoterms">Delivery Terms</option>
-                  <option value="manufacturename">Manufacture name</option>
-                  <option value="trackingid">Freight order number</option>
-                  <option value="serialID">Serial number</option>
-                  <option value="note">Notes</option>
-                  <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
-                  <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
-                  <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
-                  <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
                 </select>
               </td>
               <td colspan="6"></td>

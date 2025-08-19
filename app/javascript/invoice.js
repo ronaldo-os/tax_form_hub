@@ -1,4 +1,4 @@
-import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS } from "./long_select_options/options";
+import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS, INVOICE_INFO_OPTIONAL_FIELDS, OPTIONAL_FIELDS} from "./long_select_options/options";
 
 if ( window.location.pathname === "/invoices" || window.location.pathname === "/invoices/new" || window.location.pathname.match(/^\/invoices\/\d+\/edit$/) ) {
     $(document).ready(function () {
@@ -8,6 +8,19 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       $('#sales-archived-table').DataTable();
       $('#purchases-archived-table').DataTable();
       recalculateTotals();
+
+      // universal functions 
+      
+      // Build options for optional fields dropdown
+      function buildOptions(fields) {
+        return Object.entries(fields)
+          .map(([value, label]) => `<option value="${value}">${label}</option>`)
+          .join("");
+      }
+
+      $("#additional_field_0").html(buildOptions(OPTIONAL_FIELDS));
+      $(".invoice_info_select").html(buildOptions(INVOICE_INFO_OPTIONAL_FIELDS));
+
 
       //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
       
@@ -191,7 +204,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         $('#optional_fields_json').val(JSON.stringify(data));
       }
 
-    });
 
 
     //----------------------------------------------------- PAYMENT TERMS FIELD 
@@ -458,20 +470,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       }
     }
 
-
-    function getDropdownOptions() {
-      const options = [
-        'discount', 'charge', 'bolid', 'fileid', 'taxexemptionreason',
-        'modelname', 'hsnsac', 'documentreference', 'documentlinereference',
-        'accountingcost', 'deliveryaddress', 'actualdeliverydate', 'buyersitemidentification',
-        'origincountry', 'eccn', 'eangtin', 'incoterms', 'manufacturename',
-        'trackingid', 'serialID', 'note', 'despatchlinedocumentreference',
-        'despatchlineiddocumentreference', 'receiptlinedocumentreference', 'receiptlineiddocumentreference'
-      ];
-
-      return options.map(opt => `<option value="${opt}">${opt.replace(/([a-z])([A-Z])/g, '$1 $2')}</option>`).join('');
-    }
-
     function getLineItemHTML(new_record_id) {
       return `
         <tr class="line-item" data-line-index="${new_record_id}">
@@ -484,7 +482,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][tax]" class="form-control tax" step="0.01"></td>
           <td class="text-end total">0.00</td>
           <td>
-            <input type="hidden" name="invoice[line_items_attributes][${new_record_id}][_destroy]" value="false">
             <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
           </td>
         </tr>
@@ -492,7 +489,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           <td colspan="3">
             <select name="additional_field_${new_record_id}" id="additional_field_${new_record_id}" class="no-label form-select">
               <option value="">Add optional field</option>
-              ${getDropdownOptions()}
+              ${buildOptions(OPTIONAL_FIELDS)}
             </select>
           </td>
           <td colspan="6"></td>
@@ -1102,13 +1099,14 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
       const $container = $('#invoice_details_parent_div #optional_fields_container');
       const groups = {};
-
       const inputTypes = ['text', 'date', 'number', 'select', 'checkbox', 'radio', 'textarea'];
 
       Object.entries(invoiceInfo).forEach(([fullKey, value]) => {
-        const parts = fullKey.split('.');
+        // 🚫 Skip empty values
+        if (!value || value.trim() === "") return;
 
-        const groupKey = parts[0]; 
+        const parts = fullKey.split('.');
+        const groupKey = parts[0];
         const colsMatch = fullKey.match(/\.(\d+)$/);
         const cols = colsMatch ? colsMatch[1] : '12';
         const secondPart = parts[1] || '';
@@ -1128,12 +1126,23 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           groups[groupKey] = [];
         }
 
+        // 👇 Detect select(options) in the full key
+        let type = inputTypes.includes(secondPart.toLowerCase()) ? secondPart.toLowerCase() : 'text';
+        let selectOptions = null;
+
+        const selectMatch = fullKey.match(/\.select\(([^)]+)\)/i);
+        if (selectMatch) {
+          type = "select";
+          selectOptions = selectMatch[1].split(',').map(opt => opt.trim());
+        }
+
         groups[groupKey].push({
           fullKey,
           label,
-          type: inputTypes.includes(secondPart.toLowerCase()) ? secondPart.toLowerCase() : 'text',
+          type,
           cols,
-          value
+          value,
+          selectOptions
         });
       });
 
@@ -1145,26 +1154,48 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         groupHtml += `<button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>`;
 
         if (fields.length === 1) {
-          // Unique field: use <h6> label, value in <p>
           const f = fields[0];
           groupHtml += `<div class="row"><div class="col-md-${f.cols} mb-3">`;
-          groupHtml += `<h6>${f.label}</h6><p>${f.value || '-'}</p>`;
+          groupHtml += `<h6>${f.label}</h6>`;
+
+          if (f.type === "select" && f.selectOptions) {
+            groupHtml += `<select class="form-control optional-input" data-field-name="${f.fullKey}">`;
+            f.selectOptions.forEach(opt => {
+              const selected = (opt.toLowerCase() === f.value.toLowerCase()) ? "selected" : "";
+              groupHtml += `<option value="${opt}" ${selected}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`;
+            });
+            groupHtml += `</select>`;
+          } else {
+            groupHtml += `<p>${f.value || '-'}</p>`;
+          }
+
           groupHtml += `</div></div>`;
         } else {
-          // Multiple fields: show group heading, then fields with labels & inputs
           const cleanGroupName = groupKey
             .replace(/_/g, ' ')
             .replace(/\b\w/g, l => l.toUpperCase())
             .replace(/Id\b/, 'ID');
 
           groupHtml += `<h6>${cleanGroupName}</h6><div class="row">`;
+
           fields.forEach(field => {
-            groupHtml += `
-              <div class="col-md-${field.cols} mb-1">
-                <label class="form-label">${field.label}</label>
-                <input type="${field.type}" class="form-control optional-input" data-field-name="${field.fullKey}" value="${field.value}">
-              </div>
-            `;
+            groupHtml += `<div class="col-md-${field.cols} mb-1">`;
+            groupHtml += `<label class="form-label">${field.label}</label>`;
+
+            if (field.type === "select" && field.selectOptions) {
+              groupHtml += `<select class="form-control optional-input" data-field-name="${field.fullKey}">`;
+              field.selectOptions.forEach(opt => {
+                const selected = (opt.toLowerCase() === field.value.toLowerCase()) ? "selected" : "";
+                groupHtml += `<option value="${opt}" ${selected}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`;
+              });
+              groupHtml += `</select>`;
+            } else {
+              groupHtml += `<input type="${field.type}" class="form-control optional-input" data-field-name="${field.fullKey}" value="${field.value}">`;
+            }
+
+            groupHtml += `</div>`;
+            alert(field.type);
+
           });
           groupHtml += `</div>`;
         }
@@ -1173,6 +1204,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         $container.append(groupHtml);
       });
     });
+
 
     // Display Delivery Details if any input has value
     $(function () {
@@ -1222,33 +1254,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         <tr class="dropdown_per_line" data-line-index="${index}">
           <td colspan="3">
             <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select optional-type">
-              <option value="">Add optional field</option>
-              <option value="recurring">Recurring</option>
-              <option value="discount">Discount</option>
-              <option value="charge">Charge (e.g. freight)</option>
-              <option value="bolid">Transport Reference</option>
-              <option value="fileid">File Id</option>
-              <option value="taxexemptionreason">Tax exemption reason</option>
-              <option value="modelname">Model name</option>
-              <option value="hsnsac">HSN/SAC</option>
-              <option value="documentreference">Purchase order number</option>
-              <option value="documentlinereference">Purchase order line number</option>
-              <option value="accountingcost">Cost center</option>
-              <option value="deliveryaddress">Delivery Address</option>
-              <option value="actualdeliverydate">Delivery Date</option>
-              <option value="buyersitemidentification">Buyer material number</option>
-              <option value="origincountry">Country of origin</option>
-              <option value="eccn">Commodity classification: ECCN</option>
-              <option value="eangtin">EAN/GTIN</option>
-              <option value="incoterms">Delivery Terms</option>
-              <option value="manufacturename">Manufacture name</option>
-              <option value="trackingid">Freight order number</option>
-              <option value="serialID">Serial number</option>
-              <option value="note">Notes</option>
-              <option value="despatchlinedocumentreference">Shipping Notice Reference</option>
-              <option value="despatchlineiddocumentreference">Shipping Notice Line Reference</option>
-              <option value="receiptlinedocumentreference">Goods Receipt Reference</option>
-              <option value="receiptlineiddocumentreference">Goods Receipt Line Reference</option>
+              ${buildOptions(OPTIONAL_FIELDS)}
             </select>
           </td>
           <td colspan="6" class="optional-fields-container"></td>
@@ -1611,6 +1617,5 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       }
     });
 
-
-  
+  });
 }

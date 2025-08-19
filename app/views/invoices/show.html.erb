@@ -148,7 +148,6 @@
                         "unit.select(php,%).2"
                       ] %>
 
-                      <% # Render all except total first %>
                       <% cell_count = 0 %>
                       <% ordered_keys.each do |key| %>
                         <td style="text-align: left;">
@@ -160,18 +159,38 @@
                         <% cell_count += 1 %>
                       <% end %>
 
-                      <% # Fill empty cells before total %>
                       <% total_key = "total.text_only.2" %>
                       <% empty_cells_before_total = 8 - cell_count %> 
                       <% empty_cells_before_total.times { %><td></td><% } %>
 
-                      <% # Render total last %>
                       <td class="text-center">
                         <% if fields[total_key].present? %>
                           <label class="fw-bold">Total</label>
                           <p class="text-muted mb-0"><%= fields[total_key] %></p>
                         <% end %>
                       </td>
+
+                      <% elsif group_name == "recurring" %>
+                        <% recurring_order = [
+                          "recurring.select(yes,no).2",
+                          "interval.select(daily,weekly,monthly,yearly).2",
+                          "every.number.2",
+                          "start_date.date.2",
+                          "end_date.date.2",
+                          "occurrences.number.2"
+                        ] %>
+
+                        <% cell_count = 0 %>
+                        <% recurring_order.each do |key| %>
+                          <td style="text-align: left;">
+                            <% if fields[key].present? %>
+                              <label class="fw-bold"><%= key.split(".").first.humanize %></label>
+                              <p class="text-muted mb-0"><%= fields[key] %></p>
+                            <% end %>
+                          </td>
+                          <% cell_count += 1 %>
+                        <% end %>
+                        <% (9 - cell_count).times { %><td></td><% } %>
 
                     <% else %>
                       <% visible_fields = fields.reject { |_, value| value.blank? } %>
