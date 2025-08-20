@@ -1,5 +1,6 @@
 class Company < ApplicationRecord
   has_one_attached :profile_image
+  has_many :recommendations, dependent: :destroy
   belongs_to :user
 
   INDUSTRIES = [

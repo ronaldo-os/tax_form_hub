@@ -10,6 +10,7 @@ class User < ApplicationRecord
   # Associations
   belongs_to :company, optional: true
   has_many :companies
+  has_many :recommendations, dependent: :destroy
   has_many :tax_submissions
   has_many :invoices
   has_many :locations, dependent: :destroy

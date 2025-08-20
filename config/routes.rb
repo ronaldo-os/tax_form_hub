@@ -34,7 +34,10 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :companies
+  resources :companies do
+    resources :recommendations, only: [:create]
+  end
+
 
   resources :recurring_invoices, only: [:index, :update, :destroy] do
     patch :disable, on: :collection

@@ -35,9 +35,9 @@ if (window.location.pathname.includes("/companies")) {
             }
         });
 
-
-
-
-
+         $("#recommend-btn").on("click", function (e) {
+            e.preventDefault(); 
+            alert("You are currently in visitor view and can't write a recommendation for your own company");
+        });
     });
 }

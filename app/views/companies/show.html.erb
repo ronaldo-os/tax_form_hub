@@ -1,0 +1,151 @@
+<% if current_user && current_user.company_id == @company.id %>
+<div id="visitor-note" class="visitor-note">
+  <p>
+    You are currently viewing your profile, as other people see it. 
+    <b>
+        <%= link_to "View it as me", companies_path, class: "view-as-me", id: "exit-visitor-mode" %>
+    </b>
+  </p>
+</div>
+<% end %>
+
+
+<div class="container py-2 py-md-5">
+  <h1 class="display-2 mb-4">Company Profile</h1>
+
+  <div class="row mt-4">
+    <div class="col-md-3">
+      <div class="card shadow-sm">
+        <div class="card-body">
+            
+          <div class="d-flex flex-column align-items-center mb-3">
+            <%= image_tag(
+              @company.profile_image.attached? ? url_for(@company.profile_image) : asset_path("user_avatar_default.png"),
+              class: "rounded-2 img-thumbnail",
+              style: "width: 200px; height: 200px; object-fit: cover;"
+            ) %>
+          </div>
+
+          <h4 class="text-center"><%= @company.name %></h4>
+          <% if @company.website.present? %>
+            <% full_url = @company.website =~ /\Ahttp(s)?:\/\// ? @company.website : "https://#{@company.website}" %>
+            <p class="text-center">
+              <a href="<%= full_url %>" target="_blank" rel="noopener noreferrer">
+                <%= @company.website %>
+              </a>
+            </p>
+          <% end %>
+
+          <!-- About -->
+          <small class="text-uppercase text-muted">About</small>
+          <ul class="list-unstyled mt-3 mb-0">
+            <li class="mt-2 d-flex align-items-center">
+              <i class="fa-solid fa-laptop"></i>
+              <p class="mb-0 d-inline">
+                <%= Company::INDUSTRIES.to_h.invert[@company.industry] if @company.industry.present? %>
+              </p>
+            </li>
+            <li class="mt-2 d-flex align-items-center">
+              <i class="fa-solid fa-users"></i>
+              <p class="mb-0 d-inline">
+                <%= Company::SIZES.to_h.invert[@company.size] if @company.size.present? %>
+              </p>
+            </li>
+            <li class="mt-2 d-flex align-items-center">
+              <i class="fa-solid fa-briefcase"></i>
+              <p class="mb-0 d-inline">
+                <%= Company::OWNERSHIPS.to_h.invert[@company.ownership] if @company.ownership.present? %>
+              </p>
+            </li>
+            <li class="mt-2 d-flex align-items-center">
+              <i class="fa-solid fa-location-dot"></i>
+              <p class="mb-0 d-inline"><%= @company.address %></p>
+            </li>
+          </ul>
+
+          <!-- Contact -->
+          <div class="mb-3 pb-2 border-bottom mt-3">
+            <small class="text-uppercase text-muted">Contact</small>
+            <ul class="list-unstyled mt-3 mb-0">
+              <li class="d-flex align-items-center">
+                <i class="fa-solid fa-phone"></i>
+                <p class="mb-0 d-inline"><%= @company.phone %></p>
+              </li>
+              <li class="mt-2 d-flex align-items-center">
+                <i class="fa-solid fa-envelope"></i>
+                <p class="mb-0 d-inline"><%= @company.email_address %></p>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Map -->
+          <div>
+            <div style="height: 150px; width: 100%; overflow: hidden; border-radius: 8px;">
+              <iframe
+                width="100%"
+                height="150"
+                frameborder="0"
+                scrolling="no"
+                marginheight="0"
+                marginwidth="0"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=121.191,14.484,121.211,14.494&amp;layer=mapnik"
+                style="border:1px solid #ccc; border-radius:8px;">
+              </iframe>
+            </div>
+            <small class="text-muted d-block mt-1" style="font-size: 11px;">
+              © OpenStreetMap contributors
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Recommendations</h5>
+            </div>
+        </div>
+
+        <!-- Recommendations list -->
+        <% if @company.recommendations.any? %>
+            <% @company.recommendations.each do |rec| %>
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                <p class="fw-bold mb-2"><%= rec.user.email %></p>
+                <p class="mb-3 text-muted small"><%= rec.created_at.strftime("%B %d, %Y") %></p>
+                <p><%= rec.text %></p>
+                </div>
+            </div>
+            <% end %>
+        <% else %>
+            <p class="text-muted">No recommendations yet.</p>
+        <% end %>
+
+        <% if user_signed_in? %>
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+            <%= form_with model: [@company, Recommendation.new], local: true do |f| %>
+                <div class="mb-3">
+                <%= f.text_area :text, class: "form-control", rows: 4, placeholder: "Write your recommendation..." %>
+                </div>
+                <% if current_user && current_user.company_id == @company.id %>
+                <%= button_tag "Submit Recommendation",
+                    type: "button",
+                    id: "recommend-btn",
+                    class: "btn btn-primary" %>
+                <% else %>
+                <%= f.submit "Submit Recommendation", class: "btn btn-primary" %>
+                <% end %>
+            <% end %>
+            </div>
+        </div>
+        <% else %>
+        <p class="text-muted">
+            Please <%= link_to "sign in", new_user_session_path %> to write a recommendation.
+        </p>
+        <% end %>
+
+    </div>
+  </div>
+</div>

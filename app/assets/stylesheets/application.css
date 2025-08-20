@@ -81,3 +81,20 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
   max-width: 10px;
   margin-right: 15px;
 }
+
+/* company show css  */
+.visitor-note {
+  background: #fffd9e;
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+  text-align: center;
+}
+.visitor-note p {
+  margin: 0;
+}
+.visitor-note .view-as-me {
+  color: #0073b1;
+  cursor: pointer;
+  text-decoration: underline;
+}

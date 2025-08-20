@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_07_29_073751) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_20_083806) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -127,6 +127,16 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_29_073751) do
     t.index ["user_id"], name: "index_locations_on_user_id"
   end
 
+  create_table "recommendations", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "company_id", null: false
+    t.text "text"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_recommendations_on_company_id"
+    t.index ["user_id"], name: "index_recommendations_on_user_id"
+  end
+
   create_table "tax_submissions", force: :cascade do |t|
     t.string "email"
     t.text "details"
@@ -160,4 +170,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_07_29_073751) do
   add_foreign_key "invoices", "locations", column: "tax_representative_location_id"
   add_foreign_key "invoices", "users"
   add_foreign_key "locations", "users"
+  add_foreign_key "recommendations", "companies"
+  add_foreign_key "recommendations", "users"
 end
