@@ -14,6 +14,17 @@
                 class: "rounded-circle img-thumbnail",
                 style: "width: 150px; height: 150px; object-fit: cover;"
               ) %>
+
+              <!-- Pencil Icon Overlay (label for file input) -->
+              <label for="profile_image_input" 
+                    class="position-absolute" 
+                    style="top: 10px; right: 10px; width: 28px; height: 28px;
+                            background: white; border-radius: 50%;
+                            display: flex; align-items: center; justify-content: center;
+                            box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer;">
+                <i class="fas fa-pencil-alt text-secondary" style="font-size: 14px;"></i>
+              </label>
+
               <%= f.file_field :profile_image,
                 accept: "image/*",
                 id: "profile_image_input",

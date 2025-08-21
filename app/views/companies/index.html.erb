@@ -13,14 +13,22 @@
 
           <%= form_with(model: @company, local: true, html: { multipart: true }) do |f| %>            
           <div class="d-flex flex-column align-items-center mb-3">
-            <!-- Image preview + input -->
-            <div id="image-preview-wrapper" class="position-relative" style="cursor: pointer;">
+            <!-- Image preview -->
+            <div id="image-preview-wrapper" class="position-relative d-inline-block" style="cursor: pointer;">
               <%= image_tag(
                 @company.profile_image.attached? ? url_for(@company.profile_image) : asset_path("user_avatar_default.png"),
                 id: "image-preview",
                 class: "rounded-2 img-thumbnail",
                 style: "width: 200px; height: 200px; object-fit: cover;"
               ) %>
+              <label for="profile_image_input" 
+                    class="position-absolute" 
+                    style="top: 8px; right: 8px; width: 32px; height: 32px;
+                            background: white; border-radius: 50%;
+                            display: flex; align-items: center; justify-content: center;
+                            box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer;">
+                <i class="fas fa-pencil-alt text-secondary"></i>
+              </label>
 
               <%= f.file_field :profile_image,
                 accept: "image/*",
@@ -127,11 +135,11 @@
                 </div>
                 <div class="form-group">
                   <%= f.label :industry %>
-                  <%= f.select :industry, Company::INDUSTRIES, { include_blank: "Hide industry" }, class: "form-select" %>
+                  <%= f.select :industry, options_for_select([["Select industry", ""]], selected: "", disabled: "") + options_for_select(Company::INDUSTRIES), {},  class: "form-select" %>
                 </div>
                 <div class="form-group">
                   <%= f.label :ownership, "Company Ownership" %>
-                  <%= f.select :ownership, Company::OWNERSHIPS, { include_blank: "Hide ownership" }, class: "form-select" %>
+                  <%= f.select :ownership, options_for_select([["Select ownership", ""]], selected: "", disabled: "") + options_for_select(Company::OWNERSHIPS), {},  class: "form-select" %>
                 </div>
                 <div class="form-group">
                   <%= f.label :address, "Company Address" %>
@@ -149,7 +157,7 @@
                 </div>
                 <div class="form-group">
                   <%= f.label :size, "Company Size" %>
-                  <%= f.select :size, Company::SIZES, { include_blank: "Hide company size" }, class: "form-select" %>
+                  <%= f.select :size, options_for_select([["Select company size", ""]], selected: "", disabled: "") + options_for_select(Company::SIZES), {},  class: "form-select" %>
                 </div>
                 <div class="form-group">
                   <%= f.label :share_capital %>
