@@ -42,19 +42,19 @@
             <li class="mt-2 d-flex align-items-center">
               <i class="fa-solid fa-laptop"></i>
               <p class="mb-0 d-inline">
-                <%= Company::INDUSTRIES.to_h.invert[@company.industry] if @company.industry.present? %>
+                <%= Company::INDUSTRIES.find { |label, value, _opts| value == @company.industry }&.first if @company.industry.present? %>
               </p>
             </li>
             <li class="mt-2 d-flex align-items-center">
               <i class="fa-solid fa-users"></i>
               <p class="mb-0 d-inline">
-                <%= Company::SIZES.to_h.invert[@company.size] if @company.size.present? %>
+              <%= Company::SIZES.find { |label, value, _opts| value == @company.size }&.first if @company.size.present? %>
               </p>
             </li>
             <li class="mt-2 d-flex align-items-center">
               <i class="fa-solid fa-briefcase"></i>
               <p class="mb-0 d-inline">
-                <%= Company::OWNERSHIPS.to_h.invert[@company.ownership] if @company.ownership.present? %>
+                <%= Company::OWNERSHIPS.find { |label, value, _opts| value == @company.ownership }&.first if @company.ownership.present? %>
               </p>
             </li>
             <li class="mt-2 d-flex align-items-center">

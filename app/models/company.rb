@@ -4,6 +4,7 @@ class Company < ApplicationRecord
   belongs_to :user
 
   INDUSTRIES = [
+    [ "Select Industry", "", { disabled: true, selected: true } ],
     [ "Agriculture", "AGRICULTURE" ],
     [ "Academia", "ACADEMIA" ],
     [ "Animal care", "ANIMAL" ],
@@ -56,6 +57,7 @@ class Company < ApplicationRecord
   ]
 
   OWNERSHIPS = [
+    [ "Select Ownership", "", { disabled: true, selected: true } ],
     [ "Sole proprietorship", "SOLE" ],
     [ "General partnership", "GENERAL" ],
     [ "Limited partnership", "LIMITED" ],
@@ -91,6 +93,7 @@ class Company < ApplicationRecord
   ]
 
   SIZES = [
+    [ "Select Company Size", "", { disabled: true, selected: true } ],
     [ "1 employee (just me)", "ONE" ],
     [ "2-15 employees", "FROM2TO15" ],
     [ "16-49 employees", "FROM16TO49" ],

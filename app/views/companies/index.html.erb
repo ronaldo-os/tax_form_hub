@@ -62,19 +62,19 @@
               <li class="mt-2 d-flex align-items-center">
                 <i class="fa-solid fa-laptop"></i>
                 <p id="company_industry_text" class="mb-0 d-inline">
-                  <%= Company::INDUSTRIES.to_h.invert[@company.industry] if @company.industry.present? %>
+                  <%= Company::INDUSTRIES.find { |label, value, _opts| value == @company.industry }&.first if @company.industry.present? %>
                 </p>
               </li>
               <li class="mt-2 d-flex align-items-center">
                 <i class="fa-solid fa-users"></i>
                 <p id="company_size_text" class="mb-0 d-inline">
-                  <%= Company::SIZES.to_h.invert[@company.size] if @company.size.present? %>
+                <%= Company::SIZES.find { |label, value, _opts| value == @company.size }&.first if @company.size.present? %>
                 </p>
               </li>
               <li class="mt-2 d-flex align-items-center">
                 <i class="fa-solid fa-briefcase"></i>
                 <p id="company_ownership_text" class="mb-0 d-inline">
-                  <%= Company::OWNERSHIPS.to_h.invert[@company.ownership] if @company.ownership.present? %>
+                  <%= Company::OWNERSHIPS.find { |label, value, _opts| value == @company.ownership }&.first if @company.ownership.present? %>
                 </p>
               </li>
               <li class="mt-2 d-flex align-items-center">
@@ -135,11 +135,11 @@
                 </div>
                 <div class="form-group">
                   <%= f.label :industry %>
-                  <%= f.select :industry, options_for_select([["Select industry", ""]], selected: "", disabled: "") + options_for_select(Company::INDUSTRIES), {},  class: "form-select" %>
+                  <%= f.select :industry, Company::INDUSTRIES, {}, class: "form-select" %>
                 </div>
                 <div class="form-group">
                   <%= f.label :ownership, "Company Ownership" %>
-                  <%= f.select :ownership, options_for_select([["Select ownership", ""]], selected: "", disabled: "") + options_for_select(Company::OWNERSHIPS), {},  class: "form-select" %>
+                  <%= f.select :ownership, Company::OWNERSHIPS, {}, class: "form-select" %>
                 </div>
                 <div class="form-group">
                   <%= f.label :address, "Company Address" %>
@@ -157,7 +157,7 @@
                 </div>
                 <div class="form-group">
                   <%= f.label :size, "Company Size" %>
-                  <%= f.select :size, options_for_select([["Select company size", ""]], selected: "", disabled: "") + options_for_select(Company::SIZES), {},  class: "form-select" %>
+                  <%= f.select :size, Company::SIZES, {}, class: "form-select" %>
                 </div>
                 <div class="form-group">
                   <%= f.label :share_capital %>

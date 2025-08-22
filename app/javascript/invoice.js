@@ -1102,21 +1102,31 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       const inputTypes = ['text', 'date', 'number', 'select', 'checkbox', 'radio', 'textarea'];
 
       Object.entries(invoiceInfo).forEach(([fullKey, value]) => {
-        // 🚫 Skip empty values
         if (!value || value.trim() === "") return;
 
         const parts = fullKey.split('.');
         const groupKey = parts[0];
         const colsMatch = fullKey.match(/\.(\d+)$/);
         const cols = colsMatch ? colsMatch[1] : '12';
-        const secondPart = parts[1] || '';
 
-        let label;
-        if (inputTypes.includes(secondPart.toLowerCase())) {
-          label = groupKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-        } else {
-          label = secondPart.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        // 👇 get the second-to-the-last part (field type)
+        let rawType = parts[parts.length - 2] || 'text';
+
+        // Handle select(field1,field2)
+        let type = 'text';
+        let selectOptions = null;
+
+        const selectMatch = rawType.match(/^select\(([^)]+)\)$/i);
+        if (selectMatch) {
+          type = "select";
+          selectOptions = selectMatch[1].split(',').map(opt => opt.trim());
+        } else if (inputTypes.includes(rawType.toLowerCase())) {
+          type = rawType.toLowerCase();
         }
+
+        // Label = second part OR fallback
+        let label = parts.length > 2 ? parts[1] : groupKey;
+        label = label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
         if (groupKey.toLowerCase() === 'fileid' && parts.length === 2) {
           label = 'File';
@@ -1124,16 +1134,6 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
         if (!groups[groupKey]) {
           groups[groupKey] = [];
-        }
-
-        // 👇 Detect select(options) in the full key
-        let type = inputTypes.includes(secondPart.toLowerCase()) ? secondPart.toLowerCase() : 'text';
-        let selectOptions = null;
-
-        const selectMatch = fullKey.match(/\.select\(([^)]+)\)/i);
-        if (selectMatch) {
-          type = "select";
-          selectOptions = selectMatch[1].split(',').map(opt => opt.trim());
         }
 
         groups[groupKey].push({
@@ -1144,7 +1144,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           value,
           selectOptions
         });
-      });
+      }); 
 
       // Render
       Object.entries(groups).forEach(([groupKey, fields]) => {
@@ -1166,7 +1166,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
             });
             groupHtml += `</select>`;
           } else {
-            groupHtml += `<p>${f.value || '-'}</p>`;
+            groupHtml += `<input type="${f.type}" class="form-control optional-input" data-field-name="${f.fullKey}" value="${f.value}">`;
           }
 
           groupHtml += `</div></div>`;

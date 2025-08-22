@@ -4,7 +4,7 @@ class RecurringInvoicesController < ApplicationController
   def index
     @recurring_items = []
 
-    Invoice.find_each do |invoice|
+    current_user.invoices.find_each do |invoice|
       invoice.line_items_data.each_with_index do |item, index|
         recurring = recurring_fields(item)
         next unless recurring && recurring["recurring.select(yes,no).2"] == "yes"
