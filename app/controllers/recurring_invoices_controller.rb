@@ -1,15 +1,16 @@
 class RecurringInvoicesController < ApplicationController
-  before_action :find_invoice_and_line_item, only: [:update, :destroy, :disable]
+  before_action :find_invoice_and_line_item, only: [:update, :destroy, :disable, :enable]
 
   def index
     @recurring_items = []
+    @disabled_recurring_items = []
 
     current_user.invoices.find_each do |invoice|
       invoice.line_items_data.each_with_index do |item, index|
         recurring = recurring_fields(item)
-        next unless recurring && recurring["recurring.select(yes,no).2"] == "yes"
+        next unless recurring
 
-        @recurring_items << {
+        base_item = {
           invoice_id: invoice.id,
           invoice_number: invoice.invoice_number,
           line_index: index,
@@ -24,6 +25,12 @@ class RecurringInvoicesController < ApplicationController
           interval: recurring["interval.select(daily,weekly,monthly,yearly).2"],
           count: recurring["occurrences.number.2"]
         }
+
+        if recurring["recurring.select(yes,no).2"] == "yes"
+          @recurring_items << base_item
+        elsif recurring["recurring.select(yes,no).2"] == "no"
+          @disabled_recurring_items << base_item
+        end
       end
     end
   end
@@ -48,31 +55,59 @@ class RecurringInvoicesController < ApplicationController
     end
   end
 
+  def enable
+    rf = recurring_fields(@line_item)
+    return render json: { success: false, message: "Recurring fields not found." }, status: :unprocessable_entity unless rf
+
+    rf["recurring.select(yes,no).2"] = "yes"
+    save_invoice_changes
+
+    respond_to do |format|
+      format.html { redirect_to recurring_invoices_path, notice: "Recurring item enabled." }
+      format.json { render json: { success: true, message: "Recurring item enabled." } }
+    end
+  end
+
   def disable
-    recurring_fields(@line_item)["recurring.select(yes,no).2"] = "no"
+    rf = recurring_fields(@line_item)
+    return render json: { success: false, message: "Recurring fields not found." }, status: :unprocessable_entity unless rf
+
+    rf["recurring.select(yes,no).2"] = "no"
     save_invoice_changes
 
     respond_to do |format|
       format.html { redirect_to recurring_invoices_path, notice: "Recurring item disabled." }
-      format.json { render json: { success: true } }
+      format.json { render json: { success: true, message: "Recurring item disabled." } }
     end
   end
 
   def destroy
-    @invoice.line_items_data.delete_at(params[:line_index].to_i)
-    save_invoice_changes
-
-    respond_to do |format|
-      format.html { redirect_to recurring_invoices_path, notice: "Recurring item deleted." }
-      format.json { render json: { success: true } }
+    idx = params[:line_index].to_i
+    if @invoice.line_items_data[idx]
+      # Only delete the recurring key inside optional_fields
+      if @invoice.line_items_data[idx]["optional_fields"] &&
+        @invoice.line_items_data[idx]["optional_fields"]["recurring"]
+        @invoice.line_items_data[idx]["optional_fields"].delete("recurring")
+        save_invoice_changes
+        render json: { success: true, message: "Recurring data deleted." }
+      else
+        render json: { success: false, message: "No recurring data found." }, status: :not_found
+      end
+    else
+      render json: { success: false, message: "Line item not found." }, status: :not_found
     end
   end
+
 
   private
 
   def find_invoice_and_line_item
-    @invoice = Invoice.find(params[:invoice_id])
-    @line_item = @invoice.line_items_data[params[:line_index].to_i]
+    invoice_id = params[:invoice_id] || params[:id]
+    @invoice   = current_user.invoices.find(invoice_id)
+
+    if params[:line_index].present?
+      @line_item = @invoice.line_items_data[params[:line_index].to_i]
+    end
   end
 
   def save_invoice_changes
@@ -80,6 +115,7 @@ class RecurringInvoicesController < ApplicationController
   end
 
   def recurring_fields(item)
+    return nil unless item.is_a?(Hash)
     item.dig("optional_fields", "recurring")
   end
 

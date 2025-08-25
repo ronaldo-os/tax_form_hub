@@ -40,8 +40,12 @@ Rails.application.routes.draw do
 
 
   resources :recurring_invoices, only: [:index, :update, :destroy] do
-    patch :disable, on: :collection
+    collection do
+      patch :enable
+      patch :disable
+    end
   end
+
 
 
 
