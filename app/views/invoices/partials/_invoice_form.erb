@@ -197,7 +197,12 @@
               <option value="bic_iban">BIC + IBAN</option>
             </select>
             <div class="form-check mb-4">
-              <%= f.check_box :save_payment_terms_for_future, class: "form-check-input" %>
+              <%= f.check_box :save_payment_terms_for_future,
+                    class: "form-check-input",
+                    checked: (
+                      (@invoice.persisted? && @invoice.save_payment_terms_for_future?) || 
+                      (!@invoice.persisted? && defined?(@payment_terms) && @payment_terms.present?)
+                    ) %>
               <%= f.label :save_payment_terms_for_future, "Save payment terms and means for future invoices", class: "form-check-label" %>
             </div>
 
@@ -330,11 +335,16 @@
           <div class="col-md-6">
             <div class="mb-3">
               <%= f.label :recipient_note, "Write a message to the recipient", class: "form-label" %>
-              <%= f.text_area :recipient_note, class: "form-control", rows: 5, placeholder: "Enter your message..." %>
+              <%= f.text_area :recipient_note, class: "form-control", rows: 5, placeholder: "Enter your message...", value: @recipient_note.presence || @invoice&.recipient_note %>
             </div>
 
             <div class="form-check mb-4">
-              <%= f.check_box :save_notes_for_future, class: "form-check-input" %>
+              <%= f.check_box :save_notes_for_future,
+                    class: "form-check-input",
+                    checked: (
+                      (@invoice.persisted? && @invoice.save_notes_for_future?) ||
+                      (!@invoice.persisted? && defined?(@recipient_note) && @recipient_note.present?)
+                    ) %>
               <%= f.label :save_notes_for_future, "Save notes for future Invoices", class: "form-check-label" %>
             </div>
 
@@ -402,7 +412,7 @@
             <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id", data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id", data: { field_type: 'invoice_form_fields' } %>
 
-            <%= hidden_field_tag :payment_terms_json_edit, @invoice.payment_terms.to_json.html_safe, id: 'payment_terms_json_edit', data: { field_type: 'invoice_form_fields' } %>
+            <%= hidden_field_tag :payment_terms_json_edit, (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json_edit', data: { field_type: 'invoice_form_fields' } %>
             <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit', data: { field_type: 'invoice_form_fields' } %>
         </div>
     </div>
@@ -414,11 +424,16 @@
         <div id="footer_wrapper_parent_div" class="mt-3" style="display:none">
           <div class="mb-3">
               <%= f.label :footer_notes, class: "form-label" %>
-              <%= f.text_area :footer_notes, class: "form-control", rows: 5, placeholder: "Enter your message..." %>
+              <%= f.text_area :footer_notes, class: "form-control", rows: 5, placeholder: "Enter your message...", value: @footer_notes.presence || @invoice&.footer_notes %>
             </div>
 
             <div class="form-check mb-4">
-              <%= f.check_box :save_footer_notes_for_future, class: "form-check-input" %>
+              <%= f.check_box :save_footer_notes_for_future,
+                    class: "form-check-input",
+                    checked: (
+                      (@invoice.persisted? && @invoice.save_footer_notes_for_future?) ||
+                      (!@invoice.persisted? && defined?(@footer_notes) && @footer_notes.present?)
+                    ) %>
               <%= f.label :save_footer_notes_for_future, "Save notes for future Invoices", class: "form-check-label" %>
             </div>
         </div>
