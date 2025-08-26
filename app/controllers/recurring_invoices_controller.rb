@@ -22,8 +22,7 @@ class RecurringInvoicesController < ApplicationController
           start_date: recurring["start_date.date.2"],
           end_date: recurring["end_date.date.2"],
           every: recurring["every.number.2"],
-          interval: recurring["interval.select(daily,weekly,monthly,yearly).2"],
-          count: recurring["occurrences.number.2"]
+          interval: recurring["interval.select(daily,weekly,monthly,yearly).2"]
         }
 
         if recurring["recurring.select(yes,no).2"] == "yes"
@@ -42,7 +41,6 @@ class RecurringInvoicesController < ApplicationController
     recurring_fields["every.number.2"] = params[:every]
     recurring_fields["start_date.date.2"] = params[:start_date]
     recurring_fields["end_date.date.2"] = params[:end_date]
-    recurring_fields["occurrences.number.2"] = params[:count]
 
     save_invoice_changes
 

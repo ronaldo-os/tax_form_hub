@@ -2,43 +2,22 @@ class RecurringInvoiceService
   def self.run
     Rails.logger.info "Recurring invoice service Starting..."
 
-    recurring_invoices = Invoice.all.select do |invoice|
-      has_recurring = invoice.line_items_data.any? do |item|
+    recurring_invoices = Invoice.where(recurring_origin_invoice_id: nil).select do |invoice|
+      has_recurring = invoice.line_items.any? do |item|
         recurring = item.dig("optional_fields", "recurring")
-        unless recurring
-          Rails.logger.debug "Invoice ##{invoice.invoice_number} skipped: no recurring data."
-          next false
-        end
+        next false unless recurring
 
-        unless recurring["recurring.select(yes,no).2"] == "yes"
-          Rails.logger.debug "Invoice ##{invoice.invoice_number} skipped: recurring mode is not 'yes'."
-          next false
-        end
+        next false unless recurring["recurring.select(yes,no).2"] == "yes"
 
         start_date = Date.parse(recurring["start_date.date.2"]) rescue nil
         end_date   = Date.parse(recurring["end_date.date.2"]) rescue nil
         every      = recurring["every.number.2"].to_i
         interval   = recurring["interval.select(daily,weekly,monthly,yearly).2"]
 
-        # Skip if no valid start date
-        unless start_date
-          Rails.logger.debug "Invoice ##{invoice.invoice_number} skipped: invalid start date."
-          next false
-        end
+        next false unless start_date
+        next false if Date.today < start_date
+        next false if end_date && Date.today > end_date
 
-        # Skip if before start date
-        if Date.today < start_date
-          Rails.logger.debug "Invoice ##{invoice.invoice_number} skipped: before start date."
-          next false
-        end
-
-        # Skip if past end date
-        if end_date && Date.today > end_date
-          Rails.logger.debug "Invoice ##{invoice.invoice_number} skipped: past end date."
-          next false
-        end
-
-        # Default to every 1 if not specified
         every = 1 if every <= 0
 
         case interval
@@ -53,7 +32,6 @@ class RecurringInvoiceService
           years_between = Date.today.year - start_date.year
           years_between % every == 0 && Date.today.yday == start_date.yday
         else
-          Rails.logger.debug "Invoice ##{invoice.invoice_number} skipped: invalid interval '#{interval}'."
           false
         end
       end
@@ -73,7 +51,7 @@ class RecurringInvoiceService
       new_invoice_number = next_invoice_number
       new_issue_date = Date.today
 
-      Invoice.create!(
+      new_invoice = Invoice.create!(
         user: invoice.user,
         recipient_company_id: invoice.recipient_company_id,
         invoice_number: new_invoice_number,
@@ -104,10 +82,11 @@ class RecurringInvoiceService
         invoice_info: invoice.invoice_info,
         total: invoice.total,
         invoice_type: invoice.invoice_type,
-        status: "draft"
+        status: "draft",
+        recurring_origin_invoice_id: invoice.id
       )
 
-      Rails.logger.info "Recurring invoice service Created new invoice ##{new_invoice_number}"
+      Rails.logger.info "Recurring invoice service Created new invoice ##{new_invoice_number} (child of ##{invoice.invoice_number})"
     end
 
     Rails.logger.info "Recurring invoice service Done."

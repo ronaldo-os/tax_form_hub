@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_20_083806) do
+ActiveRecord::Schema[7.2].define(version: 2025_08_26_035222) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -103,6 +103,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_20_083806) do
     t.string "status", default: "draft"
     t.integer "sale_from_id"
     t.boolean "archived", default: false
+    t.integer "recurring_origin_invoice_id"
     t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
     t.index ["ship_from_location_id"], name: "index_invoices_on_ship_from_location_id"
     t.index ["tax_representative_location_id"], name: "index_invoices_on_tax_representative_location_id"

@@ -126,6 +126,15 @@ if (window.location.pathname.includes("/recurring_invoices")) {
             });
         });
 
+        $('.btn-link').on('change', function() {
+            if ($(this).val() === 'daily') {
+            $('#every').val(0).prop('disabled', true);
+            } else {
+            $('#every').prop('disabled', false);
+            }
+        });
+
+        $('#interval').trigger('change');
 
     });
 }
