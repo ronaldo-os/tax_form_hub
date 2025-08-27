@@ -954,7 +954,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
       // Final line total
       let lineTotal = base + charge - discount;
-      $row.find('.total').text(lineTotal.toFixed(2));
+      let lineTotalwithTax = lineTotal + (lineTotal * (taxRate / 100));
+      $row.find('.total').text(lineTotalwithTax.toFixed(2));
 
 
       let $totalInput = $row.find('input[name*="[total]"]');
