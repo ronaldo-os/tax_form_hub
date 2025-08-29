@@ -50,7 +50,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
             { name: "orderReferenceId.order_number.text.12", label: "Purchase order number", type: "text", cols: 12, class: "mb-3" }
           ],
           "orderReferenceIssueDate": [
-            { name: "orderReferenceIssueDate.issue_date.date.12", label: "Purchase order number", type: "date", cols: 12, class: "mb-3" }
+            { name: "orderReferenceIssueDate.issue_date.date.12", label: "Purchase order issue date", type: "date", cols: 12, class: "mb-3" }
           ],
           "billingReferenceId": [
             { name: "billingReferenceId.reference_id.text.12", label: "Billing reference", type: "text", cols: 12, class: "mb-3" }
@@ -928,33 +928,53 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
       // --- Discount Calculation ---
       let discount = 0;
+      let discountTax = 0; 
       const $discountRows = $(`.optional-field-row[data-optional-group="discount"][data-line-index="${lineIndex}"]`);
       $discountRows.each(function () {
         const $dRow = $(this);
         const dval = parseFloat($dRow.find('input[name*="discount.qty"]').val()) || 0;
         const unit = $dRow.find('select[name*="discount.unit"]').val();
+        const dType = $dRow.find('select[name*="discount.discount_type"]').val();
+
         const dAmount = (unit === "%") ? base * (dval / 100) : dval;
-        discount += dAmount;
+
+        if (dType === "Taxes") {
+          discountTax += dAmount; 
+        } else {
+          discount += dAmount; 
+        }
+
         $dRow.find('.optional-total[data-total-type="discount"]').text(dAmount.toFixed(2));
         $dRow.find('.optional-total-input').val(dAmount.toFixed(2));
       });
 
+
       // --- Charge Calculation ---
       let charge = 0;
+      let extraTax = 0;
       const $chargeRows = $(`.optional-field-row[data-optional-group="charge"][data-line-index="${lineIndex}"]`);
       $chargeRows.each(function () {
         const $cRow = $(this);
         const cval = parseFloat($cRow.find('input[name*="charge.qty"]').val()) || 0;
         const unit = $cRow.find('select[name*="charge.unit"]').val();
+        const cType = $cRow.find('select[name*="charge.charge_type"]').val();
+
         const cAmount = (unit === "%") ? base * (cval / 100) : cval;
-        charge += cAmount;
+
+        if (cType === "Taxes") {
+          extraTax += cAmount; 
+        } else {
+          charge += cAmount; 
+        }
+
         $cRow.find('.optional-total[data-total-type="charge"]').text(cAmount.toFixed(2));
         $cRow.find('.optional-total-input').val(cAmount.toFixed(2));
       });
 
+
       // Final line total
       let lineTotal = base + charge - discount;
-      let lineTotalwithTax = lineTotal + (lineTotal * (taxRate / 100));
+      let lineTotalwithTax = lineTotal + extraTax + (lineTotal * (taxRate / 100)) - discountTax;
       $row.find('.total').text(lineTotalwithTax.toFixed(2));
 
 
@@ -971,8 +991,9 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
       // Accumulate overall totals
       subtotal += lineTotal;
-      totalTax += lineTotal * (taxRate / 100);
+      totalTax += lineTotal * (taxRate / 100) + extraTax - discountTax;
     });
+
 
     // --- Global price adjustments ---
     $('#line-items .discount-item').each(function () {
@@ -1418,8 +1439,8 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
             $lineItems.find(`.dropdown_per_line[data-line-index="${i}"]`).before($optionalRow);
           });
 
-          recalculateTotals();
         }
+        recalculateTotals();
       });
     });
 

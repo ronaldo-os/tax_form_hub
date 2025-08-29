@@ -163,7 +163,11 @@
                   <%= f.label :share_capital %>
                   <div class="input-group">
                     <span class="input-group-text">PHP</span>
-                    <%= f.text_field :share_capital, class: "form-control", placeholder: "Enter share capital" %>
+                    <%= f.text_field :share_capital,
+                        class: "form-control",
+                        placeholder: "Enter share capital",
+                        data: { behavior: "currency-format" } %>
+
                   </div>
                 </div>
                 <div class="form-group">
