@@ -41,7 +41,9 @@ class InvoicesController < ApplicationController
   def create
     clean_params = invoice_params.deep_dup
     clean_params.delete(:line_items_attributes)
-    %w[payment_terms price_adjustments invoice_info total].each { |field| clean_params.delete(field) }
+
+    # Normalize JSON fields
+    normalize_json_fields!(clean_params)
 
     @invoice = current_user.invoices.build(clean_params)
     @invoice.invoice_type ||= "sale"
@@ -55,8 +57,6 @@ class InvoicesController < ApplicationController
       @invoice.line_items_data = processed_items
     end
 
-    parse_json_fields(@invoice)
-
     if @invoice.save
       redirect_to invoices_path, notice: "Invoice created successfully."
     else
@@ -67,7 +67,7 @@ class InvoicesController < ApplicationController
   def update
     @invoice = current_user.invoices.find(params[:id])
 
-    # Purge attachments ONLY if removal IDs are present
+    # Handle removing attachments
     if params[:invoice][:remove_attachment_ids].present?
       params[:invoice][:remove_attachment_ids].each do |attach_id|
         attachment = @invoice.attachments.find_by(id: attach_id)
@@ -76,24 +76,10 @@ class InvoicesController < ApplicationController
     end
 
     clean_params = invoice_params.deep_dup
+    clean_params.delete(:attachments)
 
-    %w[payment_terms price_adjustments invoice_info total].each do |field|
-      next unless clean_params[field].present?
-
-      begin
-        parsed = JSON.parse(clean_params[field]) if clean_params[field].is_a?(String)
-        if parsed.is_a?(Hash)
-          parsed.each do |k, v|
-            parsed[k] = {} if v == "{}"
-          end
-        end
-
-        clean_params[field] = parsed
-      rescue JSON::ParserError => e
-        Rails.logger.warn("Invalid JSON for #{field}: #{e.message}")
-        clean_params[field] = {}
-      end
-    end
+    # Normalize JSON fields
+    normalize_json_fields!(clean_params)
 
     if clean_params[:line_items_attributes].present?
       processed_items = clean_params[:line_items_attributes].values.map do |line_item|
@@ -106,7 +92,7 @@ class InvoicesController < ApplicationController
       clean_params.delete(:line_items_attributes)
     end
 
-    # Attach new uploaded files if any
+    # Handle new attachments
     if params[:invoice][:attachments].present?
       params[:invoice][:attachments].each do |attachment|
         @invoice.attachments.attach(attachment)
@@ -119,8 +105,6 @@ class InvoicesController < ApplicationController
       render :edit
     end
   end
-
-
 
 
   def destroy
@@ -213,31 +197,28 @@ class InvoicesController < ApplicationController
     grouped
   end
 
-  def parse_json_fields(invoice)
-    %i[payment_terms price_adjustments invoice_info total].each do |field|
-      next unless params[:invoice].key?(field)
+  def normalize_json_fields!(clean_params)
+    %w[payment_terms price_adjustments invoice_info total].each do |field|
+      next unless clean_params.key?(field)
 
-      raw = params[:invoice][field]
+      raw = clean_params[field]
 
-      parsed =
-        if raw.is_a?(String)
+      clean_params[field] =
+        case raw
+        when String
           begin
-            cleaned = raw.gsub(/=>/, ':')
-            json = JSON.parse(cleaned)
-            json
+            JSON.parse(raw.gsub(/=>/, ':'))
           rescue JSON::ParserError
-            Rails.logger.warn "Failed to parse #{field}: #{raw.inspect}"
+            Rails.logger.warn "Invalid JSON for #{field}: #{raw.inspect}"
             {}
           end
+        when Hash, ActionController::Parameters
+          raw.to_unsafe_h
         else
           raw
         end
-
-      Rails.logger.debug "[DEBUG] Parsed #{field}: #{parsed.inspect}"
-      invoice.send("#{field}=", parsed)
     end
   end
-
 
   def update_original_sale_status(purchase_invoice, status)
     return unless purchase_invoice.sale_from_id.present?
@@ -245,63 +226,61 @@ class InvoicesController < ApplicationController
     original_sale_invoice&.update(status: status)
   end
 
-def invoice_params
-  permitted = params.require(:invoice).permit(
-    :user_id,
-    :recipient_company_id,
-    :invoice_number,
-    :issue_date,
-    :currency,
-    :recipient_note,
-    :message,
-    :footer_notes,
-    :save_notes_for_future,
-    :save_footer_notes_for_future,
-    :save_payment_terms_for_future,
-    :invoice_type,
+  def invoice_params
+    permitted = params.require(:invoice).permit(
+      :user_id,
+      :recipient_company_id,
+      :invoice_number,
+      :issue_date,
+      :currency,
+      :recipient_note,
+      :message,
+      :footer_notes,
+      :save_notes_for_future,
+      :save_footer_notes_for_future,
+      :save_payment_terms_for_future,
+      :invoice_type,
 
-    # delivery details
-    :delivery_details_postbox,
-    :delivery_details_street,
-    :delivery_details_number,
-    :delivery_details_locality_name,
-    :delivery_details_zip_code,
-    :delivery_details_city,
-    :delivery_details_country,
-    :delivery_details_gln,
-    :delivery_details_company_name,
-    :delivery_details_tax_id,
-    :delivery_details_tax_number,
+      # delivery details
+      :delivery_details_postbox,
+      :delivery_details_street,
+      :delivery_details_number,
+      :delivery_details_locality_name,
+      :delivery_details_zip_code,
+      :delivery_details_city,
+      :delivery_details_country,
+      :delivery_details_gln,
+      :delivery_details_company_name,
+      :delivery_details_tax_id,
+      :delivery_details_tax_number,
 
-    # location references
-    :ship_from_location_id,
-    :remit_to_location_id,
-    :tax_representative_location_id,
+      # location references
+      :ship_from_location_id,
+      :remit_to_location_id,
+      :tax_representative_location_id,
 
-    # JSON fields
-    :line_items_data,
-    :payment_terms,
-    :price_adjustments,
-    :invoice_info,
-    :total,
+      # JSON fields
+      :line_items_data,
+      :payment_terms,
+      :price_adjustments,
+      :invoice_info,
+      :total,
 
-    # attachments
-    attachments: [],
-    remove_attachment_ids: [],
+      # attachments
+      attachments: [],
 
-    # nested line items
-    line_items_attributes: [
-      :item_id, :description, :quantity, :unit, :price, :tax, :total,
-      { optional_fields: {} }
-    ]
-  )
+      # nested line items
+      line_items_attributes: [
+        :item_id, :description, :quantity, :unit, :price, :tax, :total,
+        { optional_fields: {} }
+      ]
+    )
 
-  # Convert blank or zero location IDs to nil
-  %i[ship_from_location_id remit_to_location_id tax_representative_location_id].each do |field|
-    permitted[field] = nil if permitted[field].blank? || permitted[field].to_i.zero?
+    # Convert blank or zero location IDs to nil
+    %i[ship_from_location_id remit_to_location_id tax_representative_location_id].each do |field|
+      permitted[field] = nil if permitted[field].blank? || permitted[field].to_i.zero?
+    end
+
+    permitted
   end
-
-  permitted
-end
-
 end
