@@ -106,6 +106,52 @@ class InvoicesController < ApplicationController
     end
   end
 
+  def create_and_send
+    clean_params = invoice_params.deep_dup
+    clean_params.delete(:line_items_attributes)
+
+    # Normalize JSON fields
+    normalize_json_fields!(clean_params)
+
+    @invoice = current_user.invoices.build(clean_params)
+    @invoice.invoice_type ||= "sale"
+    @invoice.status = "sent"
+
+    if params[:invoice][:line_items_attributes].present?
+      processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
+        line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
+        line_item
+      end
+      @invoice.line_items_data = processed_items
+    end
+
+    if @invoice.save
+      recipient_company_id = @invoice.recipient_company_id
+      recipient_user = Company.find_by(id: recipient_company_id)&.user
+
+      unless recipient_user
+        redirect_to invoice_path(@invoice), alert: "Recipient user not found." and return
+      end
+
+      duplicated_invoice = @invoice.dup
+      duplicated_invoice.assign_attributes(
+        user_id: recipient_user.id,
+        sale_from_id: @invoice.id,
+        status: "pending",
+        invoice_type: "purchase"
+      )
+
+      if duplicated_invoice.save
+        redirect_to invoices_path, notice: "Invoice sent successfully"
+      else
+        redirect_to invoices_path, alert: "Invoice created, but failed to send to recipient."
+      end
+    else
+      render :new
+    end
+  end
+
+
 
   def destroy
     @invoice = Invoice.find(params[:id])

@@ -1,5 +1,5 @@
 <div class="container mt-5">
-  <div class="card shadow-sm mb-5">
+  <div class="card shadow-sm mb-10">
     <div class="card-body">
       <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
 
@@ -400,10 +400,40 @@
           </div>
         </div>
 
+        <nav class="navbar navbar-light bg-light fixed-bottom border-top shadow-sm py-2">
+          <div class="container d-flex justify-content-between">
+            
+            <!-- Left side -->
+            <div class="d-flex gap-2">
+              <% if action_name != "edit" %>
+                <%= link_to "Discard", invoices_path, 
+                    class: "btn btn-secondary btn-md discard-btn", 
+                    data: { confirm: "Are you sure you want to discard this invoice?" } %>
+
+                <%= f.submit "Save As Draft", class: "btn btn-secondary btn-md" %>
+              <% else %>
+                <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
+              <% end %>
+            </div>
+
+            <!-- Right side -->
+            <div>
+              <% if action_name != "edit" %>
+                <%= f.submit "Send", 
+                      class: "btn btn-success btn-md", 
+                      formaction: create_and_send_invoices_path, 
+                      formmethod: :post %>
+              <% else %>
+                <%= f.submit "Update Invoice", class: "btn btn-primary btn-md" %>
+              <% end %>
+            </div>
+            
+          </div>
+        </nav>
+
+
 
         <div class="d-flex justify-content-between gap-2 mt-5">
-            <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
-            <%= f.submit(action_name == "edit" ? "Update Invoice" : "Create Invoice", class: "btn btn-primary") %>
             <%= f.hidden_field :total, id: 'total_amount_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :price_adjustments, value: @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :payment_terms, value: @invoice.payment_terms.to_json.html_safe, id: 'payment_terms_json', data: { field_type: 'invoice_form_fields' } %>

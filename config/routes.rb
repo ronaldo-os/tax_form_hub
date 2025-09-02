@@ -34,6 +34,13 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :invoices do
+    collection do
+      post :create_and_send
+    end
+  end
+
+
   resources :companies do
     resources :recommendations, only: [:create]
   end

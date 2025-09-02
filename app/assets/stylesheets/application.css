@@ -98,3 +98,8 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
   cursor: pointer;
   text-decoration: underline;
 }
+
+
+.mb-10 {
+  margin-bottom: 5rem !important;
+}
