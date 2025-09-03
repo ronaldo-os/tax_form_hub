@@ -1,0 +1,14 @@
+<% currency_symbols = { "PHP" => "₱", "USD" => "$", "EUR" => "€", "JPY" => "¥" } %>
+<% symbol = currency_symbols[@invoice.currency] || @invoice.currency %>
+
+<p>Hello <%= @recipient_user.email %>,</p>
+
+<p>You’ve received a new invoice from <%= @invoice.user.email %>.</p>
+
+<p><strong>Invoice #:</strong> <%= @invoice.id %></p>
+
+<p><strong>Subtotal:</strong> <%= "#{symbol}#{'%.2f' % @invoice.total['subtotal'].to_f}" %></p>
+<p><strong>Tax:</strong> <%= "#{symbol}#{'%.2f' % @invoice.total['tax'].to_f}" %></p>
+<p><strong>Total:</strong> <%= "#{symbol}#{'%.2f' % @invoice.total['grand_total'].to_f}" %></p>
+
+<p><%= link_to "View Invoice", invoice_url(@invoice) %></p>
