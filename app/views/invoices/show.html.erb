@@ -252,7 +252,7 @@
           </p>
 
           <p>
-            <strong>Total PHP:
+            <strong>Total <%= @invoice.currency %>:
               <span class="fw-biold">
                 <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2) %>
               </span>
