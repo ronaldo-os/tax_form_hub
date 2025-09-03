@@ -37,7 +37,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
           ],
           "taxExchangeRateFields": [
               { name: "taxExchangeRateFields.rate.text.6", label: "Exchange rate", type: "text", cols: 6, class: "mb-3" },
-              { name: "taxExchangeRateFields.currency.select(php,usd).6", label: "Currency", type: "select", cols: 6, options: ["PHP", "USD"], class: "mb-3" },
+              { name: "taxExchangeRateFields.currency.select(php,usd,eur,jpy).6", label: "Currency", type: "select", cols: 6, options: ["PHP","USD","EUR","JPY"], class: "mb-3" },
               { name: "taxExchangeRateFields.date_of_rate.text.6", label: "Date of exchange rate", type: "date", cols: 6, class: "mb-3" },
               { name: "taxExchangeRateFields.converted_tax_total.text.6", label: "Converted tax total", type: "text", cols: 6, class: "mb-3" },
               { name: "taxExchangeRateFields.converted_doc_total_inc.text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
@@ -719,6 +719,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
 
     $dropdownRow.before(newRowHtml);
     $select.val('');
+    updateCurrencyFields();
   });
 
 
@@ -764,7 +765,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
         </td>
         <td class="align-top">
           <select class="form-select unit-type" data-field="unit_type">
-            <option value="false">PHP</option>
+            <option value="false"><span class="currency_type">PHP</span></option>
             <option value="true">%</option>
           </select>
         </td>
@@ -1581,7 +1582,7 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
             </td>
             <td class="align-top">
               <select class="form-select unit-type" data-field="unit_type">
-                <option value="false"${unitType === "false" ? " selected" : ""}>PHP</option>
+                <option value="false"${unitType === "false" ? " selected" : ""}><span class="currency_type">PHP</span></option>
                 <option value="true"${unitType === "true" ? " selected" : ""}>%</option>
               </select>
             </td>
@@ -1656,6 +1657,27 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     // Run once on page load for already-filled rows
     $(".optional-field-row select[name*='recurring.interval']").trigger("change");
 
+    function updateCurrencyFields() {
+      let selectedCurrency = $("#invoice_currency").val();
 
+      if (selectedCurrency) {
+        $(".currency_type").text(selectedCurrency);
+
+        $("select[name*='discount.unit'], select[name*='charge.unit']").each(function () {
+          const currentValue = $(this).val();
+          $(this).empty()
+            .append(`<option value="${selectedCurrency}">${selectedCurrency}</option>`)
+            .append(`<option value="%">%</option>`);
+          if (currentValue === "%" || currentValue === selectedCurrency) {
+            $(this).val(currentValue);
+          }
+        });
+      }
+    }
+
+    $(document).on("change", "#invoice_currency", function () {
+      updateCurrencyFields();
+    });
+    
   });
 }
