@@ -9,7 +9,9 @@ Rails.application.routes.draw do
 
   # Alias to create a clean /profile/edit route
   as :user do
-    get 'profile/edit' => 'users/registrations#edit', as: :edit_profile
+    get   'profile/edit' => 'users/registrations#edit',   as: :edit_profile
+    patch 'profile/edit' => 'users/registrations#update', as: :profile
+    put   'profile/edit' => 'users/registrations#update'
   end
 
   root "pages#home"

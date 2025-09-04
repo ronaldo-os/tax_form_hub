@@ -39,9 +39,9 @@
                 ),
                 prompt: "Select a company",
                 class: "form-select",
-                id: "recipient_company_id"
+                id: "recipient_company_id",
+                required: true
               %>
-
 
 
             <!-- Company preview will be inserted here -->
@@ -67,13 +67,17 @@
             <div class="row mt-3">
               <div class="col-md-6">
                 <%= f.label :issue_date, class: "form-label" %>
-                <%= f.date_field :issue_date, class: "form-control" %>
+                <%= f.date_field :issue_date, class: "form-control", value: f.object.issue_date || Date.today %>
               </div>
+
 
               <div class="col-md-6">
                 <%= f.label :currency, class: "form-label" %>
                 <%= f.select :currency, 
-                  options_for_select([["PHP - Philippine Peso", "PHP"],["USD - US Dollar", "USD"], ["EUR - Euro", "EUR"], ["JPY - Japanese Yen", "JPY"]], f.object.currency), 
+                  options_for_select(
+                    [["PHP - Philippine Peso", "PHP"], ["USD - US Dollar", "USD"], ["EUR - Euro", "EUR"], ["JPY - Japanese Yen", "JPY"]],
+                    f.object.currency.presence || "PHP"
+                  ), 
                   { prompt: "Select Currency" }, 
                   class: "form-control" %>
               </div>
@@ -132,12 +136,12 @@
           <% unless action_name == "edit" %>
             <tr class="line-item" data-line-index="0">
               <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id"></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1"></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01"></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01"></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id" required></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description" required></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1" required></td>
+              <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs" required></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01" required></td>
+              <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01" required></td>
               <td class="text-end total">0.00</td>
               <td>
                 <input type="hidden" name="invoice[line_items_attributes][0][total]" value="0.00">

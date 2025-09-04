@@ -142,8 +142,7 @@ class InvoicesController < ApplicationController
       )
 
       if duplicated_invoice.save
-        # Send email to recipient
-        InvoiceMailer.invoice_sent(@invoice, recipient_user).deliver_later
+        InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
         redirect_to invoices_path, notice: "Invoice sent successfully"
       else
         redirect_to invoices_path, alert: "Invoice created, but failed to send to recipient."
@@ -181,7 +180,7 @@ class InvoicesController < ApplicationController
     if duplicated_invoice.save
       original.update(status: "sent")
       # Send email to recipient with the original invoice
-      InvoiceMailer.invoice_sent(original, recipient_user).deliver_later
+      InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
       redirect_to invoices_path, notice: "Invoice sent successfully"
     else
       redirect_to invoices_path, alert: "Failed to send invoice."

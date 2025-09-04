@@ -103,3 +103,37 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 .mb-10 {
   margin-bottom: 5rem !important;
 }
+
+.field_with_errors {
+  display: contents !important;
+}
+
+.field_with_errors > .form-control {
+  position: relative;
+  flex: 1 1 auto;
+  width: 1%;
+  min-width: 0;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.field_with_errors > .form-control {
+  position: relative;
+  flex: 1 1 auto;
+  width: 1%;
+  min-width: 0;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.form-control:focus{
+  box-shadow: none !important;
+}
+
+.field_with_errors >:focus-within {
+  box-shadow: none !important;
+}
+
+.field_with_errors + .input-group-text {
+  border-color: #dc3545 !important;
+}

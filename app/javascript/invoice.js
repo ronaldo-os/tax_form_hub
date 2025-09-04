@@ -474,12 +474,12 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       return `
         <tr class="line-item" data-line-index="${new_record_id}">
           <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][item_id]" class="form-control item-id"></td>
-          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][description]" class="form-control description"></td>
-          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][quantity]" class="form-control quantity" value="1"></td>
-          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][unit]" class="form-control unit" value="pcs"></td>
-          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][price]" class="form-control price" step="0.01"></td>
-          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][tax]" class="form-control tax" step="0.01"></td>
+          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][item_id]" class="form-control item-id" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][description]" class="form-control description" required></td>
+          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][quantity]" class="form-control quantity" value="1" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][unit]" class="form-control unit" value="pcs" required></td>
+          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][price]" class="form-control price" step="0.01" required></td>
+          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][tax]" class="form-control tax" step="0.01" required></td>
           <td class="text-end total">0.00</td>
           <td>
             <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
@@ -1262,12 +1262,12 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       return `
         <tr class="line-item" data-line-index="${index}">
           <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-          <td><input type="text" name="invoice[line_items_attributes][${index}][item_id]" class="form-control item-id"></td>
-          <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description"></td>
-          <td><input type="number" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1"></td>
-          <td><input type="text" name="invoice[line_items_attributes][${index}][unit]" class="form-control unit" value="pcs"></td>
-          <td><input type="number" name="invoice[line_items_attributes][${index}][price]" class="form-control price" step="0.01"></td>
-          <td><input type="number" name="invoice[line_items_attributes][${index}][tax]" class="form-control tax" step="0.01"></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][item_id]" class="form-control item-id" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description" required></td>
+          <td><input type="number" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][unit]" class="form-control unit" value="pcs" required></td>
+          <td><input type="number" name="invoice[line_items_attributes][${index}][price]" class="form-control price" step="0.01" required></td>
+          <td><input type="number" name="invoice[line_items_attributes][${index}][tax]" class="form-control tax" step="0.01" required></td>
           <td class="text-end total">0.00</td>
           <td>
             <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
