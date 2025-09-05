@@ -107,15 +107,18 @@
             <div class="input-group">
               <%= f.password_field :current_password,
                     autocomplete: "current-password",
-                    required: true,
                     class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:current_password].any?} border-end-0",
                     id: "current_password" %>
               <span class="input-group-text bg-white border-start-0">
                 <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
               </span>
             </div>
+
+            <% message = resource.errors.full_messages_for(:current_password).first %>
+            <% message = message&.gsub("is invalid", "is incorrect") %>
+
             <div class="invalid-feedback <%= 'd-block' if resource.errors[:current_password].any? %>">
-              <%= resource.errors.full_messages_for(:current_password).first || "Current password is required to make changes." %>
+              <%= message || "Current password is required to make changes." %>
             </div>
           </div>
 

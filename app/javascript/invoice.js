@@ -1678,6 +1678,29 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
     $(document).on("change", "#invoice_currency", function () {
       updateCurrencyFields();
     });
+
+    $(document).on("change", "#attachments", function () {
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf"];
+      const maxSize = 10 * 1024 * 1024;
+      const $errorDiv = $("#fileError");
+
+      $errorDiv.text(""); 
+
+      $.each(this.files, function (_, file) {
+        if (!allowedTypes.includes(file.type)) {
+          $errorDiv.text(file.name + " is not a valid file. Only JPEG, PNG, GIF, and PDF are allowed.");
+          $("#attachments").val("");
+          return false;
+        }
+
+        if (file.size > maxSize) {
+          $errorDiv.text(file.name + " exceeds the 10MB size limit.");
+          $("#attachments").val("");
+          return false;
+        }
+      });
+    });
+
     
   });
 }
