@@ -432,10 +432,11 @@
             <!-- Right side -->
             <div>
               <% if action_name != "edit" %>
-                <%= f.submit "Send", 
-                      class: "btn btn-success btn-md", 
-                      formaction: create_and_send_invoices_path, 
-                      formmethod: :post %>
+                <%= f.submit "Send",
+                    class: "btn btn-success btn-md",
+                    formaction: create_and_send_invoices_path,
+                    formmethod: :post,
+                    id: "send_invoice_btn" %>
               <% else %>
                 <%= f.submit "Update Invoice", class: "btn btn-primary btn-md" %>
               <% end %>

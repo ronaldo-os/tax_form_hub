@@ -1,6 +1,11 @@
 import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS, INVOICE_INFO_OPTIONAL_FIELDS, OPTIONAL_FIELDS} from "./long_select_options/options";
 
-if ( window.location.pathname === "/invoices" || window.location.pathname === "/invoices/new" || window.location.pathname.match(/^\/invoices\/\d+\/edit$/) ) {
+if (
+      window.location.pathname === "/invoices" ||
+      window.location.pathname === "/invoices/new" ||
+      window.location.pathname.match(/^\/invoices\/\d+$/) || // matches /invoices/123
+      window.location.pathname.match(/^\/invoices\/\d+\/edit$/) // matches /invoices/123/edit
+    ){
     $(document).ready(function () {
 
       $('#sales-table').DataTable();
@@ -1701,6 +1706,13 @@ if ( window.location.pathname === "/invoices" || window.location.pathname === "/
       });
     });
 
-    
+    $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function(e) {
+      let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : "#view_invoicepayment_terms_json";
+      if (!$(inputId).val() || $(inputId).val() === "[]") {
+        e.preventDefault();
+        alert("Please add payment terms before sending it to recipient.");
+      }
+    });
+
   });
 }
