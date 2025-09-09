@@ -85,25 +85,31 @@
 
             <div id="invoice_details_parent_div" class="mt-3">
               <% unless action_name == "edit" %>
-                <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="payment_due_date">
-                  <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
-                  <div class="row">
-                    <div class="col-md-12">
-                      <%= f.label :payment_due_date, class: "form-label" %>
-                      <%= f.date_field :payment_due_date, name: "Payment_Due_Date.date.12", class: "form-control" %>
-                    </div>
-                  </div>
-                </div>
+                <% invoice_info = @invoice.invoice_info || {} %>
 
-                <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="delivery_date">
-                  <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
-                  <div class="row">
-                    <div class="col-md-12">
-                      <%= f.label :delivery_date, class: "form-label" %>
-                      <%= f.date_field :delivery_date, name: "Delivery_Date.date.12", class: "form-control" %>
+                <% unless invoice_info.key?("Payment_Due_Date.date.12") %>
+                  <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="payment_due_date">
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
+                    <div class="row">
+                      <div class="col-md-12">
+                        <%= f.label :payment_due_date, class: "form-label" %>
+                        <%= f.date_field :payment_due_date, name: "Payment_Due_Date.date.12", class: "form-control" %>
+                      </div>
                     </div>
                   </div>
-                </div>
+                <% end %>
+
+                <% unless invoice_info.key?("Delivery_Date.date.12") %>
+                  <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="delivery_date">
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
+                    <div class="row">
+                      <div class="col-md-12">
+                        <%= f.label :delivery_date, class: "form-label" %>
+                        <%= f.date_field :delivery_date, name: "Delivery_Date.date.12", class: "form-control" %>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
               <% end %>
 
 
@@ -134,28 +140,29 @@
         </thead>
         <tbody id="line-items" data-line-items='<%= raw(@invoice.line_items_data.to_json) %>'>
           <% unless action_name == "edit" %>
-            <tr class="line-item" data-line-index="0">
-              <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id" required></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description" required></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1" required></td>
-              <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs" required></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01" required></td>
-              <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01" required></td>
-              <td class="text-end total">0.00</td>
-              <td>
-                <input type="hidden" name="invoice[line_items_attributes][0][total]" value="0.00">
-                <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
-              </td>
-            </tr>
+            <% unless params[:template_id].present? %>
+              <tr class="line-item" data-line-index="0">
+                <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+                <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id" required></td>
+                <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description" required></td>
+                <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1" required></td>
+                <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs" required></td>
+                <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01" required></td>
+                <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01" required></td>
+                <td class="text-end total">0.00</td>
+                <td>
+                  <input type="hidden" name="invoice[line_items_attributes][0][total]" value="0.00">
+                  <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
+                </td>
+              </tr>
 
-            <tr class="dropdown_per_line hidden" data-line-index="0">
-              <td colspan="3">
-                <select name="additional_field_0" id="additional_field_0" class="no-label form-select">
-                </select>
-              </td>
-              <td colspan="6"></td>
-            </tr>
+              <tr class="dropdown_per_line hidden" data-line-index="0">
+                <td colspan="3">
+                  <select name="additional_field_0" id="additional_field_0" class="no-label form-select"></select>
+                </td>
+                <td colspan="6"></td>
+              </tr>
+            <% end %>
           <% end %>
       </table>
 
@@ -203,9 +210,9 @@
             <div class="form-check mb-4">
               <%= f.check_box :save_payment_terms_for_future,
                     class: "form-check-input",
-                    checked: (
-                      (@invoice.persisted? && @invoice.save_payment_terms_for_future?) || 
-                      (!@invoice.persisted? && defined?(@payment_terms) && @payment_terms.present?)
+                    checked: ( @save_payment_terms_for_future.present? ||
+                      (@invoice.persisted? && @invoice.save_payment_terms_for_future?) ||
+                      (!@invoice.persisted? && @payment_terms.present?)
                     ) %>
               <%= f.label :save_payment_terms_for_future, "Save payment terms and means for future invoices", class: "form-check-label" %>
             </div>
@@ -345,9 +352,9 @@
             <div class="form-check mb-4">
               <%= f.check_box :save_notes_for_future,
                     class: "form-check-input",
-                    checked: (
+                    checked: ( @save_notes_for_future.present? ||
                       (@invoice.persisted? && @invoice.save_notes_for_future?) ||
-                      (!@invoice.persisted? && defined?(@recipient_note) && @recipient_note.present?)
+                      (!@invoice.persisted? && @recipient_note.present?)
                     ) %>
               <%= f.label :save_notes_for_future, "Save notes for future Invoices", class: "form-check-label" %>
             </div>
@@ -474,7 +481,7 @@
             <div class="form-check mb-4">
               <%= f.check_box :save_footer_notes_for_future,
                     class: "form-check-input",
-                    checked: (
+                    checked: ( @save_footer_notes_for_future.present? ||
                       (@invoice.persisted? && @invoice.save_footer_notes_for_future?) ||
                       (!@invoice.persisted? && defined?(@footer_notes) && @footer_notes.present?)
                     ) %>

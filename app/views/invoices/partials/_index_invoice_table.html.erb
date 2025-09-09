@@ -70,13 +70,20 @@
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 
+              <% if invoice.status != "draft" %>
+                <li>
+                  <%= link_to "Use as draft",
+                      new_invoice_path(template_id: invoice.id),
+                      class: "dropdown-item" %>
+                </li>
+              <% end %>
 
-              <% if invoice.status == "approved" %>
+              <% if invoice.status == "approved" || invoice.status == "sent" %>
                 <li>
                   <%= link_to "Mark as Paid", mark_as_paid_invoice_path(invoice),
                       method: :patch,
                       data: { confirm: "Mark this invoice as paid?" },
-                      class: "dropdown-item text-success" %>
+                      class: "dropdown-item" %>
                 </li>
                 <li><hr class="dropdown-divider"></li>
               <% end %>

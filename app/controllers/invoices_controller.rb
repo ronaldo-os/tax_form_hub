@@ -18,17 +18,43 @@ class InvoicesController < ApplicationController
   end
 
   def new
-    @invoice = Invoice.new
     @recipient_companies = Company.where.not(user_id: current_user.id)
     @locations_by_type = Location.all.group_by(&:location_type)
 
-    # Get most recent invoice of current_user
-    last_invoice = Invoice.where(user_id: current_user.id).order(created_at: :desc).first
+    if params[:template_id].present?
+      template = Invoice.find(params[:template_id])
 
-    if last_invoice
-      @recipient_note = last_invoice.recipient_note if last_invoice.save_notes_for_future
-      @footer_notes = last_invoice.footer_notes if last_invoice.save_footer_notes_for_future
-      @payment_terms = last_invoice.payment_terms if last_invoice.save_payment_terms_for_future
+      @invoice = Invoice.new(
+        template.attributes.except("id", "created_at", "updated_at", "status", "invoice_number", "user_id")
+      )
+
+      @invoice.user_id = current_user.id
+      @invoice.status = "draft"
+      @invoice.invoice_type ||= "sale"
+
+      @invoice.line_items_data = template.line_items_data if template.line_items_data.present?
+
+      # Flags for template case → copy values directly
+      @save_payment_terms_for_future = template.save_payment_terms_for_future
+      @save_notes_for_future         = template.save_notes_for_future
+      @save_footer_notes_for_future  = template.save_footer_notes_for_future
+
+    else
+      @invoice = Invoice.new
+      last_invoice = Invoice.where(user_id: current_user.id).order(created_at: :desc).first
+      if last_invoice
+        @recipient_note = last_invoice.recipient_note if last_invoice.save_notes_for_future
+        @footer_notes   = last_invoice.footer_notes   if last_invoice.save_footer_notes_for_future
+        @payment_terms  = last_invoice.payment_terms  if last_invoice.save_payment_terms_for_future
+
+        @save_payment_terms_for_future = last_invoice.save_payment_terms_for_future
+        @save_notes_for_future         = last_invoice.save_notes_for_future
+        @save_footer_notes_for_future  = last_invoice.save_footer_notes_for_future
+      else
+        @save_payment_terms_for_future = false
+        @save_notes_for_future         = false
+        @save_footer_notes_for_future  = false
+      end
     end
   end
 

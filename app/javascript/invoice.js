@@ -1708,7 +1708,7 @@ if (
 
     $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function(e) {
       let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : "#view_invoicepayment_terms_json";
-      if (!$(inputId).val() || $(inputId).val() === "[]") {
+      if (!$(inputId).val() || $(inputId).val() === "[]" || $(inputId).val() === "{}") {
         e.preventDefault();
         alert("Please add payment terms before sending it to recipient.");
       }
