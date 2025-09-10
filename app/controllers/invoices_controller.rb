@@ -168,6 +168,13 @@ class InvoicesController < ApplicationController
       )
 
       if duplicated_invoice.save
+        @invoice.attachments.each do |attachment|
+          duplicated_invoice.attachments.attach(
+            io: StringIO.new(attachment.download),
+            filename: attachment.filename.to_s,
+            content_type: attachment.content_type
+          )
+        end
         InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
         redirect_to invoices_path, notice: "Invoice sent successfully"
       else

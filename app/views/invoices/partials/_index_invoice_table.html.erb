@@ -70,7 +70,7 @@
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 
-              <% if invoice.status != "draft" %>
+              <% if invoice.status != "draft" && !["purchases-table", "purchases-archived-table"].include?(table_id) %>
                 <li>
                   <%= link_to "Use as draft",
                       new_invoice_path(template_id: invoice.id),

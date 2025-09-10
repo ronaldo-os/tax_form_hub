@@ -2,7 +2,7 @@
 <div class="container mt-5">
   <div class="d-flex justify-content-between gap-2 mt-5 mb-3">
     <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
-    <% if @invoice.invoice_type == "sale" && !["sent", "approved", "denied"].include?(@invoice.status) %>
+    <% if @invoice.invoice_type == "sale" && !["sent", "approved", "denied", "paid"].include?(@invoice.status) %>
       <%= button_to "Send", duplicate_as_purchase_invoice_path(@invoice), method: :post, class: "btn btn-success btn-md", id: "view_invoice_send_btn" %>
     <% end %>
 

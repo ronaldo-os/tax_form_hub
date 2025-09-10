@@ -1689,21 +1689,35 @@ if (
       const maxSize = 10 * 1024 * 1024;
       const $errorDiv = $("#fileError");
 
+      const $saveDraftBtn = $("input[value='Save As Draft']");
+      const $sendBtn = $("#send_invoice_btn");
+
       $errorDiv.text(""); 
+      let hasError = false;
 
       $.each(this.files, function (_, file) {
         if (!allowedTypes.includes(file.type)) {
           $errorDiv.text(file.name + " is not a valid file. Only JPEG, PNG, GIF, and PDF are allowed.");
           $("#attachments").val("");
+          hasError = true;
           return false;
         }
 
         if (file.size > maxSize) {
           $errorDiv.text(file.name + " exceeds the 10MB size limit.");
           $("#attachments").val("");
+          hasError = true;
           return false;
         }
       });
+
+      if (hasError) {
+        $saveDraftBtn.prop("disabled", true);
+        $sendBtn.prop("disabled", true);
+      } else {
+        $saveDraftBtn.prop("disabled", false);
+        $sendBtn.prop("disabled", false);
+      }
     });
 
     $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function(e) {
