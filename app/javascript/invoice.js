@@ -1221,8 +1221,6 @@ if (
             }
 
             groupHtml += `</div>`;
-            alert(field.type);
-
           });
           groupHtml += `</div>`;
         }
