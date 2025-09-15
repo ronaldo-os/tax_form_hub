@@ -1,7 +1,7 @@
 class Company < ApplicationRecord
   has_one_attached :profile_image
   has_many :recommendations, dependent: :destroy
-  belongs_to :user
+  belongs_to :user, optional: true
 
   INDUSTRIES = [
     [ "Select Industry", "", { disabled: true, selected: true } ],

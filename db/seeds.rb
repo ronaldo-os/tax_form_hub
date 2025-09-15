@@ -7,18 +7,15 @@ end
 
 company_name = ENV['SUPERADMIN_COMPANY_NAME']
 
-# Check for company name conflict using correct column: name
 existing_company = Company.find_by(name: company_name)
 
 if existing_company
-  abort("❌ Seed aborted: Company name '#{company_name}' already exists.")
-end
-
-if superadmin.company.nil?
-  Company.create!(name: company_name, user: superadmin)
-  puts "Company created for Superadmin: #{company_name}"
+  superadmin.update!(company: existing_company)
+  puts "✅ Linked Superadmin to existing company: #{existing_company.name}"
 else
-  puts "Superadmin already has an associated company: #{superadmin.company.name}"
+  company = Company.create!(name: company_name, user: superadmin)
+  superadmin.update!(company: company)
+  puts "✅ Company created and linked to Superadmin: #{company.name}"
 end
 
 puts "Superadmin created: #{superadmin.email}"
