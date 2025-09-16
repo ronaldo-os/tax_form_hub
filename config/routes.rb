@@ -4,7 +4,8 @@ Rails.application.routes.draw do
   resources :locations
   get "invoices/index"
   devise_for :users, controllers: {
-    registrations: 'users/registrations'
+    registrations: 'users/registrations',
+    passwords: "users/passwords"
   }
 
   # Alias to create a clean /profile/edit route

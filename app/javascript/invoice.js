@@ -1453,6 +1453,11 @@ if (
         }
         recalculateTotals();
       });
+      
+      // Ensures to recalculate totals after a group is removed.
+      $(document).on("click", ".remove-group", function(e) {
+        recalculateTotals();
+      });
     });
 
 

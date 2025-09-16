@@ -1,4 +1,3 @@
-import "./devise_password_toggle";
 import "./client_submissions";
 import "./admin_client_submissions";
 import "./edit_profile";
@@ -16,7 +15,7 @@ $(document).ready(function () {
         $('.custom_tfh_alert').fadeOut(500, function () {
           $(this).remove();
         });
-    }, 3000); 
+    }, 5000); 
 
     $('.zoom-link').on('click', function (e) {
       e.preventDefault();
