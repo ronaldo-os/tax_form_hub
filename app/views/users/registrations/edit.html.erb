@@ -4,10 +4,10 @@
       <div class="card-body p-5">
         <h2 class="mb-4 text-center">Edit Profile</h2>
 
-<%= form_for(resource,
+        <%= form_for(resource,
              as: resource_name,
              url: profile_path,
-             html: { method: :put, class: "needs-validation", novalidate: true, multipart: true }) do |f| %>
+             html: { method: :put, multipart: true }) do |f| %>
 
           <div class="mb-4 text-center">
             <div id="image-preview-wrapper" class="position-relative d-inline-block" style="cursor: pointer;">
@@ -38,11 +38,6 @@
                 <%= resource.profile_image.attached? ? "Click image to upload new one" : "No profile image uploaded. Click image to upload." %>
               </small>
             </div>
-            <% if resource.errors[:profile_image].any? %>
-              <div class="text-danger small mt-1">
-                <%= resource.errors.full_messages_for(:profile_image).first %>
-              </div>
-            <% end %>
           </div>
 
           <!-- Email -->
@@ -52,10 +47,7 @@
                   autofocus: true,
                   autocomplete: "email",
                   required: true,
-                  class: "form-control #{'is-invalid' if resource.errors[:email].any?}" %>
-            <div class="invalid-feedback <%= 'd-block' if resource.errors[:email].any? %>">
-              <%= resource.errors.full_messages_for(:email).first || "Please enter your email." %>
-            </div>
+                  class: "form-control" %>
           </div>
 
           <hr class="my-4">
@@ -73,14 +65,11 @@
             <div class="input-group">
               <%= f.password_field :password,
                     autocomplete: "new-password",
-                    class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:password].any?} border-end-0",
+                    class: "form-control toggle-password-input border-end-0",
                     id: "password" %>
               <span class="input-group-text bg-white border-start-0">
                 <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
               </span>
-            </div>
-            <div class="invalid-feedback <%= 'd-block' if resource.errors[:password].any? %>">
-              <%= resource.errors.full_messages_for(:password).first || "Enter a new password if you want to change it." %>
             </div>
           </div>
 
@@ -90,14 +79,11 @@
             <div class="input-group">
               <%= f.password_field :password_confirmation,
                     autocomplete: "new-password",
-                    class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:password_confirmation].any?} border-end-0",
+                    class: "form-control toggle-password-input border-end-0",
                     id: "password_confirmation" %>
               <span class="input-group-text bg-white border-start-0">
                 <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
               </span>
-            </div>
-            <div class="invalid-feedback <%= 'd-block' if resource.errors[:password_confirmation].any? %>">
-              <%= resource.errors.full_messages_for(:password_confirmation).first || "Confirm new password if changing." %>
             </div>
           </div>
 
@@ -107,18 +93,11 @@
             <div class="input-group">
               <%= f.password_field :current_password,
                     autocomplete: "current-password",
-                    class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:current_password].any?} border-end-0",
+                    class: "form-control toggle-password-input border-end-0",
                     id: "current_password" %>
               <span class="input-group-text bg-white border-start-0">
                 <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
               </span>
-            </div>
-
-            <% message = resource.errors.full_messages_for(:current_password).first %>
-            <% message = message&.gsub("is invalid", "is incorrect") %>
-
-            <div class="invalid-feedback <%= 'd-block' if resource.errors[:current_password].any? %>">
-              <%= message || "Current password is required to make changes." %>
             </div>
           </div>
 

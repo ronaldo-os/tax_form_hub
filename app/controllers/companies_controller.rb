@@ -4,7 +4,12 @@ class CompaniesController < ApplicationController
   def index
     @companies = current_user.companies
     @company = current_user.companies.first
+
+    if params[:flash_alert] == "visitor_recommendation"
+      flash.now[:alert] = "You are currently in visitor view and can't write a recommendation for your own company"
+    end
   end
+
 
 
   def show

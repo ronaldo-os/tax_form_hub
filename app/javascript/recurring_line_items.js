@@ -17,11 +17,9 @@ if (window.location.pathname.includes("/recurring_invoices")) {
             $("#editRecurringModal").modal("show");
         });
 
-
         // Handle form submission via AJAX
         $("#editRecurringForm").on("submit", function (e) {
             e.preventDefault();
-
             const invoiceId = $("#invoice_id").val();
 
             $.ajax({
@@ -32,21 +30,22 @@ if (window.location.pathname.includes("/recurring_invoices")) {
                 headers: {
                     "X-CSRF-Token": $("meta[name='csrf-token']").attr("content")
                 },
-                success: function (response) {
+                success: function () {
                     location.reload();
                 },
-                error: function () {
-                    alert("Failed to update recurring item.");
+                error: function (xhr) {
+                    console.error('Update failed:', xhr.status, xhr.responseText);
+                    location.reload();
                 }
             });
         });
 
-        // Add once, before your AJAX calls:
+        // Setup CSRF for all AJAX requests
         $.ajaxSetup({
             headers: { "X-CSRF-Token": $("meta[name='csrf-token']").attr("content") }
         });
 
-        // Enable
+        // Enable recurring item
         $(document).on('click', '.enable-btn', function() {
             if (!confirm('Enable this recurring item?')) return;
 
@@ -58,18 +57,15 @@ if (window.location.pathname.includes("/recurring_invoices")) {
                 method: 'PATCH',
                 dataType: 'json',
                 data: { invoice_id: invoiceId, line_index: lineIndex },
-                success: function(res) {
-                alert(res.message || 'Recurring item enabled.');
-                location.reload();
-                },
+                success: function() { location.reload(); },
                 error: function(xhr) {
-                console.error('Enable failed:', xhr.status, xhr.responseText);
-                alert('Something went wrong.\n' + (xhr.responseJSON?.message || ''));
+                    console.error('Enable failed:', xhr.status, xhr.responseText);
+                    location.reload();
                 }
             });
         });
 
-        // Disable (same CSRF + error logging)
+        // Disable recurring item
         $(document).on('click', '.disable-btn', function() {
             if (!confirm('Disable this recurring item?')) return;
 
@@ -81,18 +77,15 @@ if (window.location.pathname.includes("/recurring_invoices")) {
                 method: 'PATCH',
                 dataType: 'json',
                 data: { invoice_id: invoiceId, line_index: lineIndex },
-                success: function(res) {
-                alert(res.message || 'Recurring item disabled.');
-                location.reload();
-                },
+                success: function() { location.reload(); },
                 error: function(xhr) {
-                console.error('Disable failed:', xhr.status, xhr.responseText);
-                alert('Something went wrong.\n' + (xhr.responseJSON?.message || ''));
+                    console.error('Disable failed:', xhr.status, xhr.responseText);
+                    location.reload();
                 }
             });
         });
 
-        // Delete button
+        // Delete recurring item
         $(document).on('click', '.delete-btn', function(e) {
             e.preventDefault();
             if (!confirm('Delete this recurring item?')) return;
@@ -102,39 +95,38 @@ if (window.location.pathname.includes("/recurring_invoices")) {
             const lineIndex = $(this).data('line-index');
 
             $.ajax({
-                url: `/recurring_invoices/${invoiceId}`,   // ← :id in path
+                url: `/recurring_invoices/${invoiceId}`,
                 method: 'DELETE',
                 dataType: 'json',
                 data: { line_index: lineIndex },
-                success: function(res) {
-                alert(res.message || 'Recurring item deleted.');
-                // Remove from the correct DataTable
-                if (activeTable.row($row).length) {
-                    activeTable.row($row).remove().draw();
-                } else if (disabledTable.row($row).length) {
-                    disabledTable.row($row).remove().draw();
-                } else {
-                    // fallback: find the table dynamically
-                    const t = $row.closest('table').DataTable();
-                    t.row($row).remove().draw();
-                }
+                success: function() {
+                    // Remove from DataTable immediately
+                    if (activeTable.row($row).length) {
+                        activeTable.row($row).remove().draw();
+                    } else if (disabledTable.row($row).length) {
+                        disabledTable.row($row).remove().draw();
+                    } else {
+                        const t = $row.closest('table').DataTable();
+                        t.row($row).remove().draw();
+                    }
+                    location.reload();
                 },
                 error: function(xhr) {
-                console.error('Delete failed:', xhr.status, xhr.responseText);
-                alert('Something went wrong.\n' + (xhr.responseJSON?.message || ''));
+                    console.error('Delete failed:', xhr.status, xhr.responseText);
+                    location.reload(); 
                 }
             });
         });
 
+        // Interval change logic
         $('.btn-link').on('change', function() {
             if ($(this).val() === 'daily') {
-            $('#every').val(0).prop('disabled', true);
+                $('#every').val(0).prop('disabled', true);
             } else {
-            $('#every').prop('disabled', false);
+                $('#every').prop('disabled', false);
             }
         });
 
         $('#interval').trigger('change');
-
     });
 }

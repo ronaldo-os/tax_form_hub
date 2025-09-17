@@ -2,6 +2,7 @@
   <thead class="thead-dark">
     <tr>
       <th>Invoice #</th>
+      <th>Total</th>
       <th>Issue Date</th>
       <th>Attachment</th>
       <th>Status</th>
@@ -12,7 +13,10 @@
     <% invoices.each do |invoice| %>
       <tr>
         <td><%= link_to invoice.invoice_number, invoice_path(invoice) %></td>
-        <td><%= invoice.issue_date&.strftime('%Y-%m-%d') || '—' %></td>
+        <td>
+          <%= invoice.currency + ' ' + number_with_delimiter(invoice.total["grand_total"].to_f, delimiter: ",") %>
+        </td>
+        <td><%= invoice.issue_date&.strftime('%b %d %Y') || '—' %></td>
         <td>
         <% if invoice.attachments.attached? %>
         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#attachmentModal-<%= invoice.id %>">View Files</button>

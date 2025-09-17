@@ -14,16 +14,5 @@ if (window.location.pathname.includes("/profile/edit")) {
             reader.readAsDataURL(file);
             }
         });
-
-        $('.toggle-password-icon').each(function () {
-            $(this).on('click', function () {
-            const $icon = $(this);
-            const $input = $icon.closest('.input-group').find('.toggle-password-input');
-            const type = $input.attr('type') === 'password' ? 'text' : 'password';
-
-            $input.attr('type', type);
-            $icon.toggleClass('fa-eye fa-eye-slash');
-            });
-        });
     });
 }

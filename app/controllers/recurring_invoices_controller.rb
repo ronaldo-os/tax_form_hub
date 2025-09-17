@@ -45,57 +45,53 @@ class RecurringInvoicesController < ApplicationController
     save_invoice_changes
 
     flash[:notice] = "Recurring settings updated."
-    flash.keep(:notice)
-
-    respond_to do |format|
-      format.json { render json: { success: true } }
-      format.html { redirect_to recurring_invoices_path, notice: "Recurring settings updated." }
-    end
+    respond_to_flash_success
   end
 
   def enable
     rf = recurring_fields(@line_item)
-    return render json: { success: false, message: "Recurring fields not found." }, status: :unprocessable_entity unless rf
+    unless rf
+      flash[:alert] = "Recurring fields not found."
+      return respond_to_flash_error
+    end
 
     rf["recurring.select(yes,no).2"] = "yes"
     save_invoice_changes
 
-    respond_to do |format|
-      format.html { redirect_to recurring_invoices_path, notice: "Recurring item enabled." }
-      format.json { render json: { success: true, message: "Recurring item enabled." } }
-    end
+    flash[:notice] = "Recurring item enabled."
+    respond_to_flash_success
   end
 
   def disable
     rf = recurring_fields(@line_item)
-    return render json: { success: false, message: "Recurring fields not found." }, status: :unprocessable_entity unless rf
+    unless rf
+      flash[:alert] = "Recurring fields not found."
+      return respond_to_flash_error
+    end
 
     rf["recurring.select(yes,no).2"] = "no"
     save_invoice_changes
 
-    respond_to do |format|
-      format.html { redirect_to recurring_invoices_path, notice: "Recurring item disabled." }
-      format.json { render json: { success: true, message: "Recurring item disabled." } }
-    end
+    flash[:notice] = "Recurring item disabled."
+    respond_to_flash_success
   end
 
   def destroy
     idx = params[:line_index].to_i
-    if @invoice.line_items_data[idx]
-      # Only delete the recurring key inside optional_fields
-      if @invoice.line_items_data[idx]["optional_fields"] &&
-        @invoice.line_items_data[idx]["optional_fields"]["recurring"]
-        @invoice.line_items_data[idx]["optional_fields"].delete("recurring")
-        save_invoice_changes
-        render json: { success: true, message: "Recurring data deleted." }
-      else
-        render json: { success: false, message: "No recurring data found." }, status: :not_found
-      end
+    if @invoice.line_items_data[idx] &&
+       @invoice.line_items_data[idx]["optional_fields"] &&
+       @invoice.line_items_data[idx]["optional_fields"]["recurring"]
+
+      @invoice.line_items_data[idx]["optional_fields"].delete("recurring")
+      save_invoice_changes
+
+      flash[:notice] = "Recurring data deleted."
+      respond_to_flash_success
     else
-      render json: { success: false, message: "Line item not found." }, status: :not_found
+      flash[:alert] = "No recurring data found."
+      respond_to_flash_error
     end
   end
-
 
   private
 
@@ -122,5 +118,20 @@ class RecurringInvoicesController < ApplicationController
       :description, :quantity, :unit, :price, :total,
       :start_date, :end_date, :every, :interval
     )
+  end
+
+  # Helpers for consistent flash + response
+  def respond_to_flash_success
+    respond_to do |format|
+      format.json { head :ok }
+      format.html { redirect_to recurring_invoices_path }
+    end
+  end
+
+  def respond_to_flash_error
+    respond_to do |format|
+      format.json { head :unprocessable_entity }
+      format.html { redirect_to recurring_invoices_path }
+    end
   end
 end
