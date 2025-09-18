@@ -38,22 +38,7 @@ if (window.location.pathname.includes("/companies")) {
 
         $("#recommend-btn").on("click", function (e) {
             e.preventDefault();
-
-            $('.custom_tfh_alert').remove();
-
-            const flashHtml = `
-            <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start" role="alert">
-                <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_danger"></i>
-                <div>
-                <h5 class="mb-1">Notice:</h5>
-                <span>You are currently in visitor view and can't write a recommendation for your own company</span>
-                </div>
-            </div>
-            `;
-
-            $('body').prepend(flashHtml);
-
-            setTimeout(() => $('.custom_tfh_alert').fadeOut(300, function() { $(this).remove(); }), 5000);
+            showFlashMessage("You are currently in visitor view and can't write a recommendation for your own company.", "danger", "Notice:");
         });
     });
 }

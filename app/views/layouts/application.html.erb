@@ -89,28 +89,28 @@
 
   <%= yield %>
 
-<% flash.each do |key, message| %>
-  <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start" role="alert">
-    <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_<%= key == "notice" ? "success" : "danger" %>"></i>
+  <% flash.each do |key, message| %>
+    <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start" role="alert">
+      <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_<%= key == "notice" ? "success" : "danger" %>"></i>
 
-    <div>
-      <% if key != "notice" %>
-        <h5 class="mb-1">Notice:</h5>
-      <% end %>
+      <div>
+        <% if key != "notice" %>
+          <h5 class="mb-1">Notice:</h5>
+        <% end %>
 
-      <% messages = message.to_s.split(/<br\s*\/?>/) %>
-      <% if messages.size > 1 %>
-        <ol class="mb-0 ps-3">
-          <% messages.each do |msg| %>
-            <li><%= msg.strip %></li>
-          <% end %>
-        </ol>
-      <% else %>
-        <span><%= message %></span>
-      <% end %>
+        <% messages = message.to_s.split(/<br\s*\/?>/) %>
+        <% if messages.size > 1 %>
+          <ol class="mb-0 ps-3">
+            <% messages.each do |msg| %>
+              <li><%= msg.strip %></li>
+            <% end %>
+          </ol>
+        <% else %>
+          <span><%= message %></span>
+        <% end %>
+      </div>
     </div>
-  </div>
-<% end %>
+  <% end %>
 
 
 

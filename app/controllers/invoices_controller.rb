@@ -107,6 +107,7 @@ class InvoicesController < ApplicationController
     # Normalize JSON fields
     normalize_json_fields!(clean_params)
 
+    # Process line items
     if clean_params[:line_items_attributes].present?
       processed_items = clean_params[:line_items_attributes].values.map do |line_item|
         if line_item[:optional_fields].present?
@@ -118,6 +119,12 @@ class InvoicesController < ApplicationController
       clean_params.delete(:line_items_attributes)
     end
 
+    # Handle payment terms JSON edit
+    if clean_params[:payment_terms_json_edit].present?
+      @invoice.payment_terms_data = JSON.parse(clean_params[:payment_terms_json_edit]) rescue {}
+      clean_params.delete(:payment_terms_json_edit)
+    end
+
     # Handle new attachments
     if params[:invoice][:attachments].present?
       params[:invoice][:attachments].each do |attachment|
@@ -126,11 +133,21 @@ class InvoicesController < ApplicationController
     end
 
     if @invoice.update(clean_params)
-      redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
+      if params[:commit_action] == "send"
+        @invoice.update(status: "sent")
+
+        recipient_user = Company.find_by(id: @invoice.recipient_company_id)&.user
+        InvoiceMailer.invoice_sent(@invoice, recipient_user).deliver_later if recipient_user
+
+        redirect_to invoice_path(@invoice), notice: "Invoice sent successfully."
+      else
+        redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
+      end
     else
       render :edit
     end
   end
+
 
   def create_and_send
     clean_params = invoice_params.deep_dup
@@ -194,29 +211,67 @@ class InvoicesController < ApplicationController
   end
 
   def duplicate_as_purchase
-    original = Invoice.find(params[:id])
-    recipient_company_id = original.recipient_company_id
-    recipient_user = Company.find_by(id: recipient_company_id)&.user
+    original = current_user.invoices.find(params[:id])
 
-    unless recipient_user
-      redirect_to invoice_path(original), alert: "Recipient user not found." and return
+    clean_params = invoice_params.deep_dup
+    clean_params.delete(:attachments)
+
+    # Normalize JSON fields
+    normalize_json_fields!(clean_params)
+
+    # Process line items
+    if clean_params[:line_items_attributes].present?
+      processed_items = clean_params[:line_items_attributes].values.map do |line_item|
+        if line_item[:optional_fields].present?
+          line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
+        end
+        line_item
+      end
+      original.line_items_data = processed_items
+      clean_params.delete(:line_items_attributes)
     end
 
-    duplicated_invoice = original.dup
-    duplicated_invoice.assign_attributes(
-      user_id: recipient_user.id,
-      sale_from_id: original.id,
-      status: "pending",
-      invoice_type: "purchase"
-    )
+    # Handle payment terms JSON edit
+    if clean_params[:payment_terms_json_edit].present?
+      original.payment_terms_data = JSON.parse(clean_params[:payment_terms_json_edit]) rescue {}
+      clean_params.delete(:payment_terms_json_edit)
+    end
 
-    if duplicated_invoice.save
-      original.update(status: "sent")
-      # Send email to recipient with the original invoice
-      InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
-      redirect_to invoices_path, notice: "Invoice sent successfully"
+    # Handle attachments
+    if params[:invoice][:attachments].present?
+      params[:invoice][:attachments].each do |attachment|
+        original.attachments.attach(attachment)
+      end
+    end
+
+    if original.update(clean_params)
+      recipient_company_id = original.recipient_company_id
+      recipient_user = Company.find_by(id: recipient_company_id)&.user
+
+      unless recipient_user
+        redirect_to invoice_path(original), alert: "Recipient user not found." and return
+      end
+
+      duplicated_invoice = original.dup
+      duplicated_invoice.assign_attributes(
+        user_id: recipient_user.id,
+        sale_from_id: original.id,
+        status: "pending",
+        invoice_type: "purchase"
+      )
+
+      if duplicated_invoice.save
+        # Mark both as sent
+        duplicated_invoice.update(status: "sent")
+        original.update(status: "sent")
+
+        InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
+        redirect_to invoice_path(original), notice: "Invoice sent successfully."
+      else
+        redirect_to invoices_path, alert: "Failed to duplicate invoice."
+      end
     else
-      redirect_to invoices_path, alert: "Failed to send invoice."
+      render :edit
     end
   end
 

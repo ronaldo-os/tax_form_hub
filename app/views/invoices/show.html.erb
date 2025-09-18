@@ -8,7 +8,15 @@
     <% if @invoice.invoice_type == "sale" && !["sent", "approved", "denied", "paid"].include?(@invoice.status) %>
       <div class="d-flex gap-2">
         <%= link_to "Modify", edit_invoice_path(@invoice), class: "btn btn-secondary btn-md" %>
-        <%= button_to "Send", duplicate_as_purchase_invoice_path(@invoice), method: :post, class: "btn btn-success btn-md d-inline", id: "view_invoice_send_btn" %>
+        <%= button_to "Send",
+            duplicate_as_purchase_invoice_path(@invoice),
+            method: :post,
+            params: { invoice: { id: @invoice.id } },
+            class: "btn btn-success btn-md d-inline",
+            id: "view_invoice_send_btn",
+            name: "commit_action",
+            value: "send" %>
+
       </div>
     <% end %>
   </div>

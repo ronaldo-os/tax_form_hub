@@ -129,7 +129,7 @@ if (
         const $container = $('#invoice_details_parent_div #optional_fields_container');
 
         if ($container.find(`[data-optional-group="${key}"]`).length > 0) {
-          alert("This group is already added.");
+          showFlashMessage("This group is already added.", "danger", "Notice:");
           $(this).val('');
           return;
         }
@@ -276,7 +276,7 @@ if (
 
       // Prevent duplicates
       if ($(`#payment_terms_parent_div [data-group-key="${key}"]`).length > 0) {
-        alert("This payment term group is already added.");
+        showFlashMessage("This payment term group is already added.", "danger", "Notice:");
         $(this).val('');
         return;
       }
@@ -423,7 +423,7 @@ if (
             details.show();
             },
             error: function () {
-            alert('Failed to fetch location details.');
+            showFlashMessage("Failed to fetch location details.", "danger", "Notice:");
             $(`#${type}_details`).hide();
             }
         });
@@ -1731,10 +1731,11 @@ if (
     });
 
     $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function(e) {
-      let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : "#view_invoicepayment_terms_json";
+      payment_terms_json_edit
+      let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : this.id === "view_invoice_btn" ? "#view_invoicepayment_terms_json" : "#payment_terms_json_edit";
       if (!$(inputId).val() || $(inputId).val() === "[]" || $(inputId).val() === "{}") {
         e.preventDefault();
-        alert("Please add payment terms before sending it to recipient.");
+        showFlashMessage("Please add payment terms before sending it to recipient.", "danger", "Notice:");
       }
     });
 

@@ -50,7 +50,7 @@ if (window.location.pathname.includes("/locations")) {
 
         // Form error
         $form.on('ajax:error', function () {
-            alert("Failed to save location.");
+            showFlashMessage("Failed to save location.", "danger", "Notice:");
         });
     });
 }

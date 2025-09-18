@@ -84,11 +84,12 @@
             </div>
 
             <div id="invoice_details_parent_div" class="mt-3">
-              <% unless action_name == "edit" %>
+              <div id="optional_fields_container" data-invoice-info='<%= @invoice.invoice_info.to_json %>'>
+                <% unless action_name == "edit" %>
                 <% invoice_info = @invoice.invoice_info || {} %>
 
                 <% unless invoice_info.key?("Payment_Due_Date.pament_due_date.date.12") %>
-                  <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="payment_due_date">
+                  <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="PaymentDueDate">
                     <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
                     <div class="row">
                       <div class="col-md-12">
@@ -100,7 +101,7 @@
                 <% end %>
 
                 <% unless invoice_info.key?("Delivery_Date.delivery_date.date.12") %>
-                  <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="delivery_date">
+                  <div class="mb-3 position-relative border rounded p-3 pt-3" data-optional-group="DeliveryDate">
                     <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
                     <div class="row">
                       <div class="col-md-12">
@@ -112,13 +113,12 @@
                 <% end %>
               <% end %>
 
-
-            <div id="optional_fields_container" data-invoice-info='<%= @invoice.invoice_info.to_json %>'></div>
-              <div class="mt-4 mb-4">
-                <select id="optionalField" class="form-select invoice_info_select">
-                </select>
               </div>
-            </div>
+                <div class="mt-4 mb-4">
+                  <select id="optionalField" class="form-select invoice_info_select">
+                  </select>
+                </div>
+              </div>
 
           </div>
 
@@ -444,8 +444,11 @@
                     formmethod: :post,
                     id: "send_invoice_btn" %>
               <% else %>
-                <%= f.submit "Update Invoice", class: "btn btn-primary btn-md" %>
+                <%= button_tag "Update", type: "submit", name: "commit_action", value: "save", class: "btn btn-primary" %>
+                <%= button_tag "Send", type: "submit", name: "commit_action", value: "send", class: "btn btn-success" %>
               <% end %>
+              
+
             </div>
             
           </div>
@@ -453,7 +456,7 @@
 
 
 
-        <div class="d-flex justify-content-between gap-2 mt-5">
+        <div id="hidden_fields_container" class="d-none">
             <%= f.hidden_field :total, id: 'total_amount_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :price_adjustments, value: @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :payment_terms, value: (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json', data: { field_type: 'invoice_form_fields' } %>
