@@ -99,41 +99,207 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
   text-decoration: underline;
 }
 
-
 .mb-10 {
   margin-bottom: 5rem !important;
 }
 
-.field_with_errors {
-  display: contents !important;
+
+html {
+  height: 100%;
 }
 
-.field_with_errors > .form-control {
+body {
+  height: 100%;
+  font-family: "Roboto", sans-serif;
+}
+
+/* Variables substituted:
+   --gray: #858e99
+   --blue: #0fa0eb
+*/
+
+.global-wrapper {
   position: relative;
-  flex: 1 1 auto;
-  width: 1%;
-  min-width: 0;
-  border-top-right-radius: 0px;
-  border-bottom-right-radius: 0px;
+  height: 100%;
+  width: 100%;
 }
 
-.field_with_errors > .form-control {
+/* side nav */
+.global-wrapper aside {
   position: relative;
-  flex: 1 1 auto;
-  width: 1%;
-  min-width: 0;
-  border-top-right-radius: 0px;
-  border-bottom-right-radius: 0px;
+  width: 68px;
+  float: left;
+  text-align: center;
+  height: 100%;
+  transition: all 0.3s ease-in-out;
+  border: 1px solid silver;
 }
 
-.form-control:focus{
-  box-shadow: none !important;
+.global-wrapper aside h1 {
+  color: white;
+  border-radius: 100%;
+  width: 45px;
+  height: 45px;
+  margin: 25px auto;
+  background: #0fa0eb;
 }
 
-.field_with_errors >:focus-within {
-  box-shadow: none !important;
+.global-wrapper aside a {
+  text-decoration: none;
+  color: inherit;
 }
 
-.field_with_errors + .input-group-text {
-  border-color: #dc3545 !important;
+.global-wrapper aside ul li .nav-item i {
+  float: left;
+  width: 25px;
+  text-align: center; 
+  color: #858e99;
+  font-size: 20px;
+}
+
+
+.global-wrapper aside a:hover {
+  text-decoration: none;
+}
+
+
+.global-wrapper aside ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.global-wrapper aside ul li {
+  padding: 20px 0 10px 0;
+  cursor: pointer;
+}
+
+.global-wrapper aside ul li:hover {
+  border-left: 3px solid #0fa0eb;
+  background: ghostwhite;
+}
+
+.global-wrapper aside ul li:hover i {
+  color: #0fa0eb !important;
+}
+
+.global-wrapper aside ul li .nav-item {
+  display: inline-block;
+  width: 30px;
+  overflow: hidden;
+  height: 30px;
+  transition: width 0.3s ease-in-out;
+  white-space: nowrap;
+  color: #858e99;
+}
+
+.global-wrapper aside ul li .nav-item i {
+  float: left;
+  position: relative;
+  top: 0px;
+  color: #858e99;
+  font-size: 20px;
+}
+
+.global-wrapper aside ul li .nav-item span {
+  opacity: 0;
+  transition: all 0.2s ease-in-out;
+}
+
+/* active item */
+.global-wrapper aside ul li.active {
+  border-left: 3px solid #0fa0eb;
+  background: ghostwhite;
+}
+
+.global-wrapper aside ul li.active i {
+  color: #0fa0eb !important;
+}
+
+/* place the third ul at the bottom if exists */
+.global-wrapper aside ul:nth-child(3) {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+}
+
+/* main content */
+.global-wrapper main,
+.global-wrapper #main {
+  float: left;
+  width: calc(100% - 68px);
+  height: 100%;
+  overflow-x: hidden;
+  transition: all 0.3s ease-in-out;
+}
+
+.global-wrapper main #blackout-on-hover,
+.global-wrapper #main #blackout-on-hover {
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
+
+.global-wrapper main header,
+.global-wrapper #main header {
+  position: relative;
+  background: #0fa0eb;
+  width: 100%;
+  height: 70px;
+}
+
+.global-wrapper main header h2,
+.global-wrapper #main header h2 {
+  position: absolute;
+  bottom: 0;
+  color: white;
+  font-size: 34px;
+  left: 35px;
+}
+
+/* side nav on hover (expanded) */
+.global-wrapper aside:hover {
+  width: 300px;
+  transition: all 0.3s ease-in-out;
+}
+
+.global-wrapper aside:hover .nav-item {
+  display: inline-block;
+  width: 190px;
+  overflow: hidden;
+  height: 30px;
+  transition: all 0.3s ease-in-out;
+}
+
+.global-wrapper aside:hover .nav-item i {
+  float: left;
+}
+
+.global-wrapper aside:hover .nav-item span {
+  opacity: 1;
+  transition: all 0.5s ease-in-out;
+}
+
+/* main content adjusts when aside hovered */
+.global-wrapper aside:hover ~ #main,
+.global-wrapper aside:hover ~ main {
+  width: calc(100% - 302px);
+  transition: all 0.3s ease-in-out;
+}
+
+.global-wrapper aside:hover ~ #main #blackout-on-hover,
+.global-wrapper aside:hover ~ main #blackout-on-hover {
+  position: absolute;
+  background: black;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  opacity: 0.5;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Invoice */
+#form_actions_fixed_navbar{
+  float: right;
+  width: calc(100% - 68px);
+  margin-left: 68px;
 }
