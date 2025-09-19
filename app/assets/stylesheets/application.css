@@ -1,3 +1,13 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  font-family: "Roboto", sans-serif;
+  background-color: rgb(245 248 251) !important;
+}
+
 .custom_tfh_alert {
   position: fixed;
   top: 70px;
@@ -103,21 +113,6 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
   margin-bottom: 5rem !important;
 }
 
-
-html {
-  height: 100%;
-}
-
-body {
-  height: 100%;
-  font-family: "Roboto", sans-serif;
-}
-
-/* Variables substituted:
-   --gray: #858e99
-   --blue: #0fa0eb
-*/
-
 .global-wrapper {
   position: relative;
   height: 100%;
@@ -132,7 +127,7 @@ body {
   text-align: center;
   height: 100%;
   transition: all 0.3s ease-in-out;
-  border: 1px solid silver;
+  background-color: white;
 }
 
 .global-wrapper aside h1 {
