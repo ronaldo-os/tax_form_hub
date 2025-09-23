@@ -1,6 +1,6 @@
 <% content_for :page_title, "Tax Form Hub" %>
 
-<div class="container mt-2">
+<div class="container py-2 py-md-5">
   <ul class="custom_nav_tabs nav nav-tabs mb-3 w-100 d-flex align-items-center">
     <li class="nav-item">
       <a class="nav-link active" data-bs-toggle="tab" href="#unarchived">Active</a>
@@ -28,50 +28,64 @@
 </div>
 
 <!-- Submit Documents Modal -->
-<div class="modal fade" id="submitDocsModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Submit the following tax documents:</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="submitDocsModal" tabindex="-1" aria-labelledby="submitDocsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-lg border-0 rounded-4">
+      
+      <div class="modal-header border-0">
+        <h4 class="modal-title fw-bold" id="submitDocsModalLabel">Submit Tax Documents</h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body">
-        <%= form_with model: @tax_submission, local: true, html: { multipart: true } do |f| %>
-          <div class="mb-3">
-            <%= f.label :company_name, "Company Name", class: "form-label" %>
-            <%= f.text_field :company_name,
-                  class: "form-control",
-                  value: (current_user.company&.name || current_user.company_name),
-                  required: true %>
+
+      <div class="modal-body p-4 pt-0">
+        <%= form_with model: @tax_submission, url: tax_submissions_path, local: true, html: { multipart: true } do |f| %>
+          <div class="row g-3">
+
+            <div class="col-12">
+              <%= f.label :company_name, "Company Name", class: "form-label fw-semibold small text-muted" %>
+              <%= f.text_field :company_name,
+                    class: "form-control form-control-lg rounded-3",
+                    value: (current_user.company&.name || current_user.company_name),
+                    required: true %>
+            </div>
+
+            <div class="col-12">
+              <%= f.label :form_2307, "Form 2307", class: "form-label fw-semibold small text-muted" %>
+              <%= f.file_field :form_2307,
+                    class: "form-control form-control-lg rounded-3",
+                    required: true,
+                    accept: "image/*,application/pdf",
+                    id: "form_2307_input" %>
+              <small class="form-text text-muted">Only images (JPG, PNG) and PDFs are allowed.</small>
+              <ul id="form_2307_list" class="list-group mt-2"></ul>
+            </div>
+
+            <div class="col-12">
+              <%= f.label :deposit_slip, "Deposit Slip or Bank Transfer Details", class: "form-label fw-semibold small text-muted" %>
+              <%= f.file_field :deposit_slip,
+                    multiple: true,
+                    class: "form-control form-control-lg rounded-3",
+                    required: true,
+                    accept: "image/*,application/pdf",
+                    id: "deposit_slip_input" %>
+              <small class="form-text text-muted">You can upload multiple images or PDFs.</small>
+              <ul id="deposit_slip_list" class="list-group mt-2"></ul>
+            </div>
+
+            <div class="col-12">
+              <%= f.label :details, "Additional Notes", class: "form-label fw-semibold small text-muted" %>
+              <%= f.text_area :details, class: "form-control form-control-lg rounded-3", rows: 4 %>
+            </div>
+
           </div>
 
-          <div class="mb-3">
-            <%= f.label :form_2307, "Form 2307", class: "form-label" %>
-            <%= f.file_field :form_2307, class: "form-control", required: true,
-                  accept: "image/*,application/pdf", id: "form_2307_input" %>
-            <small class="form-text text-muted">Only images (JPG, PNG) and PDFs are allowed.</small>
-            <ul id="form_2307_list" class="list-group mt-2"></ul>
-          </div>
-
-          <div class="mb-3">
-            <%= f.label :deposit_slip, "Deposit Slip or Bank Transfer Details", class: "form-label" %>
-            <%= f.file_field :deposit_slip, multiple: true, class: "form-control", required: true,
-                  accept: "image/*,application/pdf", id: "deposit_slip_input" %>
-            <small class="form-text text-muted">You can upload multiple images or PDFs.</small>
-            <ul id="deposit_slip_list" class="list-group mt-2"></ul>
-          </div>
-
-          <div class="mb-3">
-            <%= f.label :details, "Additional Notes", class: "form-label" %>
-            <%= f.text_area :details, class: "form-control", rows: 4 %>
-          </div>
-
-          <div class="d-flex justify-content-end gap-2">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <%= f.submit "Submit", class: "btn btn-primary" %>
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button type="button" class="btn btn-light border rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
+            <%= f.submit "Submit", class: "btn btn-primary rounded-3 px-4 fw-semibold" %>
           </div>
         <% end %>
       </div>
     </div>
   </div>
 </div>
+

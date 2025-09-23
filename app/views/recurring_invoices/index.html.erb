@@ -1,30 +1,26 @@
 <% content_for :page_title, "Recurring Line Items" %>
 <div class="container py-2 py-md-5">
 
+  <!-- Tabs -->
+  <ul class="custom_nav_tabs nav nav-tabs mb-3 w-100 d-flex align-items-center">
+    <li class="nav-item">
+      <a class="nav-link active" data-bs-toggle="tab" href="#active">Active</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-bs-toggle="tab" href="#disabled">Disabled</a>
+    </li>
+  </ul>
+
   <div class="card">
     <div class="card-body p-3">
-      
-      <!-- Tabs -->
-      <ul class="nav nav-tabs" id="recurringTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab">
-            Active
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="disabled-tab" data-bs-toggle="tab" data-bs-target="#disabled" type="button" role="tab">
-            Disabled
-          </button>
-        </li>
-      </ul>
 
       <!-- Tab Content -->
       <div class="tab-content mt-3" id="recurringTabsContent">
 
         <!-- Active Recurring Table -->
         <div class="tab-pane fade show active" id="active" role="tabpanel" aria-labelledby="active-tab">
-          <table id="recurring-items-table" class="table table-hover table-striped table-bordered align-middle nowrap w-100">
-            <thead>
+          <table id="recurring-items-table" class="table table-hover table_text_centered align-middle nowrap w-100">
+            <thead class="table-light">
               <tr>
                 <th>Invoice #</th>
                 <th>Description</th>
@@ -106,8 +102,8 @@
 
         <!-- Disabled Recurring Table -->
         <div class="tab-pane fade" id="disabled" role="tabpanel" aria-labelledby="disabled-tab">
-          <table id="disabled-recurring-items-table" class="table table-hover table-striped table-bordered align-middle nowrap w-100">
-            <thead>
+          <table id="disabled-recurring-items-table" class="table table-hover table_text_centered align-middle nowrap w-100">
+            <thead class="table-light">
               <tr>
                 <th>Invoice #</th>
                 <th>Description</th>
@@ -171,56 +167,62 @@
     </div>
   </div>
 
-    <!-- Edit Recurring Item Modal -->
-    <div class="modal fade" id="editRecurringModal" tabindex="-1" aria-labelledby="editRecurringModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="editRecurringModalLabel">Edit Recurring Item</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="editRecurringForm">
-                        <input type="hidden" name="invoice_id" id="invoice_id">
-                        <input type="hidden" name="line_index" id="line_index">
-
-                        <div class="mb-2">
-                            <label>Recurring</label>
-                            <select name="mode" id="mode" class="form-select">
-                            <option value="yes">Yes</option>
-                            <option value="no">No</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-2">
-                            <label>Interval</label>
-                            <select name="interval" id="interval" class="form-select">
-                            <option value="daily">Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                            <option value="yearly">Yearly</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-2">
-                            <label>Every (day)</label>
-                            <input type="number" name="every" id="every" class="form-control">
-                        </div>
-
-                        <div class="mb-2">
-                            <label>Start Date</label>
-                            <input type="date" name="start_date" id="start_date" class="form-control">
-                        </div>
-
-                        <div class="mb-2">
-                            <label>End Date</label>
-                            <input type="date" name="end_date" id="end_date" class="form-control">
-                        </div>
-
-                        <button type="submit" class="btn btn-primary">Save</button>
-                    </form>
-                </div>
-            </div>
+  <!-- Edit Recurring Item Modal -->
+  <div class="modal fade" id="editRecurringModal" tabindex="-1" aria-labelledby="editRecurringModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content shadow-lg border-0 rounded-4">
+        <div class="modal-header border-0">
+          <h4 class="modal-title fw-bold" id="editRecurringModalLabel">Edit Recurring Item</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
+
+        <div class="modal-body p-4 pt-0 pb-2">
+          <form id="editRecurringForm">
+            <input type="hidden" name="invoice_id" id="invoice_id">
+            <input type="hidden" name="line_index" id="line_index">
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label for="mode" class="form-label fw-semibold small text-muted">Recurring</label>
+                <select name="mode" id="mode" class="form-select form-select-lg rounded-3">
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label for="interval" class="form-label fw-semibold small text-muted">Interval</label>
+                <select name="interval" id="interval" class="form-select form-select-lg rounded-3">
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label for="every" class="form-label fw-semibold small text-muted">Every (day)</label>
+                <input type="number" name="every" id="every" class="form-control form-control-lg rounded-3">
+              </div>
+
+              <div class="col-md-6">
+                <label for="start_date" class="form-label fw-semibold small text-muted">Start Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control form-control-lg rounded-3">
+              </div>
+
+              <div class="col-md-6">
+                <label for="end_date" class="form-label fw-semibold small text-muted">End Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control form-control-lg rounded-3">
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="modal-footer border-0 d-flex justify-content-end gap-2 p-3">
+          <button type="button" class="btn btn-light border rounded-3 px-4" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" form="editRecurringForm" class="btn btn-primary rounded-3 px-4 fw-semibold">Save</button>
+        </div>
+      </div>
     </div>
+  </div>
 </div>

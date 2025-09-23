@@ -253,7 +253,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 .global-wrapper main header h2,
 .global-wrapper #main header h2 {
   position: absolute;
-  bottom: 0;
+  top: 15px;
   color: white;
   font-size: 34px;
   left: 35px;

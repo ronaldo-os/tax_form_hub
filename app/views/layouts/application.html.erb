@@ -41,7 +41,7 @@
         <%= image_tag(
                     current_user.profile_image.attached? ? url_for(current_user.profile_image) : asset_path("user_avatar_default.png"),
                     class: "rounded-circle",
-                    style: "width: 50px; height: 50px; object-fit: cover; margin-top: 20px; margin-bottom: 20px;"
+                    style: "width: 50px; height: 50px; object-fit: cover; margin-top: 10px; margin-bottom: 20px;"
                   ) %>
         <!-- top nav -->
         <ul>
