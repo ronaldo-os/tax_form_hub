@@ -30,7 +30,9 @@
             <tr>
               <td><%= location.location_type %></td>
               <td><%= location.location_name %></td>
-              <td><%= location.country %></td>
+              <td>
+                <%= [location.street, location.building, location.additional_street, location.city].compact.join(', ') %>
+              </td>
               <td><%= location.company_name %></td>
               <td>
                 <div class="dropdown text-center">

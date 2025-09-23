@@ -142,18 +142,23 @@
           <% unless action_name == "edit" %>
             <% unless params[:template_id].present? %>
               <tr class="line-item" data-line-index="0">
-                <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-                <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id" required></td>
-                <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description" required></td>
-                <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1" required></td>
-                <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs" required></td>
-                <td><input type="number" name="invoice[line_items_attributes][0][price]" class="form-control price" step="0.01" required></td>
-                <td><input type="number" name="invoice[line_items_attributes][0][tax]" class="form-control tax" step="0.01" required></td>
-                <td class="text-end total">0.00</td>
                 <td>
-                  <input type="hidden" name="invoice[line_items_attributes][0][total]" value="0.00">
-                  <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
+                  <button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button>
                 </td>
+
+                <%= f.fields_for :line_items, @invoice.line_items.build, child_index: 0 do |li| %>
+                  <td><%= li.text_field :item_id, class: "form-control item-id", required: true %></td>
+                  <td><%= li.text_field :description, class: "form-control description", required: true %></td>
+                  <td><%= li.number_field :quantity, class: "form-control quantity", value: 1, required: true %></td>
+                  <td><%= li.text_field :unit, class: "form-control unit", value: "pcs", required: true %></td>
+                  <td><%= li.number_field :price, class: "form-control price", step: 0.01, required: true %></td>
+                  <td><%= li.number_field :tax, class: "form-control tax", step: 0.01, required: true %></td>
+                  <td class="text-end total">0.00</td>
+                  <td>
+                    <%= li.hidden_field :total, value: "0.00" %>
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
+                  </td>
+                <% end %>
               </tr>
 
               <tr class="dropdown_per_line hidden" data-line-index="0">

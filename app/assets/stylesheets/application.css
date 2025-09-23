@@ -1,3 +1,8 @@
+:root {
+  --main-color: #00aeff;
+  --active-color: #20b9ff;
+}
+
 html {
   height: 100%;
 }
@@ -31,7 +36,7 @@ body {
 
 .card{
     border-radius: 2px;
-    border-color: #00000011;
+    border-color: #ffffff00;
 }
 .custom_nav_tabs {
     border-radius: 0px;
@@ -51,8 +56,8 @@ body {
 
 .custom_nav_tabs.nav-tabs .nav-link.active,
 .custom_nav_tabs.nav-tabs .nav-link.active:hover {
-  color: #0d6efd;
-  border-color: transparent transparent #0d6efd transparent;
+  color: var(--main-color);
+  border-color: transparent transparent var(--main-color) transparent;
   background-color: transparent;
 }
 
@@ -112,6 +117,9 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 .mb-10 {
   margin-bottom: 5rem !important;
 }
+
+
+/* Global Side nav + Main Content Layout */
 
 .global-wrapper {
   position: relative;
@@ -297,4 +305,61 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
   float: right;
   width: calc(100% - 68px);
   margin-left: 68px;
+}
+
+
+/* Buttons */
+.btn{
+  border-radius: 5px !important;
+}
+.btn-primary{
+  background-color: #00aeff !important;
+  border-color: #00aeff !important;
+}
+.btn-primary:hover{
+  background-color: #20b9ff !important;
+  border-color: #20b9ff !important;
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--main-color);
+  --bs-btn-border-color: var(--main-color);
+  --bs-btn-hover-bg: var(--main-color);
+  --bs-btn-hover-border-color: var(--main-color);
+  --bs-btn-active-bg: var(--main-color);
+  --bs-btn-active-border-color: var(--main-color);
+  --bs-btn-disabled-color: var(--main-color);
+  --bs-btn-disabled-border-color: var(--main-color);
+}
+
+/* Inputs */
+input, select, textarea {
+  border-radius: 3px !important;
+  border: 1px solid #d1d1d1 !important;
+}
+
+/* DataTables */
+.dataTables_wrapper .row{
+  margin-bottom: 10px;
+}
+.table-light {
+  --bs-table-bg: #ffffff;
+  --bs-table-border-color: #ffffff;
+}
+.pagination {
+  --bs-pagination-active-bg: var(--main-color);
+  --bs-pagination-active-border-color: var(--main-color);
+}
+
+/* Modals */
+.modal-content {
+  border-radius: 5px;
+  border-color: transparent !important;
+}
+.modal-backdrop {
+    --bs-backdrop-bg: #000000a1;
+}
+
+/* Borders */
+.border-none{
+  border: none !important;
 }
