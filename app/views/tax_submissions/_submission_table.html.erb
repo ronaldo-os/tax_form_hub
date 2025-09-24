@@ -15,7 +15,14 @@
     <tbody>
       <% submissions.each do |submission| %>
         <tr>
-          <td><%= link_to submission.id, tax_submission_path(submission), class: "text-decoration-none" %></td>
+          <td>
+            <%= link_to submission.id,
+                        tax_submission_path(submission, format: :js),
+                        remote: true,
+                        class: "text-decoration-none",
+                        data: { bs_toggle: "modal", bs_target: "#submissionModal" } %>
+          </td>
+
           <td><%= truncate(submission.details, length: 50) %></td>
 
           <!-- Form 2307 -->
@@ -115,13 +122,16 @@
 
               <ul class="dropdown-menu" aria-labelledby="actionsDropdown_<%= submission.id %>">
                 <li>
-                  <%= form_with model: submission, url: update_tax_submission_path(submission),
-                                method: :patch, local: true do |f| %>
+                  <%= form_with model: submission,
+                                url: tax_submission_path(submission),
+                                method: :patch,
+                                local: true do |f| %>
                     <%= f.hidden_field :archived, value: archived_table ? false : true %>
                     <%= f.submit(archived_table ? "Unarchive" : "Archive",
                                 class: "dropdown-item border-none",
                                 data: { confirm: "Are you sure?" }) %>
                   <% end %>
+
                 </li>
                 <% unless submission.processed? || submission.reviewed? %>
                   <li><%= link_to "Delete", tax_submission_path(submission), method: :delete,

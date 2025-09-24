@@ -15,15 +15,19 @@ Rails.application.routes.draw do
     put   'profile/edit' => 'users/registrations#update'
   end
 
-  root "pages#home"
+  root "tax_submissions#home"
+  get "tax_submissions/home"
 
-  get "pages/home"
+  resources :tax_submissions, only: [:new, :create, :show, :destroy, :update]
 
   namespace :admin do
     resources :tax_submissions, only: [:index, :show, :update]
   end
 
-  resources :tax_submissions, only: [:new, :create, :show, :destroy]
+  namespace :admin do
+    resources :tax_submissions, only: [:index, :show, :update]
+  end
+
   resources :invoices, only: [:index, :show, :new, :create, :destroy]
 
   resources :invoices do
@@ -55,11 +59,6 @@ Rails.application.routes.draw do
       patch :disable
     end
   end
-
-
-
-
-  patch '/tax_submissions/:id', to: 'pages#update', as: 'update_tax_submission'
 
   # Optional: health check + PWA
   get "up" => "rails/health#show", as: :rails_health_check

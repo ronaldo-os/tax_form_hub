@@ -45,25 +45,28 @@
                   ) %>
         <!-- top nav -->
         <ul>
-          <li class="active">
+          <li class="<%= 'active' if request.path == root_path %>">
             <%= link_to root_path, class: "nav-item" do %>
               <i class="fa-solid fa-file-invoice-dollar"></i>
               <span>Tax Form Hub</span>
             <% end %>
           </li>
-          <li>
+
+          <li class="<%= 'active' if request.path.starts_with?(invoices_path) %>">
             <%= link_to invoices_path, class: "nav-item" do %>
               <i class="fa-solid fa-file-invoice"></i>
               <span>Invoices</span>
             <% end %>
           </li>
-          <li>
+
+          <li class="<%= 'active' if request.path.starts_with?(locations_path) %>">
             <%= link_to locations_path, class: "nav-item" do %>
               <i class="fa-solid fa-location-dot"></i>
               <span>Locations</span>
             <% end %>
           </li>
-          <li>
+
+          <li class="<%= 'active' if request.path.starts_with?(recurring_invoices_path) %>">
             <%= link_to recurring_invoices_path, class: "nav-item" do %>
               <i class="fa-solid fa-arrows-rotate"></i>
               <span>Recurring Line Items</span>
@@ -73,14 +76,14 @@
 
         <!-- bottom nav -->
         <ul>
-          <li>
+          <li class="<%= 'active' if request.path.starts_with?(edit_profile_path) %>">
             <%= link_to edit_profile_path, class: "nav-item" do %>
               <i class="fa-solid fa-user-gear"></i>
               <span>User Profile</span>
             <% end %>
           </li>
 
-          <li>
+          <li class="<%= 'active' if request.path.starts_with?(companies_path) %>">
             <%= link_to companies_path, class: "nav-item" do %>
               <i class="fa-solid fa-building"></i>
               <span>Company Profile</span>
@@ -97,6 +100,7 @@
             <% end %>
           </li>
         </ul>
+
 
       </aside>
 
