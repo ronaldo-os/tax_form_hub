@@ -15,117 +15,147 @@
       </thead>
       <tbody>
         <% submissions.each do |submission| %>
-            <tr>
-              <td>
-                <%= link_to submission.id, admin_tax_submission_path(submission), class: "text-decoration-none" %>
-              </td>
-              <td><%= submission.email.presence || "N/A" %></td>
-              <td><%= truncate(submission.details, length: 50) %></td>
-              <td>
-                <% if submission.form_2307.attached? %>
-                  <%= link_to "View Image", rails_blob_path(submission.form_2307, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
-                <% else %>
-                  <span class="text-muted">None</span>
-                <% end %>
-              </td>
-              <td>
-                <% if submission.deposit_slip.attached? %>
-                  <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#depositModal-<%= submission.id %>">
-                    View Files
-                  </button>
-                <% else %>
-                  <span class="text-muted">None</span>
-                <% end %>
-                <% if submission.deposit_slip.attached? %>
-                  <div class="modal fade" id="depositModal-<%= submission.id %>" tabindex="-1" aria-labelledby="depositModalLabel-<%= submission.id %>" aria-hidden="true">
-                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                      <div class="modal-content">
-                        <div class="modal-header">
-                          <h5 class="modal-title" id="depositModalLabel-<%= submission.id %>">Deposit Slips</h5>
-                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                          <div class="row">
-                            <% submission.deposit_slip.each do |file| %>
-                              <div class="col-md-6 mb-3">
-                                <% if file.content_type.start_with?("image/") %>
-                                  <%= link_to url_for(file), target: "_blank" do %>
-                                    <img src="<%= url_for(file) %>" class="img-fluid rounded border" alt="Deposit Slip">
-                                  <% end %>
-                                <% else %>
-                                  <div class="d-flex align-items-center justify-content-between border p-2 rounded">
-                                    <span><%= file.filename.to_s %></span>
-                                    <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
-                                  </div>
+          <tr>
+            <!-- ID -->
+            <td>
+              <%= link_to submission.id,
+                  admin_tax_submission_path(submission, format: :js),
+                  remote: true,
+                  class: "text-decoration-none",
+                  data: { bs_toggle: "modal", bs_target: "#submissionModal" } %>
+            </td>
+
+            <td><%= submission.email.presence || "N/A" %></td>
+            <td><%= truncate(submission.details, length: 50) %></td>
+
+            <!-- Form 2307 -->
+            <td>
+              <% if submission.form_2307.attached? %>
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                        data-bs-toggle="modal" data-bs-target="#form2307Modal-<%= submission.id %>">
+                  View Form 2307
+                </button>
+
+                <!-- Form 2307 Modal -->
+                <div class="modal fade" id="form2307Modal-<%= submission.id %>" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Form 2307</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body d-flex justify-content-center">
+                        <% if submission.form_2307.content_type.start_with?("image/") %>
+                          <%= image_tag submission.form_2307, class: "img-fluid rounded border", alt: "Form 2307" %>
+                        <% else %>
+                          <%= link_to "View PDF", rails_blob_path(submission.form_2307, disposition: "inline"),
+                                target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
+                        <% end %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% else %>
+                <span class="text-muted">None</span>
+              <% end %>
+            </td>
+
+            <!-- Deposit Slips -->
+            <td>
+              <% if submission.deposit_slip.attached? %>
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                        data-bs-toggle="modal" data-bs-target="#depositModal-<%= submission.id %>">
+                  View Deposit Slips
+                </button>
+
+                <!-- Deposit Slips Modal -->
+                <div class="modal fade" id="depositModal-<%= submission.id %>" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Deposit Slips</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row justify-content-center">
+                          <% submission.deposit_slip.each do |file| %>
+                            <div class="col-md-6 mb-3 d-flex justify-content-center">
+                              <% if file.content_type.start_with?("image/") %>
+                                <%= link_to url_for(file), target: "_blank" do %>
+                                  <%= image_tag file, class: "img-fluid rounded border", alt: "Deposit Slip" %>
                                 <% end %>
-                              </div>
-                            <% end %>
-                          </div>
+                              <% else %>
+                                <div class="d-flex flex-column align-items-center border p-2 rounded text-center">
+                                  <span><%= file.filename.to_s %></span>
+                                  <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"),
+                                        target: "_blank", class: "btn btn-sm btn-outline-secondary mt-2" %>
+                                </div>
+                              <% end %>
+                            </div>
+                          <% end %>
                         </div>
                       </div>
                     </div>
                   </div>
-                <% end %>
-              </td>
-              <td>
-                <% if submission.reviewed? && submission.processed? %>
-                  <span class="badge bg-success">Processed & Reviewed</span>
-                <% elsif submission.reviewed? %>
-                  <span class="badge bg-info">Reviewed</span>
-                <% elsif submission.processed? %>
-                  <span class="badge bg-warning text-dark">Processed</span>
-                <% else %>
-                  <span class="badge bg-secondary">Pending</span>
-                <% end %>
-              </td>
-              <td><%= submission.created_at.strftime("%B %d, %Y %I:%M %p") %></td>
-              <td style="min-width: 150px; position: relative;">
-                <div class="dropdown text-center">
-                    <button class="btn btn-link text-dark btn-lg p-0 text-decoration-none" type="button" id="statusDropdown_<%= submission.id %>" data-bs-toggle="dropdown" aria-expanded="false">
-                    &#8942;
-                    </button>
-                    <ul class="dropdown-menu text-center" aria-labelledby="statusDropdown_<%= submission.id %>">
-                    
-                        <% unless archived_table %>
-                            <!-- Reviewed button -->
-                            <li>
-                            <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
-                                <%= f.hidden_field :reviewed, value: submission.reviewed? ? 0 : 1 %>
-                                <%= f.submit submission.reviewed? ? "Unmark Reviewed" : "Mark as Reviewed", class: "dropdown-item" %>
-                            <% end %>
-                            </li>
-
-                            <!-- Processed button -->
-                            <li>
-                            <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
-                                <%= f.hidden_field :processed, value: submission.processed? ? 0 : 1 %>
-                                <%= f.submit submission.processed? ? "Unmark Processed" : "Mark as Processed", class: "dropdown-item" %>
-                            <% end %>
-                            </li>
-
-                            <!-- Archive button -->
-                            <li>
-                            <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
-                                <%= f.hidden_field :archived, value: true %>
-                                <%= f.submit "Archive", class: "dropdown-item text-danger" %>
-                            <% end %>
-                            </li>
-                        <% else %>
-                            <!-- Unarchive button -->
-                            <li>
-                            <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
-                                <%= f.hidden_field :archived, value: false %>
-                                <%= f.submit "Unarchive", class: "dropdown-item" %>
-                            <% end %>
-                            </li>
-                        <% end %>
-
-                    </ul>
                 </div>
-                </td>
+              <% else %>
+                <span class="text-muted">None</span>
+              <% end %>
+            </td>
 
+            <!-- Status -->
+            <td>
+              <% if submission.reviewed? && submission.processed? %>
+                <span class="badge bg-success">Processed & Reviewed</span>
+              <% elsif submission.reviewed? %>
+                <span class="badge bg-info">Reviewed</span>
+              <% elsif submission.processed? %>
+                <span class="badge bg-warning text-dark">Processed</span>
+              <% else %>
+                <span class="badge bg-secondary">Pending</span>
+              <% end %>
+            </td>
 
-            </tr>
+            <td><%= submission.created_at.strftime("%B %d, %Y %I:%M %p") %></td>
+
+            <!-- Actions Dropdown (unchanged) -->
+            <td style="min-width: 150px; position: relative;">
+              <div class="dropdown text-center">
+                <button class="btn btn-link text-dark btn-lg p-0 text-decoration-none" type="button" id="statusDropdown_<%= submission.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                  &#8942;
+                </button>
+                <ul class="dropdown-menu text-center" aria-labelledby="statusDropdown_<%= submission.id %>">
+                  <% unless archived_table %>
+                    <li>
+                      <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
+                        <%= f.hidden_field :reviewed, value: submission.reviewed? ? 0 : 1 %>
+                        <%= f.submit submission.reviewed? ? "Unmark Reviewed" : "Mark as Reviewed", class: "border-none dropdown-item" %>
+                      <% end %>
+                    </li>
+                    <li>
+                      <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
+                        <%= f.hidden_field :processed, value: submission.processed? ? 0 : 1 %>
+                        <%= f.submit submission.processed? ? "Unmark Processed" : "Mark as Processed", class: "border-none dropdown-item" %>
+                      <% end %>
+                    </li>
+                    <li>
+                      <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
+                        <%= f.hidden_field :archived, value: true %>
+                        <%= f.submit "Archive", class: "dropdown-item border-none text-danger" %>
+                      <% end %>
+                    </li>
+                  <% else %>
+                    <li>
+                      <%= form_with model: submission, url: admin_tax_submission_path(submission), method: :patch, local: true do |f| %>
+                        <%= f.hidden_field :archived, value: false %>
+                        <%= f.submit "Unarchive", class: "dropdown-item border-none" %>
+                      <% end %>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            </td>
+          </tr>
         <% end %>
       </tbody>
     </table>

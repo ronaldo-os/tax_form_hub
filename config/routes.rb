@@ -24,10 +24,6 @@ Rails.application.routes.draw do
     resources :tax_submissions, only: [:index, :show, :update]
   end
 
-  namespace :admin do
-    resources :tax_submissions, only: [:index, :show, :update]
-  end
-
   resources :invoices, only: [:index, :show, :new, :create, :destroy]
 
   resources :invoices do

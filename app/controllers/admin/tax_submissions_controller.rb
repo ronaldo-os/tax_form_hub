@@ -14,7 +14,11 @@ class Admin::TaxSubmissionsController < ApplicationController
   end
 
   def show
-    # @tax_submission is already set by before_action
+    @tax_submission = TaxSubmission.find(params[:id])
+    respond_to do |format|
+      format.html
+      format.js
+    end
   end
 
   def update
