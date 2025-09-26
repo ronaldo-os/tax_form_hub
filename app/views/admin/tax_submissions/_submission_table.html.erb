@@ -19,10 +19,12 @@
             <!-- ID -->
             <td>
               <%= link_to submission.id,
-                  admin_tax_submission_path(submission, format: :js),
-                  remote: true,
-                  class: "text-decoration-none",
-                  data: { bs_toggle: "modal", bs_target: "#submissionModal" } %>
+    admin_tax_submission_path(submission, format: :js),
+    remote: true,
+    data: { turbo: false, bs_toggle: "modal", bs_target: "#submissionModal" },
+    class: "text-decoration-none" %>
+
+
             </td>
 
             <td><%= submission.email.presence || "N/A" %></td>

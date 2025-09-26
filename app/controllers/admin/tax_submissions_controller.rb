@@ -3,6 +3,7 @@ class Admin::TaxSubmissionsController < ApplicationController
   before_action :authorize_superadmin!
   before_action :set_tax_submission, only: [:show, :update]
 
+
   def index
     @unarchived_submissions = TaxSubmission.where(archived: [false, nil]).order(created_at: :desc)
     @archived_submissions = TaxSubmission.where(archived: true).order(created_at: :desc)
@@ -15,9 +16,10 @@ class Admin::TaxSubmissionsController < ApplicationController
 
   def show
     @tax_submission = TaxSubmission.find(params[:id])
+
     respond_to do |format|
-      format.html
       format.js
+      format.html
     end
   end
 
@@ -62,10 +64,15 @@ class Admin::TaxSubmissionsController < ApplicationController
 
   def set_tax_submission
     @tax_submission = TaxSubmission.find_by(id: params[:id])
+
     unless @tax_submission
-      redirect_to admin_tax_submissions_path, alert: "Submission not found."
+      respond_to do |format|
+        format.html { redirect_to admin_tax_submissions_path, alert: "Submission not found." }
+        format.js   { render js: "alert('Submission not found.');" }
+      end
     end
   end
+
 
   def tax_submission_params
     params.require(:tax_submission).permit(:reviewed, :processed, :archived)

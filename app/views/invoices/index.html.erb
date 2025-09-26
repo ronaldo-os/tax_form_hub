@@ -1,47 +1,64 @@
 <% content_for :page_title, "Invoices" %>
 
 <div class="container py-2 py-md-5">
-  <div class="d-flex justify-content-between align-items-end mb-3">
-    <%= link_to 'Create Invoice', new_invoice_path, class: 'btn btn-primary' %>
+  <div class="d-flex align-items-center mb-3">
+    <!-- Tab Navigation -->
+    <ul class="custom_nav_tabs nav nav-tabs border-0" id="submissionTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab" aria-controls="sales" aria-selected="true">
+          Active Submissions
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases" type="button" role="tab" aria-controls="purchases" aria-selected="false">
+          Archived Submissions
+        </button>
+      </li>
+    </ul>
+
+    <!-- Create Invoice button aligned right -->
+    <%= link_to 'Create Invoice', new_invoice_path, class: 'btn btn-primary ms-auto' %>
   </div>
 
-  <div class="card">
-    <div class="card-body p-3">
-      <!-- Tab Navigation -->
-      <ul class="nav nav-tabs mb-4" id="invoiceTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab">
-            Sales
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases" type="button" role="tab">
-            Purchases
-          </button>
-        </li>
-      </ul>
+  <!-- Tab Content -->
+  <div class="tab-content" id="invoiceTabsContent">
 
-      <!-- Tab Content -->
-      <div class="tab-content" id="invoiceTabsContent">
-        <!-- Sales -->
-        <div class="tab-pane fade show active" id="sales" role="tabpanel">
+    <!-- Sales -->
+    <div class="tab-pane fade show active" id="sales" role="tabpanel" aria-labelledby="sales-tab">
+      <div class="card mb-4">
+        <div class="card-body p-3">
           <h5>Active Sales</h5>
-          <%= render partial: 'invoices/partials/index_invoice_table', locals: { invoices: @invoices_sale, table_id: 'sales-table' } %>
-
-          <h5 class="mt-4">Archived Sales</h5>
-          <%= render partial: 'invoices/partials/index_invoice_table', locals: { invoices: @invoices_sale_archived, table_id: 'sales-archived-table' } %>
-        </div>
-
-        <!-- Purchases -->
-        <div class="tab-pane fade" id="purchases" role="tabpanel">
-          <h5>Active Purchases</h5>
-          <%= render partial: 'invoices/partials/index_invoice_table', locals: { invoices: @invoices_purchase, table_id: 'purchases-table' } %>
-
-          <h5 class="mt-4">Archived Purchases</h5>
-          <%= render partial: 'invoices/partials/index_invoice_table', locals: { invoices: @invoices_purchase_archived, table_id: 'purchases-archived-table' } %>
+          <%= render partial: 'invoices/partials/index_invoice_table',
+                     locals: { invoices: @invoices_sale, table_id: 'sales-table' } %>
         </div>
       </div>
-
+      <div class="card">
+        <div class="card-body p-3">
+          <h5 class="mt-4">Archived Sales</h5>
+          <%= render partial: 'invoices/partials/index_invoice_table',
+                     locals: { invoices: @invoices_sale_archived, table_id: 'sales-archived-table' } %>
+        </div>
+      </div>
     </div>
+
+    <!-- Purchases -->
+    <div class="tab-pane fade" id="purchases" role="tabpanel" aria-labelledby="purchases-tab">
+      <div class="card mb-4">
+        <div class="card-body p-3">
+          <h5>Active Purchases</h5>
+          <%= render partial: 'invoices/partials/index_invoice_table',
+                     locals: { invoices: @invoices_purchase, table_id: 'purchases-table' } %>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body p-3">
+
+          <h5 class="mt-4">Archived Purchases</h5>
+          <%= render partial: 'invoices/partials/index_invoice_table',
+                     locals: { invoices: @invoices_purchase_archived, table_id: 'purchases-archived-table' } %>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>

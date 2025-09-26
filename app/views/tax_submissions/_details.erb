@@ -1,117 +1,84 @@
-<div class="d-flex justify-content-center align-items-center mt-5">
-  <div class="container" style="max-width: 1200px;">
-    <h1 class="display-5">Tax Submission Details</h1>
-    <div class="card mb-5">
-      <div class="card-body p-2 p-md-5">
-        <dl class="row">
-        <dt class="col-sm-3">Submission ID</dt>
-        <dd class="col-sm-9"><%= @tax_submission.id %></dd>
 
-        <dt class="col-sm-3">Status</dt>
-        <dd class="col-sm-9">
-            <% if @tax_submission.reviewed? && @tax_submission.processed? %>
-            <span class="badge bg-success">Processed &amp; Reviewed</span>
-            <% elsif @tax_submission.reviewed? %>
-            <span class="badge bg-info">Reviewed</span>
-            <% elsif @tax_submission.processed? %>
-            <span class="badge bg-warning text-dark">Processed</span>
+<dl class="row">
+  <dt class="col-sm-3">Submission ID</dt>
+  <dd class="col-sm-9"><%= @tax_submission.id %></dd>
+
+  <dt class="col-sm-3">Status</dt>
+  <dd class="col-sm-9">
+      <% if @tax_submission.reviewed? && @tax_submission.processed? %>
+      <span class="badge bg-success">Processed &amp; Reviewed</span>
+      <% elsif @tax_submission.reviewed? %>
+      <span class="badge bg-info">Reviewed</span>
+      <% elsif @tax_submission.processed? %>
+      <span class="badge bg-warning text-dark">Processed</span>
+      <% else %>
+      <span class="badge bg-secondary">Pending</span>
+      <% end %>
+  </dd>
+
+  <dt class="col-sm-3">Details</dt>
+  <dd class="col-sm-9"><%= simple_format(@tax_submission.details) %></dd>
+</dl>
+
+<div class="row mb-4">
+  <!-- Form 2307 -->
+  <div class="col-md-6 d-flex mb-3 mb-md-0">
+    <div class="border p-3 rounded bg-light text-center w-100 h-100 d-flex flex-column">
+      <h5>Form 2307</h5>
+      <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+        <% if @tax_submission.form_2307.attached? %>
+          <% if @tax_submission.form_2307.content_type == "application/pdf" %>
+            <iframe src="<%= url_for(@tax_submission.form_2307) %>" width="100%" height="250px" class="rounded border"></iframe>
+          <% else %>
+            <a href="#" class="zoom-link" data-img-url="<%= url_for(@tax_submission.form_2307) %>">
+              <%= image_tag url_for(@tax_submission.form_2307), class: "img-fluid", style: "max-height: 250px;" %>
+            </a>
+          <% end %>
+        <% else %>
+          <p class="text-muted fst-italic">No attachment</p>
+        <% end %>
+      </div>
+      <% if @tax_submission.form_2307.attached? && @tax_submission.form_2307.content_type == "application/pdf" %>
+        <%= link_to "Open PDF in New Tab", url_for(@tax_submission.form_2307), target: "_blank", class: "btn btn-sm btn-outline-primary mt-2" %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Deposit Slips -->
+  <div class="col-md-6 d-flex">
+    <div class="border p-3 rounded bg-light text-center w-100 h-100 d-flex flex-column">
+      <h5>Deposit Slip<%= 's' if @tax_submission.deposit_slip.count > 1 %></h5>
+      <div class="flex-grow-1 w-100">
+        <% if @tax_submission.deposit_slip.attached? %>
+          <% if @tax_submission.deposit_slip.count == 1 %>
+            <% file = @tax_submission.deposit_slip.first %>
+            <% if file.content_type == "application/pdf" %>
+              <iframe src="<%= url_for(file) %>" width="100%" height="250px" class="rounded border"></iframe>
+              <%= link_to "Open PDF in New Tab", url_for(file), target: "_blank", class: "btn btn-sm btn-outline-primary mt-2" %>
             <% else %>
-            <span class="badge bg-secondary">Pending</span>
-            <% end %>
-        </dd>
-
-        <dt class="col-sm-3">Details</dt>
-        <dd class="col-sm-9"><%= simple_format(@tax_submission.details) %></dd>
-      </dl>
-
-      <div class="row mb-4">
-        <!-- Form 2307 -->
-        <div class="col-md-6 d-flex mb-3 mb-md-0">
-          <div class="border p-3 rounded bg-light text-center w-100 h-100 d-flex flex-column">
-            <h5>Form 2307</h5>
-            <div class="flex-grow-1 d-flex align-items-center justify-content-center">
-              <% if @tax_submission.form_2307.attached? %>
-                <% if @tax_submission.form_2307.content_type == "application/pdf" %>
-                  <iframe src="<%= url_for(@tax_submission.form_2307) %>" width="100%" height="250px" class="rounded border"></iframe>
-                <% else %>
-                  <a href="#" class="zoom-link" data-img-url="<%= url_for(@tax_submission.form_2307) %>">
-                    <%= image_tag url_for(@tax_submission.form_2307), class: "img-fluid", style: "max-height: 250px;" %>
-                  </a>
-                <% end %>
-              <% else %>
-                <p class="text-muted fst-italic">No attachment</p>
+              <%= link_to url_for(file), target: "_blank", class: "d-block" do %>
+                <%= image_tag url_for(file), class: "img-fluid rounded border", style: "max-height: 250px; object-fit: contain;" %>
               <% end %>
-            </div>
-            <% if @tax_submission.form_2307.attached? && @tax_submission.form_2307.content_type == "application/pdf" %>
-              <%= link_to "Open PDF in New Tab", url_for(@tax_submission.form_2307), target: "_blank", class: "btn btn-sm btn-outline-primary mt-2" %>
             <% end %>
-          </div>
-        </div>
-
-        <!-- Deposit Slips -->
-        <div class="col-md-6 d-flex">
-          <div class="border p-3 rounded bg-light text-center w-100 h-100 d-flex flex-column">
-            <h5>Deposit Slip<%= 's' if @tax_submission.deposit_slip.count > 1 %></h5>
-            <div class="flex-grow-1 w-100">
-              <% if @tax_submission.deposit_slip.attached? %>
-                <% if @tax_submission.deposit_slip.count == 1 %>
-                  <% file = @tax_submission.deposit_slip.first %>
+          <% else %>
+            <div class="row">
+              <% @tax_submission.deposit_slip.each do |file| %>
+                <div class="col-md-6 mb-3 d-flex flex-column align-items-center">
                   <% if file.content_type == "application/pdf" %>
-                    <iframe src="<%= url_for(file) %>" width="100%" height="250px" class="rounded border"></iframe>
-                    <%= link_to "Open PDF in New Tab", url_for(file), target: "_blank", class: "btn btn-sm btn-outline-primary mt-2" %>
+                    <iframe src="<%= url_for(file) %>" width="100%" height="200px" class="rounded border mb-2"></iframe>
+                    <%= link_to "Open PDF in New Tab", url_for(file), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
                   <% else %>
                     <%= link_to url_for(file), target: "_blank", class: "d-block" do %>
-                      <%= image_tag url_for(file), class: "img-fluid rounded border", style: "max-height: 250px; object-fit: contain;" %>
+                      <%= image_tag url_for(file), class: "img-fluid rounded border", style: "max-height: 200px; object-fit: contain;" %>
                     <% end %>
                   <% end %>
-                <% else %>
-                  <div class="row">
-                    <% @tax_submission.deposit_slip.each do |file| %>
-                      <div class="col-md-6 mb-3 d-flex flex-column align-items-center">
-                        <% if file.content_type == "application/pdf" %>
-                          <iframe src="<%= url_for(file) %>" width="100%" height="200px" class="rounded border mb-2"></iframe>
-                          <%= link_to "Open PDF in New Tab", url_for(file), target: "_blank", class: "btn btn-sm btn-outline-primary" %>
-                        <% else %>
-                          <%= link_to url_for(file), target: "_blank", class: "d-block" do %>
-                            <%= image_tag url_for(file), class: "img-fluid rounded border", style: "max-height: 200px; object-fit: contain;" %>
-                          <% end %>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  </div>
-                <% end %>
-              <% else %>
-                <p class="text-muted fst-italic">No attachment</p>
+                </div>
               <% end %>
             </div>
-          </div>
-        </div>
-      </div>
-        <div class="d-flex justify-content-between">
-          <%= link_to "Back", root_path, class: "btn btn-outline-secondary" %>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal for zoomed image -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content bg-transparent border-0">
-      <div class="modal-body p-0">
-        <img src="" id="modalImage" class="img-fluid rounded" alt="Zoomed image">
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal for zoomed image -->
-<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content bg-transparent border-0">
-      <div class="modal-body p-0">
-        <img src="" id="modalImage" class="img-fluid rounded" alt="Zoomed image">
+          <% end %>
+        <% else %>
+          <p class="text-muted fst-italic">No attachment</p>
+        <% end %>
       </div>
     </div>
   </div>
