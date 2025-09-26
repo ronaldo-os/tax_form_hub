@@ -22,313 +22,157 @@
       </div>
     <% end %>
   </div>
-  <div class="card shadow-sm mb-5">
-    <div class="card-header bg-secondary">
-      <p class="mb-0 float-end text-light">STATUS: <span class="fw-bold"><%= @invoice.status.to_s.upcase %></span></p>
-    </div>
+
+  <div class="card shadow-sm border-0 mb-5">
     <div class="card-body">
-      <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
-        <div class="row">
+      <%= form_with model: @invoice, local: true, html: { multipart: true } do |f| %>
 
-          <div class="col-md-6 mb-3">
-            <% if @recipient_company.present? %>
-            <div id="recipient-preview" class="p-3 rounded">
-                <p class="mb-1 fw-bold" id="company_name"><%= @recipient_company.name %></p>
-                <p class="mb-1" id="company_address"><%= @recipient_company.address %></p>
-                <p class="mb-1" id="company_location"><%= @recipient_company.registration_address %></p>
-                <p class="mb-1" id="company_country">Philippines</p>
-                <br>
-                <p class="mb-1" id="company_number">
-                Company number: <%= @recipient_company.company_id_number.presence || '-' %>
-                </p>
-                <p class="mb-1" id="company_tax_number">
-                Tax number: <%= @recipient_company.tax_id_number.presence || '-' %>
-                </p>
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Invoice Details</h4>
+        <span class="badge px-3 py-2 fs-6 
+          <%= case @invoice.status
+              when "sent"     then "bg-primary-subtle text-primary"
+              when "approved" then "bg-success-subtle text-success"
+              when "denied"   then "bg-danger-subtle text-danger"
+              when "paid"     then "bg-info-subtle text-info"
+              when "draft"    then "bg-secondary-subtle text-muted"
+              else "bg-light text-dark"
+          end %>">
+          <%= @invoice.status.to_s.upcase %>
+        </span>
+      </div>
+
+      <div class="row g-4">
+        <!-- Company Info -->
+        <div class="col-md-6">
+          <% if @recipient_company.present? %>
+            <div class="p-3 rounded border bg-light-subtle h-100">
+              <h6 class="fw-bold mb-2"><%= @recipient_company.name %></h6>
+              <p class="mb-1 text-muted"><%= @recipient_company.address %></p>
+              <p class="mb-1 text-muted"><%= @recipient_company.registration_address %></p>
+              <p class="mb-1 text-muted">Philippines</p>
+              <hr>
+              <p class="mb-1 small">Company No: <strong><%= @recipient_company.company_id_number.presence || '-' %></strong></p>
+              <p class="mb-0 small">Tax No: <strong><%= @recipient_company.tax_id_number.presence || '-' %></strong></p>
             </div>
-            <% end %>
-          </div>
-
-
-          <div class="col-md-6">
-            <div class="row mt-3 mb-3">
-                <div class="col-md-6 mb-2">
-                    <%= f.label :invoice_number, "Invoice Number", class: "h6 form-label" %>
-                    <p class="mb-1"><%= @invoice.invoice_number %></p>
-                </div>
-
-                <div class="col-md-6 mb-2">
-                    <%= f.label :issue_date, class: "h6 form-label" %>
-                    <p class="mb-1"><%= @invoice.issue_date %></p>
-                </div>
-
-                <%= f.label :currency, class: "h6 form-label" %>
-                <p class="mb-3"><%= @invoice.currency %></p>
-
-                <% if @invoice.invoice_info.is_a?(Hash) %>
-                  <% 
-                    input_types = %w[text date select number checkbox radio textarea]
-                    grouped = @invoice.invoice_info.group_by { |k, _| k.split('.').first }
-                  %>
-
-                  <% grouped.each do |group_name, fields| %>
-                    <% 
-                      clean_group_name = group_name.to_s
-                                                  .gsub('_', ' ')
-                                                  .titleize
-                                                  .gsub('Id', 'ID')
-                    %>
-
-                    <% if fields.size == 1 %>
-                      <% key, value = fields.first %>
-                      <% parts = key.split('.') %>
-                      <% second_part = parts[1] %>
-                      <% col_size = key[/\.(\d+)$/, 1] || "12" %>
-
-                      <% 
-                        label = if input_types.include?(second_part.downcase)
-                                  clean_group_name
-                                else
-                                  second_part.to_s.gsub('_', ' ').titleize
-                                end
-                      %>
-
-                      <div class="row">
-                        <div class="col-md-<%= col_size %>">
-                          <h6><%= label %></h6>
-                          <p><%= value.presence || "-" %></p>
-                        </div>
-                      </div>
-                    <% else %>
-                      <div class="row">
-                        <h6><%= clean_group_name %></h6>
-                        <% fields.each do |key, value| %>
-                          <% 
-                            parts = key.split('.')
-                            second_part = parts[1]
-                            col_size = key[/\.(\d+)$/, 1] || "12"
-
-                            label = if input_types.include?(second_part.downcase)
-                                      parts[1].to_s.gsub('_', ' ').titleize
-                                    else
-                                      second_part.to_s.gsub('_', ' ').titleize
-                                    end
-                          %>
-                          <div class="col-md-<%= col_size %>">
-                            <label class="form-label"><%= label %></label>
-                            <p><%= value.presence || "-" %></p>
-                          </div>
-                        <% end %>
-                      </div>
-                    <% end %>
-                  <% end %>
-                <% end %>
-            </div>
-          </div>
-
+          <% end %>
         </div>
 
-        <table class="table text-center align-middle invoice-table">
-          <thead class="table-light">
-            <tr>
-              <th></th>
-              <th>Item ID</th>
-              <th>Description</th>
-              <th>Quantity</th>
-              <th>Unit</th>
-              <th>Price per unit</th>
-              <th>Tax (%)</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody id="line-items">
-            <% @invoice.line_items_data.each_with_index do |item, index| %>
-              <tr class="line-item">
-                <td><%= index + 1 %></td>
-                <td><%= item["item_id"] %></td>
-                <td><%= item["description"] %></td>
-                <td><%= item["quantity"] %></td>
-                <td><%= item["unit"] %></td>
-                <td><%= item["price"] %></td>
-                <td><%= item["tax"] %></td>
-                <td class="line_item_total_excl_tax"><%= item["total"] || "" %></td>
-              </tr>
+        <!-- Invoice Meta -->
+        <div class="col-md-6">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label text-muted small">Invoice Number</label>
+              <p class="fw-semibold"><%= @invoice.invoice_number %></p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-muted small">Issue Date</label>
+              <p class="fw-semibold"><%= @invoice.issue_date %></p>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label text-muted small">Currency</label>
+              <p class="fw-semibold"><%= @invoice.currency %></p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-              <% if item["optional_fields"].present? %>
-                <% item["optional_fields"].each do |group_name, fields| %>
-                  <tr>
-                    <% if group_name == "charge" || group_name == "discount" %>
-                      <% ordered_keys = [
-                        "#{group_name}_type.select(DISCOUNT_OPTIONS).2",
-                        "#{group_name}_type_edit.text.4",
-                        "qty.text.2",
-                        "unit.select(php,%).2"
-                      ] %>
-
-                      <% cell_count = 0 %>
-                      <% ordered_keys.each do |key| %>
-                        <td style="text-align: left;">
-                          <% if fields[key].present? %>
-                            <label class="fw-bold"><%= key.split(".").first.humanize %></label>
-                            <p class="text-muted mb-0"><%= fields[key] %></p>
-                          <% end %>
-                        </td>
-                        <% cell_count += 1 %>
-                      <% end %>
-
-                      <% total_key = "total.text_only.2" %>
-                      <% empty_cells_before_total = 8 - cell_count %> 
-                      <% empty_cells_before_total.times { %><td></td><% } %>
-
-                      <td class="text-center">
-                        <% if fields[total_key].present? %>
-                          <label class="fw-bold">Total</label>
-                          <p class="text-muted mb-0"><%= fields[total_key] %></p>
-                        <% end %>
-                      </td>
-
-                      <% elsif group_name == "recurring" %>
-                        <% recurring_order = [
-                          "recurring.select(yes,no).2",
-                          "interval.select(daily,weekly,monthly,yearly).2",
-                          "every.number.2",
-                          "start_date.date.2",
-                          "end_date.date.2"
-                        ] %>
-
-                        <% cell_count = 0 %>
-                        <% recurring_order.each do |key| %>
-                          <td style="text-align: left;">
-                            <% if fields[key].present? %>
-                              <label class="fw-bold"><%= key.split(".").first.humanize %></label>
-                              <p class="text-muted mb-0"><%= fields[key] %></p>
-                            <% end %>
-                          </td>
-                          <% cell_count += 1 %>
-                        <% end %>
-                        <% (9 - cell_count).times { %><td></td><% } %>
-
-                    <% else %>
-                      <% visible_fields = fields.reject { |_, value| value.blank? } %>
-                      <% visible_fields.each do |key, value| %>
-                        <td style="text-align: left;">
-                          <label class="fw-bold"><%= key.split(".").first.humanize %></label>
-                          <p class="text-muted mb-0"><%= value %></p>
-                        </td>
-                      <% end %>
-                      <% (9 - visible_fields.size).times { %><td></td><% } %>
-                    <% end %>
-                  </tr>
-                <% end %>
-              <% end %>
-            <% end %>
-
-
-
-            <% if @invoice.price_adjustments.present? %>
+        <!-- Line Items -->
+        <div class="table-responsive mt-4">
+          <table class="table align-middle table-hover border">
+            <thead class="table-light">
               <tr>
-                <td colspan="10" class="text-center text-muted fw-bold table-light">HEADERS</td>
+                <th>#</th>
+                <th>Item ID</th>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Price</th>
+                <th>Tax (%)</th>
+                <th>Total</th>
               </tr>
-
-              <% @invoice.price_adjustments.each do |adjustment| %>
-                <tr>
-                  <% # Iterate through all fields except total %>
-                  <% ["type", "description", "description_edit", "amount", "unit"].each do |field| %>
-                    <% value = adjustment[field] %>
-                    <td style="text-align: left;">
-                      <% unless value.blank? %>
-                        <label class="fw-bold"><%= field.humanize %></label>
-                        <p class="text-muted mb-0"><%= value %></p>
-                      <% end %>
-                    </td>
-                  <% end %>
-
-                  <% empty_cells = 9 - 6 %>
-                  <% empty_cells.times { %><td></td><% } %>
-                  
-                  <td class="text-center">
-                    <% unless adjustment["total"].blank? %>
-                      <label class="fw-bold">Total</label>
-                      <p class="text-muted mb-0"><%= adjustment["total"] %></p>
-                    <% end %>
-                  </td>
+            </thead>
+            <tbody id="line-items">
+              <% @invoice.line_items_data.each_with_index do |item, index| %>
+                <tr class="line-item">
+                  <td><%= index + 1 %></td>
+                  <td><%= item["item_id"] %></td>
+                  <td><%= item["description"] %></td>
+                  <td><%= item["quantity"] %></td>
+                  <td><%= item["unit"] %></td>
+                  <td><%= item["price"] %></td>
+                  <td><%= item["tax"] %></td>
+                  <td class="fw-semibold"><%= item["total"] || "" %></td>
                 </tr>
               <% end %>
-            <% end %>
+            </tbody>
+          </table>
+        </div>
 
-
-          </tbody>
-        </table>
-
-        <div class="text-end mt-3">
-          <p>
+        <!-- Totals -->
+        <div class="text-end mt-4">
+          <p class="mb-1">
             Subtotal excl. taxes:
-            <span>
+            <span class="fw-semibold">
               <%= number_with_precision(@invoice.total.dig("subtotal").to_f, precision: 2) %>
             </span>
           </p>
-
-          <p>
-            <strong>Total <%= @invoice.currency %>:
-              <span class="fw-biold">
-                <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2) %>
-              </span>
-            </strong>
-          </p>
-
-          <p>
+          <p class="mb-1">
             Total taxes:
-            <span>
+            <span class="fw-semibold">
               <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2) %>
+            </span>
+          </p>
+          <p class="fs-5 fw-bold mt-2">
+            Total <%= @invoice.currency %>:
+            <span>
+              <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2) %>
             </span>
           </p>
         </div>
 
-
+        <!-- Keep everything below this line unchanged -->
         <hr>
 
-    <div class="row">
-      <div class="col-md-6">
-        <% if @invoice.payment_terms.present? %>
-        <h5 class="mb-3">Payment Terms</h5>
-
-        <% payment_labels = {
-          "cash" => "Cash Payment",
-          "check" => "Check Payment",
-          "bank_card" => "Bank Card Payment"
-        } %>
-
-        <ol class="ps-3 mb-0">
-          <% @invoice.payment_terms.each do |group_key, fields| %>
-            <% if fields.present? || payment_labels.key?(group_key) %>
-              <li class="mb-3">
-                <h6 class="fw-bold d-inline"><%= payment_labels[group_key] || group_key.titleize %></h6>
-
-                <% if fields.present? %>
-                  <table class="table table-sm table-borderless mt-2">
-                    <tbody>
-                      <% fields.each do |field_key, field_value| %>
-                        <% next if field_key.ends_with?("_edit") || field_value.blank? %>
-
-                        <% parts = field_key.split('.') %>
-                        <% label_part = parts.detect { |p| p !~ /^\d+$/ && !%w[text date select].include?(p) && p != group_key } %>
-                        <% label = label_part.present? ? label_part.titleize : field_key.titleize %>
-
-                        <tr>
-                          <td class="text-start" style="width: 40%;"><%= label %></td>
-                          <td class="text-start"><%= field_value %></td>
-                        </tr>
+        <div class="row">
+          <div class="col-md-6">
+            <% if @invoice.payment_terms.present? %>
+              <h5 class="mb-3">Payment Terms</h5>
+              <% payment_labels = {
+                "cash" => "Cash Payment",
+                "check" => "Check Payment",
+                "bank_card" => "Bank Card Payment"
+              } %>
+              <ol class="ps-3 mb-0">
+                <% @invoice.payment_terms.each do |group_key, fields| %>
+                  <% if fields.present? || payment_labels.key?(group_key) %>
+                    <li class="mb-3">
+                      <h6 class="fw-bold d-inline"><%= payment_labels[group_key] || group_key.titleize %></h6>
+                      <% if fields.present? %>
+                        <table class="table table-sm table-borderless mt-2">
+                          <tbody>
+                            <% fields.each do |field_key, field_value| %>
+                              <% next if field_key.ends_with?("_edit") || field_value.blank? %>
+                              <% parts = field_key.split('.') %>
+                              <% label_part = parts.detect { |p| p !~ /^\d+$/ && !%w[text date select].include?(p) && p != group_key } %>
+                              <% label = label_part.present? ? label_part.titleize : field_key.titleize %>
+                              <tr>
+                                <td class="text-start" style="width: 40%;"><%= label %></td>
+                                <td class="text-start"><%= field_value %></td>
+                              </tr>
+                            <% end %>
+                          </tbody>
+                        </table>
                       <% end %>
-                    </tbody>
-                  </table>
+                    </li>
+                  <% end %>
                 <% end %>
-              </li>
+              </ol>
             <% end %>
-          <% end %>
-        </ol>
-        <% end %>
 
-        <div id="delivery_details_parent_div">
-          <% if [
+            <div id="delivery_details_parent_div">
+              <% if [
                 @invoice.delivery_details_postbox,
                 @invoice.delivery_details_street,
                 @invoice.delivery_details_number,
@@ -341,15 +185,13 @@
                 @invoice.delivery_details_tax_id,
                 @invoice.delivery_details_tax_number
               ].any?(&:present?) %>
-            <hr>
-            <h5 class="mb-3">Delivery details</h5>
-
-            <div class="row">
-              <!-- Full Address in One or Two Lines -->
-              <div class="col-md-12 mb-3">
-                <label class="form-label h6">Address</label>
-                <p class="form-control-plaintext">
-                  <%= [
+                <hr>
+                <h5 class="mb-3">Delivery details</h5>
+                <div class="row">
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">Address</label>
+                    <p class="form-control-plaintext">
+                      <%= [
                         @invoice.delivery_details_postbox,
                         @invoice.delivery_details_street,
                         @invoice.delivery_details_number,
@@ -358,44 +200,32 @@
                         @invoice.delivery_details_city,
                         @invoice.delivery_details_country
                       ].compact.reject(&:blank?).join(', ') %>
-                </p>
-              </div>
-
-              <!-- GLN -->
-              <div class="col-md-12 mb-3">
-                <label class="form-label h6">GLN</label>
-                <p class="form-control-plaintext"><%= @invoice.delivery_details_gln %></p>
-              </div>
-
-              <!-- Company Name -->
-              <div class="col-md-12 mb-3">
-                <label class="form-label h6">Company Name</label>
-                <p class="form-control-plaintext"><%= @invoice.delivery_details_company_name %></p>
-              </div>
-
-              <!-- Tax Info -->
-              <div class="col-md-4 mb-3">
-                <label class="form-label h6">Tax ID</label>
-                <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_id %></p>
-              </div>
-
-              <div class="col-md-8 mb-3">
-                <label class="form-label h6">Tax Number</label>
-                <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_number %></p>
-              </div>
+                    </p>
+                  </div>
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">GLN</label>
+                    <p class="form-control-plaintext"><%= @invoice.delivery_details_gln %></p>
+                  </div>
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">Company Name</label>
+                    <p class="form-control-plaintext"><%= @invoice.delivery_details_company_name %></p>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label h6">Tax ID</label>
+                    <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_id %></p>
+                  </div>
+                  <div class="col-md-8 mb-3">
+                    <label class="form-label h6">Tax Number</label>
+                    <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_number %></p>
+                  </div>
+                </div>
+              <% end %>
+              <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @ship_from_location, type_name: "Ship From Location" } if @ship_from_location.present? %>
+              <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @remit_to_location_id, type_name: "Remit To Location" } if @remit_to_location_id.present? %>
+              <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @tax_representative_location_id, type_name: "Tax Representative Location" } if @tax_representative_location_id.present? %>
             </div>
-
-          <% end %>
-
-
-            <!-- Location Partials -->
-            <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @ship_from_location, type_name: "Ship From Location" } if @ship_from_location.present? %>
-            <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @remit_to_location_id, type_name: "Remit To Location" } if @remit_to_location_id.present? %>
-            <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @tax_representative_location_id, type_name: "Tax Representative Location" } if @tax_representative_location_id.present? %>
           </div>
-        </div>
 
-          
           <div class="col-md-6">
             <div class="mb-3">
               <h5 class="mb-3">Message:</h5>
@@ -403,63 +233,59 @@
             </div>
           </div>
 
+          <hr>
+
+          <h4 class="mb-3">Attachments</h4>
+          <% if @invoice.attachments.attached? %>
+            <div class="row">
+              <% @invoice.attachments.each do |attachment| %>
+                <div class="col-md-4 mb-4 d-flex">
+                  <div class="card shadow-sm h-100 w-100 d-flex flex-column">
+                    <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
+                      <% if attachment.image? %>
+                        <%= link_to url_for(attachment), target: "_blank" do %>
+                          <%= image_tag attachment.variant(resize_to_limit: [300, 300]),
+                                        class: "img-fluid rounded mb-2" %>
+                        <% end %>
+                      <% elsif attachment.content_type == "application/pdf" %>
+                        <%= link_to url_for(attachment), target: "_blank" do %>
+                          <embed src="<%= url_for(attachment) %>"
+                                type="application/pdf"
+                                class="w-100 mb-2"
+                                style="height: 200px;" />
+                        <% end %>
+                      <% else %>
+                        <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
+                      <% end %>
+                    </div>
+                    <div class="card-footer text-center mt-auto">
+                      <div class="d-flex flex-column align-items-center">
+                        <span class="mb-2 text-truncate"
+                              style="max-width: 100%;"
+                              data-bs-toggle="tooltip"
+                              title="<%= attachment.filename.to_s %>">
+                          <%= attachment.filename.to_s %>
+                        </span>
+                        <%= link_to "Download",
+                                    rails_blob_path(attachment, disposition: "attachment"),
+                                    class: "btn btn-sm btn-outline-primary" %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-muted">No attachments uploaded.</p>
+          <% end %>
         </div>
     </div>
+
     <div class="card-footer bg-white">
       <p><%= simple_format(@invoice.footer_notes) %></p>
     </div>
     <% end %>
   </div>
-
-<h4 class="mb-3">Attachments</h4>
-<% if @invoice.attachments.attached? %>
-  <div class="row">
-    <% @invoice.attachments.each do |attachment| %>
-      <div class="col-md-4 mb-4 d-flex">
-        <div class="card shadow-sm h-100 w-100 d-flex flex-column">
-          <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
-            <% if attachment.image? %>
-              <%= link_to url_for(attachment), target: "_blank" do %>
-                <%= image_tag attachment.variant(resize_to_limit: [300, 300]),
-                              class: "img-fluid rounded mb-2" %>
-              <% end %>
-            <% elsif attachment.content_type == "application/pdf" %>
-              <%= link_to url_for(attachment), target: "_blank" do %>
-                <embed src="<%= url_for(attachment) %>"
-                       type="application/pdf"
-                       class="w-100 mb-2"
-                       style="height: 200px;" />
-              <% end %>
-            <% else %>
-              <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
-            <% end %>
-          </div>
-          <div class="card-footer text-center mt-auto">
-            <div class="d-flex flex-column align-items-center">
-              <span class="mb-2 text-truncate"
-                    style="max-width: 100%;"
-                    data-bs-toggle="tooltip"
-                    title="<%= attachment.filename.to_s %>">
-                <%= attachment.filename.to_s %>
-              </span>
-              <%= link_to "Download",
-                          rails_blob_path(attachment, disposition: "attachment"),
-                          class: "btn btn-sm btn-outline-primary" %>
-            </div>
-          </div>
-        </div>
-      </div>
-    <% end %>
-  </div>
-<% else %>
-  <p class="text-muted">No attachments uploaded.</p>
-<% end %>
-
-
-
-
-
-
 
 
 </div>
