@@ -27,20 +27,22 @@
       <h5>Form 2307</h5>
       <div class="flex-grow-1 d-flex align-items-center justify-content-center">
         <% if @tax_submission.form_2307.attached? %>
-          <% if @tax_submission.form_2307.content_type == "application/pdf" %>
-            <iframe src="<%= url_for(@tax_submission.form_2307) %>" width="100%" height="250px" class="rounded border"></iframe>
-          <% else %>
-            <a href="#" class="zoom-link" data-img-url="<%= url_for(@tax_submission.form_2307) %>">
-              <%= image_tag url_for(@tax_submission.form_2307), class: "img-fluid", style: "max-height: 250px;" %>
-            </a>
+          <%= link_to url_for(@tax_submission.form_2307), target: "_blank", class: "d-block" do %>
+            <% if @tax_submission.form_2307.content_type == "application/pdf" %>
+              <div class="border rounded p-4 bg-white w-100 text-center">
+                <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
+                <p class="mt-2 mb-0">View PDF</p>
+              </div>
+            <% else %>
+              <%= image_tag url_for(@tax_submission.form_2307),
+                  class: "img-fluid rounded border",
+                  style: "max-height: 250px;" %>
+            <% end %>
           <% end %>
         <% else %>
           <p class="text-muted fst-italic">No attachment</p>
         <% end %>
       </div>
-      <% if @tax_submission.form_2307.attached? && @tax_submission.form_2307.content_type == "application/pdf" %>
-        <%= link_to "Open PDF in New Tab", url_for(@tax_submission.form_2307), target: "_blank", class: "btn btn-sm btn-outline-primary mt-2" %>
-      <% end %>
     </div>
   </div>
 

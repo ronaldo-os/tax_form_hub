@@ -29,8 +29,8 @@
 
 <!-- Submit Documents Modal -->
 <div class="modal fade" id="submitDocsModal" tabindex="-1" aria-labelledby="submitDocsModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content shadow-lg border-0 rounded-4">
+  <div class="modal-dialog modal-md modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-md border-0 rounded-4">
       
       <div class="modal-header border-0">
         <h4 class="modal-title fw-bold" id="submitDocsModalLabel">Submit Tax Documents</h4>
@@ -44,7 +44,7 @@
             <div class="col-12">
               <%= f.label :company_name, "Company Name", class: "form-label fw-semibold small text-muted" %>
               <%= f.text_field :company_name,
-                    class: "form-control form-control-lg rounded-3",
+                    class: "form-control rounded-3",
                     value: (current_user.company&.name || current_user.company_name),
                     required: true %>
             </div>
@@ -52,7 +52,7 @@
             <div class="col-12">
               <%= f.label :form_2307, "Form 2307", class: "form-label fw-semibold small text-muted" %>
               <%= f.file_field :form_2307,
-                    class: "form-control form-control-lg rounded-3",
+                    class: "form-control rounded-3",
                     required: true,
                     accept: "image/*,application/pdf",
                     id: "form_2307_input" %>
@@ -64,7 +64,7 @@
               <%= f.label :deposit_slip, "Deposit Slip or Bank Transfer Details", class: "form-label fw-semibold small text-muted" %>
               <%= f.file_field :deposit_slip,
                     multiple: true,
-                    class: "form-control form-control-lg rounded-3",
+                    class: "form-control rounded-3",
                     required: true,
                     accept: "image/*,application/pdf",
                     id: "deposit_slip_input" %>
@@ -74,7 +74,7 @@
 
             <div class="col-12">
               <%= f.label :details, "Additional Notes", class: "form-label fw-semibold small text-muted" %>
-              <%= f.text_area :details, class: "form-control form-control-lg rounded-3", rows: 4 %>
+              <%= f.text_area :details, class: "form-control rounded-3", rows: 4 %>
             </div>
 
           </div>

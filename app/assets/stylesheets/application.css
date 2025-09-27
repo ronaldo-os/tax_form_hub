@@ -3,6 +3,34 @@
   --active-color: #20b9ff;
 }
 
+.text-primary {
+    --bs-text-opacity: 1;
+    color: var(--main-color) !important;
+}
+
+a{
+    color: var(--main-color);
+}
+
+/* Apply height only to input + select */
+.form-control:not(textarea),
+.form-select {
+  height: calc(1.6em + 0.75rem + 2px);
+}
+
+/* Keep padding/font/radius shared */
+.form-control,
+.form-select {
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  border-radius: var(--bs-border-radius-lg) !important;
+}
+
+.border-left-0 {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
 html {
   height: 100%;
 }
@@ -310,7 +338,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 
 /* Buttons */
 .btn{
-  border-radius: 5px !important;
+  border-radius: var(--bs-border-radius-lg) !important;
 }
 .btn-primary{
   background-color: #00aeff !important;
@@ -333,7 +361,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 
 /* Inputs */
 input, select, textarea {
-  border-radius: 3px !important;
+  border-radius: var(--bs-border-radius-md) !important;
   border: 1px solid #d1d1d1 !important;
 }
 
