@@ -65,26 +65,26 @@
             <div class="mb-4">
               <small class="text-uppercase text-muted fw-semibold">About</small>
               <ul class="list-unstyled mt-3 mb-0">
-                <li class="d-flex align-items-center mb-2">
-                  <i class="fa-solid fa-laptop me-2 text-secondary"></i>
+                <li class="d-flex mb-2">
+                  <i class="fa-solid fa-laptop text-secondary icon-fixed"></i>
                   <span id="company_industry_text">
                     <%= Company::INDUSTRIES.find { |label, value, _| value == @company.industry }&.first.presence || "N/A" %>
                   </span>
                 </li>
-                <li class="d-flex align-items-center mb-2">
-                  <i class="fa-solid fa-users me-2 text-secondary"></i>
+                <li class="d-flex mb-2">
+                  <i class="fa-solid fa-users text-secondary icon-fixed"></i>
                   <span id="company_size_text">
                     <%= Company::SIZES.find { |label, value, _| value == @company.size }&.first.presence || "N/A" %>
                   </span>
                 </li>
-                <li class="d-flex align-items-center mb-2">
-                  <i class="fa-solid fa-briefcase me-2 text-secondary"></i>
+                <li class="d-flex mb-2">
+                  <i class="fa-solid fa-briefcase text-secondary icon-fixed"></i>
                   <span id="company_ownership_text">
                     <%= Company::OWNERSHIPS.find { |label, value, _| value == @company.ownership }&.first.presence || "N/A" %>
                   </span>
                 </li>
-                <li class="d-flex align-items-center">
-                  <i class="fa-solid fa-location-dot me-2 text-secondary"></i>
+                <li class="d-flex">
+                  <i class="fa-solid fa-location-dot text-secondary icon-fixed"></i>
                   <span id="company_location_text"><%= @company.address.presence || "N/A" %></span>
                 </li>
               </ul>
@@ -94,12 +94,12 @@
             <div class="mb-4">
               <small class="text-uppercase text-muted fw-semibold">Contact</small>
               <ul class="list-unstyled mt-3 mb-0">
-                <li class="d-flex align-items-center mb-2">
-                  <i class="fa-solid fa-phone me-2 text-secondary"></i>
+                <li class="d-flex mb-2">
+                  <i class="fa-solid fa-phone text-secondary icon-fixed"></i>
                   <span id="company_phone_text"><%= @company.phone.presence || "N/A" %></span>
                 </li>
-                <li class="d-flex align-items-center">
-                  <i class="fa-solid fa-envelope me-2 text-secondary"></i>
+                <li class="d-flex">
+                  <i class="fa-solid fa-envelope text-secondary icon-fixed"></i>
                   <span id="company_email_text"><%= @company.email_address.presence || "N/A" %></span>
                 </li>
               </ul>

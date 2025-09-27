@@ -29,7 +29,8 @@
           </div>
 
           <!-- Company Name + Website -->
-          <h4 class="fw-bold mb-4"><%= @company.name %></h4>
+          <h4 class="fw-bold mb-4"><%= @company.name.presence || "No company name" %></h4>
+
           <% if @company.website.present? %>
             <% full_url = @company.website =~ /\Ahttp(s)?:\/\// ? @company.website : "https://#{@company.website}" %>
             <p class="mb-4">
@@ -37,33 +38,29 @@
                 <%= @company.website %>
               </a>
             </p>
+          <% else %>
+            <p class="mb-4 text-muted">No website</p>
           <% end %>
 
           <!-- About -->
           <div class="mb-4 text-start">
             <small class="text-uppercase text-muted fw-semibold">About</small>
             <ul class="list-unstyled mt-3 mb-0">
-              <li class="d-flex align-items-center mb-2">
-                <i class="fa-solid fa-laptop me-2 text-secondary"></i>
-                <span>
-                  <%= Company::INDUSTRIES.find { |label, value, _| value == @company.industry }&.first if @company.industry.present? %>
-                </span>
+              <li class="d-flex mb-2">
+                <i class="fa-solid fa-laptop text-secondary icon-fixed"></i>
+                <span><%= Company::INDUSTRIES.find { |label, value, _| value == @company.industry }&.first.presence || "None" %></span>
               </li>
-              <li class="d-flex align-items-center mb-2">
-                <i class="fa-solid fa-users me-2 text-secondary"></i>
-                <span>
-                  <%= Company::SIZES.find { |label, value, _| value == @company.size }&.first if @company.size.present? %>
-                </span>
+              <li class="d-flex mb-2">
+                <i class="fa-solid fa-users text-secondary icon-fixed"></i>
+                <span><%= Company::SIZES.find { |label, value, _| value == @company.size }&.first.presence || "None" %></span>
               </li>
-              <li class="d-flex align-items-center mb-2">
-                <i class="fa-solid fa-briefcase me-2 text-secondary"></i>
-                <span>
-                  <%= Company::OWNERSHIPS.find { |label, value, _| value == @company.ownership }&.first if @company.ownership.present? %>
-                </span>
+              <li class="d-flex mb-2">
+                <i class="fa-solid fa-briefcase text-secondary icon-fixed"></i>
+                <span><%= Company::OWNERSHIPS.find { |label, value, _| value == @company.ownership }&.first.presence || "None" %></span>
               </li>
-              <li class="d-flex align-items-center">
-                <i class="fa-solid fa-location-dot me-2 text-secondary"></i>
-                <span><%= @company.address %></span>
+              <li class="d-flex">
+                <i class="fa-solid fa-location-dot text-secondary icon-fixed"></i>
+                <span><%= @company.address.presence || "None" %></span>
               </li>
             </ul>
           </div>
@@ -72,16 +69,17 @@
           <div class="mb-4 text-start">
             <small class="text-uppercase text-muted fw-semibold">Contact</small>
             <ul class="list-unstyled mt-3 mb-0">
-              <li class="d-flex align-items-center mb-2">
-                <i class="fa-solid fa-phone me-2 text-secondary"></i>
-                <span><%= @company.phone %></span>
+              <li class="d-flex mb-2">
+                <i class="fa-solid fa-phone text-secondary icon-fixed"></i>
+                <span><%= @company.phone.presence || "None" %></span>
               </li>
-              <li class="d-flex align-items-center">
-                <i class="fa-solid fa-envelope me-2 text-secondary"></i>
-                <span><%= @company.email_address %></span>
+              <li class="d-flex">
+                <i class="fa-solid fa-envelope text-secondary icon-fixed"></i>
+                <span><%= @company.email_address.presence || "None" %></span>
               </li>
             </ul>
           </div>
+
 
           <!-- Map -->
           <div>

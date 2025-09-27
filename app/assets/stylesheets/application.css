@@ -26,6 +26,14 @@ a{
   border-radius: var(--bs-border-radius-lg) !important;
 }
 
+.icon-fixed {
+  width: 20px;   /* adjust until it feels right */
+  text-align: center;
+  margin-right: 8px;
+  position: relative;
+  top: 3px;
+}
+
 .border-left-0 {
   border-top-left-radius: 0 !important;
   border-bottom-left-radius: 0 !important;
