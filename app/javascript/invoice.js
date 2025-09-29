@@ -431,13 +431,25 @@ if (
 
     //----------------------------------------------------- ADD FOOTER BUTTON TOGGLE
 
-    $('.add-footer-toggle-btn').on('click', function() {
-      const $button = $(this);
+    $(document).ready(function () {
+      const $button = $('.add-footer-toggle-btn');
       const $target = $('#footer_wrapper_parent_div');
+      const $notes = $('#invoice_footer_notes');
 
-      $target.slideToggle(300, function() {
-        const isVisible = $target.is(':visible');
-        $button.text(isVisible ? '− Remove footer notes' : '+ Add footer notes');
+      if ($notes.val().trim() !== '') {
+        $target.show();
+        $button.text('− Remove footer notes');
+      } else {
+        $target.hide();
+        $button.text('+ Add footer notes');
+      }
+
+      // Toggle action
+      $button.on('click', function () {
+        $target.slideToggle(300, function () {
+          const isVisible = $target.is(':visible');
+          $button.text(isVisible ? '− Remove footer notes' : '+ Add footer notes');
+        });
       });
     });
 

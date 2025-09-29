@@ -45,15 +45,18 @@
 
 
             <!-- Company preview will be inserted here -->
-            <div id="recipient-preview" class="border p-3 rounded d-none">
-              <p class="mb-1" id="company_name"></p>
-              <p class="mb-1" id="company_address"></p>
-              <p class="mb-1" id="company_location"></p>
-              <p class="mb-1" id="company_country"></p>
-              <br>
-              <p class="mb-1" id="company_number"></p>
-              <p class="mb-1" id="company_tax_number"></p>
-              <a href="#" class="text-primary small" id="change-recipient">Change recipient</a>
+            <div id="recipient-preview" class="p-3 rounded border bg-light-subtle d-none">
+              <h6 class="fw-bold mb-2" id="company_name"></h6>
+              <p class="mb-1 text-muted" id="company_address"></p>
+              <p class="mb-1 text-muted" id="company_location"></p>
+              <p class="mb-1 text-muted" id="company_country"></p>
+              <hr>
+              <p class="mb-1 small"><strong id="company_number"></strong></p>
+              <p class="mb-0 small"><strong id="company_tax_number"></strong></p>
+
+              <a href="#" class="text-primary small d-block mt-2" id="change-recipient">
+                Change recipient
+              </a>
             </div>
           </div>
 
@@ -170,29 +173,34 @@
       </table>
 
 
-        <div class="row g-3 mb-3 mt-0">
-          <div class="col-md-4 d-grid">
-            <button type="button" id="add-discount-row" class="btn btn-outline-primary">
-              Add Header Charge / Discount / Tax
-            </button>
-          </div>
-          <div class="col-md-4 d-grid">
-            <button type="button" id="add-base-quantity" class="btn btn-outline-secondary">
-              Show Base Quantity Column
-            </button>
-          </div>
-          <div class="col-md-4 d-grid">
-            <button type="button" id="add-line" class="btn btn-success">
-              <i class="bi bi-plus-square me-1"></i> Add New Line
-            </button>
-          </div>
+      <!-- Action buttons -->
+      <div class="row g-2 mb-4">
+        <div class="col-md-4 d-grid">
+          <button type="button" id="add-discount-row" class="btn btn-outline-primary btn-sm">
+            Add Charge / Discount
+          </button>
         </div>
+        <div class="col-md-4 d-grid">
+          <button type="button" id="add-base-quantity" class="btn btn-outline-secondary btn-sm">
+            Show Base Quantity
+          </button>
+        </div>
+        <div class="col-md-4 d-grid">
+          <button type="button" id="add-line" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i> Add Line
+          </button>
+        </div>
+      </div>
 
-        <div class="text-end mt-3">
-          <p>Subtotal excl. taxes: <span class="subtotal-amount">0.00</span></p>
-          <p><strong>Total <span class="currency_type">PHP</span>: <span class="grand-total-amount">0.00</span></strong></p>
-          <p>Total taxes: <span class="total-tax-amount">0.00</span> <span class="currency_type">PHP</span></p>
-        </div>
+      <!-- Totals -->
+      <div class="card border-0 shadow-sm p-3 text-end">
+        <p class="mb-1">Subtotal excl. taxes: <strong><span class="subtotal-amount">0.00</span></strong></p>
+        <p class="mb-1">Total taxes: <strong><span class="total-tax-amount">0.00</span> <span class="currency_type">PHP</span></strong></p>
+        <hr>
+        <h5 class="fw-bold">Grand Total <span class="currency_type">PHP</span>: 
+          <span class="grand-total-amount text-primary">0.00</span>
+        </h5>
+      </div>
 
         <hr>
 
@@ -221,7 +229,7 @@
 
             <hr>
 
-            <button type="button" class="btn btn-primary btn-sm"
+            <button type="button" class="btn btn-primary btn-sm w-100"
               data-bs-toggle="collapse"
               data-bs-target="#delivery_details_parent_div"
               aria-expanded="false"
@@ -442,7 +450,7 @@
             <div>
               <% if action_name != "edit" %>
                 <%= f.submit "Send",
-                    class: "btn btn-success btn-md",
+                    class: "btn btn-primary btn-md",
                     formaction: create_and_send_invoices_path,
                     formmethod: :post,
                     id: "send_invoice_btn" %>
