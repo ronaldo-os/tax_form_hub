@@ -1,31 +1,34 @@
-<div class="d-flex justify-content-center align-items-center min-vh-100 bg-light">
-  <div class="container" style="max-width: 700px;">
-    <div class="card">
+<% content_for :page_title, "Edit Profile" %>
+
+<div class="d-flex justify-content-center align-items-center min-vh-100 mt-5 mb-5">
+  <div class="container" style="max-width: 640px;">
+    <div class="card rounded-4">
       <div class="card-body p-5">
-        <h2 class="mb-4 text-center">Edit Profile</h2>
+        <!-- Heading -->
+        <p class="text-center text-muted mb-5">Manage your personal information and security settings.</p>
 
         <%= form_for(resource,
              as: resource_name,
              url: profile_path,
              html: { method: :put, multipart: true }) do |f| %>
 
-          <div class="mb-4 text-center">
-            <div id="image-preview-wrapper" class="position-relative d-inline-block" style="cursor: pointer;">
+          <!-- Profile Image -->
+          <div class="mb-5 text-center">
+            <div id="image-preview-wrapper" 
+                 class="position-relative d-inline-block"
+                 style="cursor: pointer;">
               <%= image_tag(
                 resource.profile_image.attached? ? url_for(resource.profile_image) : asset_path("user_avatar_default.png"),
                 id: "image-preview",
-                class: "rounded-circle img-thumbnail",
-                style: "width: 150px; height: 150px; object-fit: cover;"
+                class: "rounded-circle border",
+                style: "width: 160px; height: 160px; object-fit: cover;"
               ) %>
 
-              <!-- Pencil Icon Overlay (label for file input) -->
+              <!-- Overlay Pencil Icon -->
               <label for="profile_image_input" 
-                    class="position-absolute" 
-                    style="top: 10px; right: 10px; width: 28px; height: 28px;
-                            background: white; border-radius: 50%;
-                            display: flex; align-items: center; justify-content: center;
-                            box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer;">
-                <i class="fas fa-pencil-alt text-secondary" style="font-size: 14px;"></i>
+                     class="position-absolute d-flex align-items-center justify-content-center bg-white rounded-circle"
+                     style="bottom: 10px; right: 10px; width: 38px; height: 38px; cursor: pointer;">
+                <i class="fas fa-camera text-primary" style="font-size: 16px;"></i>
               </label>
 
               <%= f.file_field :profile_image,
@@ -33,77 +36,76 @@
                 id: "profile_image_input",
                 style: "display: none;" %>
             </div>
-            <div class="mt-2">
+            <div class="mt-3">
               <small class="text-muted">
-                <%= resource.profile_image.attached? ? "Click image to upload new one" : "No profile image uploaded. Click image to upload." %>
+                <%= resource.profile_image.attached? ? "Click your photo to upload a new one" : "No profile image yet. Click to upload." %>
               </small>
             </div>
           </div>
 
           <!-- Email -->
-          <div class="mb-3">
-            <%= f.label :email, class: "form-label" %>
+          <div class="mb-4">
+            <%= f.label :email, class: "form-label fw-semibold" %>
             <%= f.email_field :email,
                   autofocus: true,
                   autocomplete: "email",
                   required: true,
-                  class: "form-control" %>
+                  class: "form-control rounded-3" %>
           </div>
 
-          <hr class="my-4">
+          <hr class="my-5">
 
-          <p class="text-muted">Leave password fields blank if you don’t want to change it.</p>
+          <p class="text-muted small mb-4">Leave password fields blank if you don’t want to change them.</p>
 
           <!-- Password -->
-          <div class="mb-3">
-            <%= f.label :password, class: "form-label" %>
+          <div class="mb-4">
+            <%= f.label :password, class: "form-label fw-semibold" %>
             <% if @minimum_password_length %>
-              <small class="form-text text-muted mb-1">
-                (<%= @minimum_password_length %> characters minimum)
-              </small>
+              <small class="text-muted d-block mb-2">(<%= @minimum_password_length %> characters minimum)</small>
             <% end %>
-            <div class="input-group">
+            <div class="input-group input-group-lg">
               <%= f.password_field :password,
                     autocomplete: "new-password",
-                    class: "form-control toggle-password-input border-end-0",
+                    class: "form-control toggle-password-input rounded-start-3 border-end-0",
                     id: "password" %>
-              <span class="input-group-text bg-white border-start-0">
-                <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
+              <span class="input-group-text bg-white rounded-end-3 border-start-0">
+                <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
               </span>
             </div>
           </div>
 
           <!-- Password Confirmation -->
-          <div class="mb-3">
-            <%= f.label :password_confirmation, class: "form-label" %>
-            <div class="input-group">
+          <div class="mb-4">
+            <%= f.label :password_confirmation, class: "form-label fw-semibold" %>
+            <div class="input-group input-group-lg">
               <%= f.password_field :password_confirmation,
                     autocomplete: "new-password",
-                    class: "form-control toggle-password-input border-end-0",
+                    class: "form-control toggle-password-input rounded-start-3 border-end-0",
                     id: "password_confirmation" %>
-              <span class="input-group-text bg-white border-start-0">
-                <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
+              <span class="input-group-text bg-white rounded-end-3 border-start-0">
+                <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
               </span>
             </div>
           </div>
 
           <!-- Current Password -->
-          <div class="mb-3">
-            <%= f.label :current_password, "Current Password", class: "form-label" %>
-            <div class="input-group">
+          <div class="mb-4">
+            <%= f.label :current_password, "Current Password", class: "form-label fw-semibold" %>
+            <div class="input-group input-group-lg">
               <%= f.password_field :current_password,
                     autocomplete: "current-password",
-                    class: "form-control toggle-password-input border-end-0",
+                    class: "form-control toggle-password-input rounded-start-3 border-end-0",
                     id: "current_password" %>
-              <span class="input-group-text bg-white border-start-0">
-                <i class="fa fa-eye toggle-password-icon" style="cursor: pointer;"></i>
+              <span class="input-group-text bg-white rounded-end-3 border-start-0">
+                <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
               </span>
             </div>
           </div>
 
-          <div class="d-flex justify-content-between gap-2 mt-5">
-            <%= link_to "Back", root_path, class: "btn btn-secondary btn-md" %>
-            <%= f.submit "Update Profile", class: "btn btn-primary btn-md"%>
+          <!-- Actions -->
+          <div class="d-flex justify-content-between gap-3 mt-5">
+            <%= link_to "Back", root_path, class: "btn btn-light" %>
+            <%= f.submit "Update Profile", class: "btn btn-primary" %>
           </div>
 
         <% end %>

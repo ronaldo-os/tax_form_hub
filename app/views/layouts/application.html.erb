@@ -35,7 +35,7 @@
   <body data-devise="<%= devise_controller? %>" class="bg-light">
 
 
-  <% unless devise_controller? %>
+  <% unless devise_controller? && !(controller_name == "registrations" && action_name == "edit") %>
     <section class="global-wrapper">
       <aside>
         <%= image_tag(
@@ -118,7 +118,7 @@
   <% end %>
 
 
-  <% if devise_controller? %>
+  <% if devise_controller? && !(controller_name == "registrations" && action_name == "edit") %>
     <%= yield %>
   <% end %>
 
