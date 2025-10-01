@@ -34,6 +34,7 @@ Rails.application.routes.draw do
       patch :unarchive
       patch :mark_as_paid
       post  :duplicate_as_purchase
+      get   :pdf_partial
     end
   end
 
