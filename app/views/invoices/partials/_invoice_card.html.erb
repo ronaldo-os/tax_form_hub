@@ -1,0 +1,263 @@
+  <div class="card shadow-sm border-0 mb-5" id="invoice_card">
+    <div class="card-body">
+      <%= form_with model: @invoice, local: true, html: { multipart: true } do |f| %>
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Invoice Details</h4>
+        <span class="badge px-3 py-2 fs-6 
+          <%= case @invoice.status
+              when "sent"     then "bg-primary-subtle text-primary"
+              when "approved" then "bg-success-subtle text-success"
+              when "denied"   then "bg-danger-subtle text-danger"
+              when "paid"     then "bg-info-subtle text-info"
+              when "draft"    then "bg-secondary-subtle text-muted"
+              else "bg-light text-dark"
+          end %>">
+          <%= @invoice.status.to_s.upcase %>
+        </span>
+      </div>
+
+      <div class="row g-4">
+        <!-- Company Info -->
+        <div class="col-md-6">
+          <% if @recipient_company.present? %>
+            <div class="p-3 rounded border bg-light-subtle h-100">
+              <h6 class="fw-bold mb-2"><%= @recipient_company.name %></h6>
+              <p class="mb-1 text-muted"><%= @recipient_company.address %></p>
+              <p class="mb-1 text-muted"><%= @recipient_company.registration_address %></p>
+              <p class="mb-1 text-muted">Philippines</p>
+              <hr>
+              <p class="mb-1 small">Company No: <strong><%= @recipient_company.company_id_number.presence || '-' %></strong></p>
+              <p class="mb-0 small">Tax No: <strong><%= @recipient_company.tax_id_number.presence || '-' %></strong></p>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Invoice Meta -->
+        <div class="col-md-6">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label text-muted small">Invoice Number</label>
+              <p class="fw-semibold"><%= @invoice.invoice_number %></p>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-muted small">Issue Date</label>
+              <p class="fw-semibold"><%= @invoice.issue_date %></p>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label text-muted small">Currency</label>
+              <p class="fw-semibold"><%= @invoice.currency %></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+        <!-- Line Items -->
+        <div class="table-responsive mt-4">
+          <table class="table align-middle table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>#</th>
+                <th>Item ID</th>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Unit</th>
+                <th>Price</th>
+                <th>Tax (%)</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="line-items">
+              <% @invoice.line_items_data.each_with_index do |item, index| %>
+                <tr class="line-item">
+                  <td><%= index + 1 %></td>
+                  <td><%= item["item_id"] %></td>
+                  <td><%= item["description"] %></td>
+                  <td><%= item["quantity"] %></td>
+                  <td><%= item["unit"] %></td>
+                  <td><%= item["price"] %></td>
+                  <td><%= item["tax"] %></td>
+                  <td class="fw-semibold"><%= item["total"] || "" %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totals -->
+        <div class="text-end mt-4">
+          <p class="mb-1">
+            Subtotal excl. taxes:
+            <span class="fw-semibold">
+              <%= number_with_precision(@invoice.total.dig("subtotal").to_f, precision: 2) %>
+            </span>
+          </p>
+          <p class="mb-1">
+            Total taxes:
+            <span class="fw-semibold">
+              <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2) %>
+            </span>
+          </p>
+          <p class="fs-5 fw-bold mt-2">
+            Total <%= @invoice.currency %>:
+            <span>
+              <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2) %>
+            </span>
+          </p>
+        </div>
+
+        <!-- Keep everything below this line unchanged -->
+        <hr>
+
+        <div class="row">
+          <div class="col-md-6">
+            <% if @invoice.payment_terms.present? %>
+              <h5 class="mb-3">Payment Terms</h5>
+              <% payment_labels = {
+                "cash" => "Cash Payment",
+                "check" => "Check Payment",
+                "bank_card" => "Bank Card Payment"
+              } %>
+              <ol class="ps-3 mb-0">
+                <% @invoice.payment_terms.each do |group_key, fields| %>
+                  <% if fields.present? || payment_labels.key?(group_key) %>
+                    <li class="mb-3">
+                      <h6 class="fw-bold d-inline"><%= payment_labels[group_key] || group_key.titleize %></h6>
+                      <% if fields.present? %>
+                        <table class="table table-sm table-borderless mt-2">
+                          <tbody>
+                            <% fields.each do |field_key, field_value| %>
+                              <% next if field_key.ends_with?("_edit") || field_value.blank? %>
+                              <% parts = field_key.split('.') %>
+                              <% label_part = parts.detect { |p| p !~ /^\d+$/ && !%w[text date select].include?(p) && p != group_key } %>
+                              <% label = label_part.present? ? label_part.titleize : field_key.titleize %>
+                              <tr>
+                                <td class="text-start" style="width: 40%;"><%= label %></td>
+                                <td class="text-start"><%= field_value %></td>
+                              </tr>
+                            <% end %>
+                          </tbody>
+                        </table>
+                      <% end %>
+                    </li>
+                  <% end %>
+                <% end %>
+              </ol>
+            <% end %>
+
+            <div id="delivery_details_parent_div">
+              <% if [
+                @invoice.delivery_details_postbox,
+                @invoice.delivery_details_street,
+                @invoice.delivery_details_number,
+                @invoice.delivery_details_locality_name,
+                @invoice.delivery_details_zip_code,
+                @invoice.delivery_details_city,
+                @invoice.delivery_details_country,
+                @invoice.delivery_details_gln,
+                @invoice.delivery_details_company_name,
+                @invoice.delivery_details_tax_id,
+                @invoice.delivery_details_tax_number
+              ].any?(&:present?) %>
+                <hr>
+                <h5 class="mb-3">Delivery details</h5>
+                <div class="row">
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">Address</label>
+                    <p class="form-control-plaintext">
+                      <%= [
+                        @invoice.delivery_details_postbox,
+                        @invoice.delivery_details_street,
+                        @invoice.delivery_details_number,
+                        @invoice.delivery_details_locality_name,
+                        @invoice.delivery_details_zip_code,
+                        @invoice.delivery_details_city,
+                        @invoice.delivery_details_country
+                      ].compact.reject(&:blank?).join(', ') %>
+                    </p>
+                  </div>
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">GLN</label>
+                    <p class="form-control-plaintext"><%= @invoice.delivery_details_gln %></p>
+                  </div>
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">Company Name</label>
+                    <p class="form-control-plaintext"><%= @invoice.delivery_details_company_name %></p>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <label class="form-label h6">Tax ID</label>
+                    <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_id %></p>
+                  </div>
+                  <div class="col-md-8 mb-3">
+                    <label class="form-label h6">Tax Number</label>
+                    <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_number %></p>
+                  </div>
+                </div>
+              <% end %>
+              <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @ship_from_location, type_name: "Ship From Location" } if @ship_from_location.present? %>
+              <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @remit_to_location_id, type_name: "Remit To Location" } if @remit_to_location_id.present? %>
+              <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @tax_representative_location_id, type_name: "Tax Representative Location" } if @tax_representative_location_id.present? %>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="mb-3">
+              <h5 class="mb-3">Message:</h5>
+              <p class="mb-1"><%= simple_format(@invoice.recipient_note) %></p>
+            </div>
+          </div>
+
+          <hr>
+
+          <h4 class="mb-3">Attachments</h4>
+          <% if @invoice.attachments.attached? %>
+            <div class="row">
+              <% @invoice.attachments.each do |attachment| %>
+                <div class="col-md-4 mb-4 d-flex">
+                  <div class="card shadow-sm h-100 w-100 d-flex flex-column">
+                    <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
+                      <% if attachment.image? %>
+                        <%= link_to url_for(attachment), target: "_blank" do %>
+                          <%= image_tag attachment.variant(resize_to_limit: [300, 300]),
+                                        class: "img-fluid rounded mb-2" %>
+                        <% end %>
+                      <% elsif attachment.content_type == "application/pdf" %>
+                        <%= link_to url_for(attachment), target: "_blank" do %>
+                          <embed src="<%= url_for(attachment) %>"
+                                type="application/pdf"
+                                class="w-100 mb-2"
+                                style="height: 200px;" />
+                        <% end %>
+                      <% else %>
+                        <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
+                      <% end %>
+                    </div>
+                    <div class="card-footer text-center mt-auto">
+                      <div class="d-flex flex-column align-items-center">
+                        <span class="mb-2 text-truncate"
+                              style="max-width: 100%;"
+                              data-bs-toggle="tooltip"
+                              title="<%= attachment.filename.to_s %>">
+                          <%= attachment.filename.to_s %>
+                        </span>
+                        <%= link_to "Download",
+                                    rails_blob_path(attachment, disposition: "attachment"),
+                                    class: "btn btn-sm btn-outline-primary" %>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-muted">No attachments uploaded.</p>
+          <% end %>
+        </div>
+    </div>
+
+    <div class="card-footer bg-white">
+      <p><%= simple_format(@invoice.footer_notes) %></p>
+    </div>
+    <% end %>
+  </div>

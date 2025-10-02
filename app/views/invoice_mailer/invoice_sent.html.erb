@@ -1,14 +1,61 @@
 <% currency_symbols = { "PHP" => "₱", "USD" => "$", "EUR" => "€", "JPY" => "¥" } %>
 <% symbol = currency_symbols[@invoice.currency] || @invoice.currency %>
 
-<p>Hello <%= @recipient_user.email %>,</p>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9fafb;padding:40px 0;font-family:Arial,Helvetica,sans-serif;">
+  <tr>
+    <td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:40px;text-align:left;">
+        
+        <!-- Header -->
+        <tr>
+          <td style="text-align:center;padding-bottom:30px;">
+            <h2 style="margin:0;font-size:24px;color:#111827;">You’ve got a new invoice</h2>
+            <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">Sent by <%= @invoice.user.email %></p>
+          </td>
+        </tr>
 
-<p>You’ve received a new invoice from <%= @invoice.user.email %>.</p>
+        <!-- Invoice Summary -->
+        <tr>
+          <td style="padding:20px;background:#f3f4f6;border-radius:8px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="padding:6px 0;font-size:14px;color:#374151;"><strong>Invoice #:</strong></td>
+                <td style="padding:6px 0;font-size:14px;color:#111827;text-align:right;"><%= @invoice.id %></td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-size:14px;color:#374151;"><strong>Subtotal:</strong></td>
+                <td style="padding:6px 0;font-size:14px;color:#111827;text-align:right;"><%= "#{symbol}#{'%.2f' % @invoice.total['subtotal'].to_f}" %></td>
+              </tr>
+              <tr>
+                <td style="padding:6px 0;font-size:14px;color:#374151;"><strong>Tax:</strong></td>
+                <td style="padding:6px 0;font-size:14px;color:#111827;text-align:right;"><%= "#{symbol}#{'%.2f' % @invoice.total['tax'].to_f}" %></td>
+              </tr>
+              <tr>
+                <td style="padding:8px 0;font-size:16px;color:#111827;font-weight:bold;">Total:</td>
+                <td style="padding:8px 0;font-size:16px;color:#111827;font-weight:bold;text-align:right;"><%= "#{symbol}#{'%.2f' % @invoice.total['grand_total'].to_f}" %></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
 
-<p><strong>Invoice #:</strong> <%= @invoice.id %></p>
+        <!-- CTA -->
+        <tr>
+          <td style="text-align:center;padding:30px 0;">
+            <a href="<%= invoice_url(@invoice) %>" style="background:#00aeff;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600;display:inline-block;">
+              View Invoice
+            </a>
+          </td>
+        </tr>
 
-<p><strong>Subtotal:</strong> <%= "#{symbol}#{'%.2f' % @invoice.total['subtotal'].to_f}" %></p>
-<p><strong>Tax:</strong> <%= "#{symbol}#{'%.2f' % @invoice.total['tax'].to_f}" %></p>
-<p><strong>Total:</strong> <%= "#{symbol}#{'%.2f' % @invoice.total['grand_total'].to_f}" %></p>
+        <!-- Footer -->
+        <tr>
+          <td style="text-align:center;padding-top:20px;font-size:12px;color:#9ca3af;">
+            This invoice was sent to <%= @recipient_user.email %>.  
+            If you weren’t expecting it, you can safely ignore this email.
+          </td>
+        </tr>
 
-<p><%= link_to "View Invoice", invoice_url(@invoice) %></p>
+      </table>
+    </td>
+  </tr>
+</table>

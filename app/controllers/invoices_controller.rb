@@ -15,7 +15,17 @@ class InvoicesController < ApplicationController
     @ship_from_location = Location.find(@invoice.ship_from_location_id) if @invoice.ship_from_location_id.present?
     @remit_to_location_id = Location.find(@invoice.remit_to_location_id) if @invoice.remit_to_location_id.present?
     @tax_representative_location_id = Location.find(@invoice.tax_representative_location_id) if @invoice.tax_representative_location_id.present?
+
+    respond_to do |format|
+      format.html
+      format.json { render json: @invoice } # keep JSON if you want
+      format.js   # optional if you want a JS template
+      format.any(:pdf, :html) do
+        render partial: "invoices/partials/invoice_card", locals: { invoice: @invoice }
+      end
+    end
   end
+
 
   def new
     @recipient_companies = Company.where.not(user_id: current_user.id)

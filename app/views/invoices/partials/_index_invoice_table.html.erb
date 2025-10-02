@@ -67,6 +67,12 @@
             </button>
             <ul class="dropdown-menu" aria-labelledby="actionsDropdown_">
 
+              <li>
+                <a href="#" class="dropdown-item download-pdf" data-id="<%= invoice.id %>">
+                  Download PDF
+                </a>
+              </li>
+
               <% if invoice.status == "draft" %>
                 <li>
                   <%= link_to "Edit", edit_invoice_path(invoice), class: "dropdown-item" %>
