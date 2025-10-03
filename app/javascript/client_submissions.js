@@ -1,4 +1,4 @@
-if (window.location.pathname.includes("")) {
+if (window.location.pathname === "/") {
     $(document).ready(function () {
         const tables = [];
 
@@ -53,5 +53,18 @@ if (window.location.pathname.includes("")) {
             updateFileList('#form_2307_input', '#form_2307_list', false);
         });
 
+        const params = new URLSearchParams(window.location.search);
+        const submissionId = params.get("open_submission");
+
+        if (submissionId) {
+            const modal = new bootstrap.Modal($("#submissionModal")[0]);
+            modal.show();
+
+            $.ajax({
+            url: "tax_submissions/" + submissionId,
+            dataType: "script",
+            headers: { Accept: "text/javascript" }
+            });
+        }
     });
 }

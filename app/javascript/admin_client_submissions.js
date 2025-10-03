@@ -32,5 +32,20 @@ if (window.location.pathname.includes("/admin/tax_submissions")) {
         $('.auto-submit').on('change', function () {
             $(this).closest('form').submit();
         });
+
+        const params = new URLSearchParams(window.location.search);
+        const submissionId = params.get("open_submission");
+
+        if (submissionId) {
+            const modal = new bootstrap.Modal($("#submissionModal")[0]);
+            modal.show();
+
+            $.ajax({
+            url: "/admin/tax_submissions/" + submissionId,
+            dataType: "script",
+            headers: { Accept: "text/javascript" }
+            });
+        }
+        
     });
 }

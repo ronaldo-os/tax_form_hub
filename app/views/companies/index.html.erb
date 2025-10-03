@@ -12,20 +12,23 @@
 
           <%= form_with(model: @company, local: true, html: { multipart: true }) do |f| %>            
             <!-- Profile Image -->
-            <div class="d-flex flex-column align-items-center mb-4">
-              <div id="image-preview-wrapper" class="position-relative" style="cursor: pointer;">
+            <div class="mb-5 text-center">
+              <div id="image-preview-wrapper" 
+                  class="position-relative d-inline-block"
+                  style="cursor: pointer;">
+
                 <%= image_tag(
                   @company.profile_image.attached? ? url_for(@company.profile_image) : asset_path("user_avatar_default.png"),
                   id: "image-preview",
-                  class: "rounded-circle shadow-sm border",
+                  class: "rounded-circle border shadow-sm",
                   style: "width: 160px; height: 160px; object-fit: cover;"
                 ) %>
 
-                <!-- Edit button -->
+                <!-- Overlay Camera Icon -->
                 <label for="profile_image_input" 
-                      class="position-absolute bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-                      style="top: 6px; right: 6px; width: 36px; height: 36px; cursor: pointer;">
-                  <i class="fas fa-pencil-alt text-secondary"></i>
+                      class="position-absolute d-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm"
+                      style="bottom: 10px; right: 10px; width: 38px; height: 38px; cursor: pointer;">
+                  <i class="fas fa-camera text-primary" style="font-size: 16px;"></i>
                 </label>
 
                 <%= f.file_field :profile_image,
@@ -34,16 +37,19 @@
                   style: "display: none;" %>
               </div>
 
-              <small class="text-muted mt-2 text-center">
-                <%= @company.profile_image.attached? ? "Click image to change" : "Upload a profile image" %>
-              </small>
+              <div class="mt-3">
+                <small class="text-muted">
+                  <%= @company.profile_image.attached? ? "Click your photo to upload a new one" : "No profile image yet. Click to upload." %>
+                </small>
+              </div>
 
               <% if @company.errors[:profile_image].any? %>
-                <div class="text-danger small mt-1 text-center">
+                <div class="text-danger small mt-1">
                   <%= @company.errors[:profile_image].first %>
                 </div>
               <% end %>
             </div>
+
 
             <!-- Company Name + Website -->
             <h4 class="fw-bold text-center mb-1">
