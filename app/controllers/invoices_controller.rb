@@ -4,7 +4,25 @@ class InvoicesController < ApplicationController
     @invoices_sale_archived = current_user.invoices.where(invoice_type: "sale", archived: true).order(issue_date: :desc)
     @invoices_purchase = current_user.invoices.where(invoice_type: "purchase", archived: false).order(issue_date: :desc)
     @invoices_purchase_archived = current_user.invoices.where(invoice_type: "purchase", archived: true).order(issue_date: :desc)
+
+    # Sales totals
+    @invoice_totals_sale = {
+      "total" => @invoices_sale.count,
+      "draft" => @invoices_sale.where(status: "draft").count,
+      "sent"  => @invoices_sale.where(status: "sent").count,
+      "paid"  => @invoices_sale.where(status: "paid").count,
+      "pending" => @invoices_sale.where(status: "pending").count
+    }
+
+    @invoice_totals_purchase = {
+      "total" => @invoices_purchase.count,
+      "draft" => @invoices_purchase.where(status: "draft").count,
+      "sent" =>  @invoices_purchase.where(status: "sent").count,
+      "paid" =>  @invoices_purchase.where(status: "paid").count
+    }
   end
+
+
 
   def show
     @invoice = Invoice.find(params[:id])

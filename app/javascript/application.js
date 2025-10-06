@@ -1,6 +1,7 @@
 import "./client_submissions";
 import "./admin_client_submissions";
 import "./edit_profile";
+import "./index_invoice.js";
 import "./invoice";
 import "./locations";
 import "./companies.js";

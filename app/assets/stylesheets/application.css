@@ -404,3 +404,12 @@ input, select, textarea {
 .border-none{
   border: none !important;
 }
+
+.card-filter {
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.card-filter:hover {
+  color: #0d6efd; /* Bootstrap primary color */
+}
