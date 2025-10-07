@@ -5,23 +5,18 @@ class InvoicesController < ApplicationController
     @invoices_purchase = current_user.invoices.where(invoice_type: "purchase", archived: false).order(issue_date: :desc)
     @invoices_purchase_archived = current_user.invoices.where(invoice_type: "purchase", archived: true).order(issue_date: :desc)
 
-    # Sales totals
-    @invoice_totals_sale = {
-      "total" => @invoices_sale.count,
-      "draft" => @invoices_sale.where(status: "draft").count,
-      "sent"  => @invoices_sale.where(status: "sent").count,
-      "paid"  => @invoices_sale.where(status: "paid").count,
-      "pending" => @invoices_sale.where(status: "pending").count
-    }
+    # month ranges (use Time.current so it respects time zone)
+    current_month_range = Time.current.beginning_of_month..Time.current.end_of_month
+    last_month_range    = 1.month.ago.beginning_of_month..1.month.ago.end_of_month
 
-    @invoice_totals_purchase = {
-      "total" => @invoices_purchase.count,
-      "draft" => @invoices_purchase.where(status: "draft").count,
-      "sent" =>  @invoices_purchase.where(status: "sent").count,
-      "paid" =>  @invoices_purchase.where(status: "paid").count
-    }
+    # Summary stats
+    @invoice_totals_sale     = build_invoice_stats(@invoices_sale, current_month_range, last_month_range)
+    @invoice_totals_purchase = build_invoice_stats(@invoices_purchase, current_month_range, last_month_range)
+
+    # Trend graph data (last 6 months)
+    @invoice_trends_sale     = build_invoice_trends(@invoices_sale)
+    @invoice_trends_purchase = build_invoice_trends(@invoices_purchase)
   end
-
 
 
   def show
@@ -347,6 +342,66 @@ class InvoicesController < ApplicationController
   end
 
   private
+
+  def build_invoice_trends(relation)
+    statuses = %w[total draft sent paid pending]
+    trends = {}
+
+    6.times.reverse_each do |i|
+      month_start = i.months.ago.beginning_of_month
+      month_end   = i.months.ago.end_of_month
+      label       = month_start.strftime("%b")
+
+      month_scope = relation.where(issue_date: month_start..month_end)
+
+      statuses.each do |status|
+        count =
+          if status == "total"
+            month_scope.count
+          else
+            month_scope.where(status: status).count
+          end
+
+        trends[status] ||= []
+        trends[status] << { month: label, count: count }
+      end
+    end
+
+    trends
+  end
+
+  def build_invoice_stats(relation, current_range, last_range)
+    statuses = %w[draft sent paid pending]
+    stats = {}
+
+    (["total"] + statuses).each do |status|
+      if status == "total"
+        overall = relation.count
+        current = relation.where(issue_date: current_range).count
+        last    = relation.where(issue_date: last_range).count
+      else
+        overall = relation.where(status: status).count
+        current = relation.where(status: status, issue_date: current_range).count
+        last    = relation.where(status: status, issue_date: last_range).count
+      end
+
+      percent_change =
+        if last.zero?
+          current.positive? ? 100.0 : 0.0
+        else
+          (((current - last).to_f / last) * 100).round(1)
+        end
+
+      stats[status] = {
+        "overall"        => overall,
+        "current"        => current,
+        "last"           => last,
+        "percent_change" => percent_change
+      }
+    end
+
+    stats
+  end
 
   def process_optional_fields(fields)
     grouped = {}

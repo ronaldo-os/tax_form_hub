@@ -42,24 +42,25 @@ if (window.location.pathname.includes("/invoices")) {
             }, 'html');
         });
 
-        $(".card-filter").on("click", function (e) {
-            e.stopPropagation(); // prevent triggering parent card clicks
+        $(".card-filter").on("click", function() {
+            const $this = $(this);
+            const tableSelector = $this.data("table");
+            const status = $this.data("status");
 
-            const card = $(this).closest(".card");
-            const tableId = card.data("table");
-            const status  = card.data("status");
-            const table   = $(tableId).DataTable();
+            $this.closest(".row").find(".card-filter").removeClass("active");
 
+            $this.addClass("active");
+
+            if ($.fn.DataTable && tableSelector) {
+            const table = $(tableSelector).DataTable();
             if (status) {
-            table.column(4).search("^" + status + "$", true, false).draw();
+                table.column(3).search(status, true, false).draw();
             } else {
-            table.column(4).search("").draw();
+                table.column(3).search("").draw();
             }
-
-            // optional: highlight active filter icon
-            $(".card-filter").removeClass("text-primary");
-            $(this).addClass("text-primary");
+            }
         });
+
 
 
     });
