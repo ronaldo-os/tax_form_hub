@@ -360,10 +360,11 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 }
 
 /* Invoice */
-#form_actions_fixed_navbar{
+#form_actions_fixed_navbar {
   float: right;
   width: calc(100% - 68px);
   margin-left: 68px;
+  transition: all 0.3s ease-in-out;
 }
 .chart-wrapper {
   flex-shrink: 0;

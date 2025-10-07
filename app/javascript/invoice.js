@@ -1761,10 +1761,25 @@ if (
       html2pdf().set(opt).from(invoice).save();
     });
 
-    // Initialize Bootstrap tooltips
-    $(function () {
-      $('[data-bs-toggle="tooltip"]').tooltip();
+    $(function() {
+      const $aside = $(".global-wrapper aside");
+      const $nav = $("#form_actions_fixed_navbar");
+
+      $aside.on("mouseenter", function() {
+        $nav.css({
+          width: "calc(100% - 302px)",
+          marginLeft: "300px"
+        });
+      });
+
+      $aside.on("mouseleave", function() {
+        $nav.css({
+          width: "calc(100% - 68px)",
+          marginLeft: "68px"
+        });
+      });
     });
+
 
   });
 }

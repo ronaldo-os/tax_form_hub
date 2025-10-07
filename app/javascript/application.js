@@ -12,6 +12,10 @@ import Rails from "@rails/ujs";
 Rails.start();
 
 $(document).ready(function () {
+    $(function () {
+      $('[data-bs-toggle="tooltip"]').tooltip();
+    });
+
     setTimeout(function () {
         $('.custom_tfh_alert').fadeOut(500, function () {
             $(this).remove();
