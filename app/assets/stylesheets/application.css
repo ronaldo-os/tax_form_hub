@@ -12,6 +12,11 @@ a{
     color: var(--main-color);
 }
 
+.form-label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
 /* Apply height only to input + select */
 .form-control:not(textarea),
 .form-select {
@@ -375,7 +380,7 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
 
 /* Buttons */
 .btn{
-  border-radius: var(--bs-border-radius-lg) !important;
+  border-radius: 5px !important;
 }
 .btn-primary{
   background-color: #00aeff !important;
@@ -394,6 +399,18 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
   --bs-btn-active-border-color: var(--main-color);
   --bs-btn-disabled-color: var(--main-color);
   --bs-btn-disabled-border-color: var(--main-color);
+}
+.btn-success {
+  background-color: #0077ff !important;
+  border-color: #0077ff !important;
+  color: #fff !important;
+}
+
+.btn-success:hover,
+.btn-success:focus {
+  background-color: #0087e6 !important;
+  border-color: #0087e6 !important;
+  color: #fff !important;
 }
 
 /* Inputs */
@@ -414,6 +431,20 @@ input, select, textarea {
   --bs-pagination-active-bg: var(--main-color);
   --bs-pagination-active-border-color: var(--main-color);
 }
+#invoice-preview table td,
+#invoice-preview table th {
+  vertical-align: middle;
+  padding: 0.5rem 0.75rem;
+}
+
+#invoice-preview table td label {
+  margin-bottom: 2px;
+}
+
+#invoice-preview .line-item td {
+  border-top: 2px solid #f0f0f0;
+}
+
 
 /* Modals */
 .modal-content {
@@ -436,13 +467,13 @@ input, select, textarea {
 
 /* Highlight active filter card */
 .card-filter.active {
-  border: 2px solid #0d6efd;
+  border: 2px solid #00aeff;
   box-shadow: 0 0 10px rgba(13, 110, 253, 0.25);
 }
 
 .card-filter.active p,
 .card-filter.active i {
-  color: #0d6efd !important;
+  color: #00aeff !important;
   font-weight: 600;
 }
 

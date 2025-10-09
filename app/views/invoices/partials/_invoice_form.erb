@@ -430,14 +430,14 @@
           </div>
         </div>
 
-        <nav class="navbar navbar-light bg-white fixed-bottom border-top shadow-sm py-2" id="form_actions_fixed_navbar">
-          <div class="container d-flex justify-content-between">
-            
+        <nav class="navbar navbar-light bg-white fixed-bottom py-2" id="form_actions_fixed_navbar">
+          <div class="container d-flex justify-content-between align-items-center">
+
             <!-- Left side -->
             <div class="d-flex gap-2">
               <% if action_name != "edit" %>
-                <%= link_to "Discard", invoices_path, 
-                    class: "btn btn-secondary btn-md discard-btn", 
+                <%= link_to "Discard", invoices_path,
+                    class: "btn btn-secondary btn-md discard-btn",
                     data: { confirm: "Are you sure you want to discard this invoice?" } %>
 
                 <%= f.submit "Save As Draft", class: "btn btn-secondary btn-md" %>
@@ -447,7 +447,11 @@
             </div>
 
             <!-- Right side -->
-            <div>
+            <div class="d-flex gap-2">
+              <button type="button" id="preview-invoice-btn" class="btn btn-outline-primary btn-md">
+                Preview
+              </button>
+
               <% if action_name != "edit" %>
                 <%= f.submit "Send",
                     class: "btn btn-primary btn-md",
@@ -455,15 +459,19 @@
                     formmethod: :post,
                     id: "send_invoice_btn" %>
               <% else %>
-                <%= button_tag "Update", type: "submit", name: "commit_action", value: "save", class: "btn btn-primary" %>
-                <%= button_tag "Send", type: "submit", name: "commit_action", value: "send", class: "btn btn-success" %>
-              <% end %>
-              
+                <%= button_tag "Update", type: "submit",
+                    name: "commit_action", value: "save",
+                    class: "btn btn-primary btn-md" %>
 
+                <%= button_tag "Send", type: "submit",
+                    name: "commit_action", value: "send",
+                    class: "btn btn-success btn-md" %>
+              <% end %>
             </div>
-            
+
           </div>
         </nav>
+
 
 
 
@@ -479,7 +487,6 @@
             <%= hidden_field_tag :payment_terms_json_edit, (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json_edit', data: { field_type: 'invoice_form_fields' } %>
             <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit', data: { field_type: 'invoice_form_fields' } %>
         </div>
-    </div>
     <div class="card-footer bg-white pb-3">
         <button type="button" class="btn btn-primary btn-sm add-footer-toggle-btn mt-3">
           + Add footer notes
@@ -505,3 +512,178 @@
     <% end %>
   </div>
 </div>
+
+<div class="modal fade" id="invoicePreviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Invoice Preview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="invoicePreviewCard"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  $(document).ready(function () {
+    const $previewBtn = $('#preview-invoice-btn');
+    const $previewCard = $('#invoicePreviewCard');
+    const modal = new bootstrap.Modal($('#invoicePreviewModal')[0]);
+
+    if ($previewBtn.length === 0) return;
+
+    $previewBtn.on('click', function () {
+      const formData = $('form').serializeArray();
+      const data = {};
+      $.each(formData, function (_, field) {
+        data[field.name] = field.value;
+      });
+
+      // Company details
+      const companyName = $('#company_name').text() || '—';
+      const companyAddress = $('#company_address').text() || '';
+      const companyLocation = $('#company_location').text() || '';
+      const companyCountry = $('#company_country').text() || '';
+      const companyNumber = $('#company_number').text().replace('Company number :', '').trim() || '-';
+      const companyTaxNumber = $('#company_tax_number').text().replace('Tax number :', '').trim() || '-';
+
+      // Basic invoice fields
+      const issueDate = data['invoice[issue_date]'] || '—';
+      const invoiceNumber = data['invoice[invoice_number]'] || '—';
+      const currency = data['invoice[currency]'] || '—';
+      const note = $('#invoice_recipient_note').val() || '';
+      const footer = $('#invoice_footer_notes').val() || '';
+
+      // Collect optional/dynamic fields
+      let optionalFieldsHtml = '';
+      $('#optional_fields_container .optional-group, #optional_fields_container [data-optional-group]').each(function () {
+        const groupLabel = $(this).find('label').first().text().trim();
+        const inputs = $(this).find('input, select');
+        let groupValues = '';
+
+        inputs.each(function () {
+          const label = $(this).closest('.mb-3').find('label').text().trim();
+          const value = $(this).val() || '—';
+          groupValues += `<p class="mb-1 small"><strong>${label}:</strong> ${value}</p>`;
+        });
+
+        optionalFieldsHtml += `
+          <div class="mb-3 border rounded p-2 bg-light-subtle">
+            <p class="fw-semibold mb-1">${groupLabel}</p>
+            ${groupValues}
+          </div>
+        `;
+      });
+
+      // Line items
+      let lineItems = '';
+      $('#line-items tr.line-item').each(function (i) {
+        const $tr = $(this);
+        const $inputs = $tr.find('input, select');
+        lineItems += `
+          <tr>
+            <td>${i + 1}</td>
+            <td>${$inputs.eq(0).val() || ''}</td>
+            <td>${$inputs.eq(1).val() || ''}</td>
+            <td>${$inputs.eq(2).val() || ''}</td>
+            <td>${$inputs.eq(3).val() || ''}</td>
+            <td>${$inputs.eq(4).val() || ''}</td>
+            <td>${$inputs.eq(5).val() || ''}</td>
+            <td class="fw-semibold">${$tr.find('.total').text() || '0.00'}</td>
+          </tr>`;
+      });
+
+      // Totals
+      const subtotal = $('.subtotal-amount').text() || '0.00';
+      const tax = $('.total-tax-amount').text() || '0.00';
+      const total = $('.grand-total-amount').text() || '0.00';
+
+      // Build preview HTML
+      const html = `
+        <div class="card shadow-sm border-0 mb-5" id="invoice_card">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h4 class="fw-bold mb-0">Invoice Details</h4>
+              <span class="badge px-3 py-2 fs-6 bg-secondary-subtle text-muted">DRAFT</span>
+            </div>
+
+            <div class="row g-4">
+              <div class="col-md-6">
+                <div class="p-3 rounded border bg-light-subtle h-100">
+                  <h6 class="fw-bold mb-2">${companyName}</h6>
+                  <p class="mb-1 text-muted">${companyAddress}</p>
+                  <p class="mb-1 text-muted">${companyLocation}</p>
+                  <p class="mb-1 text-muted">${companyCountry}</p>
+                  <hr>
+                  <p class="mb-1 small">Company No: <strong>${companyNumber}</strong></p>
+                  <p class="mb-0 small">Tax No: <strong>${companyTaxNumber}</strong></p>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="p-3 rounded border bg-light-subtle h-100">
+                  <p class="mb-2"><strong>Invoice Number:</strong> ${invoiceNumber}</p>
+                  <p class="mb-2"><strong>Issue Date:</strong> ${issueDate}</p>
+                  <p class="mb-2"><strong>Currency:</strong> ${currency}</p>
+                  ${optionalFieldsHtml}
+                </div>
+              </div>
+            </div>
+
+            <div class="table-responsive mt-4">
+              <table class="table align-middle table-hover">
+                <thead class="table-light">
+                  <tr>
+                    <th>#</th><th>Item ID</th><th>Description</th><th>Qty</th>
+                    <th>Unit</th><th>Price</th><th>Tax (%)</th><th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>${lineItems}</tbody>
+              </table>
+            </div>
+
+            <div class="text-end mt-4">
+              <p class="mb-1">Subtotal excl. taxes: <span class="fw-semibold">${subtotal}</span></p>
+              <p class="mb-1">Total taxes: <span class="fw-semibold">${tax}</span></p>
+              <p class="fs-5 fw-bold mt-2">Total ${currency}: <span>${total}</span></p>
+            </div>
+
+            <hr>
+
+            <div class="row">
+              <div class="col-md-6">
+                <h5 class="mb-3">Payment & Delivery</h5>
+                ${optionalFieldsHtml || '<p class="text-muted">No extra details provided.</p>'}
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <h5 class="mb-3">Message:</h5>
+                  <p>${note.replace(/\n/g, '<br>')}</p>
+                </div>
+              </div>
+
+              <hr>
+
+              <h4 class="mb-3">Attachments</h4>
+              <p class="text-muted">No attachments uploaded.</p>
+            </div>
+          </div>
+
+          <div class="card-footer bg-white">
+            <p>${footer.replace(/\n/g, '<br>')}</p>
+          </div>
+        </div>
+      `;
+
+      // Render smoothly
+      $previewCard.stop(true, true).fadeOut(150, function () {
+        $previewCard.html(html).fadeIn(150);
+        modal.show();
+      });
+    });
+  });
+</script>
+

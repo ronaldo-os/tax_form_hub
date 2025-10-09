@@ -12,6 +12,15 @@ import Rails from "@rails/ujs";
 Rails.start();
 
 $(document).ready(function () {
+
+    $('.global-wrapper aside')
+    .on('mouseenter', function() {
+    $('body').css('overflow-x', 'hidden');
+    })
+    .on('mouseleave', function() {
+    $('body').css('overflow-x', '');
+    });
+
     $(function () {
       $('[data-bs-toggle="tooltip"]').tooltip();
     });
