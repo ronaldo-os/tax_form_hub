@@ -661,13 +661,12 @@ if (
     }
   });
 
-
   $(document).on('change', 'select[id^="additional_field_"]', function () {
     const $select = $(this);
     const selectedKey = $select.val();
     const selectedText = $select.find("option:selected").text();
     if (!selectedKey) return;
-    
+
     const $dropdownRow = $select.closest('tr.dropdown_per_line');
     const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
       return $(this).data('line-index') === parseInt($select.attr('id').split('_').pop());
@@ -681,55 +680,105 @@ if (
     const fields = discount_fieldTypeMap[selectedKey];
     if (!Array.isArray(fields)) return;
 
-    // Prevent duplicate optional fields of the same type for the same line
     const existing = $(`#line-items .optional-field-row[data-line-index="${rowIndex}"][data-optional-group="${selectedKey}"]`);
     if (existing.length > 0) return;
 
     let newRowHtml = `
-      <tr class="optional-field-row" data-optional-group="${selectedKey}" data-line-index="${rowIndex}">
-        <td colspan="9">
-          <div class="p-2 border rounded bg-light mb-2">
-            <p class="fs-5 mb-3 d-flex justify-content-between align-items-center">
-              ${selectedText.toUpperCase()}
-              <button type="button" class="btn btn-sm btn-outline-danger remove-group ms-2">×</button>
-            </p>
-            <div class="row g-3">`;
+      <tr class="optional-field-row bg-light" data-optional-group="${selectedKey}" data-line-index="${rowIndex}">
+        <td></td><td></td>
+    `;
 
     fields.forEach(field => {
-      const colClass = `col-md-${field.cols || 6} ${field.class || ''}`.trim();
       let inputHtml = '';
-
       const inputName = `invoice[line_items_attributes][${rowIndex}][optional_fields][${field.name}]`;
+      const placeholder = field.label ? ` placeholder="${field.label}"` : '';
 
       if (field.type === "select") {
         const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
-        inputHtml = `<select name="${inputName}" class="form-select"${field.disabled ? ' disabled' : ''}>${optionsHtml}</select>`;
+        inputHtml = `
+          <select name="${inputName}" class="form-select form-select-sm"${field.disabled ? ' disabled' : ''}>
+            <option value="" disabled selected>${field.label}</option>
+            ${optionsHtml}
+          </select>
+        `;
       } else if (field.type === "textarea") {
-        inputHtml = `<textarea name="${inputName}" class="form-control"${field.disabled ? ' disabled' : ''}></textarea>`;
+        inputHtml = `
+          <textarea 
+            name="${inputName}" 
+            class="form-control form-control-sm"
+            ${placeholder}
+            ${field.disabled ? ' disabled' : ''}></textarea>
+        `;
       } else if (field.type === "text_only") {
-        inputHtml = `<span class="form-control-plaintext optional-total" data-total-type="${selectedKey}" data-line-index="${rowIndex}">0.00</span>
-        <input type="hidden" name="${inputName}" class="form-control optional-total-input"${field.disabled ? ' disabled' : ''}>`;
+        inputHtml = `
+          <span class="form-control-plaintext text-end optional-total" 
+            data-total-type="${selectedKey}" 
+            data-line-index="${rowIndex}">0.00</span>
+          <input type="hidden" 
+            name="${inputName}" 
+            class="form-control optional-total-input"
+            ${field.disabled ? ' disabled' : ''}>
+        `;
+      } else if (field.type === "date") {
+        inputHtml = `
+          <input 
+            type="text"
+            name="${inputName}"
+            class="form-control form-control-sm flatpickr-date"
+            placeholder="${field.label}"
+            autocomplete="off"
+            readonly
+          />
+        `;
       } else {
-        inputHtml = `<input type="${field.type}" name="${inputName}" class="form-control"${field.disabled ? ' disabled' : ''}>`;
+        inputHtml = `
+          <input 
+            type="${field.type}" 
+            name="${inputName}" 
+            class="form-control form-control-sm"
+            ${placeholder}
+            ${field.disabled ? ' disabled' : ''}>
+        `;
       }
 
-      newRowHtml += `
-        <div class="${colClass}">
-          <div class="d-flex flex-column">
-            <label class="form-label text-start w-100">${field.label}</label>
-            ${inputHtml}
-          </div>
-        </div>`;
+      newRowHtml += `<td>${inputHtml}</td>`;
     });
 
+    const totalCols = 7;
+    if (fields.length < totalCols) {
+      const emptyCols = totalCols - fields.length - 1;
+      for (let i = 0; i < emptyCols; i++) {
+        newRowHtml += `<td></td>`;
+      }
+    }
+
     newRowHtml += `
-            </div>
-          </div>
-        </td>
-      </tr>`;
+      <td class="text-end">
+        <button type="button" class="btn btn-sm btn-outline-danger remove-group">-</button>
+      </td>
+    </tr>`;
 
     $dropdownRow.before(newRowHtml);
     $select.val('');
+    updateCurrencyFields();
+
+    // ✅ Initialize Flatpickr for date fields (only show on click)
+    $dropdownRow.prev().find('.flatpickr-date').each(function () {
+      const fp = flatpickr(this, {
+        dateFormat: "Y-m-d",
+        allowInput: false,
+        clickOpens: false,
+      });
+
+      $(this).on('click', function () {
+        fp.open();
+      });
+    });
+  });
+
+
+  $(document).on('click', '.remove-group', function () {
+    $(this).closest('tr.optional-field-row').remove();
     updateCurrencyFields();
   });
 
@@ -780,7 +829,6 @@ if (
             <option value="true">%</option>
           </select>
         </td>
-        <td class="align-top"></td>
         <td class="align-top"></td>
         <td class="align-top text-end total">0.00</td>
         <td class="align-top">
@@ -856,35 +904,49 @@ if (
 
 
   // Toggle base quantity column button 
-  let baseQuantityVisible = false;
+// Toggle base quantity column button 
+let baseQuantityVisible = false;
 
-  $('#add-base-quantity').on('click', function () {
-    baseQuantityVisible = !baseQuantityVisible;
+$('#add-base-quantity').on('click', function () {
+  baseQuantityVisible = !baseQuantityVisible;
 
-    const $theadRow = $('.invoice-table thead tr');
-    const $headerCells = $theadRow.find('th');
+  const $table = $('.invoice-table');
+  const $theadRow = $table.find('thead tr');
+  const $headerCells = $theadRow.find('th');
 
-    if (baseQuantityVisible) {
-      $(this).text('Hide Base Quantity Column');
-      $headerCells.eq(5).text('Price');
-      $('<th class="base-quantity-header">Price per Quantity</th>').insertAfter($headerCells.eq(5));
+  if (baseQuantityVisible) {
+    $(this).text('Hide Base Quantity Column');
+    $headerCells.eq(5).text('Price');
+    $('<th class="base-quantity-header">Price per Quantity</th>').insertAfter($headerCells.eq(5));
 
-      $('.line-item').each(function () {
-        $('<td class="base-quantity-cell"><input type="number" name="invoice[price_per_quantity]" class="form-control price-per-quantity" step="0.01"></td>')
-          .insertAfter($(this).find('td').eq(5));
-      });
+    // Add input column to each main line item
+    $table.find('tr.line-item').each(function () {
+      $('<td class="base-quantity-cell"><input type="number" name="invoice[price_per_quantity]" class="form-control price-per-quantity" step="0.01"></td>')
+        .insertAfter($(this).find('td').eq(5));
+    });
 
-      $('.optional-field-row td[colspan]').attr('colspan', 10);
-    } else {
-      $(this).text('Show Base Quantity Column');
-      $headerCells.eq(5).text('Price per unit');
-      $('.base-quantity-header').remove();
-      $('.base-quantity-cell').remove();
-      $('.optional-field-row td[colspan]').attr('colspan', 9);
-    }
+    // Add an empty <td> at the second-to-last position for NON-line-item rows only
+    $table.find('tr').not('.line-item').each(function () {
+      const $tds = $(this).find('td');
+      if ($tds.length > 2 && !$(this).find('.empty-added').length) {
+        $('<td class="empty-added"></td>').insertBefore($tds.last());
+      }
+    });
 
-    recalculateTotals();
-  });
+    $('.optional-field-row td[colspan]').attr('colspan', 10);
+  } else {
+    $(this).text('Show Base Quantity Column');
+    $headerCells.eq(5).text('Price per unit');
+    $('.base-quantity-header').remove();
+    $('.base-quantity-cell').remove();
+    $('.empty-added').remove();
+    $('.optional-field-row td[colspan]').attr('colspan', 9);
+  }
+
+  recalculateTotals();
+});
+
+
 
   // Update discount type input when select changes
   $(document).on('change', 'select[name*="[optional_fields][discount.discount_type.select"], select[name*="[optional_fields][charge.charge_type.select"]', function () {
@@ -1326,142 +1388,224 @@ if (
         $html.find('.tax').val(item.tax);
 
         if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
+
         if (item.optional_fields) {
           Object.entries(item.optional_fields).forEach(([groupKey, fields]) => {
             const $optionalRow = $(`
-              <tr class="optional-field-row" data-optional-group="${groupKey}" data-line-index="${i}">
-                <td colspan="9">
-                  <div class="p-2 border rounded bg-light mb-2">
-                    <p class="fs-5 mb-3 d-flex justify-content-between align-items-center text-uppercase">
-                      ${groupKey.replace(/_/g, ' ')}
-                      <button type="button" class="btn btn-sm btn-outline-danger remove-group ms-2">×</button>
-                    </p>
-                    <div class="row g-3"></div>
-                  </div>
-                </td>
+              <tr class="optional-field-row bg-light" data-optional-group="${groupKey}" data-line-index="${i}">
+                <td></td><td></td>
               </tr>
             `);
 
-            const $fieldRow = $optionalRow.find('.row');
-
-            // Field order definition for recurring
             const RECURRING_FIELDS_ORDER = [
-              { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
-              { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"], cols: 2 },
-              { name: "recurring.every.number.2", label: "Every (day)", type: "number", cols: 2 },
-              { name: "recurring.start_date.date.2", label: "Start Date", type: "date", cols: 2 },
-              { name: "recurring.end_date.date.2", label: "End Date", type: "date", cols: 2 },
+              { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"] },
+              { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"] },
+              { name: "recurring.every.number.2", label: "Every (day)", type: "number" },
+              { name: "recurring.start_date.date.2", label: "Start Date", type: "date" },
+              { name: "recurring.end_date.date.2", label: "End Date", type: "date" },
             ];
 
-            if (groupKey === "recurring") {
-              RECURRING_FIELDS_ORDER.forEach(fieldDef => {
-                const rawKey = fieldDef.name.replace(/^recurring\./, "");
-                const value = fields[rawKey] || "";
+            const fieldsToRender = groupKey === "recurring"
+              ? RECURRING_FIELDS_ORDER.map(def => ({
+                  name: def.name,
+                  label: def.label,
+                  type: def.type,
+                  options: def.options || [],
+                  value: fields[def.name.replace(/^recurring\./, "")] || ""
+                }))
+              : Object.entries(fields).map(([rawKey, val]) => {
+                  let type = "text", value = "", options = [];
 
-                const colClass = `col-md-${fieldDef.cols}`;
-
-                if (fieldDef.type === "select") {
-                  $fieldRow.append(`
-                    <div class="${colClass} mb-3">
-                      <label class="form-label">${fieldDef.label}</label>
-                      <select name="invoice[line_items_attributes][${i}][optional_fields][${fieldDef.name}]" class="form-select">
-                        ${fieldDef.options.map(opt => `<option value="${opt}" ${opt === value ? "selected" : ""}>${opt}</option>`).join("")}
-                      </select>
-                    </div>
-                  `);
-                } else {
-                  $fieldRow.append(`
-                    <div class="${colClass} mb-3">
-                      <label class="form-label">${fieldDef.label}</label>
-                      <input type="${fieldDef.type}" name="invoice[line_items_attributes][${i}][optional_fields][${fieldDef.name}]" class="form-control" value="${value}">
-                    </div>
-                  `);
-                }
-              });
-            } else {
-              // fallback for other groups (your original logic)
-              const entries = Object.entries(fields).reverse().sort(([keyA], [keyB]) => {
-                const aIsTotal = keyA.toLowerCase().includes("total") ? 1 : 0;
-                const bIsTotal = keyB.toLowerCase().includes("total") ? 1 : 0;
-                return aIsTotal - bIsTotal;
-              });
-
-              entries.forEach(([rawKey, val], index, array) => {
-                const name = `invoice[line_items_attributes][${i}][optional_fields][${groupKey}.${rawKey}]`;
-
-                // Determine value type
-                let value = '';
-                let type = 'text';
-                let cols = 4;
-
-                if (typeof val === 'string') {
-                  value = val;
-                } else if (typeof val === 'object') {
-                  value = val.value || '';
-                  type = val.type || 'text';
-                  cols = val.columns || 4;
-                }
-
-                // Get columns from .N suffix
-                const colMatch = rawKey.match(/\.(\d+)$/);
-                if (colMatch) cols = parseInt(colMatch[1]);
-
-                // Extract label (second segment only)
-                const labelSegment = rawKey.split('.')[0] || '';
-                const formattedLabel = labelSegment.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-                const colClass = `col-md-${cols}`;
-
-                // *** NEW: Check if this is a "total" field - render text_only style ***
-                if (rawKey.toLowerCase().includes('total')) {
-                  $fieldRow.append(`
-                    <div class="${colClass} mb-3">
-                      <label class="form-label text-start w-100">Total</label>
-                      <span class="form-control-plaintext optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
-                      <input type="hidden" name="${name}" class="form-control optional-total-input" value="${value}">
-                    </div>
-                  `);
-                } else if (rawKey.includes('select(')) {
-                  const match = rawKey.match(/select\((.*?)\)/);
-                  const optionSource = match?.[1] || '';
-                  let options = [];
-
-                  if (optionSource === "DISCOUNT_OPTIONS") {
-                    options = DISCOUNT_OPTIONS;
-                  } else if (optionSource === "COUNTRY_OPTIONS") {
-                    options = COUNTRY_OPTIONS;
+                  if (typeof val === "object") {
+                    value = val.value || "";
+                    type = val.type || "text";
                   } else {
-                    options = optionSource.split(',').map(opt => opt.trim());
+                    value = val;
                   }
 
-                  $fieldRow.append(`
-                    <div class="${colClass} mb-3">
-                      <label class="form-label">${formattedLabel}</label>
-                      <select name="${name}" class="form-select">
-                        ${options.map(opt => `<option value="${opt}" ${opt === value ? 'selected' : ''}>${opt}</option>`).join('')}
-                      </select>
-                    </div>
-                  `);
+                  const label = rawKey.split('.')[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                  if (rawKey.includes('select(')) {
+                    const match = rawKey.match(/select\((.*?)\)/);
+                    const optionSource = match?.[1]?.trim() || '';
+                    type = "select";
+
+                    // ✅ Handle external constants
+                    if (optionSource === "DISCOUNT_OPTIONS") {
+                      options = DISCOUNT_OPTIONS;
+                    } else if (optionSource === "COUNTRY_OPTIONS") {
+                      options = COUNTRY_OPTIONS;
+                    } else {
+                      options = optionSource.split(',').map(opt => opt.trim());
+                    }
+                  }
+
+                  return { name: rawKey, label, type, value, options };
+              });
+
+            let newRowHtml = "";
+
+            const isDiscountOrCharge = Object.keys(fields).some(k =>
+              k.toLowerCase().includes("discount") || k.toLowerCase().includes("charge")
+            );
+
+            if (isDiscountOrCharge) {
+              const orderedKeys = ["", "discount_type", "charge_type", "edit_type", "unit", "quantity", "total"];
+              const orderedFields = [];
+              orderedKeys.forEach(key => {
+                const found = fieldsToRender.find(f =>
+                  f.name.toLowerCase().includes(key) && key !== ""
+                );
+                if (found) orderedFields.push(found);
+              });
+
+              orderedFields.forEach(field => {
+                let inputHtml = "";
+                const inputName = `invoice[line_items_attributes][${i}][optional_fields][${groupKey}.${field.name}]`;
+
+                if (field.type === "select") {
+                  const optionsHtml = field.options.map(opt =>
+                    `<option value="${opt}" ${opt === field.value ? "selected" : ""}>${opt}</option>`
+                  ).join("");
+                  inputHtml = `
+                    <select name="${inputName}" class="form-select form-select-sm">
+                      <option value="" disabled ${!field.value ? "selected" : ""}>${field.label}</option>
+                      ${optionsHtml}
+                    </select>
+                  `;
+                } else if (field.type === "date") {
+                  inputHtml = `
+                    <input 
+                      type="text"
+                      name="${inputName}"
+                      class="form-control form-control-sm flatpickr-date"
+                      placeholder="${field.label}"
+                      value="${field.value || ''}"
+                      readonly
+                      autocomplete="off"
+                    >
+                  `;
+                } else if (field.name.toLowerCase().includes("total")) {
+                  inputHtml = `
+                    <span class="form-control-plaintext text-end optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
+                    <input type="hidden" name="${inputName}" class="form-control optional-total-input" value="${field.value}">
+                  `;
                 } else {
-                  $fieldRow.append(`
-                    <div class="${colClass} mb-3">
-                      <label class="form-label">${formattedLabel}</label>
-                      <input type="${type}" name="${name}" class="form-control" value="${value}">
-                    </div>
-                  `);
+                  inputHtml = `
+                    <input 
+                      type="${field.type}"
+                      name="${inputName}"
+                      class="form-control form-control-sm"
+                      placeholder="${field.label}"
+                      value="${field.value || ''}"
+                    >
+                  `;
                 }
+
+                newRowHtml += `<td>${inputHtml}</td>`;
+              });
+
+              if (!orderedFields.some(f => f.name.toLowerCase().includes("total"))) {
+                newRowHtml += `
+                  <td>
+                    <span class="form-control-plaintext text-end optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
+                    <input type="hidden" name="invoice[line_items_attributes][${i}][optional_fields][${groupKey}.total]" class="form-control optional-total-input" value="">
+                  </td>
+                `;
+              }
+
+            } else {
+              // Default layout for non-discount/charge optional fields
+              fieldsToRender.forEach(field => {
+                let inputHtml = "";
+                const inputName = `invoice[line_items_attributes][${i}][optional_fields][${groupKey}.${field.name}]`;
+
+                if (field.type === "select") {
+                  const optionsHtml = field.options.map(opt =>
+                    `<option value="${opt}" ${opt === field.value ? "selected" : ""}>${opt}</option>`
+                  ).join("");
+                  inputHtml = `
+                    <select name="${inputName}" class="form-select form-select-sm">
+                      <option value="" disabled ${!field.value ? "selected" : ""}>${field.label}</option>
+                      ${optionsHtml}
+                    </select>
+                  `;
+                } else if (field.type === "date") {
+                  inputHtml = `
+                    <input 
+                      type="text"
+                      name="${inputName}"
+                      class="form-control form-control-sm flatpickr-date"
+                      placeholder="${field.label}"
+                      value="${field.value || ''}"
+                      readonly
+                      autocomplete="off"
+                    >
+                  `;
+                } else if (field.name.toLowerCase().includes("total")) {
+                  inputHtml = `
+                    <span class="form-control-plaintext text-end optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
+                    <input type="hidden" name="${inputName}" class="form-control optional-total-input" value="${field.value}">
+                  `;
+                } else {
+                  inputHtml = `
+                    <input 
+                      type="${field.type}"
+                      name="${inputName}"
+                      class="form-control form-control-sm"
+                      placeholder="${field.label}"
+                      value="${field.value || ''}"
+                    >
+                  `;
+                }
+
+                newRowHtml += `<td>${inputHtml}</td>`;
               });
             }
 
+            // Fill up remaining columns if needed
+            const totalCols = 7;
+            if (fieldsToRender.length < totalCols) {
+              const emptyCols = totalCols - fieldsToRender.length - 1;
+              for (let i = 0; i < emptyCols; i++) {
+                newRowHtml += `<td></td>`;
+              }
+            }
+
+            newRowHtml += `
+              <td>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-line">-</button>
+              </td>
+            `;
+
+            $optionalRow.append(newRowHtml);
             $lineItems.find(`.dropdown_per_line[data-line-index="${i}"]`).before($optionalRow);
           });
-
         }
+
         recalculateTotals();
       });
-      
-      // Ensures to recalculate totals after a group is removed.
-      $(document).on("click", ".remove-group", function(e) {
+
+      // Initialize Flatpickr for date fields
+      function initFlatpickrs() {
+        $('.flatpickr-date').each(function () {
+          const fp = flatpickr(this, {
+            dateFormat: "Y-m-d",
+            clickOpens: false,
+            allowInput: false,
+          });
+          $(this).on('click', function () { fp.open(); });
+        });
+      }
+
+      initFlatpickrs();
+
+      $(document).on('DOMNodeInserted', '.flatpickr-date', function () {
+        initFlatpickrs();
+      });
+
+      $(document).on("click", ".remove-group", function () {
+        $(this).closest('tr.optional-field-row').remove();
         recalculateTotals();
       });
     });
@@ -1607,7 +1751,6 @@ if (
                 <option value="true"${unitType === "true" ? " selected" : ""}>%</option>
               </select>
             </td>
-            <td class="align-top"></td>
             <td class="align-top"></td>
             <td class="align-top text-end total">${totalFormatted}</td>
             <td class="align-top">

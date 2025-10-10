@@ -81,8 +81,9 @@ body {
 }
 
 .card{
-    border-radius: 2px;
-    border-color: #ffffff00;
+  border-radius: 2px;
+  border: 1px solid !important;
+  border-color: #ededed ! IMPORTANT;
 }
 .custom_nav_tabs {
     border-radius: 0px;

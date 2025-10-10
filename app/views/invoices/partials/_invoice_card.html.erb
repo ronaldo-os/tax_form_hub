@@ -236,7 +236,7 @@
 
 
         <!-- Totals -->
-        <div class="text-end mt-4">
+        <div class="card border-0 shadow-sm p-3 text-end">
           <p class="mb-1">
             Subtotal excl. taxes:
             <span class="fw-semibold">
@@ -249,9 +249,10 @@
               <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2) %>
             </span>
           </p>
-          <p class="fs-5 fw-bold mt-2">
+          <hr>
+          <p class="fs-5 fw-bold mb-0">
             Total <%= @invoice.currency %>:
-            <span>
+            <span class="grand-total-amount text-primary">
               <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2) %>
             </span>
           </p>
@@ -372,7 +373,7 @@
             
           <div class="col-md-6">
             <div class="mb-3">
-              <h5 class="mb-3 fw-semibold">Message:</h5>
+              <h5 class="mb-3 fw-semibold form-label">Message:</h5>
               <p class="mb-1"><%= simple_format(@invoice.recipient_note) %></p>
             </div>
           </div>
