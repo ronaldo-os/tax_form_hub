@@ -35,10 +35,10 @@ if (
               { name: "customsDeclarations.reference_number_of_customs_from_No_2.text.12", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
           ],
           "taxExchangeRateFields": [
-              { name: "taxExchangeRateFields.exchange_rate.text.6", label: "Exchange rate", type: "text", cols: 6, class: "mb-3" },
-              { name: "taxExchangeRateFields.currency.select(php,usd,eur,jpy).6", label: "Currency", type: "select", cols: 6, options: ["PHP","USD","EUR","JPY"], class: "mb-3" },
-              { name: "taxExchangeRateFields.date_of_exchange_rate.text.6", label: "Date of exchange rate", type: "date", cols: 6, class: "mb-3" },
-              { name: "taxExchangeRateFields.converted_tax_total.text.6", label: "Converted tax total", type: "text", cols: 6, class: "mb-3" },
+              { name: "taxExchangeRateFields.exchange_rate.text.7", label: "Exchange rate", type: "text", cols: 7, class: "mb-3" },
+              { name: "taxExchangeRateFields.currency.select(php,usd,eur,jpy).5", label: "Currency", type: "select", cols: 5, options: ["PHP","USD","EUR","JPY"], class: "mb-3" },
+              { name: "taxExchangeRateFields.date_of_exchange_rate.text.7", label: "Date of exchange rate", type: "date", cols: 7, class: "mb-3" },
+              { name: "taxExchangeRateFields.converted_tax_total.text.5", label: "Converted tax total", type: "text", cols: 5, class: "mb-3" },
               { name: "taxExchangeRateFields.converted_document_total_(incl taxes).text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
               { name: "taxExchangeRateFields.converted_document_total_(excl taxes).text.12", label: "Converted Document Total (excl taxes)", type: "text", cols: 12, class: "mb-3" },
           ],
@@ -75,11 +75,11 @@ if (
           "customerPartyContactName": [
             { name: "customerPartyContactName.person_reference.text.12", label: "Person reference", type: "text", cols: 12, class: "mb-3" }
           ],
-          "additionalReferences[BOL ID]": [
-            { name: "additionalReferences[BOL ID].transport_reference.text.12", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" }
+          "transportReference": [
+            { name: "transport_reference.text.12", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" }
           ],
-          "BOLIssueDate": [
-            { name: "BOLIssueDate.transport_reference_issue_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
+          "transportReferenceIssueDate": [
+            { name: "transport_reference_issue_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
           ],
           "FileID": [
             { name: "FileID.file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
