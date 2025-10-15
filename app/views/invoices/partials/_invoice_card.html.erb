@@ -252,7 +252,7 @@
           <hr>
           <p class="fs-5 fw-bold mb-0">
             Total <%= @invoice.currency %>:
-            <span class="grand-total-amount text-primary">
+            <span class="grand-total-static text-primary">
               <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2) %>
             </span>
           </p>

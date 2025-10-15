@@ -54,9 +54,9 @@ if (window.location.pathname.includes("/invoices")) {
             if ($.fn.DataTable && tableSelector) {
             const table = $(tableSelector).DataTable();
             if (status) {
-                table.column(3).search(status, true, false).draw();
+                table.column(4).search(status, true, false).draw();
             } else {
-                table.column(3).search("").draw();
+                table.column(4).search("").draw();
             }
             }
         });
