@@ -549,14 +549,14 @@ input, select, textarea {
 }
 
 .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
-    padding-left: calc(var(--bs-gutter-x) * 1.5);
+    padding-left: calc(var(--bs-gutter-x) * 2);
 }
 
 @media (max-width: 768px) {
   /* styles for tablets and smaller screens */
 }
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   #main_content_div{
     margin-top: 70px;
   }
