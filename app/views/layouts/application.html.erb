@@ -40,85 +40,85 @@
 
 
   <% unless devise_controller? && !(controller_name == "registrations" && action_name == "edit") %>
-    <section class="global-wrapper">
-      <aside>
-        <%= image_tag(
-                    current_user.profile_image.attached? ? url_for(current_user.profile_image) : asset_path("user_avatar_default.png"),
-                    class: "rounded-circle",
-                    style: "width: 50px; height: 50px; object-fit: cover; margin-top: 10px; margin-bottom: 20px;"
-                  ) %>
-        <!-- top nav -->
-        <ul>
-          <li class="<%= 'active' if request.path == root_path %>">
-            <%= link_to root_path, class: "nav-item" do %>
-              <i class="fa-solid fa-file-invoice-dollar"></i>
-              <span>Tax Form Hub</span>
+    <div class="app-menu-toggle" id="desktop_menu_toggle">
+      <i class="fa-solid fa-chevron-right"></i>
+    </div>
+    <div class="mobile-app-menu-toggle" id="mobile_menu_toggle">
+    </div>
+    <div class="app-sidebar">
+      <ul>
+        <!-- App logo -->
+        <li class="app-logo">
+          <%= link_to root_path, class: "d-flex align-items-center" do %>
+            <div class="app-icon text-primary">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div class="app-text text-primary">Tax Form Hub</div>
+          <% end %>
+        </li>
+
+        <!-- Main Menu -->
+        <div class="app-menu-list">
+          <li class="<%= 'app-active' if request.path == root_path %>">
+            <%= link_to root_path do %>
+              <div class="app-icon"><i class="fa-solid fa-file-invoice-dollar z-1"></i></div>
+              <div class="app-text">Taxes</div>
             <% end %>
           </li>
 
-          <li class="<%= 'active' if request.path.starts_with?(invoices_path) %>">
-            <%= link_to invoices_path, class: "nav-item" do %>
-              <i class="fa-solid fa-file-invoice"></i>
-              <span>Invoices</span>
+          <li class="<%= 'app-active' if request.path.starts_with?(invoices_path) %>">
+            <%= link_to invoices_path do %>
+              <div class="app-icon"><i class="fa-solid fa-file-invoice z-1"></i></div>
+              <div class="app-text">Invoices</div>
             <% end %>
           </li>
 
-          <li class="<%= 'active' if request.path.starts_with?(locations_path) %>">
-            <%= link_to locations_path, class: "nav-item" do %>
-              <i class="fa-solid fa-location-dot"></i>
-              <span>Locations</span>
+          <li class="<%= 'app-active' if request.path.starts_with?(locations_path) %>">
+            <%= link_to locations_path do %>
+              <div class="app-icon"><i class="fa-solid fa-location-dot z-1"></i></div>
+              <div class="app-text">Locations</div>
             <% end %>
           </li>
 
-          <li class="<%= 'active' if request.path.starts_with?(recurring_invoices_path) %>">
-            <%= link_to recurring_invoices_path, class: "nav-item" do %>
-              <i class="fa-solid fa-arrows-rotate"></i>
-              <span>Recurring Line Items</span>
+          <li class="<%= 'app-active' if request.path.starts_with?(recurring_invoices_path) %>">
+            <%= link_to recurring_invoices_path do %>
+              <div class="app-icon"><i class="fa-solid fa-arrows-rotate z-1"></i></div>
+              <div class="app-text">Recurring Items</div>
             <% end %>
           </li>
-        </ul>
+        </div>
 
-        <!-- bottom nav -->
-        <ul>
-          <li class="<%= 'active' if request.path.starts_with?(edit_profile_path) %>">
-            <%= link_to edit_profile_path, class: "nav-item" do %>
-              <i class="fa-solid fa-user-gear"></i>
-              <span>User Profile</span>
+        <!-- Bottom Section -->
+        <div class="app-bottom">
+          <li class="<%= 'app-active' if request.path.starts_with?(edit_profile_path) %>">
+            <%= link_to edit_profile_path do %>
+              <div class="app-icon"><i class="fa-solid fa-user-gear z-1"></i></div>
+              <div class="app-text">User Profile</div>
             <% end %>
           </li>
 
-          <li class="<%= 'active' if request.path.starts_with?(companies_path) %>">
-            <%= link_to companies_path, class: "nav-item" do %>
-              <i class="fa-solid fa-building"></i>
-              <span>Company Profile</span>
+          <li class="<%= 'app-active' if request.path.starts_with?(companies_path) %>">
+            <%= link_to companies_path do %>
+              <div class="app-icon"><i class="fa-solid fa-building z-1"></i></div>
+              <div class="app-text">Company Profile</div>
             <% end %>
           </li>
 
           <li>
             <%= link_to destroy_user_session_path,
                         method: :delete,
-                        data: { confirm: "Are you sure you want to log out?" },
-                        class: "nav-item text-danger" do %>
-              <i class="fa-solid fa-right-from-bracket"></i>
-              <span>Log out</span>
+                        data: { confirm: "Are you sure you want to log out?" } do %>
+              <div class="app-icon"><i class="fa-solid fa-right-from-bracket z-1"></i></div>
+              <div class="app-text">Log out</div>
             <% end %>
           </li>
-        </ul>
+        </div>
+      </ul>
+    </div>
 
-
-      </aside>
-
-      <main id="main">
-        <div id="blackout-on-hover"></div>
-        <header>
-          <h2><%= content_for?(:page_title) ? yield(:page_title) : "Default Title" %></h2>
-        </header>
-
-        <%= yield %>
-      </main>
-
-
-    </section>
+    <div id="main_content_div">
+      <%= yield %>
+    </div>
   <% end %>
 
 

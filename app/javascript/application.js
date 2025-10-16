@@ -13,13 +13,36 @@ Rails.start();
 
 $(document).ready(function () {
 
-    $('.global-wrapper aside')
-    .on('mouseenter', function() {
-    $('body').css('overflow-x', 'hidden');
-    })
-    .on('mouseleave', function() {
-    $('body').css('overflow-x', '');
+    // Sidenav toggle function 
+    $(function () {
+        const $menuToggle = $("#desktop_menu_toggle");
+        const $mobileToggle = $("#mobile_menu_toggle");
+        const $sidebar = $(".app-sidebar");
+        const $menuListItems = $(".app-menu-list li, .app-bottom li");
+
+        // === Desktop toggle ===
+        $menuToggle.on("click", function () {
+            $menuToggle.toggleClass("app-active");
+            $sidebar.toggleClass("app-active");
+        });
+
+        // === Mobile toggle ===
+        $mobileToggle.on("click", function () {
+            $mobileToggle.toggleClass("app-active");
+            $sidebar.toggleClass("app-active");
+        });
+
+        $menuListItems.on("click", function () {
+            $menuListItems.removeClass("app-active");
+            $(this).addClass("app-active");
+
+            if (window.innerWidth <= 768) {
+            $sidebar.removeClass("app-active");
+            $mobileToggle.removeClass("app-active");
+            }
+        });
     });
+
 
     $(function () {
       $('[data-bs-toggle="tooltip"]').tooltip();
