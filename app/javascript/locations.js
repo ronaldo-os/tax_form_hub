@@ -1,6 +1,11 @@
 if (window.location.pathname.includes("/locations")) {
     $(function () {
-        const $table = $('#location-table').DataTable();
+        
+         const $table = $('#location-table').DataTable({
+            responsive: true,
+            autoWidth: false
+        });
+
         const $form = $('#locationModal form');
 
         const resetForm = (action = '/locations', method = null) => {

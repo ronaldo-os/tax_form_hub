@@ -1,15 +1,16 @@
 if (window.location.pathname.includes("/recurring_invoices")) {
     $(function () {
-    const activeTable = $('#recurring-items-table').DataTable({
-        responsive: true,
-        autoWidth: false
+        const activeTable = $('#recurring-items-table').DataTable({
+            responsive: true,
+            autoWidth: false
+        });
+
+        const disabledTable = $('#disabled-recurring-items-table').DataTable({
+            responsive: true,
+            autoWidth: false
+        });
     });
 
-    const disabledTable = $('#disabled-recurring-items-table').DataTable({
-        responsive: true,
-        autoWidth: false
-    });
-    });
 
 
     $(document).ready(function () {

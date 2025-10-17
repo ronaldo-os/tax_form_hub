@@ -43,12 +43,22 @@
     <div class="app-menu-toggle" id="desktop_menu_toggle">
       <i class="fa-solid fa-chevron-right"></i>
     </div>
-    <div class="mobile-app-menu-toggle" id="mobile_menu_toggle">
+    
+    <div class="app-header d-flex align-items-center justify-content-between">
+      <%= link_to root_path, class: "d-flex align-items-center text-decoration-none" do %>
+        <div class="app-icon text-primary">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+        </div>
+        <div class="app-text text-primary ms-2">TAX FORM HUB</div>
+      <% end %>
+
+      <div class="mobile-app-menu-toggle" id="mobile_menu_toggle"></div>
     </div>
+
     <div class="app-sidebar">
       <ul>
         <!-- App logo -->
-        <li class="app-logo">
+        <li class="app-logo" id="desktop_app_logo">
           <%= link_to root_path, class: "d-flex align-items-center" do %>
             <div class="app-icon text-primary">
             <i class="fa-solid fa-cloud-arrow-up"></i>

@@ -11,11 +11,6 @@ if (window.location.pathname === "/") {
             order: [[5, 'desc']],
             pageLength: 10,
             lengthChange: true,
-            language: {
-            search: "_INPUT_",
-            searchPlaceholder: "Search submissions...",
-            lengthMenu: "Show _MENU_ entries",
-            }
         });
 
         tables.push(table);

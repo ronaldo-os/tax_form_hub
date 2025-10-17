@@ -125,5 +125,46 @@ $(document).ready(function () {
     }
 
     window.showFlashMessage = showFlashMessage;
+
+    // Remove "Show _ entries" and "Search:" labels on datatables.
+    $('div.dataTables_length label').contents().filter(function() {
+        return this.nodeType === 3;
+    }).remove();
+
+    $('div.dataTables_filter label').contents().filter(function() {
+        return this.nodeType === 3;
+    }).remove();
+
+    $('div.dataTables_filter input').attr('placeholder', 'Search...');
+
+    $('.dataTables_wrapper [class*="col-sm-"], .dataTables_wrapper [class*="col-md-"], .dataTables_wrapper [class*="col-12"]').each(function () {
+        let current = $(this).attr('class');
+
+        // Replace col-sm-* and col-md-* with col-*
+        current = current
+        .replace(/\bcol-sm-/g, 'col-')
+        .replace(/\bcol-md-/g, 'col-');
+
+        // If both col-6 and col-12 exist, remove col-12
+        if (/\bcol-6\b/.test(current) && /\bcol-12\b/.test(current)) {
+        current = current.replace(/\bcol-12\b/g, '');
+        }
+
+        // Clean extra spaces
+        current = current.replace(/\s+/g, ' ').trim();
+
+        $(this).attr('class', current);
+    });
+
+    // When a tab becomes visible, recalc the datatable layout
+    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+        $.fn.dataTable
+        .tables({ visible: true, api: true })
+        .columns.adjust()
+        .responsive.recalc();
+    });
+
+
+
 });
 

@@ -501,78 +501,123 @@ input, select, textarea {
   transform: rotate(180deg);
 }
 
-/* === Mobile Menu Toggle === */
+/* === App Header === */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+}
+
+/* === Mobile Menu Toggle (Aligned with Logo) === */
 #mobile_menu_toggle {
-  position: fixed;
-  top: 15px;
-  right: 20px;
   width: 40px;
   height: 40px;
-  z-index: 100002 !important;
   background: #00aeff;
-  z-index: 1000;
+  border-radius: 6px;
   cursor: pointer;
-  display: flex;
+  display: none; /* hidden by default */
   justify-content: center;
   align-items: center;
-  display: none;
+  position: relative;
+  z-index: 100002;
 }
 
-#mobile_menu_toggle::before {
-  content: "";
-  position: absolute;
-  width: 20px;
-  height: 3px;
-  background: #fff;
-  transform: translateY(-9px);
-  box-shadow: 0 9px 0 #fff;
-  transition: 0.5s;
-}
-
+#mobile_menu_toggle::before,
 #mobile_menu_toggle::after {
   content: "";
   position: absolute;
   width: 20px;
   height: 3px;
   background: #fff;
-  transform: translateY(9px);
-  transition: 0.5s;
+  transition: 0.4s;
+}
+
+#mobile_menu_toggle::before {
+  transform: translateY(-6px);
+  box-shadow: 0 6px 0 #fff;
+}
+
+#mobile_menu_toggle::after {
+  transform: translateY(6px);
 }
 
 #mobile_menu_toggle.app-active::before {
-  transform: translateY(0px) rotate(45deg);
-  box-shadow: 0 0 0 #fff;
+  transform: rotate(45deg);
+  box-shadow: none;
 }
 
 #mobile_menu_toggle.app-active::after {
-  transform: translateY(0px) rotate(-45deg);
+  transform: rotate(-45deg);
+}
+
+/* === App Header Logo (match sidebar logo size) === */
+.app-header{
+  padding-left: 25px;
+  display: none !important;
+}
+.app-header .app-icon {
+  font-size: 2em;
+  margin-right: 15px;
+  color: var(--app-clr, #00aeff); /* fallback if --app-clr isn’t defined */
+}
+
+.app-header .app-text {
+  font-size: 1.2em;
+  font-weight: 500;
+  color: var(--app-clr, #00aeff);
+}
+
+/* optional spacing between icon and text */
+.app-header .app-text, .app-bottom {
+  margin-left: 8px;
 }
 
 .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
     padding-left: calc(var(--bs-gutter-x) * 2);
 }
 
-@media (max-width: 768px) {
-  /* styles for tablets and smaller screens */
+/* For mobile modal scroll */
+@media (max-width: 767.98px) {
+  .modal-dialog {
+    height: 100%;
+    margin: 0;
+  }
+
+  .modal-content {
+    height: 100%;
+    max-height: 100vh;
+    overflow-y: auto !important;
+    border-radius: 0;
+  }
+
+  body.modal-open {
+    overflow: hidden; /* prevent background scroll */
+  }
 }
 
+
 @media (max-width: 600px) {
-  #main_content_div{
-    margin-top: 70px;
-  }
-  #desktop_menu_toggle{
+  #desktop_menu_toggle, #desktop_app_logo {
     display: none;
   }
-  #mobile_menu_toggle{
+  #mobile_menu_toggle {
     display: flex;
   }
+  .app-header {
+    display: flex !important;
+  }
+  .app-logo, .app-menu-list{
+    padding-left: 10px;
+    margin-top: 70px;
+  }
   .app-sidebar {
-    padding-left: 0px;
-    width: 0px;
-  }  
+    padding-left: 0;
+    width: 0;
+    transition: width 0.3s ease;
+  }
   .app-sidebar.app-active {
     width: 100%;
-    padding-left: 10px;
   }
   .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
       padding-left: calc(var(--bs-gutter-x) * .5);
@@ -583,4 +628,9 @@ input, select, textarea {
   .modal{
     z-index: 100004 !important;
   }
+  div.dataTables_wrapper div.dataTables_filter input{
+    width: 100% !important;
+    margin-left: 0px !important;
+  }
 }
+
