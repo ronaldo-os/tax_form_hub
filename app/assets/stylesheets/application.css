@@ -634,6 +634,8 @@ input, select, textarea {
   .mob-mb-4{
     margin-bottom: 1.5rem !important;
   }
-  
+  .mob-p-4{
+    padding: 1.5rem !important;
+  }
 }
 
