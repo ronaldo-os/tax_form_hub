@@ -596,7 +596,6 @@ input, select, textarea {
   }
 }
 
-
 @media (max-width: 600px) {
   #desktop_menu_toggle, #desktop_app_logo {
     display: none;
@@ -632,5 +631,9 @@ input, select, textarea {
     width: 100% !important;
     margin-left: 0px !important;
   }
+  .mob-mb-4{
+    margin-bottom: 1.5rem !important;
+  }
+  
 }
 

@@ -123,7 +123,7 @@ if (
         const $container = $('#invoice_details_parent_div #optional_fields_container');
 
         if ($container.find(`[data-optional-group="${key}"]`).length > 0) {
-          showFlashMessage("This group is already added.", "danger", "Notice:");
+          showFlashMessage("This group is already added.", "danger");
           $(this).val('');
           return;
         }
@@ -270,7 +270,7 @@ if (
 
       // Prevent duplicates
       if ($(`#payment_terms_parent_div [data-group-key="${key}"]`).length > 0) {
-        showFlashMessage("This payment term group is already added.", "danger", "Notice:");
+        showFlashMessage("This payment term group is already added.", "danger");
         $(this).val('');
         return;
       }
@@ -417,7 +417,7 @@ if (
             details.show();
             },
             error: function () {
-            showFlashMessage("Failed to fetch location details.", "danger", "Notice:");
+            showFlashMessage("Failed to fetch location details.", "danger");
             $(`#${type}_details`).hide();
             }
         });
@@ -1884,7 +1884,7 @@ $('#add-base-quantity').on('click', function () {
       let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : this.id === "view_invoice_btn" ? "#view_invoicepayment_terms_json" : "#payment_terms_json_edit";
       if (!$(inputId).val() || $(inputId).val() === "[]" || $(inputId).val() === "{}") {
         e.preventDefault();
-        showFlashMessage("Please add payment terms before sending it to recipient.", "danger", "Notice:");
+        showFlashMessage("Please add payment terms before sending it to recipient.", "danger");
       }
     });
 

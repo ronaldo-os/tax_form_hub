@@ -92,7 +92,7 @@ $(document).ready(function () {
         $(this).val(formatWithCommas($(this).val()));
     });
 
-    function showFlashMessage(message, type = "danger", title = null) {
+    function showFlashMessage(message, type = "danger") {
         $('.custom_tfh_alert').remove();
 
         let messages = message.split(/<br\s*\/?>/i).map(m => m.trim()).filter(Boolean);
@@ -110,7 +110,6 @@ $(document).ready(function () {
                  style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
                 <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_${type}"></i>
                 <div>
-                    ${title ? `<h5 class="mb-1">${title}</h5>` : ""}
                     ${messageHtml}
                 </div>
             </div>
