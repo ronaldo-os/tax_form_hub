@@ -1407,12 +1407,12 @@ $('#add-base-quantity').on('click', function () {
 
             const fieldsToRender = groupKey === "recurring"
               ? RECURRING_FIELDS_ORDER.map(def => ({
-                  name: def.name,
-                  label: def.label,
-                  type: def.type,
-                  options: def.options || [],
-                  value: fields[def.name.replace(/^recurring\./, "")] || ""
-                }))
+                name: def.name,
+                label: def.label,
+                type: def.type,
+                options: def.options || [],
+                value: fields[def.name] || ""
+              }))
               : Object.entries(fields).map(([rawKey, val]) => {
                   let type = "text", value = "", options = [];
 
