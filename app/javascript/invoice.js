@@ -539,7 +539,7 @@ if (
   // Initialization   
   updateRemoveButtons();
 
-  const discount_fieldTypeMap = {
+  window.discount_fieldTypeMap = {
     recurring: [
       { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
       { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"], cols: 2 },
@@ -1902,6 +1902,506 @@ $('#add-base-quantity').on('click', function () {
       };
 
       html2pdf().set(opt).from(invoice).save();
+    });
+
+    $(document).ready(function () {
+      const $previewBtn = $('#preview-invoice-btn');
+      const $previewCard = $('#invoicePreviewCard');
+      const modal = new bootstrap.Modal($('#invoicePreviewModal')[0]);
+
+      if ($previewBtn.length === 0) return;
+
+      $previewBtn.on('click', function () {
+        const formData = $('form').serializeArray();
+        const data = {};
+        $.each(formData, function (_, field) {
+          data[field.name] = field.value;
+        });
+
+        // Company details
+        const companyName = $('#company_name').text() || '—';
+        const companyAddress = $('#company_address').text() || '';
+        const companyLocation = $('#company_location').text() || '';
+        const companyCountry = $('#company_country').text() || '';
+        const companyNumber = $('#company_number').text().replace('Company number :', '').trim() || '-';
+        const companyTaxNumber = $('#company_tax_number').text().replace('Tax number :', '').trim() || '-';
+
+        // Basic invoice fields
+        const issueDate = data['invoice[issue_date]'] || '—';
+        const invoiceNumber = data['invoice[invoice_number]'] || '—';
+        const currency = data['invoice[currency]'] || '—';
+        const note = $('#invoice_recipient_note').val() || '';
+        const footer = $('#invoice_footer_notes').val() || '';
+
+
+        // Invoice info optional fields
+        let optionalFieldsHtml = '';
+
+        $('#optional_fields_container .optional-group').each(function () {
+          const $group = $(this);
+          const groupKey = $group.attr('data-optional-group') || '';
+          const $cols = $group.find('.row > [class^="col-"]');
+          let rowContent = '';
+
+          $cols.each(function () {
+            const $col = $(this);
+            let label = $col.find('label').text().trim().replace(/[:]+$/, '');
+            const $input = $col.find('input, select');
+            let value = '';
+
+            if ($input.is('select')) {
+              value = $input.find('option:selected').text().trim();
+            } else {
+              value = $input.val() ? $input.val().trim() : '';
+            }
+
+            if (!value) return;
+
+            if (!label || label === ':') label = 'Date';
+
+            const colClasses = $col.attr('class').split(' ').filter(c => c.startsWith('col-')).join(' ');
+
+            rowContent += `
+              <div class="${colClasses} mb-2">
+                <p class="mb-1 small">${label}: ${value}</p>
+              </div>
+            `;
+          });
+
+          if (rowContent.trim() === '') return;
+
+          const formattedTitle = groupKey
+            .replace(/_/g, ' ')
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .replace(/\b\w/g, c => c.toUpperCase());
+          if (
+            /delivery\s*date/i.test(formattedTitle) ||
+            /payment\s*due\s*date/i.test(formattedTitle)
+          ) {
+            const value = $group.find('input, select').val() || '';
+            if (value) {
+              optionalFieldsHtml += `
+                <p class="mb-1"><strong>${formattedTitle}:</strong> ${value}</p>
+              `;
+            }
+          } else {
+            optionalFieldsHtml += `
+              <div class="mt-3">
+                ${formattedTitle ? `<h6 class="fw-bold mb-2">${formattedTitle}</h6>` : ''}
+                <div class="row">
+                  ${rowContent}
+                </div>
+              </div>
+            `;
+          }
+        });
+
+        // Build line items table (clean, structured, visually identical to provided example)
+        let lineItems = '';
+
+        $('#line-items tr.line-item').each(function (i) {
+          const $tr = $(this);
+          const $inputs = $tr.find('input, select');
+          const index = $tr.data('line-index') ?? i;
+
+          // Regular line item
+          lineItems += `
+            <tr class="line-item">
+              <td>${$inputs.eq(0).val() || ''}</td>
+              <td>${$inputs.eq(1).val() || ''}</td>
+              <td>${$inputs.eq(2).val() || ''}</td>
+              <td>${$inputs.eq(3).val() || ''}</td>
+              <td>${$inputs.eq(4).val() || ''}</td>
+              <td>${$inputs.eq(5).val() || ''}</td>
+              <td class="text-end fw-semibold">${$tr.find('.total').text() || '0.00'}</td>
+              <input type="hidden" name="invoice[line_items_attributes][${index}][total]" class="line-total-input" value="${$tr.find('.total').text() || '0.00'}">
+            </tr>
+          `;
+
+          // Clone and render optional fields for each line item
+          $(`#line-items tr.optional-field-row[data-line-index="${index}"]`).each(function () {
+            const $opt = $(this).clone(); // clone to avoid touching live DOM
+            const group = $opt.data('optional-group');
+            const fieldDefs = discount_fieldTypeMap[group] || [];
+            const vals = {};
+
+            // Extract all field values by matching names
+            $opt.find('input, select, span.optional-total').each(function () {
+              const $el = $(this);
+              const name = $el.attr('name') || '';
+              let val =
+                $el.is('select')
+                  ? $el.find('option:selected').text().trim()
+                  : $el.is('span')
+                    ? $el.text().trim()
+                    : $el.val();
+
+              if (!val) return;
+              vals[name] = val;
+            });
+
+            let rowHtml = `<tr class="bg-light">`;
+
+            fieldDefs.forEach((field, i) => {
+              const fieldKey = Object.keys(vals).find(k => k.includes(field.name.split('.')[1])) || '';
+              const value = fieldKey ? vals[fieldKey] : '';
+
+              if (!value && field.type !== 'text_only') return;
+
+              rowHtml += `
+                <td>
+                  <label class="fw-bold small d-block">${field.label}</label>
+                  <span class="text-muted small">${value || ''}</span>
+                </td>
+              `;
+            });
+
+            // If the group has fewer than 7 visible columns, fill with empty <td>
+            const tdCount = (rowHtml.match(/<td>/g) || []).length;
+            if (tdCount < 7) {
+              for (let i = tdCount; i < 7; i++) {
+                rowHtml += `<td></td>`;
+              }
+            }
+
+            rowHtml += `</tr>`;
+            lineItems += rowHtml;
+          });
+
+        });
+
+
+        // Price Adjustments section
+        const adjustments = $('.discount-item');
+        if (adjustments.length) {
+          lineItems += `
+            <tr>
+              <td colspan="8" class="fw-bold text-muted table-light py-3">Price Adjustments</td>
+            </tr>`;
+
+          adjustments.each(function () {
+            const $row = $(this);
+            const type = $row.find('.price-adjustment-unit').val() || '';
+            const desc = $row.find('.reason-code option:selected').text() || '';
+            const descEdit = $row.find('.description-edit').val() || '';
+            const amount = $row.find('.amount').val() || '';
+            const unit = $row.find('.unit-type option:selected').text() || '';
+            const total = $row.find('.total').text().replace('+', '') || '0.00';
+
+            lineItems += `
+              <tr class="bg-light">
+                <td>
+                  <label class="fw-bold small d-block">Type</label>
+                  <span class="text-muted small">${type}</span>
+                </td>
+                <td>
+                  <label class="fw-bold small d-block">Description</label>
+                  <span class="text-muted small">${desc}</span>
+                </td>
+                <td>
+                  <label class="fw-bold small d-block">Description Edit</label>
+                  <span class="text-muted small">${descEdit}</span>
+                </td>
+                <td>
+                  <label class="fw-bold small d-block">Amount</label>
+                  <span class="text-muted small">${amount}</span>
+                </td>
+                <td>
+                  <label class="fw-bold small d-block">Unit</label>
+                  <span class="text-muted small">${unit}</span>
+                </td>
+                <td></td>
+                <td class="text-end fw-semibold">
+                  <label class="fw-bold small d-block">Total</label>
+                  <span class="text-muted small">${total}</span>
+                </td>
+              </tr>`;
+          });
+        }
+
+
+        // Totals
+        const subtotal = $('.subtotal-amount').text() || '0.00';
+        const tax = $('.total-tax-amount').text() || '0.00';
+        const total = $('.grand-total-amount').text() || '0.00';
+
+        // Payment Terms Section
+        let paymentTermsHtml = '';
+
+        const $paymentGroups = $('#payment_terms_parent_div .payment-term-group');
+        if ($paymentGroups.length > 0) {
+          paymentTermsHtml += `
+            <h5 class="mb-3 fw-semibold">Payment Terms</h5>
+            <ol class="ps-3 mb-0">
+          `;
+
+          $paymentGroups.each(function () {
+            const $group = $(this);
+            const title = $group.find('h5').text().trim() || 'Payment';
+            const $inputs = $group.find('.payment-term-input');
+            const $textOnly = $group.find('.payment-term-text-only');
+
+            let rows = '';
+
+            // handle input-based fields
+            $inputs.each(function () {
+              const $input = $(this);
+              const label = $input.closest('.mb-3').find('label').text().trim().replace('(optional)', '').trim();
+              const value = $input.val()?.trim();
+              if (!value) return;
+
+              rows += `
+                <tr>
+                  <td class="text-start" style="width: 40%;">${label}</td>
+                  <td class="text-start">${value}</td>
+                </tr>
+              `;
+            });
+
+            // handle text-only fields (like Cash / Check)
+            $textOnly.each(function () {
+              const $txt = $(this);
+              const label = $txt.closest('.mb-3').find('label').text().trim();
+              const text = $txt.text().trim();
+              // Show the section title even if no text content (like “Cash Payment”)
+              if (!text && !rows) {
+                rows = '';
+              }
+            });
+
+            paymentTermsHtml += `
+              <li class="mb-3">
+                <h6 class="fw-bold d-inline">${title}</h6>
+                ${
+                  rows
+                    ? `
+                      <table class="table table-sm table-borderless mt-2">
+                        <tbody>${rows}</tbody>
+                      </table>
+                    `
+                    : ''
+                }
+              </li>
+            `;
+          });
+
+          paymentTermsHtml += `</ol>`;
+        }
+
+        // Delivery Details Section
+        let deliveryHtml = '';
+
+        const $deliveryDiv = $('#delivery_details_parent_div');
+        if ($deliveryDiv.length > 0) {
+          const getVal = (selector) => $deliveryDiv.find(selector).val()?.trim() || '';
+
+          // Collect values
+          const country = getVal('[name="invoice[delivery_details_country]"]');
+          const postbox = getVal('[name="invoice[delivery_details_postbox]"]');
+          const street = getVal('[name="invoice[delivery_details_street]"]');
+          const number = getVal('[name="invoice[delivery_details_number]"]');
+          const locality = getVal('[name="invoice[delivery_details_locality_name]"]');
+          const zip = getVal('[name="invoice[delivery_details_zip_code]"]');
+          const city = getVal('[name="invoice[delivery_details_city]"]');
+          const gln = getVal('[name="invoice[delivery_details_gln]"]');
+          const company = getVal('[name="invoice[delivery_details_company_name]"]');
+          const taxId = getVal('[name="invoice[delivery_details_tax_id]"]');
+          const taxNum = getVal('[name="invoice[delivery_details_tax_number]"]');
+
+          // Build full address line
+          const addressParts = [postbox, street, number, locality, zip, city, country]
+            .filter(Boolean);
+          const address = addressParts.join(', ');
+
+          // If everything is empty, skip entirely
+          const hasContent = address || gln || company || taxId || taxNum;
+
+          if (hasContent) {
+            deliveryHtml += `
+              <h5 class="mb-3 fw-semibold">Delivery details</h5>
+              <div class="row">
+                ${address ? `
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">Address</label>
+                    <p class="form-control-plaintext">${address}</p>
+                  </div>` : ''}
+
+                ${gln ? `
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">GLN</label>
+                    <p class="form-control-plaintext">${gln}</p>
+                  </div>` : ''}
+
+                ${company ? `
+                  <div class="col-md-12 mb-3">
+                    <label class="form-label h6">Company Name</label>
+                    <p class="form-control-plaintext">${company}</p>
+                  </div>` : ''}
+
+                ${(taxId || taxNum) ? `
+                  ${taxId ? `
+                    <div class="col-md-4 mb-3">
+                      <label class="form-label h6">Tax ID</label>
+                      <p class="form-control-plaintext">${taxId}</p>
+                    </div>` : ''}
+
+                  ${taxNum ? `
+                    <div class="col-md-8 mb-3">
+                      <label class="form-label h6">Tax Number</label>
+                      <p class="form-control-plaintext">${taxNum}</p>
+                    </div>` : ''}
+                ` : ''}
+              </div>
+            `;
+          }
+        }
+
+
+        // === Generic Location Details Renderer ===
+        function renderLocationDetails(selector, title, outputId) {
+          const $el = $(selector);
+          if ($el.length === 0) return '';
+
+          const locationName = $el.find('.location_name').text().trim();
+          const companyName = $el.find('.company_name').text().trim();
+          const taxNumberText = $el.find('.tax_number').text().replace(/Tax number\s*:\s*/i, '').trim();
+          const street = $el.find('.street').text().trim();
+          const city = $el.find('.city').text().trim();
+          const country = $el.find('.country').text().trim();
+
+          // Skip if all empty
+          if (![locationName, companyName, taxNumberText, street, city, country].some(Boolean)) return '';
+
+          // Combine address
+          const streetLine = [street, city].filter(Boolean).join(', ');
+
+          // Build HTML
+          return `
+            <div class="location-details mb-2" id="${outputId}">
+              <hr>
+              <h6>${title}</h6>
+              <hr>
+              ${locationName ? `<p class="fw-bold mb-1 location_name">${locationName}</p>` : ''}
+              ${companyName ? `<p class="company_name mb-1">${companyName}</p>` : ''}
+              ${taxNumberText ? `<p class="tax_number mb-1 text-muted">${taxNumberText}</p>` : ''}
+              ${streetLine ? `<p class="street mb-0">${streetLine}</p>` : ''}
+              ${country ? `<p class="country mb-0">${country}</p>` : ''}
+            </div>
+          `;
+        }
+
+        // === Use the same function for all three ===
+        const shipFromHtml = renderLocationDetails('#ship_from_details', 'Ship From Location Details', 'ship_from_location_details');
+        const remitToHtml = renderLocationDetails('#remit_to_details', 'Remit To Location Details', 'remit_to_location_details');
+        const taxRepresentativeHtml = renderLocationDetails('#tax_representative_details', 'Tax Representative Location Details', 'tax_representative_location_details');
+
+        // Build preview HTML
+        const html = `
+          <div class="card shadow-sm border-0" id="invoice_card">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-bold mb-0">Invoice Details</h4>
+                <span class="badge px-3 py-2 fs-6 bg-secondary-subtle text-muted">DRAFT</span>
+              </div>
+
+              <div class="row g-4">
+                <div class="col-md-6">
+                  <div class="p-3 rounded border bg-light-subtle">
+                    <h6 class="fw-bold mb-2">${companyName}</h6>
+                    <p class="mb-1 text-muted">${companyAddress}</p>
+                    <p class="mb-1 text-muted">${companyLocation}</p>
+                    <p class="mb-1 text-muted">${companyCountry}</p>
+                    <hr>
+                    <p class="mb-1 small">Company No: <strong>${companyNumber}</strong></p>
+                    <p class="mb-0 small">Tax No: <strong>${companyTaxNumber}</strong></p>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="p-3">
+                    <div class="row mb-1">
+                      <div class="col-md-6">
+                        <p class="mb-0"><strong>Invoice No.:</strong> ${invoiceNumber}</p>
+                      </div>
+                      <div class="col-md-6">
+                        <p class="mb-0"><strong>Issue Date:</strong> ${issueDate}</p>
+                      </div>
+                    </div>
+                    <p class="mb-1"><strong>Currency:</strong> ${currency}</p>
+                    ${optionalFieldsHtml}
+                  </div>
+                </div>
+              </div>
+
+              <div class="table-responsive mt-4">
+                <table class="table align-middle table-hover">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Item ID</th><th>Description</th><th>Qty</th>
+                      <th>Unit</th><th>Price</th><th>Tax (%)</th><th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>${lineItems}</tbody>
+                </table>
+              </div>
+
+              <div class="text-end mt-4">
+                <p class="mb-1">Subtotal excl. taxes: <span class="fw-semibold">${subtotal}</span></p>
+                <p class="mb-1">Total taxes: <span class="fw-semibold">${tax}</span></p>
+                <p class="fs-5 fw-bold mt-2">Total ${currency}: <span>${total}</span></p>
+              </div>
+
+              <hr>
+
+              <div class="row">
+                <div class="col-md-6">
+                  ${paymentTermsHtml || `
+                    <h5 class="mb-3">Payment Terms</h5>
+                    <p class="text-muted">No payment terms provided.</p>
+                  `}
+                  <hr>
+                  ${deliveryHtml || `
+                    <h5 class="mb-3 fw-semibold">Delivery details</h5>
+                    <p class="text-muted">No delivery details provided.</p>
+                  `}
+                  ${shipFromHtml || `
+                    <h5 class="mb-3 fw-semibold">Ship from details</h5>
+                    <p class="text-muted">No Ship From details provided.</p>
+                  `}
+                  ${remitToHtml || `
+                    <h5 class="mb-3 fw-semibold">Remit to details</h5>
+                    <p class="text-muted">No remit to details provided.</p>
+                  `}
+                  ${taxRepresentativeHtml  || `
+                    <h5 class="mb-3 fw-semibold">Tax representative details</h5>
+                    <p class="text-muted">No tax representative details provided.</p>
+                  `}
+                </div>
+
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <h5 class="mb-3 fw-bold">Message:</h5>
+                    <p>${note.replace(/\n/g, '<br>')}</p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="card-footer bg-white">
+              <p class="mb-0">${footer.replace(/\n/g, '<br>')}</p>
+            </div>
+          </div>
+        `;
+
+        // Render smoothly
+        $previewCard.stop(true, true).fadeOut(150, function () {
+          $previewCard.html(html).fadeIn(150);
+          modal.show();
+        });
+      });
     });
 
   });
