@@ -26,10 +26,10 @@
     <!-- Sales -->
     <div class="tab-pane fade show active" id="sales" role="tabpanel" aria-labelledby="sales-tab">
 
-    <div class="row mb-3">
+    <div class="row mb-3 ">
       <% ["total", "draft", "sent", "paid"].each do |status| %>
         <% totals = @invoice_totals_sale[status] %>
-        <div class="col-md-3">
+        <div class="col-md-3 mob-mb-4">
           <div class="card card-filter shadow-sm h-100" 
               data-table="#sales-table" 
               data-status="<%= (status == "total" ? "" : status) %>">
@@ -69,7 +69,7 @@
       </div>
       <div class="card">
         <div class="card-body p-3">
-          <h5 class="mt-4">Archived Sales</h5>
+          <h5>Archived Sales</h5>
           <%= render partial: 'invoices/partials/index_invoice_table',
                      locals: { invoices: @invoices_sale_archived, table_id: 'sales-archived-table' } %>
         </div>
@@ -82,7 +82,7 @@
     <div class="row mb-3">
       <% ["total", "draft", "sent", "paid"].each do |status| %>
         <% totals = @invoice_totals_purchase[status] %>
-        <div class="col-md-3">
+        <div class="col-md-3 mob-mb-4">
           <div class="card card-filter shadow-sm h-100" 
               data-table="#purchases-table" 
               data-status="<%= (status == "total" ? "" : status) %>">

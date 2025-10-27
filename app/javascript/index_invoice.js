@@ -1,9 +1,28 @@
 if (window.location.pathname.includes("/invoices")) {
     $(document).ready(function () {
-        $('#sales-table').DataTable();
-        $('#purchases-table').DataTable();
-        $('#sales-archived-table').DataTable();
-        $('#purchases-archived-table').DataTable();
+        // Initialize all DataTables
+        $('#sales-table, #purchases-table, #sales-archived-table, #purchases-archived-table').DataTable({
+            responsive: true,
+            autoWidth: false
+        });
+
+        // Handle tab switch
+        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
+            setTimeout(function () {
+                $.fn.dataTable
+                .tables({ visible: true, api: true })
+                .columns.adjust()
+                .responsive.recalc();
+            }, 200); // short delay ensures proper sizing even for empty tables
+        });
+
+        // Optional: adjust on window resize too
+        $(window).on('resize', function () {
+            $.fn.dataTable
+            .tables({ visible: true, api: true })
+            .columns.adjust()
+            .responsive.recalc();
+        });
 
         // Index datatable download PDF
         $(document).on('click', '.download-pdf', function () {
