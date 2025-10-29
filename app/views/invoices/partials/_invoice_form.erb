@@ -1,9 +1,9 @@
-<div class="container mt-5">
+<div class="container mt-5 mob-mt-0">
   <div class="card shadow-sm mb-10">
     <div class="card-body">
       <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
 
-        <h5 class="text-secondary">Invoice Details</h5>
+        <h5 class="text-secondary">Invoice Details</h5> 
         
         <div class="row">
 
@@ -31,7 +31,7 @@
                         'data-company-id-number': c.company_id_number,
                         'data-tax-id-type': c.tax_id_type,
                         'data-tax-id-number': c.tax_id_number,
-                        'data-internal-identifier': c.internal_identifier
+                        'data-internal-identifier': c.internal_identifier 
                       }
                     ]
                   },
@@ -126,51 +126,52 @@
           </div>
 
         </div>
+      <div class="table-responsive">
+        <table class="table text-center align-middle invoice-table">
+          <thead class="table-light">
+            <tr>
+              <th></th>
+              <th>Item ID</th>
+              <th>Description</th>
+              <th>Quantity</th>
+              <th>Unit</th>
+              <th>Price per unit</th>
+              <th>Tax (%)</th>
+              <th>Total</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="line-items" data-line-items='<%= raw(@invoice.line_items_data.to_json) %>'>
+            <% unless action_name == "edit" %>
+              <% unless params[:template_id].present? %>
+                <tr class="line-item" data-line-index="0" test>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button>
+                  </td>
 
-      <table class="table text-center align-middle invoice-table">
-        <thead class="table-light">
-          <tr>
-            <th></th>
-            <th>Item ID</th>
-            <th>Description</th>
-            <th>Quantity</th>
-            <th>Unit</th>
-            <th>Price per unit</th>
-            <th>Tax (%)</th>
-            <th>Total</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="line-items" data-line-items='<%= raw(@invoice.line_items_data.to_json) %>'>
-          <% unless action_name == "edit" %>
-            <% unless params[:template_id].present? %>
-              <tr class="line-item" data-line-index="0" test>
-                <td>
-                  <button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button>
-                </td>
+                  <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id" required></td>
+                  <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description" required></td>
+                  <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1" required></td>
+                  <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs" required></td>
+                  <td><input type="number" step="0.01" name="invoice[line_items_attributes][0][price]" class="form-control price" required></td>
+                  <td><input type="number" step="0.01" name="invoice[line_items_attributes][0][tax]" class="form-control tax" required></td>
+                  <td class="text-end total">0.00</td>
+                  <td>
+                    <input type="hidden" name="invoice[line_items_attributes][0][total]" value="0.00">
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
+                  </td>
+                </tr>
 
-                <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id" required></td>
-                <td><input type="text" name="invoice[line_items_attributes][0][description]" class="form-control description" required></td>
-                <td><input type="number" name="invoice[line_items_attributes][0][quantity]" class="form-control quantity" value="1" required></td>
-                <td><input type="text" name="invoice[line_items_attributes][0][unit]" class="form-control unit" value="pcs" required></td>
-                <td><input type="number" step="0.01" name="invoice[line_items_attributes][0][price]" class="form-control price" required></td>
-                <td><input type="number" step="0.01" name="invoice[line_items_attributes][0][tax]" class="form-control tax" required></td>
-                <td class="text-end total">0.00</td>
-                <td>
-                  <input type="hidden" name="invoice[line_items_attributes][0][total]" value="0.00">
-                  <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
-                </td>
-              </tr>
-
-              <tr class="dropdown_per_line hidden" data-line-index="0">
-                <td colspan="3">
-                  <select name="additional_field_0" id="additional_field_0" class="no-label form-select"></select>
-                </td>
-                <td colspan="6"></td>
-              </tr>
+                <tr class="dropdown_per_line hidden" data-line-index="0">
+                  <td colspan="3">
+                    <select name="additional_field_0" id="additional_field_0" class="no-label form-select"></select>
+                  </td>
+                  <td colspan="6"></td>
+                </tr>
+              <% end %>
             <% end %>
-          <% end %>
-      </table>
+        </table>
+      </div>
 
 
       <!-- Action buttons -->
@@ -354,7 +355,7 @@
           </div>
           
           <div class="col-md-6">
-            <div class="mb-3">
+            <div class="mb-3 mob-mt-2">
               <%= f.label :recipient_note, "Write a message to the recipient", class: "form-label" %>
               <%= f.text_area :recipient_note, class: "form-control", rows: 5, placeholder: "Enter your message...", value: @recipient_note.presence || @invoice&.recipient_note %>
             </div>

@@ -577,6 +577,20 @@ input, select, textarea {
     padding-left: calc(var(--bs-gutter-x) * 2);
 }
 
+.table-responsive {
+  width: 100% !important;
+  overflow-x: auto !important;
+}
+table {
+  width: 100% !important;
+  border-collapse: collapse !important;
+  min-width: 600px !important; /* Minimum for scroll */
+}
+th, td {
+  padding: 8px !important;
+  text-align: left !important;
+}
+
 /* For mobile modal scroll */
 @media (max-width: 767.98px) {
   .modal-dialog {
@@ -631,11 +645,50 @@ input, select, textarea {
     width: 100% !important;
     margin-left: 0px !important;
   }
+  .mob-mt-2{
+    margin-top: 20px !important;
+  }
   .mob-mb-4{
     margin-bottom: 1.5rem !important;
   }
   .mob-p-4{
     padding: 1.5rem !important;
   }
+  .mob-mt-0{
+    margin-top: 0 !important;
+  }
+  /* Invoice */
+  #form_actions_fixed_navbar {
+    float: right;
+    width: 100%;
+    margin-left: 0px;
+    transition: all 0.3s ease-in-out;
+  }
+
 }
 
+@media (max-width: 768px) {
+  #invoicePreviewModal .modal-dialog {
+    width: 100vw;
+    max-width: none;
+    transform: scale(0.8); 
+    transform-origin: top left;
+  }
+  #invoicePreviewModal .modal-content {
+    width: 100%;
+  }
+  #invoicePreviewModal .row {
+  display: block !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+#invoicePreviewModal [class*="col-"] {
+  float: none !important;
+  width: auto !important;
+  max-width: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+}
