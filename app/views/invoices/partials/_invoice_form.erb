@@ -3,7 +3,7 @@
     <div class="card-body">
       <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
 
-        <h5 class="text-secondary">Invoice Details</h5> 
+        <h5 class="text-secondary">Invoice Details</h5>
         
         <div class="row">
 
@@ -31,7 +31,7 @@
                         'data-company-id-number': c.company_id_number,
                         'data-tax-id-type': c.tax_id_type,
                         'data-tax-id-number': c.tax_id_number,
-                        'data-internal-identifier': c.internal_identifier 
+                        'data-internal-identifier': c.internal_identifier
                       }
                     ]
                   },
@@ -432,7 +432,7 @@
         </div>
 
         <nav class="navbar navbar-light bg-white fixed-bottom py-2" id="form_actions_fixed_navbar">
-          <div class="container d-flex justify-content-between align-items-center">
+          <div class="container d-flex justify-content-between align-items-center" id="action_buttons_container">
 
             <!-- Left side -->
             <div class="d-flex gap-2">

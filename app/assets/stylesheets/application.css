@@ -332,7 +332,6 @@ input, select, textarea {
 
 .app-sidebar ul {
   position: relative;
-  height: 100vh;
   padding-left: 0px;
 }
 
@@ -576,23 +575,21 @@ input, select, textarea {
 .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
     padding-left: calc(var(--bs-gutter-x) * 2);
 }
+#main_content_div{
+  padding-bottom: 1px;
+}
 
-.table-responsive {
-  width: 100% !important;
-  overflow-x: auto !important;
-}
-table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  min-width: 600px !important; /* Minimum for scroll */
-}
-th, td {
-  padding: 8px !important;
-  text-align: left !important;
+#action_buttons_container{
+  position: relative;
+  left: -35px;
 }
 
 /* For mobile modal scroll */
 @media (max-width: 767.98px) {
+  #action_buttons_container{
+    position: relative;
+    left: 0px;
+  }
   .modal-dialog {
     height: 100%;
     margin: 0;
@@ -654,6 +651,9 @@ th, td {
   .mob-p-4{
     padding: 1.5rem !important;
   }
+  .mob-p-0{
+    padding: 0 !important;
+  }
   .mob-mt-0{
     margin-top: 0 !important;
   }
@@ -667,28 +667,11 @@ th, td {
 
 }
 
-@media (max-width: 768px) {
-  #invoicePreviewModal .modal-dialog {
-    width: 100vw;
-    max-width: none;
-    transform: scale(0.8); 
-    transform-origin: top left;
+@media (max-width: 576px) {
+  .btn-md {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
   }
-  #invoicePreviewModal .modal-content {
-    width: 100%;
-  }
-  #invoicePreviewModal .row {
-  display: block !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-}
-
-#invoicePreviewModal [class*="col-"] {
-  float: none !important;
-  width: auto !important;
-  max-width: none !important;
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-}
-
 }

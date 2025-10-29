@@ -2320,7 +2320,7 @@ $('#add-base-quantity').on('click', function () {
                 </div>
 
                 <div class="col-md-6">
-                  <div class="p-3">
+                  <div class="mob-p-0 p-3">
                     <div class="row mb-1">
                       <div class="col-md-6">
                         <p class="mb-0"><strong>Invoice No.:</strong> ${invoiceNumber}</p>
