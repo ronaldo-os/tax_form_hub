@@ -113,126 +113,128 @@
 
         </div>
 
-        <table class="table align-middle table-hover text-nowrap mt-4">
-          <thead class="table-light">
-            <tr>
-              <th style="width: 100px;">Item ID</th>
-              <th style="width: 300px;">Description</th>
-              <th style="width: 100px;">Quantity</th>
-              <th style="width: 100px;">Unit</th>
-              <th style="width: 150px;">Price per unit</th>
-              <th style="width: 100px;">Tax (%)</th>
-              <th style="width: 150px;" class="text-end">Total</th>
-            </tr>
-          </thead>
-          <tbody id="line-items">
-            <% @invoice.line_items_data.each_with_index do |item, index| %>
-              <!-- Regular line item -->
-              <tr class="line-item">
-                <td><%= item["item_id"] %></td>
-                <td><%= item["description"] %></td>
-                <td><%= item["quantity"] %></td>
-                <td><%= item["unit"] %></td>
-                <td><%= item["price"] %></td>
-                <td><%= item["tax"] %></td>
-                <td class="text-end fw-semibold"><%= item["total"] || "" %></td>
+        <div class="table-responsive">
+          <table class="table align-middle table-hover text-nowrap mt-4">
+            <thead class="table-light">
+              <tr>
+                <th style="width: 100px;">Item ID</th>
+                <th style="width: 300px;">Description</th>
+                <th style="width: 100px;">Quantity</th>
+                <th style="width: 100px;">Unit</th>
+                <th style="width: 150px;">Price per unit</th>
+                <th style="width: 100px;">Tax (%)</th>
+                <th style="width: 150px;" class="text-end">Total</th>
               </tr>
+            </thead>
+            <tbody id="line-items">
+              <% @invoice.line_items_data.each_with_index do |item, index| %>
+                <!-- Regular line item -->
+                <tr class="line-item">
+                  <td><%= item["item_id"] %></td>
+                  <td><%= item["description"] %></td>
+                  <td><%= item["quantity"] %></td>
+                  <td><%= item["unit"] %></td>
+                  <td><%= item["price"] %></td>
+                  <td><%= item["tax"] %></td>
+                  <td class="text-end fw-semibold"><%= item["total"] || "" %></td>
+                </tr>
 
-              <!-- Optional fields -->
-              <% if item["optional_fields"].present? %>
-                <% item["optional_fields"].each do |group_name, fields| %>
-                  <% if group_name == "discount" || group_name == "charge" %>
-                    <tr class="bg-light">
-                      <td>
-                        <% type_key = "#{group_name}_type.select(DISCOUNT_OPTIONS).2" %>
-                        <% if fields[type_key].present? %>
-                          <label class="fw-bold small d-block"><%= group_name.capitalize %> Type</label>
-                          <span class="text-muted small"><%= fields[type_key] %></span>
-                        <% end %>
-                      </td>
-
-                      <td>
-                        <% edit_key = fields.keys.find { |k| k.include?('edit_type') } %>
-                        <% if edit_key && fields[edit_key].present? %>
-                          <label class="fw-bold small d-block">Edit Type</label>
-                          <span class="text-muted small"><%= fields[edit_key] %></span>
-                        <% end %>
-                      </td>
-
-                      <td>
-                        <% unit_key = "unit.select(php,%).2" %>
-                        <% if fields[unit_key].present? %>
-                          <label class="fw-bold small d-block">Unit</label>
-                          <span class="text-muted small"><%= fields[unit_key] %></span>
-                        <% end %>
-                      </td>
-
-                      <td>
-                        <% qty_key = "qty.text.2" %>
-                        <% if fields[qty_key].present? %>
-                          <label class="fw-bold small d-block">Quantity</label>
-                          <span class="text-muted small"><%= fields[qty_key] %></span>
-                        <% end %>
-                      </td>
-
-                      <% 2.times { %><td></td><% } %>
-
-                      <td class="text-end fw-semibold">
-                        <% total_key = "total.text_only.2" %>
-                        <% if fields[total_key].present? %>
-                          <label class="fw-bold small d-block">Total</label>
-                          <span class="text-muted small"><%= fields[total_key] %></span>
-                        <% end %>
-                      </td>
-                    </tr>
-                  <% else %>
-                    <tr class="bg-light">
-                      <% visible_fields = fields.reject { |_, v| v.blank? } %>
-                      <% visible_fields.each do |key, value| %>
-                        <td class="align-top">
-                          <label class="fw-bold small d-block"><%= key.split(".").first.humanize %></label>
-                          <span class="text-muted small"><%= value %></span>
+                <!-- Optional fields -->
+                <% if item["optional_fields"].present? %>
+                  <% item["optional_fields"].each do |group_name, fields| %>
+                    <% if group_name == "discount" || group_name == "charge" %>
+                      <tr class="bg-light">
+                        <td>
+                          <% type_key = "#{group_name}_type.select(DISCOUNT_OPTIONS).2" %>
+                          <% if fields[type_key].present? %>
+                            <label class="fw-bold small d-block"><%= group_name.capitalize %> Type</label>
+                            <span class="text-muted small"><%= fields[type_key] %></span>
+                          <% end %>
                         </td>
-                      <% end %>
-                      <% (7 - visible_fields.size).times { %><td></td><% } %>
-                    </tr>
+
+                        <td>
+                          <% edit_key = fields.keys.find { |k| k.include?('edit_type') } %>
+                          <% if edit_key && fields[edit_key].present? %>
+                            <label class="fw-bold small d-block">Edit Type</label>
+                            <span class="text-muted small"><%= fields[edit_key] %></span>
+                          <% end %>
+                        </td>
+
+                        <td>
+                          <% unit_key = "unit.select(php,%).2" %>
+                          <% if fields[unit_key].present? %>
+                            <label class="fw-bold small d-block">Unit</label>
+                            <span class="text-muted small"><%= fields[unit_key] %></span>
+                          <% end %>
+                        </td>
+
+                        <td>
+                          <% qty_key = "qty.text.2" %>
+                          <% if fields[qty_key].present? %>
+                            <label class="fw-bold small d-block">Quantity</label>
+                            <span class="text-muted small"><%= fields[qty_key] %></span>
+                          <% end %>
+                        </td>
+
+                        <% 2.times { %><td></td><% } %>
+
+                        <td class="text-end fw-semibold">
+                          <% total_key = "total.text_only.2" %>
+                          <% if fields[total_key].present? %>
+                            <label class="fw-bold small d-block">Total</label>
+                            <span class="text-muted small"><%= fields[total_key] %></span>
+                          <% end %>
+                        </td>
+                      </tr>
+                    <% else %>
+                      <tr class="bg-light">
+                        <% visible_fields = fields.reject { |_, v| v.blank? } %>
+                        <% visible_fields.each do |key, value| %>
+                          <td class="align-top">
+                            <label class="fw-bold small d-block"><%= key.split(".").first.humanize %></label>
+                            <span class="text-muted small"><%= value %></span>
+                          </td>
+                        <% end %>
+                        <% (7 - visible_fields.size).times { %><td></td><% } %>
+                      </tr>
+                    <% end %>
                   <% end %>
                 <% end %>
               <% end %>
-            <% end %>
 
-            <!-- Price Adjustments -->
-            <% if @invoice.price_adjustments.present? %>
-              <tr>
-                <td colspan="9" class="text-muted fw-bold table-light py-3">Price Adjustments</td>
-              </tr>
+              <!-- Price Adjustments -->
+              <% if @invoice.price_adjustments.present? %>
+                <tr>
+                  <td colspan="9" class="text-muted fw-bold table-light py-3">Price Adjustments</td>
+                </tr>
 
-              <% @invoice.price_adjustments.each do |adjustment| %>
-                <tr class="bg-light">
-                  <% ["type", "description", "description_edit", "amount", "unit"].each do |field| %>
-                    <% value = adjustment[field] %>
-                    <td style="text-align: left;">
-                      <% unless value.blank? %>
-                        <label class="fw-bold small d-block"><%= field.humanize %></label>
-                        <span class="text-muted small"><%= value %></span>
+                <% @invoice.price_adjustments.each do |adjustment| %>
+                  <tr class="bg-light">
+                    <% ["type", "description", "description_edit", "amount", "unit"].each do |field| %>
+                      <% value = adjustment[field] %>
+                      <td style="text-align: left;">
+                        <% unless value.blank? %>
+                          <label class="fw-bold small d-block"><%= field.humanize %></label>
+                          <span class="text-muted small"><%= value %></span>
+                        <% end %>
+                      </td>
+                    <% end %>
+
+                    <% empty_cells = 8 - 7 %>
+                    <% empty_cells.times { %><td></td><% } %>
+
+                    <td class="text-end fw-semibold">
+                      <% unless adjustment["total"].blank? %>
+                        <label class="fw-bold small d-block">Total</label>
+                        <span class="text-muted small"><%= adjustment["total"] %></span>
                       <% end %>
                     </td>
-                  <% end %>
-
-                  <% empty_cells = 8 - 7 %>
-                  <% empty_cells.times { %><td></td><% } %>
-
-                  <td class="text-end fw-semibold">
-                    <% unless adjustment["total"].blank? %>
-                      <label class="fw-bold small d-block">Total</label>
-                      <span class="text-muted small"><%= adjustment["total"] %></span>
-                    <% end %>
-                  </td>
-                </tr>
+                  </tr>
+                <% end %>
               <% end %>
-            <% end %>
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
 
 
         <!-- Totals -->
