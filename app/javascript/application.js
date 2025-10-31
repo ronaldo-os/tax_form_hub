@@ -3,6 +3,7 @@ import "./admin_client_submissions";
 import "./edit_profile";
 import "./index_invoice.js";
 import "./invoice";
+import "./view_invoice.js";
 import "./locations";
 import "./companies.js";
 import "./recurring_line_items.js";
