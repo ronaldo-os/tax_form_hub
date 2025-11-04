@@ -1,0 +1,104 @@
+@media (max-width: 767.98px) {
+  #action_buttons_container {
+    position: relative;
+    left: 0px;
+  }
+
+  .modal-dialog {
+    height: 100%;
+    margin: 0;
+  }
+
+  .modal-content {
+    height: 100%;
+    max-height: 100vh;
+    overflow-y: auto !important;
+    border-radius: 0;
+  }
+
+  body.modal-open {
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 600px) {
+  #desktop_menu_toggle, #desktop_app_logo {
+    display: none;
+  }
+
+  #mobile_menu_toggle {
+    display: flex;
+  }
+
+  .app-header {
+    display: flex !important;
+  }
+
+  .app-logo, .app-menu-list {
+    padding-left: 10px;
+    margin-top: 70px;
+  }
+
+  .app-sidebar {
+    padding-left: 0;
+    width: 0;
+    transition: width 0.3s ease;
+  }
+
+  .app-sidebar.app-active {
+    width: 100%;
+  }
+
+  .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+    padding-left: calc(var(--bs-gutter-x) * .5);
+  }
+
+  .modal-backdrop {
+    z-index: 100003 !important;
+  }
+
+  .modal {
+    z-index: 100004 !important;
+  }
+
+  div.dataTables_wrapper div.dataTables_filter input {
+    width: 100% !important;
+    margin-left: 0px !important;
+  }
+
+  .mob-mt-2 {
+    margin-top: 20px !important;
+  }
+
+  .mob-mb-4 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .mob-p-4 {
+    padding: 1.5rem !important;
+  }
+
+  .mob-p-0 {
+    padding: 0 !important;
+  }
+
+  .mob-mt-0 {
+    margin-top: 0 !important;
+  }
+
+  #form_actions_fixed_navbar {
+    float: right;
+    width: 100%;
+    margin-left: 0px;
+    transition: all 0.3s ease-in-out;
+  }
+}
+
+@media (max-width: 576px) {
+  .btn-md {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+  }
+}

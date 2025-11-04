@@ -1,0 +1,29 @@
+#company_info_list .fa-solid,
+#company_contact_list_2 .fa-solid {
+  max-width: 10px;
+  margin-right: 15px;
+}
+
+.visitor-note {
+  background: #fffd9e;
+  padding: 10px 15px;
+  border-bottom: 1px solid #ddd;
+  font-size: 14px;
+  text-align: center;
+}
+
+.visitor-note p {
+  margin: 0;
+}
+
+.visitor-note .view-as-me {
+  color: #0073b1;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.profile-preview {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+}

@@ -1,0 +1,60 @@
+#form_actions_fixed_navbar {
+  float: right;
+  width: calc(100% - 68px);
+  margin-left: 68px;
+  transition: all 0.3s ease-in-out;
+}
+
+.chart-wrapper {
+  flex-shrink: 0;
+  width: 100px;
+  height: 30px;
+  overflow: hidden;
+}
+
+#invoice-preview table td,
+#invoice-preview table th {
+  vertical-align: middle;
+  padding: 0.5rem 0.75rem;
+}
+
+#invoice-preview table td label {
+  margin-bottom: 2px;
+}
+
+#invoice-preview .line-item td {
+  border-top: 2px solid #f0f0f0;
+}
+
+#invoice_card tr {
+    page-break-inside: avoid;
+}
+
+#invoice_card table {
+    page-break-inside: auto;
+}
+
+#invoice_card thead {
+    display: table-header-group;
+}
+
+.card-filter {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-filter:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.card-filter.active {
+  border: 2px solid #00aeff;
+  box-shadow: 0 0 10px rgba(13, 110, 253, 0.25);
+}
+
+.card-filter.active p,
+.card-filter.active i {
+  color: #00aeff !important;
+  font-weight: 600;
+}
