@@ -55,7 +55,7 @@ class CompaniesController < ApplicationController
       :name, :website, :industry, :ownership, :address, :phone,
       :description, :size, :share_capital, :registration_address,
       :email_address, :company_id_type, :company_id_number,
-      :tax_id_type, :tax_id_number, :internal_identifier,
+      :tax_id_type, :tax_id_number, :internal_identifier, :gln,
       :profile_image
     )
   end

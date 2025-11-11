@@ -1342,7 +1342,6 @@
       const selected2 = $(this).find("option:selected");
       $("#company_name").text(selected2.data("name") || "");
       $("#company_address").text(selected2.data("address") || "");
-      $("#company_location").text(selected2.data("registration-address") || "");
       $("#company_country").text("Philippines");
       $("#company_number").text("Company number : " + (selected2.data("company-id-number") || "-"));
       $("#company_tax_number").text("Tax number : " + (selected2.data("tax-id-number") || "-"));

@@ -27,3 +27,7 @@
   height: 150px;
   object-fit: cover;
 }
+
+.company_description_textarea{
+  height: 127px;
+}

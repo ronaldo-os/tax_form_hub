@@ -1121,11 +1121,9 @@ $('#add-base-quantity').on('click', function () {
 
     $('#company_name').text(selected.data('name') || '');
     $('#company_address').text(selected.data('address') || '');
-    $('#company_location').text(selected.data('registration-address') || '');
     $('#company_country').text("Philippines");
-
-    $('#company_number').text('Company number : ' + (selected.data('company-id-number') || '-'));
-    $('#company_tax_number').text('Tax number : ' + (selected.data('tax-id-number') || '-'));
+    $('#company_number').text('Company ' + (selected.data('company-id-type') || '') + ' number : ' + (selected.data('company-id-number') || '-'));
+    $('#company_tax_number').text('Tax '+ (selected.data('tax-id-type') || '') +' number : ' + (selected.data('tax-id-number') || '-'));
 
     $('#recipient-preview').removeClass('d-none');
     $('#recipient_company_id').addClass('d-none');
@@ -1907,7 +1905,6 @@ $('#add-base-quantity').on('click', function () {
         const company = {
           name: getText('#company_name'),
           address: getText('#company_address', ''),
-          location: getText('#company_location', ''),
           country: getText('#company_country', ''),
           number: stripLabel(getText('#company_number'), 'Company number :'),
           taxNumber: stripLabel(getText('#company_tax_number'), 'Tax number :')
@@ -2157,11 +2154,10 @@ $('#add-base-quantity').on('click', function () {
                   <div class="p-3 rounded border bg-light-subtle">
                     <h6 class="fw-bold mb-2">${company.name}</h6>
                     <p class="mb-1 text-muted">${company.address}</p>
-                    <p class="mb-1 text-muted">${company.location}</p>
                     <p class="mb-1 text-muted">${company.country}</p>
                     <hr>
-                    <p class="mb-1 small">Company No: <strong>${company.number}</strong></p>
-                    <p class="mb-0 small">Tax No: <strong>${company.taxNumber}</strong></p>
+                    <p class="mb-1 small">${company.number}</p>
+                    <p class="mb-0 small">${company.taxNumber}</p>
                   </div>
                 </div>
 
