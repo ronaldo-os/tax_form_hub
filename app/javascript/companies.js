@@ -40,5 +40,42 @@ if (window.location.pathname.includes("/companies")) {
             e.preventDefault();
             showFlashMessage("You are currently in visitor view and can't write a recommendation for your own company.", "danger");
         });
-    });
+
+        var address = $('#company_location_text').text().trim();
+        var $mapFrame = $('#map-frame');
+        var $errorBox = $('#map-error');
+
+        if (!address || address === 'N/A') {
+        $errorBox.text('No company address provided.').show();
+        return;
+        }
+
+        var query = encodeURIComponent(address);
+        var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + query;
+
+        $.getJSON(url)
+        .done(function(data) {
+            if (data && data.length > 0) {
+            var lat = parseFloat(data[0].lat);
+            var lon = parseFloat(data[0].lon);
+
+            // Compute a small bbox for map view
+            var bbox = (lon - 0.01) + ',' + (lat - 0.01) + ',' + (lon + 0.01) + ',' + (lat + 0.01);
+            var mapSrc = 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + lat + ',' + lon;
+
+            $mapFrame.attr('src', mapSrc);
+            } else {
+            $errorBox
+                .text('Address not found. Please check the company address.')
+                .show();
+            $mapFrame.hide();
+            }
+        })
+        .fail(function() {
+            $errorBox
+            .text('Error retrieving map data. Please check your connection or try again later.')
+            .show();
+            $mapFrame.hide();
+        });
+        });
 }
