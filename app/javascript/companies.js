@@ -41,41 +41,88 @@ if (window.location.pathname.includes("/companies")) {
             showFlashMessage("You are currently in visitor view and can't write a recommendation for your own company.", "danger");
         });
 
-        var address = $('#company_location_text').text().trim();
+        // Map rendering logic
+
+        var rawAddress = $('#company_location_text').text().trim();
         var $mapFrame = $('#map-frame');
         var $errorBox = $('#map-error');
 
-        if (!address || address === 'N/A') {
-        $errorBox.text('No company address provided.').show();
-        return;
+        if (!rawAddress || rawAddress === 'N/A') {
+            $errorBox.text('No company address provided.').show();
+            return;
         }
 
-        var query = encodeURIComponent(address);
-        var url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + query;
+        // STEP 1 — remove unit numbers
+        var address = rawAddress.replace(/^(unit\s*\d+|[A-Za-z]+\s*\d+|\d+[A-Za-z]?|\w+\s*\d+)\s+/i, '').trim();
 
-        $.getJSON(url)
-        .done(function(data) {
-            if (data && data.length > 0) {
-            var lat = parseFloat(data[0].lat);
-            var lon = parseFloat(data[0].lon);
+        // STEP 2 — remove leading digits
+        address = address.replace(/^\d+\s+/i, '').trim();
 
-            // Compute a small bbox for map view
-            var bbox = (lon - 0.01) + ',' + (lat - 0.01) + ',' + (lon + 0.01) + ',' + (lat + 0.01);
-            var mapSrc = 'https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&layer=mapnik&marker=' + lat + ',' + lon;
+        console.log("Level 1 Cleaned:", address);
 
-            $mapFrame.attr('src', mapSrc);
-            } else {
-            $errorBox
-                .text('Address not found. Please check the company address.')
-                .show();
-            $mapFrame.hide();
+        var parts = address.split(',');
+        parts = parts.map(p => p.trim());
+
+        var fallbackLevels = [];
+
+        // Level 1 — Full address
+        fallbackLevels.push(address);
+
+        // Level 2 — remove first part (building name)
+        if (parts.length >= 3) {
+            fallbackLevels.push(parts.slice(1).join(', ')); 
+        }
+
+        // Level 3 — street + city only
+        if (parts.length >= 3) {
+            fallbackLevels.push(parts.slice(-2).join(', ')); 
+        }
+
+        // Level 4 — city only
+        fallbackLevels.push(parts[parts.length - 1]);
+
+        console.log("Fallback Levels:", fallbackLevels);
+
+        // Recursive search
+        function tryGeocode(level) {
+            if (level >= fallbackLevels.length) {
+                $errorBox.text('Address not found. Please check the company address.').show();
+                $mapFrame.hide();
+                return;
             }
-        })
-        .fail(function() {
-            $errorBox
-            .text('Error retrieving map data. Please check your connection or try again later.')
-            .show();
-            $mapFrame.hide();
-        });
-        });
+
+            var query = fallbackLevels[level];
+            console.log("Trying level", level, "→", query);
+
+            $.getJSON('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(query))
+                .done(function(data) {
+                    console.log("Response level", level, data);
+
+                    if (data && data.length > 0) {
+                        var lat = parseFloat(data[0].lat);
+                        var lon = parseFloat(data[0].lon);
+
+                        var bbox = (lon - 0.01) + ',' + (lat - 0.01) + ',' +
+                                (lon + 0.01) + ',' + (lat + 0.01);
+
+                        var mapSrc = 'https://www.openstreetmap.org/export/embed.html?bbox=' +
+                                    bbox + '&layer=mapnik&marker=' + lat + ',' + lon;
+
+                        $mapFrame.attr('src', mapSrc).show();
+                        $errorBox.hide();
+                    } else {
+                        // Try next fallback level
+                        tryGeocode(level + 1);
+                    }
+                })
+                .fail(function() {
+                    // Try next fallback level on error
+                    tryGeocode(level + 1);
+                });
+        }
+
+        // Start searching
+        tryGeocode(0);
+
+    });
 }
