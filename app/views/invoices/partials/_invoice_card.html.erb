@@ -25,11 +25,10 @@
             <div class="p-3 rounded border bg-light-subtle">
               <h6 class="fw-bold mb-2"><%= @recipient_company.name %></h6>
               <p class="mb-1 text-muted"><%= @recipient_company.address %></p>
-              <p class="mb-1 text-muted"><%= @recipient_company.registration_address %></p>
               <p class="mb-1 text-muted">Philippines</p>
               <hr>
-              <p class="mb-1 small">Company No: <strong><%= @recipient_company.company_id_number.presence || '-' %></strong></p>
-              <p class="mb-0 small">Tax No: <strong><%= @recipient_company.tax_id_number.presence || '-' %></strong></p>
+              <p class="mb-1 small">Company <%= @recipient_company.company_id_type.presence || '-' %> number: <strong><%= @recipient_company.company_id_number.presence || '-' %></strong></p>
+              <p class="mb-0 small">Tax <%= @recipient_company.tax_id_type.presence || '-' %> number: <strong><%= @recipient_company.tax_id_number.presence || '-' %></strong></p>
             </div>
           <% end %>
         </div>

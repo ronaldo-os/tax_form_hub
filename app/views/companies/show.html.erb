@@ -63,7 +63,7 @@
               </li>
               <li class="d-flex">
                 <i class="fa-solid fa-location-dot text-secondary icon-fixed"></i>
-                <span><%= @company.address.presence || "None" %></span>
+                <span id="company_location_text"><%= @company.address.presence || "None" %></span>
               </li>
             </ul>
           </div>
@@ -85,18 +85,22 @@
 
 
           <!-- Map -->
-          <div>
-            <div class="overflow-hidden rounded-3 shadow-sm" style="height: 150px;">
-              <iframe
-                width="100%"
-                height="150"
-                frameborder="0"
-                scrolling="no"
-                marginheight="0"
-                marginwidth="0"
-                src="https://www.openstreetmap.org/export/embed.html?bbox=121.191,14.484,121.211,14.494&amp;layer=mapnik">
-              </iframe>
+          <div id="map-container">
+            <!-- Error message placeholder -->
+            <div id="map-error" class="text-danger fw-semibold mb-2" style="display: none; font-size: 12px;">
+              <!-- error text will be injected here -->
             </div>
+
+            <!-- Map iframe -->
+            <iframe
+              id="map-frame"
+              width="100%"
+              height="150"
+              frameborder="0"
+              scrolling="no"
+              src="">
+            </iframe>
+
             <small class="text-muted d-block mt-2" style="font-size: 11px;">
               © OpenStreetMap contributors
             </small>
