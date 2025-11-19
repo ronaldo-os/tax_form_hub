@@ -98,5 +98,6 @@ Rails.application.configure do
   config.assets.debug = true
   config.assets.compile = true
 
-
+  config.hosts << "portainer.meteorpayroll.com"
+  config.hosts << "invoice-staging.meteorsoftwareph.com"
 end
