@@ -41,7 +41,7 @@ Rails.application.configure do
   # caching is enabled.
   config.action_mailer.perform_caching = false
 
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.action_mailer.default_url_options = { host: "localhost", port: 9007 }
 
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
@@ -80,7 +80,7 @@ Rails.application.configure do
   # config.generators.apply_rubocop_autocorrect_after_generate!
   config.action_mailer.delivery_method = :letter_opener
   config.action_mailer.perform_deliveries = true
-  config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  config.action_mailer.default_url_options = { host: "localhost", port: 9007 }
   config.action_mailer.default_options = { from: "taxformhub@meteorsoftwareph.com" }
   config.action_mailer.delivery_method = :smtp
 
