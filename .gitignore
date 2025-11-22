@@ -46,3 +46,4 @@
 .vscode/settings.json
 
 /config/database.yml
+/config/environments/development.rb
