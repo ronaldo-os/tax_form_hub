@@ -19,6 +19,8 @@ cd tax_form_hub
 2. **Install Dependencies**
 bundle install
 npm install
+yarn install
+yarn build
 
 3. **Set Up the Database**
 rails db:setup
@@ -31,9 +33,9 @@ rename env.sample to .env and populate it.
 
 5. **Build JavaScript Assets**
 ./bin/dev
+
 # or for production build
 rails assets:precompile
-
 6. **Run the Server**
 rails s
 

@@ -44,3 +44,5 @@
 /public/packs-test
 /node_modules
 .vscode/settings.json
+
+/config/database.yml
