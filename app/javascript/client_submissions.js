@@ -3,17 +3,31 @@ if (window.location.pathname === "/") {
         const tables = [];
 
         $('.submissionsTable').each(function () {
-        const table = $(this).DataTable({
-            responsive: true,
-            paging: true,
-            searching: true,
-            ordering: true,
-            order: [[5, 'desc']],
-            pageLength: 10,
-            lengthChange: true,
-        });
+            const table = $(this).DataTable({
+                responsive: true,
+                paging: true,
+                searching: true,
+                ordering: true,
+                order: [[5, 'desc']],
+                pageLength: 10,
+                lengthChange: true,
+                destroy: true,
+                initComplete: function () {
+                    const api = this.api();
+                    const $container = $(api.table().container());
 
-        tables.push(table);
+                    // Remove "Show _ entries" and "Search:" labels
+                    $container.find('div.dataTables_length label').contents().filter(function () {
+                        return this.nodeType === 3;
+                    }).remove();
+
+                    $container.find('div.dataTables_filter label').contents().filter(function () {
+                        return this.nodeType === 3;
+                    }).remove();
+                }
+            });
+
+            tables.push(table);
         });
 
         $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
@@ -33,8 +47,8 @@ if (window.location.pathname === "/") {
 
                     const displayFiles = multiple ? files : [files[0]];
                     displayFiles.forEach(file => {
-                    const size = Math.round(file.size / 1024);
-                    $list.append(`
+                        const size = Math.round(file.size / 1024);
+                        $list.append(`
                         <li class="list-group-item d-flex justify-content-between align-items-center">
                         ${file.name}
                         <span class="badge bg-secondary rounded-pill">${size} KB</span>
@@ -56,9 +70,9 @@ if (window.location.pathname === "/") {
             modal.show();
 
             $.ajax({
-            url: "tax_submissions/" + submissionId,
-            dataType: "script",
-            headers: { Accept: "text/javascript" }
+                url: "tax_submissions/" + submissionId,
+                dataType: "script",
+                headers: { Accept: "text/javascript" }
             });
         }
     });

@@ -3,32 +3,46 @@ if (window.location.pathname.includes("/invoices")) {
         // Initialize all DataTables
         $('#sales-table, #purchases-table, #sales-archived-table, #purchases-archived-table').DataTable({
             responsive: true,
-            autoWidth: false
+            autoWidth: false,
+            destroy: true,
+            initComplete: function () {
+                const api = this.api();
+                const $container = $(api.table().container());
+
+                // Remove "Show _ entries" and "Search:" labels
+                $container.find('div.dataTables_length label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+
+                $container.find('div.dataTables_filter label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+            }
         });
 
         // Handle tab switch
         $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
             setTimeout(function () {
                 $.fn.dataTable
-                .tables({ visible: true, api: true })
-                .columns.adjust()
-                .responsive.recalc();
+                    .tables({ visible: true, api: true })
+                    .columns.adjust()
+                    .responsive.recalc();
             }, 200); // short delay ensures proper sizing even for empty tables
         });
 
         // Optional: adjust on window resize too
         $(window).on('resize', function () {
             $.fn.dataTable
-            .tables({ visible: true, api: true })
-            .columns.adjust()
-            .responsive.recalc();
+                .tables({ visible: true, api: true })
+                .columns.adjust()
+                .responsive.recalc();
         });
 
         // Index datatable download PDF
         $(document).on('click', '.download-pdf', function () {
             const invoiceId = $(this).data('id');
 
-            $.get(`/invoices/${invoiceId}`, { partial: true }, function(html) {
+            $.get(`/invoices/${invoiceId}`, { partial: true }, function (html) {
                 const temp = document.createElement('div');
                 temp.innerHTML = html;
                 document.body.appendChild(temp);
@@ -36,8 +50,8 @@ if (window.location.pathname.includes("/invoices")) {
                 const invoice = temp.querySelector("#invoice_card");
 
                 if (!invoice) {
-                alert("Invoice HTML not found");
-                return;
+                    alert("Invoice HTML not found");
+                    return;
                 }
 
                 // Get today's date in YYYY-MM-DD format
@@ -48,20 +62,20 @@ if (window.location.pathname.includes("/invoices")) {
                 const dateStr = `${yyyy}-${mm}-${dd}`;
 
                 const opt = {
-                margin: [8, 8, 8, 8],
-                filename: `${dateStr}-invoice-${invoiceId}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true },
-                jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
+                    margin: [8, 8, 8, 8],
+                    filename: `${dateStr}-invoice-${invoiceId}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'pt', format: 'a4', orientation: 'portrait' }
                 };
 
                 html2pdf().set(opt).from(invoice).save().then(() => {
-                temp.remove();
+                    temp.remove();
                 });
             }, 'html');
         });
 
-        $(".card-filter").on("click", function() {
+        $(".card-filter").on("click", function () {
             const $this = $(this);
             const tableSelector = $this.data("table");
             const status = $this.data("status");
@@ -71,12 +85,12 @@ if (window.location.pathname.includes("/invoices")) {
             $this.addClass("active");
 
             if ($.fn.DataTable && tableSelector) {
-            const table = $(tableSelector).DataTable();
-            if (status) {
-                table.column(4).search(status, true, false).draw();
-            } else {
-                table.column(4).search("").draw();
-            }
+                const table = $(tableSelector).DataTable();
+                if (status) {
+                    table.column(4).search(status, true, false).draw();
+                } else {
+                    table.column(4).search("").draw();
+                }
             }
         });
 

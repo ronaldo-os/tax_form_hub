@@ -2,12 +2,40 @@ if (window.location.pathname.includes("/recurring_invoices")) {
     $(function () {
         const activeTable = $('#recurring-items-table').DataTable({
             responsive: true,
-            autoWidth: false
+            autoWidth: false,
+            destroy: true,
+            initComplete: function () {
+                const api = this.api();
+                const $container = $(api.table().container());
+
+                // Remove "Show _ entries" and "Search:" labels
+                $container.find('div.dataTables_length label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+
+                $container.find('div.dataTables_filter label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+            }
         });
 
         const disabledTable = $('#disabled-recurring-items-table').DataTable({
             responsive: true,
-            autoWidth: false
+            autoWidth: false,
+            destroy: true,
+            initComplete: function () {
+                const api = this.api();
+                const $container = $(api.table().container());
+
+                // Remove "Show _ entries" and "Search:" labels
+                $container.find('div.dataTables_length label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+
+                $container.find('div.dataTables_filter label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+            }
         });
     });
 
@@ -15,7 +43,7 @@ if (window.location.pathname.includes("/recurring_invoices")) {
 
     $(document).ready(function () {
         // Open modal & populate fields
-        $(document).on("click", ".edit-btn", function() {
+        $(document).on("click", ".edit-btn", function () {
             $("#invoice_id").val($(this).data("invoice-id"));
             $("#line_index").val($(this).data("line-index"));
             $("#mode").val($(this).data("mode"));
@@ -57,7 +85,7 @@ if (window.location.pathname.includes("/recurring_invoices")) {
         });
 
         // Enable recurring item
-        $(document).on('click', '.enable-btn', function() {
+        $(document).on('click', '.enable-btn', function () {
             if (!confirm('Enable this recurring item?')) return;
 
             const invoiceId = $(this).data('invoice-id');
@@ -68,8 +96,8 @@ if (window.location.pathname.includes("/recurring_invoices")) {
                 method: 'PATCH',
                 dataType: 'json',
                 data: { invoice_id: invoiceId, line_index: lineIndex },
-                success: function() { location.reload(); },
-                error: function(xhr) {
+                success: function () { location.reload(); },
+                error: function (xhr) {
                     console.error('Enable failed:', xhr.status, xhr.responseText);
                     location.reload();
                 }
@@ -77,7 +105,7 @@ if (window.location.pathname.includes("/recurring_invoices")) {
         });
 
         // Disable recurring item
-        $(document).on('click', '.disable-btn', function() {
+        $(document).on('click', '.disable-btn', function () {
             if (!confirm('Disable this recurring item?')) return;
 
             const invoiceId = $(this).data('invoice-id');
@@ -88,8 +116,8 @@ if (window.location.pathname.includes("/recurring_invoices")) {
                 method: 'PATCH',
                 dataType: 'json',
                 data: { invoice_id: invoiceId, line_index: lineIndex },
-                success: function() { location.reload(); },
-                error: function(xhr) {
+                success: function () { location.reload(); },
+                error: function (xhr) {
                     console.error('Disable failed:', xhr.status, xhr.responseText);
                     location.reload();
                 }
@@ -97,11 +125,11 @@ if (window.location.pathname.includes("/recurring_invoices")) {
         });
 
         // Delete recurring item
-        $(document).on('click', '.delete-btn', function(e) {
+        $(document).on('click', '.delete-btn', function (e) {
             e.preventDefault();
             if (!confirm('Delete this recurring item?')) return;
 
-            const $row      = $(this).closest('tr');
+            const $row = $(this).closest('tr');
             const invoiceId = $(this).data('invoice-id');
             const lineIndex = $(this).data('line-index');
 
@@ -110,7 +138,7 @@ if (window.location.pathname.includes("/recurring_invoices")) {
                 method: 'DELETE',
                 dataType: 'json',
                 data: { line_index: lineIndex },
-                success: function() {
+                success: function () {
                     // Remove from DataTable immediately
                     if (activeTable.row($row).length) {
                         activeTable.row($row).remove().draw();
@@ -122,15 +150,15 @@ if (window.location.pathname.includes("/recurring_invoices")) {
                     }
                     location.reload();
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     console.error('Delete failed:', xhr.status, xhr.responseText);
-                    location.reload(); 
+                    location.reload();
                 }
             });
         });
 
         // Interval change logic
-        $('.btn-link').on('change', function() {
+        $('.btn-link').on('change', function () {
             if ($(this).val() === 'daily') {
                 $('#every').val(0).prop('disabled', true);
             } else {

@@ -1,12 +1,13 @@
-import "./client_submissions";
-import "./admin_client_submissions";
-import "./edit_profile";
-import "./index_invoice.js";
-import "./invoice";
-import "./view_invoice.js";
-import "./locations";
-import "./companies.js";
-import "./recurring_line_items.js";
+// Page specific JS are now loaded in their respective views
+// import "./client_submissions";
+// import "./admin_client_submissions";
+// import "./edit_profile";
+// import "./index_invoice.js";
+// import "./invoice";
+// import "./view_invoice.js";
+// import "./locations";
+// import "./companies.js";
+// import "./recurring_line_items.js";
 
 
 import Rails from "@rails/ujs";
@@ -38,15 +39,15 @@ $(document).ready(function () {
             $(this).addClass("app-active");
 
             if (window.innerWidth <= 768) {
-            $sidebar.removeClass("app-active");
-            $mobileToggle.removeClass("app-active");
+                $sidebar.removeClass("app-active");
+                $mobileToggle.removeClass("app-active");
             }
         });
     });
 
 
     $(function () {
-      $('[data-bs-toggle="tooltip"]').tooltip();
+        $('[data-bs-toggle="tooltip"]').tooltip();
     });
 
     setTimeout(function () {
@@ -56,12 +57,12 @@ $(document).ready(function () {
     }, 5000);
 
     $('.zoom-link').on('click', function (e) {
-      e.preventDefault();
-      const imgUrl = $(this).data('img-url');
-      $('#modalImage').attr('src', imgUrl);
+        e.preventDefault();
+        const imgUrl = $(this).data('img-url');
+        $('#modalImage').attr('src', imgUrl);
 
-      const myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-      myModal.show();
+        const myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+        myModal.show();
     });
 
     // Currency formatting
@@ -84,7 +85,7 @@ $(document).ready(function () {
 
         let parts = val.split(".");
         if (parts.length > 2) {
-          val = parts[0] + "." + parts[1];
+            val = parts[0] + "." + parts[1];
         }
         $this.val(formatWithCommas(val));
     });
@@ -127,13 +128,15 @@ $(document).ready(function () {
     window.showFlashMessage = showFlashMessage;
 
     // Remove "Show _ entries" and "Search:" labels on datatables.
-    $('div.dataTables_length label').contents().filter(function() {
-        return this.nodeType === 3;
-    }).remove();
+    // Moved to initComplete in specific JS files to avoid race conditions and support code splitting.
 
-    $('div.dataTables_filter label').contents().filter(function() {
-        return this.nodeType === 3;
-    }).remove();
+    // $('div.dataTables_length label').contents().filter(function () {
+    //     return this.nodeType === 3;
+    // }).remove();
+
+    // $('div.dataTables_filter label').contents().filter(function () {
+    //     return this.nodeType === 3;
+    // }).remove();
 
     $('div.dataTables_filter input').attr('placeholder', 'Search...');
 
@@ -142,12 +145,12 @@ $(document).ready(function () {
 
         // Replace col-sm-* and col-md-* with col-*
         current = current
-        .replace(/\bcol-sm-/g, 'col-')
-        .replace(/\bcol-md-/g, 'col-');
+            .replace(/\bcol-sm-/g, 'col-')
+            .replace(/\bcol-md-/g, 'col-');
 
         // If both col-6 and col-12 exist, remove col-12
         if (/\bcol-6\b/.test(current) && /\bcol-12\b/.test(current)) {
-        current = current.replace(/\bcol-12\b/g, '');
+            current = current.replace(/\bcol-12\b/g, '');
         }
 
         // Clean extra spaces
@@ -159,9 +162,9 @@ $(document).ready(function () {
     // When a tab becomes visible, recalc the datatable layout
     $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
         $.fn.dataTable
-        .tables({ visible: true, api: true })
-        .columns.adjust()
-        .responsive.recalc();
+            .tables({ visible: true, api: true })
+            .columns.adjust()
+            .responsive.recalc();
     });
 
 

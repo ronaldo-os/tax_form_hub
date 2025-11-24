@@ -1,9 +1,23 @@
 if (window.location.pathname.includes("/locations")) {
     $(function () {
-        
-         const $table = $('#location-table').DataTable({
+
+        const $table = $('#location-table').DataTable({
             responsive: true,
-            autoWidth: false
+            autoWidth: false,
+            destroy: true,
+            initComplete: function () {
+                const api = this.api();
+                const $container = $(api.table().container());
+
+                // Remove "Show _ entries" and "Search:" labels
+                $container.find('div.dataTables_length label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+
+                $container.find('div.dataTables_filter label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+            }
         });
 
         const $form = $('#locationModal form');
