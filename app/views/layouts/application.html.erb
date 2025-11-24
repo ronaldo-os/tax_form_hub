@@ -54,7 +54,7 @@
 
         <!-- Main Menu -->
         <div class="app-menu-list">
-          <li class="<%= 'app-active' if request.path == root_path %>">
+          <li class="<%= 'app-active' if request.path == root_path || request.path.starts_with?('/admin') %>">
             <%= link_to root_path do %>
               <div class="app-icon"><i class="fa-solid fa-file-invoice-dollar z-1"></i></div>
               <div class="app-text">Taxes</div>
