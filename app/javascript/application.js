@@ -13,6 +13,26 @@
 import Rails from "@rails/ujs";
 Rails.start();
 
+// password toggle handler
+$(document).on('click', '.toggle-password-icon', function (event) {
+    event.preventDefault();
+
+    const $icon = $(this);
+    const $inputGroup = $icon.closest('.input-group');
+    const $input = $inputGroup.find('input');
+
+    if ($input.length) {
+        if ($input.attr('type') === 'password') {
+            $input.attr('type', 'text');
+            $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            $input.attr('type', 'password');
+            $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    }
+});
+
+
 $(document).ready(function () {
 
     // Sidenav toggle function 
@@ -170,4 +190,6 @@ $(document).ready(function () {
 
 
 });
+
+
 

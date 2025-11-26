@@ -1,1 +1,3 @@
 web: bin/rails server -b 0.0.0.0 -p 9007
+
+js: yarn build:watch
