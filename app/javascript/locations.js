@@ -32,7 +32,8 @@ if (window.location.pathname.includes("/locations")) {
         };
 
         // Handle Add (dropdown option click)
-        $('.location-option').on('click', function () {
+        $(document).on('click', '.location-option', function (e) {
+            e.preventDefault();
             const type = $(this).data('location-type');
             resetForm();
             $('#locationModalLabel').text(`Create a new ${type.toLowerCase()} location`);
@@ -40,13 +41,14 @@ if (window.location.pathname.includes("/locations")) {
         });
 
         // Handle Edit
-        $('.edit-location').on('click', function () {
+        $(document).on('click', '.edit-location', function (e) {
+            e.preventDefault();
             const loc = $(this).data();
             resetForm(`/locations/${loc.id}`, 'patch');
 
             $('#locationModalLabel').text(`Edit ${loc.locationType} Location`);
             $('#modal_location_type').val(loc.locationType);
-            $('#location_name').val(loc.locationName);
+            $('#location_location_name').val(loc.locationName);
             $('#location_country').val(loc.country);
             $('#location_company_name').val(loc.companyName);
             $('#location_tax_number').val(loc.taxNumber);

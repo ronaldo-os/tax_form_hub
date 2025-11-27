@@ -2,4 +2,5 @@
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "invoices", media: "all" %>
 <% end %>
+<%= javascript_include_tag "invoice", "data-turbo-track": "reload", type: "module" %>
 <%= render 'invoices/partials/invoice_form', invoice: @invoice %>

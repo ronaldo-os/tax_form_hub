@@ -2,6 +2,7 @@
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "company", media: "all" %>
 <% end %>
+<%= javascript_include_tag "companies", "data-turbo-track": "reload", type: "module" %>
 
 <% if current_user && current_user.company_id == @company.id %>
 <div id="visitor-note" class="visitor-note">

@@ -1,4 +1,5 @@
 <% content_for :page_title, "Locations" %>
+<%= javascript_include_tag "locations", "data-turbo-track": "reload", type: "module" %>
 <div class="container py-2 py-md-5">
   <div class="d-flex justify-content-between align-items-end mb-3">
     <div class="dropdown ms-auto">
@@ -32,7 +33,11 @@
               <td><%= location.location_type %></td>
               <td><%= location.location_name %></td>
               <td>
-                <%= [location.street, location.building, location.additional_street, location.city].compact.join(', ') %>
+                <% street_and_number = [location.building, location.street].map(&:presence).compact.join(' ') %>
+                <%= [street_and_number, location.additional_street, location.city]
+                    .map(&:presence)
+                    .compact
+                    .join(', ') %>
               </td>
               <td><%= location.company_name %></td>
               <td>
