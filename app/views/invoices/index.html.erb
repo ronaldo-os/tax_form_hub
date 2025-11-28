@@ -25,7 +25,10 @@
   </div>
 
   <!-- Tab Content -->
-  <div class="tab-content" id="invoiceTabsContent">
+  <div class="tab-content" 
+       id="invoiceTabsContent"
+       data-sale-trends="<%= @invoice_trends_sale.to_json %>"
+       data-purchase-trends="<%= @invoice_trends_purchase.to_json %>">
 
     <!-- Sales -->
     <div class="tab-pane fade show active" id="sales" role="tabpanel" aria-labelledby="sales-tab">
@@ -134,51 +137,4 @@
     </div>
   </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-$(function() {
-  const saleTrends = <%= raw @invoice_trends_sale.to_json %>;
-  const purchaseTrends = <%= raw @invoice_trends_purchase.to_json %>;
-
-  function renderMiniCharts(prefix, trends, color) {
-    $.each(trends, function(status, data) {
-      const $canvas = $(`#${prefix}-${status}`);
-      if (!$canvas.length) return;
-
-      const ctx = $canvas[0].getContext("2d");
-
-      new Chart(ctx, {
-        type: "bar",
-        data: {
-          labels: data.map(d => d.month),
-          datasets: [{
-            data: data.map(d => d.count),
-            backgroundColor: color,
-            borderRadius: 5,
-            barThickness: 4,
-          }]
-        },
-        options: {
-          plugins: { legend: { display: false }, tooltip: { enabled: false } },
-          scales: {
-            x: { display: false },
-            y: { display: false }
-          },
-          layout: {
-            padding: 0
-          },
-          animation: false,
-          responsive: true,
-          maintainAspectRatio: false,
-        }
-      });
-    });
-  }
-
-  renderMiniCharts("chart-sale", saleTrends, "#00aeff");
-  renderMiniCharts("chart-purchase", purchaseTrends, "#00aeff");
-});
-</script>
-
 

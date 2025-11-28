@@ -2,6 +2,7 @@
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "invoices", media: "all" %>
 <% end %>
+<%= javascript_include_tag "view_invoice", "data-turbo-track": "reload", type: "module" %>
 
 <%= hidden_field_tag :payment_terms, @invoice.payment_terms.to_json.html_safe, id: 'view_invoicepayment_terms_json' %>
 <div class="container mt-5">
