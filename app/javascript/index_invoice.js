@@ -90,6 +90,10 @@ if (window.location.pathname.includes("/invoices")) {
             $.get(`/invoices/${invoiceId}`, { partial: true }, function (html) {
                 const temp = document.createElement('div');
                 temp.innerHTML = html;
+                // Hide the temp div so it doesn't show on the page during PDF generation
+                temp.style.position = 'absolute';
+                temp.style.left = '-9999px';
+                temp.style.visibility = 'hidden';
                 document.body.appendChild(temp);
 
                 let invoice = temp.querySelector("#invoice_card");
