@@ -1,4 +1,7 @@
 <% content_for :page_title, "Edit Profile" %>
+<% content_for :javascripts do %>
+  <%= javascript_include_tag "edit_profile", "data-turbo-track": "reload", type: "module" %>
+<% end %>
 
 <div class="d-flex justify-content-center align-items-center min-vh-100 mt-5 mb-5">
   <div class="container" style="max-width: 640px;">
@@ -105,7 +108,7 @@
           <!-- Actions -->
           <div class="d-flex justify-content-between gap-3 mt-5">
             <%= link_to "Back", root_path, class: "btn btn-light" %>
-            <%= f.submit "Update Profile", class: "btn btn-primary" %>
+            <%= f.submit "Update Profile", class: "btn btn-primary", id: "update-profile-btn" %>
           </div>
 
         <% end %>

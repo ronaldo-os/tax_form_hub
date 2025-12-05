@@ -21,17 +21,53 @@ if (window.location.pathname.includes("/companies")) {
         updateLabel('#company_id_type', '#company_id_number_label', 'Company ID Number');
         updateLabel('#tax_id_type', '#tax_id_number_label', 'Tax ID Number');
 
-        $('#image-preview').on('click', function () {
-            $('#profile_image_input').click();
+        const $imagePreview = $('#image-preview');
+        const $fileInput = $('#profile_image_input');
+        const $submitBtn = $('#update-company-btn');
+        const defaultImageSrc = $imagePreview.attr('src');
+
+        $('#image-preview-wrapper').on('click', function (e) {
+            // Ignore clicks on the input itself or the label (which handles it natively)
+            if ($(e.target).is($fileInput) || $(e.target).closest('label').length > 0) {
+                return;
+            }
+            $fileInput.click();
         });
 
-        $('#profile_image_input').on('change', function (e) {
+        // Prevent infinite loop by stopping propagation from the input itself
+        $fileInput.on('click', function (e) {
+            e.stopPropagation();
+        });
+
+        $fileInput.on('change', function (e) {
             const file = e.target.files[0];
-            if (file && file.type.startsWith('image/')) {
+
+            // Reset state
+            $submitBtn.prop('disabled', false);
+            $imagePreview.css('border', '');
+
+            if (file) {
+                if (!file.type.startsWith('image/')) {
+                    alert("Please select a valid image file.");
+                    $submitBtn.prop('disabled', true);
+                    $imagePreview.css('border', '2px solid red');
+                    e.target.value = ""; // Clear the input
+                    return;
+                }
+
                 const reader = new FileReader();
+
                 reader.onload = function (e) {
-                    $('#image-preview').attr('src', e.target.result);
+                    $imagePreview.attr('src', e.target.result);
                 };
+
+                reader.onerror = function () {
+                    alert("Failed to read the file. Please try another one.");
+                    $submitBtn.prop('disabled', true);
+                    $imagePreview.attr('src', defaultImageSrc); // Revert to original
+                    e.target.value = ""; // Clear input
+                };
+
                 reader.readAsDataURL(file);
             }
         });
@@ -70,12 +106,12 @@ if (window.location.pathname.includes("/companies")) {
 
         // Level 2 — remove first part (building name)
         if (parts.length >= 3) {
-            fallbackLevels.push(parts.slice(1).join(', ')); 
+            fallbackLevels.push(parts.slice(1).join(', '));
         }
 
         // Level 3 — street + city only
         if (parts.length >= 3) {
-            fallbackLevels.push(parts.slice(-2).join(', ')); 
+            fallbackLevels.push(parts.slice(-2).join(', '));
         }
 
         // Level 4 — city only
@@ -95,7 +131,7 @@ if (window.location.pathname.includes("/companies")) {
             console.log("Trying level", level, "→", query);
 
             $.getJSON('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(query))
-                .done(function(data) {
+                .done(function (data) {
                     console.log("Response level", level, data);
 
                     if (data && data.length > 0) {
@@ -103,10 +139,10 @@ if (window.location.pathname.includes("/companies")) {
                         var lon = parseFloat(data[0].lon);
 
                         var bbox = (lon - 0.01) + ',' + (lat - 0.01) + ',' +
-                                (lon + 0.01) + ',' + (lat + 0.01);
+                            (lon + 0.01) + ',' + (lat + 0.01);
 
                         var mapSrc = 'https://www.openstreetmap.org/export/embed.html?bbox=' +
-                                    bbox + '&layer=mapnik&marker=' + lat + ',' + lon;
+                            bbox + '&layer=mapnik&marker=' + lat + ',' + lon;
 
                         $mapFrame.attr('src', mapSrc).show();
                         $errorBox.hide();
@@ -115,7 +151,7 @@ if (window.location.pathname.includes("/companies")) {
                         tryGeocode(level + 1);
                     }
                 })
-                .fail(function() {
+                .fail(function () {
                     // Try next fallback level on error
                     tryGeocode(level + 1);
                 });
