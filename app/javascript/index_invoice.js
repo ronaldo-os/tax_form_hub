@@ -66,7 +66,12 @@ if (window.location.pathname.includes("/invoices")) {
         });
 
         // Handle tab switch
-        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function () {
+        $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+            const tabId = $(e.target).attr('id').replace('-tab', '');
+            const url = new URL(window.location);
+            url.searchParams.set('tab', tabId);
+            window.history.replaceState({}, '', url);
+
             setTimeout(function () {
                 $.fn.dataTable
                     .tables({ visible: true, api: true })

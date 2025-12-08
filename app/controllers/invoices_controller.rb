@@ -16,6 +16,8 @@ class InvoicesController < ApplicationController
     # Trend graph data (last 6 months)
     @invoice_trends_sale     = build_invoice_trends(@invoices_sale)
     @invoice_trends_purchase = build_invoice_trends(@invoices_purchase)
+
+    @active_tab = params[:tab] || 'sales'
   end
 
 
@@ -302,9 +304,9 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.update(status: "approved")
       update_original_sale_status(invoice, "approved")
-      redirect_to invoices_path, notice: "Invoice approved."
+      redirect_to invoices_path(tab: "purchases"), notice: "Invoice approved."
     else
-      redirect_to invoices_path, alert: "Failed to approve invoice."
+      redirect_to invoices_path(tab: "purchases"), alert: "Failed to approve invoice."
     end
   end
 
@@ -312,22 +314,24 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.update(status: "denied")
       update_original_sale_status(invoice, "denied")
-      redirect_to invoices_path, notice: "Invoice denied."
+      redirect_to invoices_path(tab: "purchases"), notice: "Invoice denied."
     else
-      redirect_to invoices_path, alert: "Failed to deny invoice."
+      redirect_to invoices_path(tab: "purchases"), alert: "Failed to deny invoice."
     end
   end
 
   def archive
     invoice = current_user.invoices.find(params[:id])
     invoice.update(archived: true)
-    redirect_to invoices_path, notice: "Invoice archived."
+    tab = invoice.invoice_type == "purchase" ? "purchases" : "sales"
+    redirect_to invoices_path(tab: tab), notice: "Invoice archived."
   end
 
   def unarchive
     invoice = current_user.invoices.find(params[:id])
     invoice.update(archived: false)
-    redirect_to invoices_path, notice: "Invoice unarchived."
+    tab = invoice.invoice_type == "purchase" ? "purchases" : "sales"
+    redirect_to invoices_path(tab: tab), notice: "Invoice unarchived."
   end
 
   def mark_as_paid
@@ -335,9 +339,11 @@ class InvoicesController < ApplicationController
     if sale_invoice.update(status: "paid")
       purchase_invoice = Invoice.find_by(sale_from_id: sale_invoice.id, invoice_type: "purchase")
       purchase_invoice&.update(status: "paid")
-      redirect_to invoices_path, notice: "Invoice marked as paid."
+      tab = sale_invoice.invoice_type == "purchase" ? "purchases" : "sales"
+      redirect_to invoices_path(tab: tab), notice: "Invoice marked as paid."
     else
-      redirect_to invoices_path, alert: "Failed to update invoice."
+      tab = sale_invoice.invoice_type == "purchase" ? "purchases" : "sales"
+      redirect_to invoices_path(tab: tab), alert: "Failed to update invoice."
     end
   end
 
