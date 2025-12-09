@@ -2,5 +2,5 @@
 //= link company.css
 //= link invoices.css
 //= link responsive.css
-//= link application.js
+//= link application.css
 //= link_tree ../builds
