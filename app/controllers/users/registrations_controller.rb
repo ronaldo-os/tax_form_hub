@@ -63,4 +63,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
       :password_confirmation, :current_password, :company_name
     ])
   end
+
+  def after_update_path_for(resource)
+    edit_profile_path
+  end
 end

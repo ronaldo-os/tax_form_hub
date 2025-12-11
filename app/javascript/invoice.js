@@ -1,213 +1,224 @@
-import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS, INVOICE_INFO_OPTIONAL_FIELDS, OPTIONAL_FIELDS} from "./long_select_options/options";
+import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS, INVOICE_INFO_OPTIONAL_FIELDS, OPTIONAL_FIELDS } from "./long_select_options/options";
 
 if (
-      window.location.pathname === "/invoices/new" ||
-      window.location.pathname.match(/^\/invoices\/\d+\/edit$/) // matches /invoices/123/edit
-    ){
-    $(document).ready(function () {
-      recalculateTotals();
+  window.location.pathname === "/invoices/new" ||
+  window.location.pathname.match(/^\/invoices\/\d+\/edit$/) // matches /invoices/123/edit
+) {
+  // universal functions
+  function formatCurrency(value) {
+    if (value === null || value === undefined || value === '') return '0.00';
+    let num = parseFloat(String(value).replace(/,/g, ''));
+    if (isNaN(num)) num = 0;
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
 
-      // universal functions 
-      
-      // Build options for optional fields dropdown
-      function buildOptions(fields) {
-        return Object.entries(fields)
-          .map(([value, label]) => `<option value="${value}">${label}</option>`)
-          .join("");
+  function parseCurrency(value) {
+    if (!value) return 0;
+    return parseFloat(String(value).replace(/,/g, '')) || 0;
+  }
+
+  $(document).ready(function () {
+    recalculateTotals();
+
+    // Build options for optional fields dropdown
+    function buildOptions(fields) {
+      return Object.entries(fields)
+        .map(([value, label]) => `<option value="${value}">${label}</option>`)
+        .join("");
+    }
+
+    $("#additional_field_0").html(buildOptions(OPTIONAL_FIELDS));
+    $(".invoice_info_select").html(buildOptions(INVOICE_INFO_OPTIONAL_FIELDS));
+
+
+    //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
+
+    const fieldTypeMap = {
+      "DeliveryDate": [
+        { name: "Delivery_Date.delivery_date.date.12", label: "Delivery Date", type: "date", cols: 12, class: "mb-3" }
+      ],
+      "PaymentDueDate": [
+        { name: "Payment_Due_Date.payment_due_date.date.12", label: "Payment Due Date", type: "date", cols: 12, class: "mb-3" }
+      ],
+      "customsDeclarations": [
+        { name: "customsDeclarations.reference_number_of_customs_from_No_1.text.12", label: "Reference Number of Customs Form No.1", type: "text", cols: 12, class: "mb-3" },
+        { name: "customsDeclarations.reference_number_of_customs_from_No_2.text.12", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
+      ],
+      "taxExchangeRateFields": [
+        { name: "taxExchangeRateFields.exchange_rate.text.7", label: "Exchange rate", type: "text", cols: 7, class: "mb-3" },
+        { name: "taxExchangeRateFields.currency.select(php,usd,eur,jpy).5", label: "Currency", type: "select", cols: 5, options: ["PHP", "USD", "EUR", "JPY"], class: "mb-3" },
+        { name: "taxExchangeRateFields.date_of_exchange_rate.text.7", label: "Date of exchange rate", type: "date", cols: 7, class: "mb-3" },
+        { name: "taxExchangeRateFields.converted_tax_total.text.5", label: "Converted tax total", type: "text", cols: 5, class: "mb-3" },
+        { name: "taxExchangeRateFields.converted_document_total_(incl taxes).text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
+        { name: "taxExchangeRateFields.converted_document_total_(excl taxes).text.12", label: "Converted Document Total (excl taxes)", type: "text", cols: 12, class: "mb-3" },
+      ],
+      "transactionVatType": [
+        { name: "transactionVatType.transaction_vat_type.select(collection,debit).12", label: "Transaction VAT Type", type: "select", cols: 12, options: ["Collection", "Debit"], class: "mb-3" }
+      ],
+      "orderReferenceId": [
+        { name: "orderReferenceId.purchase_order_number.text.12", label: "Purchase order number", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "orderReferenceIssueDate": [
+        { name: "orderReferenceIssueDate.purchase_order_issue_date.date.12", label: "Purchase order issue date", type: "date", cols: 12, class: "mb-3" }
+      ],
+      "billingReferenceId": [
+        { name: "billingReferenceId.billing_reference.text.12", label: "Billing reference", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "contractDocumentReferenceId": [
+        { name: "contractDocumentReferenceId.contract_number.text.12", label: "Contract number", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "despatchDocumentReference.id": [
+        { name: "despatchDocumentReference.shipping_notice_reference.text.12", label: "Shipping Notice Reference", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "despatchDocumentReference.issueDate": [
+        { name: "despatchDocumentReference.shipping_notice_issue_date.date.12", label: "Shipping Notice Issue Date", type: "date", cols: 12, class: "mb-3" }
+      ],
+      "receiptDocumentReference.id": [
+        { name: "receiptDocumentReference.goods_receipt_reference.text.12", label: "Goods Receipt Reference", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "receiptDocumentReference.issueDate": [
+        { name: "receiptDocumentReference.goods_receipt_issue_date.date.12", label: "Goods Receipt Issue Date", type: "date", cols: 12, class: "mb-3" }
+      ],
+      "accountingCost": [
+        { name: "accountingCost.cost_center.text.12", label: "Cost center", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "customerPartyContactName": [
+        { name: "customerPartyContactName.person_reference.text.12", label: "Person reference", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "transportReference": [
+        { name: "transport_reference.text.12", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "transportReferenceIssueDate": [
+        { name: "transport_reference_issue_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
+      ],
+      "FileID": [
+        { name: "FileID.file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "customerAssignedId": [
+        { name: "customerAssignedId.customer_account_id.text.12", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "taxPointDate": [
+        { name: "taxPointDate.tax_point_date.date.12", label: "Tax point date", type: "date", cols: 12, class: "mb-3" }
+      ],
+      "supplierCommissionNumber": [
+        { name: "supplierCommissionNumber.commision_number_of_seller.text.12", label: "Commission number of seller", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "supplierPhysicalLocationValue": [
+        { name: "supplierPhysicalLocationValue.data_universal_numbering_system.text.12", label: "Data universal numbering system", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "deliveryTerms": [
+        { name: "deliveryTerms.delivery_terms.text.12", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "InternimHours": [
+        { name: "InternimHours.interim_hours.text.12", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "BookingNumber": [
+        { name: "BookingNumber.booking_number.text.12", label: "Booking Number", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "PaymentReference": [
+        { name: "PaymentReference.payment_reference.text.12", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "promisedDeliveryPeriod": [
+        { name: "promisedDeliveryPeriod.delivery_period.text.12", label: "Delivery period", type: "text", cols: 12, class: "mb-3" }
+      ],
+      "ClearanceClave": [
+        { name: "ClearanceClave.clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
+      ]
+    };
+
+    $('#optionalField').on('change', function () {
+      const key = $(this).val();
+      if (!key) return;
+
+      const $container = $('#invoice_details_parent_div #optional_fields_container');
+
+      if ($container.find(`[data-optional-group="${key}"]`).length > 0) {
+        showFlashMessage("This group is already added.", "danger");
+        $(this).val('');
+        return;
       }
 
-      $("#additional_field_0").html(buildOptions(OPTIONAL_FIELDS));
-      $(".invoice_info_select").html(buildOptions(INVOICE_INFO_OPTIONAL_FIELDS));
+      const fields = fieldTypeMap[key];
+      if (!fields || !Array.isArray(fields)) return;
 
-
-      //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
-      
-      const fieldTypeMap = {
-          "DeliveryDate": [
-            { name: "Delivery_Date.delivery_date.date.12", label: "Delivery Date", type: "date", cols: 12, class: "mb-3" }
-          ],
-          "PaymentDueDate": [
-            { name: "Payment_Due_Date.payment_due_date.date.12", label: "Payment Due Date", type: "date", cols: 12, class: "mb-3" }
-          ],
-          "customsDeclarations": [
-              { name: "customsDeclarations.reference_number_of_customs_from_No_1.text.12", label: "Reference Number of Customs Form No.1", type: "text", cols: 12, class: "mb-3" },
-              { name: "customsDeclarations.reference_number_of_customs_from_No_2.text.12", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
-          ],
-          "taxExchangeRateFields": [
-              { name: "taxExchangeRateFields.exchange_rate.text.7", label: "Exchange rate", type: "text", cols: 7, class: "mb-3" },
-              { name: "taxExchangeRateFields.currency.select(php,usd,eur,jpy).5", label: "Currency", type: "select", cols: 5, options: ["PHP","USD","EUR","JPY"], class: "mb-3" },
-              { name: "taxExchangeRateFields.date_of_exchange_rate.text.7", label: "Date of exchange rate", type: "date", cols: 7, class: "mb-3" },
-              { name: "taxExchangeRateFields.converted_tax_total.text.5", label: "Converted tax total", type: "text", cols: 5, class: "mb-3" },
-              { name: "taxExchangeRateFields.converted_document_total_(incl taxes).text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
-              { name: "taxExchangeRateFields.converted_document_total_(excl taxes).text.12", label: "Converted Document Total (excl taxes)", type: "text", cols: 12, class: "mb-3" },
-          ],
-          "transactionVatType": [
-            { name: "transactionVatType.transaction_vat_type.select(collection,debit).12", label: "Transaction VAT Type", type: "select", cols: 12, options: ["Collection", "Debit"], class: "mb-3" }
-          ],
-          "orderReferenceId": [
-            { name: "orderReferenceId.purchase_order_number.text.12", label: "Purchase order number", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "orderReferenceIssueDate": [
-            { name: "orderReferenceIssueDate.purchase_order_issue_date.date.12", label: "Purchase order issue date", type: "date", cols: 12, class: "mb-3" }
-          ],
-          "billingReferenceId": [
-            { name: "billingReferenceId.billing_reference.text.12", label: "Billing reference", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "contractDocumentReferenceId": [
-            { name: "contractDocumentReferenceId.contract_number.text.12", label: "Contract number", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "despatchDocumentReference.id": [
-            { name: "despatchDocumentReference.shipping_notice_reference.text.12", label: "Shipping Notice Reference", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "despatchDocumentReference.issueDate": [
-            { name: "despatchDocumentReference.shipping_notice_issue_date.date.12", label: "Shipping Notice Issue Date", type: "date", cols: 12, class: "mb-3" }
-          ],
-          "receiptDocumentReference.id": [
-            { name: "receiptDocumentReference.goods_receipt_reference.text.12", label: "Goods Receipt Reference", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "receiptDocumentReference.issueDate": [
-            { name: "receiptDocumentReference.goods_receipt_issue_date.date.12", label: "Goods Receipt Issue Date", type: "date", cols: 12, class: "mb-3" }
-          ],
-          "accountingCost": [
-            { name: "accountingCost.cost_center.text.12", label: "Cost center", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "customerPartyContactName": [
-            { name: "customerPartyContactName.person_reference.text.12", label: "Person reference", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "transportReference": [
-            { name: "transport_reference.text.12", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "transportReferenceIssueDate": [
-            { name: "transport_reference_issue_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
-          ],
-          "FileID": [
-            { name: "FileID.file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "customerAssignedId": [
-            { name: "customerAssignedId.customer_account_id.text.12", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "taxPointDate": [
-            { name: "taxPointDate.tax_point_date.date.12", label: "Tax point date", type: "date", cols: 12, class: "mb-3" }
-          ],
-          "supplierCommissionNumber": [
-            { name: "supplierCommissionNumber.commision_number_of_seller.text.12", label: "Commission number of seller", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "supplierPhysicalLocationValue": [
-            { name: "supplierPhysicalLocationValue.data_universal_numbering_system.text.12", label: "Data universal numbering system", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "deliveryTerms": [
-            { name: "deliveryTerms.delivery_terms.text.12", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "InternimHours": [
-            { name: "InternimHours.interim_hours.text.12", label: "Interim Hours", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "BookingNumber": [
-            { name: "BookingNumber.booking_number.text.12", label: "Booking Number", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "PaymentReference": [
-            { name: "PaymentReference.payment_reference.text.12", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "promisedDeliveryPeriod": [
-            { name: "promisedDeliveryPeriod.delivery_period.text.12", label: "Delivery period", type: "text", cols: 12, class: "mb-3" }
-          ],
-          "ClearanceClave": [
-            { name: "ClearanceClave.clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
-          ]
-      };
-
-      $('#optionalField').on('change', function () {
-        const key = $(this).val();
-        if (!key) return;
-
-        const $container = $('#invoice_details_parent_div #optional_fields_container');
-
-        if ($container.find(`[data-optional-group="${key}"]`).length > 0) {
-          showFlashMessage("This group is already added.", "danger");
-          $(this).val('');
-          return;
-        }
-
-        const fields = fieldTypeMap[key];
-        if (!fields || !Array.isArray(fields)) return;
-
-        let groupHtml = `
+      let groupHtml = `
           <div class="mb-3 position-relative border rounded p-3 pt-3 optional-group" data-optional-group="${key}">
             <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
             <div class="row">
         `;
 
-        fields.forEach(field => {
-          const colClass = `col-md-${field.cols || 6} ${field.class || ""}`;
-          let inputHtml = "";
+      fields.forEach(field => {
+        const colClass = `col-md-${field.cols || 6} ${field.class || ""}`;
+        let inputHtml = "";
 
-          if (field.type === "select") {
-            inputHtml = `
+        if (field.type === "select") {
+          inputHtml = `
               <select class="form-select optional-input" data-field-name="${field.name}">
                 ${field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('')}
               </select>`;
-          } else if (field.type === "textarea") {
-            inputHtml = `<textarea class="form-control optional-input" data-field-name="${field.name}"></textarea>`;
-          } else {
-            inputHtml = `<input type="${field.type}" class="form-control optional-input" data-field-name="${field.name}">`;
-          }
+        } else if (field.type === "textarea") {
+          inputHtml = `<textarea class="form-control optional-input" data-field-name="${field.name}"></textarea>`;
+        } else {
+          inputHtml = `<input type="${field.type}" class="form-control optional-input" data-field-name="${field.name}">`;
+        }
 
-          groupHtml += `
+        groupHtml += `
             <div class="${colClass}">
               <label class="form-label">${field.label}</label>
               ${inputHtml}
             </div>
           `;
-        });
+      });
 
-        groupHtml += `
+      groupHtml += `
             </div>
           </div>
         `;
 
-        $container.append(groupHtml);
-        $(this).val('');
-        updateInvoiceInfoJSON();
-      });
+      $container.append(groupHtml);
+      $(this).val('');
+      updateInvoiceInfoJSON();
+    });
 
 
-      // Remove group inside #invoice_details_parent_div
-      $(document).on('click', '#invoice_details_parent_div .remove-group', function () {
-        $(this).closest('[data-optional-group]').remove();
-        updateInvoiceInfoJSON();
-      });
+    // Remove group inside #invoice_details_parent_div
+    $(document).on('click', '#invoice_details_parent_div .remove-group', function () {
+      $(this).closest('[data-optional-group]').remove();
+      updateInvoiceInfoJSON();
+    });
 
-      // Track input changes in optional fields inside #invoice_details_parent_div
-      $(document).on('input change', '#invoice_details_parent_div .optional-input, #invoice_details_parent_div [data-optional-group] input, #invoice_details_parent_div [data-optional-group] select, #invoice_details_parent_div [data-optional-group] textarea', function () {
-        updateInvoiceInfoJSON();
-      });
+    // Track input changes in optional fields inside #invoice_details_parent_div
+    $(document).on('input change', '#invoice_details_parent_div .optional-input, #invoice_details_parent_div [data-optional-group] input, #invoice_details_parent_div [data-optional-group] select, #invoice_details_parent_div [data-optional-group] textarea', function () {
+      updateInvoiceInfoJSON();
+    });
 
-      // Update hidden field from fields inside #invoice_details_parent_div
-      function updateInvoiceInfoJSON() {
-        const data = {};
+    // Update hidden field from fields inside #invoice_details_parent_div
+    function updateInvoiceInfoJSON() {
+      const data = {};
 
-        $('#invoice_details_parent_div [data-optional-group]').each(function () {
-          const groupKey = $(this).data('optional-group');
-          const inputs = $(this).find('input, select, textarea');
+      $('#invoice_details_parent_div [data-optional-group]').each(function () {
+        const groupKey = $(this).data('optional-group');
+        const inputs = $(this).find('input, select, textarea');
 
-          inputs.each(function () {
-            const name = $(this).data('field-name') || $(this).attr('name');
-            const value = $(this).val();
+        inputs.each(function () {
+          const name = $(this).data('field-name') || $(this).attr('name');
+          const value = $(this).val();
 
-            if (name) {
-              data[name] = value;
-            }
-          });
+          if (name) {
+            data[name] = value;
+          }
         });
+      });
 
-        $('#optional_fields_json').val(JSON.stringify(data));
-      }
+      $('#optional_fields_json').val(JSON.stringify(data));
+    }
 
 
 
     //----------------------------------------------------- PAYMENT TERMS FIELD 
 
     const payment_terms_fieldTypeMap = {
-    payment_terms: [
+      payment_terms: [
         { name: "payment_terms.discount_percent.text.6", label: "Discount Percent", type: "text", cols: 6 },
         { name: "payment_terms.surcharge_percent.text.6", label: "Surcharge Percent", type: "text", cols: 6 },
         { name: "payment_terms.settelement_start_date.date.6", label: "Settlement Start Date", type: "date", cols: 6 },
@@ -215,14 +226,14 @@ if (
         { name: "payment_terms.settlement_end_date.date.6", label: "Settlement End Date", type: "date", cols: 6 },
         { name: "payment_terms.penalty_end_date.date.6", label: "Penalty End Date", type: "date", cols: 6 },
         { name: "payment_terms.note.textarea.12", label: "Note", type: "textarea", cols: 12 },
-    ],
-    cash: [
+      ],
+      cash: [
         { name: "cash.cash.text_only.12", label: "Cash Payment", type: "text_only", cols: 12 }
-    ],
-    check: [
+      ],
+      check: [
         { name: "check.check.text_only.12", label: "Check Payment", type: "text_only", cols: 12 },
-    ],
-    bank: [
+      ],
+      bank: [
         { name: "bank.name.text.12", label: "Bank name", type: "text", cols: 12 },
         { name: "bank.sortcode.text.6", label: "Sort Code", type: "text", cols: 6 },
         { name: "bank.account_number.text.6", label: "Account number", type: "text", cols: 6 },
@@ -236,11 +247,11 @@ if (
         { name: "bank.address_line.text.12", label: "Address line (optional)", type: "text", cols: 12 },
         { name: "bank.country.text.12", label: "Country (optional)", type: "text", cols: 12 },
         { name: "bank.note.text.12", label: "Payment note", type: "text", cols: 12 },
-    ],
-    bank_card: [
+      ],
+      bank_card: [
         { name: "bank_card.bank_card.text_only.6", label: "Bank Card", type: "text_only", cols: 6 },
-    ],
-    debit: [
+      ],
+      debit: [
         { name: "debit.name.text.12", label: "Bank name", type: "text", cols: 12 },
         { name: "debit.sortcode.text.6", label: "Sort Code", type: "text", cols: 6 },
         { name: "debit.account_number.text.6", label: "Account number", type: "text", cols: 6 },
@@ -254,12 +265,12 @@ if (
         { name: "debit.address_line.text.12", label: "Address line (optional)", type: "text", cols: 12 },
         { name: "debit.country.text.12", label: "Country (optional)", type: "text", cols: 12 },
         { name: "debit.note.text.12", label: "Payment note", type: "text", cols: 12 },
-    ],
-    bic_iban: [
+      ],
+      bic_iban: [
         { name: "bic_iban.bic_swift.text.4", label: "BIC/SWIFT", type: "text", cols: 4 },
         { name: "bic_iban.iban.text.8", label: "IBAN", type: "text", cols: 8 },
         { name: "bic_iban.note.text.12", label: "Payment note", type: "text", cols: 12 },
-    ],
+      ],
     };
 
     $('#payment_terms_select').on('change', function () {
@@ -360,22 +371,22 @@ if (
     var $target = $($btn.data('bs-target'));
 
     $target.on('show.bs.collapse hide.bs.collapse', function (e) {
-    var symbol = e.type === 'show' ? '−' : '+';
-    $btn.text(symbol + ' Delivery Details');
+      var symbol = e.type === 'show' ? '−' : '+';
+      $btn.text(symbol + ' Delivery Details');
     });
-    
+
     //----------------------------------------------------- PAYMENT TERMS LOCATIONS BUTTON TOGGLE
 
     $(document).on('click', '.location-toggle-btn', function () {
-        const $btn = $(this);
-        const type = $btn.data('type');
-        const wrapperId = `#${type.toLowerCase().replace(/ /g, '_')}_selector_wrapper`;
-        const $wrapper = $(wrapperId);
+      const $btn = $(this);
+      const type = $btn.data('type');
+      const wrapperId = `#${type.toLowerCase().replace(/ /g, '_')}_selector_wrapper`;
+      const $wrapper = $(wrapperId);
 
-        $wrapper.slideToggle(200, function () {
-            const isVisible = $wrapper.is(':visible');
-            $btn.html(`${isVisible ? '–' : '+'} ${type} Details`);
-        });
+      $wrapper.slideToggle(200, function () {
+        const isVisible = $wrapper.is(':visible');
+        $btn.html(`${isVisible ? '–' : '+'} ${type} Details`);
+      });
     });
 
     $('.toggle-location-details').on('click', function (e) {
@@ -394,32 +405,32 @@ if (
     });
 
     $('.location-select').on('change', function () {
-        const type = $(this).data('type').toLowerCase().replace(/\s+/g, '_');
-        const selectedId = $(this).val();
+      const type = $(this).data('type').toLowerCase().replace(/\s+/g, '_');
+      const selectedId = $(this).val();
 
-        if (!selectedId) {
-            $(`#${type}_details`).hide();
-            return;
+      if (!selectedId) {
+        $(`#${type}_details`).hide();
+        return;
+      }
+
+      $.ajax({
+        url: `/locations/${selectedId}.json`,
+        method: 'GET',
+        success: function (data) {
+          const details = $(`#${type}_details`);
+          details.find('.location_name').text(data.location_name || '');
+          details.find('.company_name').text(data.company_name || '');
+          details.find('.tax_number').text(data.tax_number ? `Tax number : ${data.tax_number}` : '');
+          details.find('.street').text(data.street || '');
+          details.find('.city').text(data.city || '');
+          details.find('.country').text(data.country || '');
+          details.show();
+        },
+        error: function () {
+          showFlashMessage("Failed to fetch location details.", "danger");
+          $(`#${type}_details`).hide();
         }
-
-        $.ajax({
-            url: `/locations/${selectedId}.json`,
-            method: 'GET',
-            success: function (data) {
-            const details = $(`#${type}_details`);
-            details.find('.location_name').text(data.location_name || '');
-            details.find('.company_name').text(data.company_name || '');
-            details.find('.tax_number').text(data.tax_number ? `Tax number : ${data.tax_number}` : '');
-            details.find('.street').text(data.street || '');
-            details.find('.city').text(data.city || '');
-            details.find('.country').text(data.country || '');
-            details.show();
-            },
-            error: function () {
-            showFlashMessage("Failed to fetch location details.", "danger");
-            $(`#${type}_details`).hide();
-            }
-        });
+      });
     });
 
     //----------------------------------------------------- ADD FOOTER BUTTON TOGGLE
@@ -449,46 +460,46 @@ if (
 
     $(document).ready(function () {
 
-    const $select = $('#initial_delivery_details_country');
+      const $select = $('#initial_delivery_details_country');
 
-    if ($select.length) {
-      $.each(COUNTRY_OPTIONS, function (i, country) {
-        $select.append($('<option>', {
-          value: country,
-          text: country
-        }));
-      });
-    }
+      if ($select.length) {
+        $.each(COUNTRY_OPTIONS, function (i, country) {
+          $select.append($('<option>', {
+            value: country,
+            text: country
+          }));
+        });
+      }
 
-    let lineIndex = 1;
+      let lineIndex = 1;
 
-    // Utility Functions
-    function updateRemoveButtons() {
-      const lineItemCount = $('#line-items .line-item').length;
-      const discountItemCount = $('#line-items .discount-item').length;
+      // Utility Functions
+      function updateRemoveButtons() {
+        const lineItemCount = $('#line-items .line-item').length;
+        const discountItemCount = $('#line-items .discount-item').length;
 
-      // Hide all remove buttons by default
-      $('#line-items .remove-line').hide();
+        // Hide all remove buttons by default
+        $('#line-items .remove-line').hide();
 
-      // If there is more than one item in total, show all remove buttons
-      if (lineItemCount + discountItemCount > 1) {
-        if (lineItemCount === 1 && discountItemCount) {
-          $('#line-items .discount-item .remove-line').show();
-        } else {
-          $('#line-items .remove-line').show();
+        // If there is more than one item in total, show all remove buttons
+        if (lineItemCount + discountItemCount > 1) {
+          if (lineItemCount === 1 && discountItemCount) {
+            $('#line-items .discount-item .remove-line').show();
+          } else {
+            $('#line-items .remove-line').show();
+          }
         }
       }
-    }
 
-    function getLineItemHTML(new_record_id) {
-      return `
+      function getLineItemHTML(new_record_id) {
+        return `
         <tr class="line-item" data-line-index="${new_record_id}">
           <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
           <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][item_id]" class="form-control item-id" required></td>
           <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][description]" class="form-control description" required></td>
           <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][quantity]" class="form-control quantity" value="1" required></td>
           <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][unit]" class="form-control unit" value="pcs" required></td>
-          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][price]" class="form-control price" step="0.01" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][price]" class="form-control price" required></td>
           <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][tax]" class="form-control tax" step="0.01" required></td>
           <td class="text-end total">0.00</td>
           <td>
@@ -505,211 +516,211 @@ if (
           <td colspan="6"></td>
         </tr>
       `;
-    }
+      }
 
-    // In your event listener for adding a line
-    $('#add-line').on('click', function () {
-      $('#line-items').append(getLineItemHTML(lineIndex++));
-      updateRemoveButtons();
-    });
+      // In your event listener for adding a line
+      $('#add-line').on('click', function () {
+        $('#line-items').append(getLineItemHTML(lineIndex++));
+        updateRemoveButtons();
+      });
 
-    $(document).on('click', '.toggle-dropdown', function () {
-      const $btn = $(this);
-      const $currentLineItem = $btn.closest('tr');
-      let $next = $currentLineItem.next();
-      const $toggleRows = [];
+      $(document).on('click', '.toggle-dropdown', function () {
+        const $btn = $(this);
+        const $currentLineItem = $btn.closest('tr');
+        let $next = $currentLineItem.next();
+        const $toggleRows = [];
 
-      while ($next.length && !$next.hasClass('line-item')) {
-        if ($next.hasClass('optional-field-row') || $next.hasClass('dropdown_per_line')) {
-          $toggleRows.push($next);
+        while ($next.length && !$next.hasClass('line-item')) {
+          if ($next.hasClass('optional-field-row') || $next.hasClass('dropdown_per_line')) {
+            $toggleRows.push($next);
+          }
+          $next = $next.next();
         }
-        $next = $next.next();
-      }
 
-      const shouldShow = $toggleRows.length > 0 && !$toggleRows[0].is(':visible');
-      $toggleRows.forEach($row => $row.toggle(shouldShow));
-      $btn.text(shouldShow ? '−' : '+');
-    });
+        const shouldShow = $toggleRows.length > 0 && !$toggleRows[0].is(':visible');
+        $toggleRows.forEach($row => $row.toggle(shouldShow));
+        $btn.text(shouldShow ? '−' : '+');
+      });
 
 
 
 
-  
-  // Initialization   
-  updateRemoveButtons();
 
-  window.discount_fieldTypeMap = {
-    recurring: [
-      { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
-      { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"], cols: 2 },
-      { name: "recurring.every.number.2", label: "Every (day)", type: "number", cols: 2 },
-      { name: "recurring.start_date.date.2", label: "Start Date", type: "date", cols: 2 },
-      { name: "recurring.end_date.date.2", label: "End Date", type: "date", cols: 2 }
-    ],
-    discount: [
-      { name: "discount.discount_type.select(DISCOUNT_OPTIONS).2", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
-      { name: "discount.edit_type_(if needed).text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
-      { name: "discount.quantity.text.2", label: "Quantity", type: "text", cols: 2 },
-      { name: "discount.unit.select(php,%).2", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
-      { name: "discount.total.text_only.2", label: "Total", type: "text_only", cols: 2 },
-    ],
-    charge: [
-      { name: "charge.charge_type.select(DISCOUNT_OPTIONS).2", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
-      { name: "charge.edit_type_(if needed).text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
-      { name: "charge.quantity.text.2", label: "Quantity", type: "text", cols: 2 },
-      { name: "charge.unit.select(php,%).2", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
-      { name: "charge.total.text_only.2", label: "Total", type: "text_only", cols: 2 },
-    ],
-    bolid: [
-      { name: "bolid.transport_reference.text.4", label: "Transport Reference", type: "text", cols: 4 }
-    ],
-    fileid: [
-      { name: "fileid.file_id.text.4", label: "File ID", type: "text", cols: 4 }
-    ],
-    taxexemptionreason: [
-      { name: "taxexemptionreason.tax_exemption_reason.text.4", label: "Tax exemption reason", type: "text", cols: 4 }
-    ],
-    modelname: [
-      { name: "modelname.model_name.text.4", label: "Model name", type: "text", cols: 4 }
-    ],
-    hsnsac: [
-      { name: "hsnsac.hsn_sac.select(hsn,sac).4", label: "HSN/SAC", type: "select", options: ["HSN", "SAC"], cols: 4 },
-      { name: "hsnsac.quantity.text.4", label: "Quantity", type: "text", cols: 4 },
-    ],
-    documentreference: [
-      { name: "documentreference.purchase_order_number.text.4", label: "Purchase order number", type: "text", cols: 4 }
-    ],
-    documentlinereference: [
-      { name: "documentlinereference.purchase_order_line_number.text.4", label: "Purchase order line number", type: "text", cols: 4 }
-    ],
-    accountingcost: [
-      { name: "accountingcost.cost_center.text.4", label: "Cost center", type: "text", cols: 4 }
-    ],
-    deliveryaddress: [
-      { name: "deliveryaddress.country/region.select(COUNTRY_OPTIONS).4", label: "Country/Region", type: "select", options: COUNTRY_OPTIONS, cols: 4 },
-      { name: "deliveryaddress.postbox.text.4", label: "Postbox", type: "text", cols: 4 },
-      { name: "deliveryaddress.street.text.4", label: "Street", type: "text", cols: 4 },
-      { name: "deliveryaddress.number.text.4", label: "Number", type: "text", cols: 4 },
-      { name: "deliveryaddress.locality_name.text.4", label: "Locality name", type: "text", cols: 4 },
-      { name: "deliveryaddress.postal/zipcode.text.4", label: "Postal/ZIP", type: "text", cols: 4 },
-      { name: "deliveryaddress.city.text.4", label: "City", type: "text", cols: 4 },
-      { name: "deliveryaddress.location_id.text.4", label: "Location Id", type: "text", cols: 4 },
-    ],
-    actualdeliverydate: [
-      { name: "actualdeliverydate.delivery_date.date.4", label: "Delivery Date", type: "date", cols: 4 }
-    ],
-    buyersitemidentification: [
-      { name: "buyersitemidentification.buyer_material_number.text.4", label: "Buyer material number", type: "text", cols: 4 }
-    ],
-    origincountry: [
-      { name: "origincountry.country_of_origin.select(COUNTRY_OPTIONS).4", label: "Country of origin", type: "select", options: COUNTRY_OPTIONS, cols: 4 }
-    ],
-    eccn: [
-      { name: "eccn.commodity_classification:_ECCN.text.4", label: "Commodity classification: ECCN", type: "text", cols: 4 }
-    ],
-    eangtin: [
-      { name: "eangtin.ean/gtin.text.4", label: "EAN/GTIN", type: "text", cols: 4 }
-    ],
-    incoterms: [
-      { name: "incoterms.delivery_terms.text.4", label: "Delivery Terms", type: "text", cols: 4 }
-    ],
-    manufacturename: [
-      { name: "manufacturename.manufacture_name.text.4", label: "Manufacture name", type: "text", cols: 4 }
-    ],
-    trackingid: [
-      { name: "trackingid.freight_order_number.text.4", label: "Freight order number", type: "text", cols: 4 }
-    ],
-    serialID: [
-      { name: "serialID.serial_id.text.4", label: "Serial number", type: "text", cols: 4 }
-    ],
-    note: [
-      { name: "note.notes.text.4", label: "Notes", type: "text", cols: 4 }
-    ],
-    despatchlinedocumentreference: [
-      { name: "despatchlinedocumentreference.shipping_notice_reference.text.4", label: "Shipping Notice Reference", type: "text", cols: 4 }
-    ],
-    despatchlineiddocumentreference: [
-      { name: "despatchlineiddocumentreference.shipping_notice_line_reference.text.4", label: "Shipping Notice Line Reference", type: "text", cols: 4 }
-    ],
-    receiptlinedocumentreference: [
-      { name: "receiptlinedocumentreference.goods_receipt_reference.text.4", label: "Goods Receipt Reference", type: "text", cols: 4 }
-    ],
-    receiptlineiddocumentreference: [
-      { name: "receiptlineiddocumentreference.goods_receipt_line_reference.text.4", label: "Goods Receipt Line Reference", type: "text", cols: 4 }
-    ],
-  };
+      // Initialization   
+      updateRemoveButtons();
 
-  $(document).on('change', 'select[name*="[optional_fields][discount.discount_type]"], select[name*="[optional_fields][charge.charge_type]"]', function () {
-    const $select = $(this);
-    const selectedValue = $select.val();
-    const $rowGroup = $select.closest('tr.optional-field-row');
+      window.discount_fieldTypeMap = {
+        recurring: [
+          { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
+          { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"], cols: 2 },
+          { name: "recurring.every.number.2", label: "Every (day)", type: "number", cols: 2 },
+          { name: "recurring.start_date.date.2", label: "Start Date", type: "date", cols: 2 },
+          { name: "recurring.end_date.date.2", label: "End Date", type: "date", cols: 2 }
+        ],
+        discount: [
+          { name: "discount.discount_type.select(DISCOUNT_OPTIONS).2", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
+          { name: "discount.edit_type_(if needed).text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
+          { name: "discount.amount.text.2", label: "Amount", type: "text", cols: 2 },
+          { name: "discount.unit.select(php,%).2", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
+          { name: "discount.total.text_only.2", label: "Total", type: "text_only", cols: 2 },
+        ],
+        charge: [
+          { name: "charge.charge_type.select(DISCOUNT_OPTIONS).2", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
+          { name: "charge.edit_type_(if needed).text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
+          { name: "charge.amount.text.2", label: "Amount", type: "text", cols: 2 },
+          { name: "charge.unit.select(php,%).2", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
+          { name: "charge.total.text_only.2", label: "Total", type: "text_only", cols: 2 },
+        ],
+        bolid: [
+          { name: "bolid.transport_reference.text.4", label: "Transport Reference", type: "text", cols: 4 }
+        ],
+        fileid: [
+          { name: "fileid.file_id.text.4", label: "File ID", type: "text", cols: 4 }
+        ],
+        taxexemptionreason: [
+          { name: "taxexemptionreason.tax_exemption_reason.text.4", label: "Tax exemption reason", type: "text", cols: 4 }
+        ],
+        modelname: [
+          { name: "modelname.model_name.text.4", label: "Model name", type: "text", cols: 4 }
+        ],
+        hsnsac: [
+          { name: "hsnsac.hsn_sac.select(hsn,sac).4", label: "HSN/SAC", type: "select", options: ["HSN", "SAC"], cols: 4 },
+          { name: "hsnsac.quantity.text.4", label: "Quantity", type: "text", cols: 4 },
+        ],
+        documentreference: [
+          { name: "documentreference.purchase_order_number.text.4", label: "Purchase order number", type: "text", cols: 4 }
+        ],
+        documentlinereference: [
+          { name: "documentlinereference.purchase_order_line_number.text.4", label: "Purchase order line number", type: "text", cols: 4 }
+        ],
+        accountingcost: [
+          { name: "accountingcost.cost_center.text.4", label: "Cost center", type: "text", cols: 4 }
+        ],
+        deliveryaddress: [
+          { name: "deliveryaddress.country/region.select(COUNTRY_OPTIONS).4", label: "Country/Region", type: "select", options: COUNTRY_OPTIONS, cols: 4 },
+          { name: "deliveryaddress.postbox.text.4", label: "Postbox", type: "text", cols: 4 },
+          { name: "deliveryaddress.street.text.4", label: "Street", type: "text", cols: 4 },
+          { name: "deliveryaddress.number.text.4", label: "Number", type: "text", cols: 4 },
+          { name: "deliveryaddress.locality_name.text.4", label: "Locality name", type: "text", cols: 4 },
+          { name: "deliveryaddress.postal/zipcode.text.4", label: "Postal/ZIP", type: "text", cols: 4 },
+          { name: "deliveryaddress.city.text.4", label: "City", type: "text", cols: 4 },
+          { name: "deliveryaddress.location_id.text.4", label: "Location Id", type: "text", cols: 4 },
+        ],
+        actualdeliverydate: [
+          { name: "actualdeliverydate.delivery_date.date.4", label: "Delivery Date", type: "date", cols: 4 }
+        ],
+        buyersitemidentification: [
+          { name: "buyersitemidentification.buyer_material_number.text.4", label: "Buyer material number", type: "text", cols: 4 }
+        ],
+        origincountry: [
+          { name: "origincountry.country_of_origin.select(COUNTRY_OPTIONS).4", label: "Country of origin", type: "select", options: COUNTRY_OPTIONS, cols: 4 }
+        ],
+        eccn: [
+          { name: "eccn.commodity_classification:_ECCN.text.4", label: "Commodity classification: ECCN", type: "text", cols: 4 }
+        ],
+        eangtin: [
+          { name: "eangtin.ean/gtin.text.4", label: "EAN/GTIN", type: "text", cols: 4 }
+        ],
+        incoterms: [
+          { name: "incoterms.delivery_terms.text.4", label: "Delivery Terms", type: "text", cols: 4 }
+        ],
+        manufacturename: [
+          { name: "manufacturename.manufacture_name.text.4", label: "Manufacture name", type: "text", cols: 4 }
+        ],
+        trackingid: [
+          { name: "trackingid.freight_order_number.text.4", label: "Freight order number", type: "text", cols: 4 }
+        ],
+        serialID: [
+          { name: "serialID.serial_id.text.4", label: "Serial number", type: "text", cols: 4 }
+        ],
+        note: [
+          { name: "note.notes.text.4", label: "Notes", type: "text", cols: 4 }
+        ],
+        despatchlinedocumentreference: [
+          { name: "despatchlinedocumentreference.shipping_notice_reference.text.4", label: "Shipping Notice Reference", type: "text", cols: 4 }
+        ],
+        despatchlineiddocumentreference: [
+          { name: "despatchlineiddocumentreference.shipping_notice_line_reference.text.4", label: "Shipping Notice Line Reference", type: "text", cols: 4 }
+        ],
+        receiptlinedocumentreference: [
+          { name: "receiptlinedocumentreference.goods_receipt_reference.text.4", label: "Goods Receipt Reference", type: "text", cols: 4 }
+        ],
+        receiptlineiddocumentreference: [
+          { name: "receiptlineiddocumentreference.goods_receipt_line_reference.text.4", label: "Goods Receipt Line Reference", type: "text", cols: 4 }
+        ],
+      };
 
-    let targetName = '';
+      $(document).on('change', 'select[name*="[optional_fields][discount.discount_type]"], select[name*="[optional_fields][charge.charge_type]"]', function () {
+        const $select = $(this);
+        const selectedValue = $select.val();
+        const $rowGroup = $select.closest('tr.optional-field-row');
 
-    if ($select.attr('name').includes('discount.discount_type')) {
-      targetName = 'discount.edit_type_(if needed)';
-    } else if ($select.attr('name').includes('charge.charge_type')) {
-      targetName = 'charge.edit_type_(if needed)';
-    }
+        let targetName = '';
 
-    if (targetName !== '') {
-      const $editInput = $rowGroup.find(`input[name*="[optional_fields][${targetName}]"]`);
-      if ($editInput.length > 0) {
-        $editInput.val(selectedValue).trigger('input');
-      }
-    }
-  });
+        if ($select.attr('name').includes('discount.discount_type')) {
+          targetName = 'discount.edit_type_(if needed)';
+        } else if ($select.attr('name').includes('charge.charge_type')) {
+          targetName = 'charge.edit_type_(if needed)';
+        }
 
-  $(document).on('change', 'select[id^="additional_field_"]', function () {
-    const $select = $(this);
-    const selectedKey = $select.val();
-    const selectedText = $select.find("option:selected").text();
-    if (!selectedKey) return;
+        if (targetName !== '') {
+          const $editInput = $rowGroup.find(`input[name*="[optional_fields][${targetName}]"]`);
+          if ($editInput.length > 0) {
+            $editInput.val(selectedValue).trigger('input');
+          }
+        }
+      });
 
-    const $dropdownRow = $select.closest('tr.dropdown_per_line');
-    const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
-      return $(this).data('line-index') === parseInt($select.attr('id').split('_').pop());
-    });
-    const rowIndex = $lineItemRow.data('line-index');
-    if (rowIndex === undefined) {
-      console.warn("Missing data-line-index for optional field");
-      return;
-    }
+      $(document).on('change', 'select[id^="additional_field_"]', function () {
+        const $select = $(this);
+        const selectedKey = $select.val();
+        const selectedText = $select.find("option:selected").text();
+        if (!selectedKey) return;
 
-    const fields = discount_fieldTypeMap[selectedKey];
-    if (!Array.isArray(fields)) return;
+        const $dropdownRow = $select.closest('tr.dropdown_per_line');
+        const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
+          return $(this).data('line-index') === parseInt($select.attr('id').split('_').pop());
+        });
+        const rowIndex = $lineItemRow.data('line-index');
+        if (rowIndex === undefined) {
+          console.warn("Missing data-line-index for optional field");
+          return;
+        }
 
-    const existing = $(`#line-items .optional-field-row[data-line-index="${rowIndex}"][data-optional-group="${selectedKey}"]`);
-    if (existing.length > 0) return;
+        const fields = discount_fieldTypeMap[selectedKey];
+        if (!Array.isArray(fields)) return;
 
-    let newRowHtml = `
+        const existing = $(`#line-items .optional-field-row[data-line-index="${rowIndex}"][data-optional-group="${selectedKey}"]`);
+        if (existing.length > 0) return;
+
+        let newRowHtml = `
       <tr class="optional-field-row bg-light" data-optional-group="${selectedKey}" data-line-index="${rowIndex}">
         <td></td><td></td>
     `;
 
-    fields.forEach(field => {
-      let inputHtml = '';
-      const inputName = `invoice[line_items_attributes][${rowIndex}][optional_fields][${field.name}]`;
-      const placeholder = field.label ? ` placeholder="${field.label}"` : '';
+        fields.forEach(field => {
+          let inputHtml = '';
+          const inputName = `invoice[line_items_attributes][${rowIndex}][optional_fields][${field.name}]`;
+          const placeholder = field.label ? ` placeholder="${field.label}"` : '';
 
-      if (field.type === "select") {
-        const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
-        inputHtml = `
+          if (field.type === "select") {
+            const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+            inputHtml = `
           <select name="${inputName}" class="form-select form-select-sm"${field.disabled ? ' disabled' : ''}>
             <option value="" disabled selected>${field.label}</option>
             ${optionsHtml}
           </select>
         `;
-      } else if (field.type === "textarea") {
-        inputHtml = `
+          } else if (field.type === "textarea") {
+            inputHtml = `
           <textarea 
             name="${inputName}" 
             class="form-control form-control-sm"
             ${placeholder}
             ${field.disabled ? ' disabled' : ''}></textarea>
         `;
-      } else if (field.type === "text_only") {
-        inputHtml = `
+          } else if (field.type === "text_only") {
+            inputHtml = `
           <span class="form-control-plaintext text-end optional-total" 
             data-total-type="${selectedKey}" 
             data-line-index="${rowIndex}">0.00</span>
@@ -718,8 +729,8 @@ if (
             class="form-control optional-total-input"
             ${field.disabled ? ' disabled' : ''}>
         `;
-      } else if (field.type === "date") {
-        inputHtml = `
+          } else if (field.type === "date") {
+            inputHtml = `
           <input 
             type="text"
             name="${inputName}"
@@ -729,8 +740,8 @@ if (
             readonly
           />
         `;
-      } else {
-        inputHtml = `
+          } else {
+            inputHtml = `
           <input 
             type="${field.type}" 
             name="${inputName}" 
@@ -738,57 +749,57 @@ if (
             ${placeholder}
             ${field.disabled ? ' disabled' : ''}>
         `;
-      }
+          }
 
-      newRowHtml += `<td>${inputHtml}</td>`;
-    });
+          newRowHtml += `<td>${inputHtml}</td>`;
+        });
 
-    const totalCols = 7;
-    if (fields.length < totalCols) {
-      const emptyCols = totalCols - fields.length - 1;
-      for (let i = 0; i < emptyCols; i++) {
-        newRowHtml += `<td></td>`;
-      }
-    }
+        const totalCols = 7;
+        if (fields.length < totalCols) {
+          const emptyCols = totalCols - fields.length - 1;
+          for (let i = 0; i < emptyCols; i++) {
+            newRowHtml += `<td></td>`;
+          }
+        }
 
-    newRowHtml += `
+        newRowHtml += `
       <td class="text-end">
         <button type="button" class="btn btn-sm btn-outline-danger remove-group">-</button>
       </td>
     </tr>`;
 
-    $dropdownRow.before(newRowHtml);
-    $select.val('');
-    updateCurrencyFields();
+        $dropdownRow.before(newRowHtml);
+        $select.val('');
+        updateCurrencyFields();
 
-    // ✅ Initialize Flatpickr for date fields (only show on click)
-    $dropdownRow.prev().find('.flatpickr-date').each(function () {
-      const fp = flatpickr(this, {
-        dateFormat: "Y-m-d",
-        allowInput: false,
-        clickOpens: false,
+        // ✅ Initialize Flatpickr for date fields (only show on click)
+        $dropdownRow.prev().find('.flatpickr-date').each(function () {
+          const fp = flatpickr(this, {
+            dateFormat: "Y-m-d",
+            allowInput: false,
+            clickOpens: false,
+          });
+
+          $(this).on('click', function () {
+            fp.open();
+          });
+        });
       });
 
-      $(this).on('click', function () {
-        fp.open();
+
+      $(document).on('click', '.remove-group', function () {
+        $(this).closest('tr.optional-field-row').remove();
+        updateCurrencyFields();
       });
-    });
-  });
 
 
-  $(document).on('click', '.remove-group', function () {
-    $(this).closest('tr.optional-field-row').remove();
-    updateCurrencyFields();
-  });
+      // Remove dynamically added group
+      $(document).on('click', '.remove-group', function () {
+        $(this).closest('tr.optional-field-row').remove();
+      });
 
-
-  // Remove dynamically added group
-  $(document).on('click', '.remove-group', function () {
-    $(this).closest('tr.optional-field-row').remove();
-  });
-
-  $('#add-discount-row').on('click', function () {
-    const newRow = `
+      $('#add-discount-row').on('click', function () {
+        const newRow = `
       <tr class="discount-item">
         <td class="align-top" colspan="2">
           <select class="form-select price-adjustment-unit" data-field="unit">
@@ -820,7 +831,7 @@ if (
           </select>
         </td>
         <td class="align-top">
-          <input type="number" class="form-control amount" value="1" data-field="amount">
+          <input type="text" class="form-control amount" value="1" data-field="amount">
         </td>
         <td class="align-top">
           <select class="form-select unit-type" data-field="unit_type">
@@ -836,319 +847,331 @@ if (
       </tr>
     `;
 
-    $('#line-items').append(newRow);
-    updateRemoveButtons();
-    updateDiscountsJSON();
-  });
-
-  $('#line-items').on('click', '.remove-line', function () {
-    const $lineItem = $(this).closest('tr');
-
-    let $next = $lineItem.next();
-    const $relatedRows = [];
-
-    while ($next.length && !$next.hasClass('line-item')) {
-      if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
-        $relatedRows.push($next);
-      }
-      $next = $next.next();
-    }
-
-    $lineItem.remove();
-    $relatedRows.forEach($row => $row.remove());
-
-    updateRemoveButtons();
-    recalculateTotals();
-    updateDiscountsJSON();
-  });
-
-  // Track changes
-  $('#line-items').on('input change', 'input, select, textarea', function () {
-    updateDiscountsJSON();
-  });
-
-
-  });
-
-  // Update hidden field for price_adjustments
-  function updateDiscountsJSON() {
-    const discounts = [];
-
-    $('.discount-item').each(function () {
-      const $row = $(this);
-
-      const type = ($row.find('.price-adjustment-unit').val() || "").trim();
-      const description = ($row.find('.reason-code').val() || "").trim();
-      const description_edit = ($row.find('.description-edit').val() || "").trim();
-      const amount = parseFloat($row.find('.amount').val()) || 0;
-
-      const unit_raw = $row.find('.unit-type').val();
-      const unit = unit_raw === "true" ? "%" : "PHP";
-
-      const total = ($row.find('.total').text().trim() || "0.00").replace(/[^\d.-]/g, "");
-
-      discounts.push({
-        type,
-        description: description || null,
-        description_edit: description_edit || "",
-        amount,
-        unit,
-        total
+        $('#line-items').append(newRow);
+        updateRemoveButtons();
+        updateDiscountsJSON();
       });
-    });
 
-    $('#price_adjustments_json').val(JSON.stringify(discounts));
-  }
+      $('#line-items').on('click', '.remove-line', function () {
+        const $lineItem = $(this).closest('tr');
 
+        let $next = $lineItem.next();
+        const $relatedRows = [];
 
-
-  // Toggle base quantity column button 
-// Toggle base quantity column button 
-let baseQuantityVisible = false;
-
-$('#add-base-quantity').on('click', function () {
-  baseQuantityVisible = !baseQuantityVisible;
-
-  const $table = $('.invoice-table');
-  const $theadRow = $table.find('thead tr');
-  const $headerCells = $theadRow.find('th');
-
-  if (baseQuantityVisible) {
-    $(this).text('Hide Base Quantity Column');
-    $headerCells.eq(5).text('Price');
-    $('<th class="base-quantity-header">Price per Quantity</th>').insertAfter($headerCells.eq(5));
-
-    // Add input column to each main line item
-    $table.find('tr.line-item').each(function () {
-      $('<td class="base-quantity-cell"><input type="number" name="invoice[price_per_quantity]" class="form-control price-per-quantity" step="0.01"></td>')
-        .insertAfter($(this).find('td').eq(5));
-    });
-
-    // Add an empty <td> at the second-to-last position for NON-line-item rows only
-    $table.find('tr').not('.line-item').each(function () {
-      const $tds = $(this).find('td');
-      if ($tds.length > 2 && !$(this).find('.empty-added').length) {
-        $('<td class="empty-added"></td>').insertBefore($tds.last());
-      }
-    });
-
-    $('.optional-field-row td[colspan]').attr('colspan', 10);
-  } else {
-    $(this).text('Show Base Quantity Column');
-    $headerCells.eq(5).text('Price per unit');
-    $('.base-quantity-header').remove();
-    $('.base-quantity-cell').remove();
-    $('.empty-added').remove();
-    $('.optional-field-row td[colspan]').attr('colspan', 9);
-  }
-
-  recalculateTotals();
-});
-
-
-
-  // Update discount type input when select changes
-  $(document).on('change', 'select[name*="[optional_fields][discount.discount_type.select"], select[name*="[optional_fields][charge.charge_type.select"]', function () {
-    const selectedValue = $(this).val();
-    const selectName = $(this).attr('name');
-
-    const match = selectName.match(/invoice\[line_items_attributes\]\[(\d+)\]/);
-    if (!match) return;
-    const index = match[1];
-
-    let inputName = '';
-
-    if (selectName.includes('discount.discount_type.select')) {
-      inputName = `invoice[line_items_attributes][${index}][optional_fields][discount.edit_type_(if needed).text.4]`;
-    } else if (selectName.includes('charge.charge_type.select')) {
-      inputName = `invoice[line_items_attributes][${index}][optional_fields][charge.edit_type_(if needed).text.4]`;
-    } else {
-      return; 
-    }
-
-    $(`input[name="${inputName}"]`).val(selectedValue);
-  });
-  
-  // Update description input when reason code is selected
-  $(document).on('change', 'select.reason-code', function () {
-    const selectedText = $(this).find('option:selected').text();
-    const $descriptionInput = $(this).siblings('input.description-edit');
-    $descriptionInput.val(selectedText);
-    UpdteDiscountsJSON();
-  });
-
-
-  function recalculateTotals() {
-    let subtotal = 0;
-    let totalTax = 0;
-    let discountAmount = 0;
-    let chargeAmount = 0;
-    let fixedTax = 0;
-
-    $('#line-items .line-item').each(function () {
-      const $row = $(this);
-      const qty = parseFloat($row.find('.quantity').val()) || 0;
-      const price = parseFloat($row.find('.price').val()) || 0;
-      const pricePerQty = parseFloat($row.find('.price-per-quantity').val()) || 0;
-      const taxRate = parseFloat($row.find('.tax').val()) || 0;
-
-      const lineIndex = $row.data('line-index');
-
-      // Base line value before adjustments
-      let base = (pricePerQty && pricePerQty !== 0)
-        ? (qty * price) / pricePerQty
-        : qty * price;
-
-      // --- Discount Calculation ---
-      let discount = 0;
-      let discountTax = 0; 
-      const $discountRows = $(`.optional-field-row[data-optional-group="discount"][data-line-index="${lineIndex}"]`);
-      $discountRows.each(function () {
-        const $dRow = $(this);
-        const dval = parseFloat($dRow.find('input[name*="discount.quantity"]').val()) || 0;
-        const unit = $dRow.find('select[name*="discount.unit.select(php,%).2"]').val();
-        const dType = $dRow.find('select[name*="discount.discount_type"]').val();
-
-        const dAmount = (unit === "%") ? base * (dval / 100) : dval;
-
-        if (dType === "Taxes") {
-          discountTax += dAmount; 
-        } else {
-          discount += dAmount; 
+        while ($next.length && !$next.hasClass('line-item')) {
+          if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
+            $relatedRows.push($next);
+          }
+          $next = $next.next();
         }
 
-        $dRow.find('.optional-total[data-total-type="discount"]').text(dAmount.toFixed(2));
-        $dRow.find('.optional-total-input').val(dAmount.toFixed(2));
+        $lineItem.remove();
+        $relatedRows.forEach($row => $row.remove());
+
+        updateRemoveButtons();
+        recalculateTotals();
+        updateDiscountsJSON();
+      });
+
+      // Track changes
+      $('#line-items').on('input change', 'input, select, textarea', function () {
+        updateDiscountsJSON();
       });
 
 
-      // --- Charge Calculation ---
-      let charge = 0;
-      let extraTax = 0;
-      const $chargeRows = $(`.optional-field-row[data-optional-group="charge"][data-line-index="${lineIndex}"]`);
-      $chargeRows.each(function () {
-        const $cRow = $(this);
-        const cval = parseFloat($cRow.find('input[name*="charge.quantity"]').val()) || 0;
-        const unit = $cRow.find('select[name*="charge.unit.select(php,%).2"]').val();
-        const cType = $cRow.find('select[name*="charge.charge_type"]').val();
+    });
 
-        const cAmount = (unit === "%") ? base * (cval / 100) : cval;
+    // Update hidden field for price_adjustments
+    function updateDiscountsJSON() {
+      const discounts = [];
 
-        if (cType === "Taxes") {
-          extraTax += cAmount; 
-        } else {
-          charge += cAmount; 
-        }
+      $('.discount-item').each(function () {
+        const $row = $(this);
 
-        $cRow.find('.optional-total[data-total-type="charge"]').text(cAmount.toFixed(2));
-        $cRow.find('.optional-total-input').val(cAmount.toFixed(2));
+        const type = ($row.find('.price-adjustment-unit').val() || "").trim();
+        const description = ($row.find('.reason-code').val() || "").trim();
+        const description_edit = ($row.find('.description-edit').val() || "").trim();
+        const amount = parseCurrency($row.find('.amount').val());
+
+        const unit_raw = $row.find('.unit-type').val();
+        const unit = unit_raw === "true" ? "%" : "PHP";
+
+        const total = ($row.find('.total').text().trim() || "0.00").replace(/[^\d.-]/g, "");
+
+        discounts.push({
+          type,
+          description: description || null,
+          description_edit: description_edit || "",
+          amount,
+          unit,
+          total
+        });
       });
 
-
-      // Final line total
-      let lineTotal = base + charge - discount;
-      let lineTotalwithTax = lineTotal + extraTax + (lineTotal * (taxRate / 100)) - discountTax;
-      $row.find('.total').text(lineTotalwithTax.toFixed(2));
+      $('#price_adjustments_json').val(JSON.stringify(discounts));
+    }
 
 
-      let $totalInput = $row.find('input[name*="[total]"]');
-      if ($totalInput.length === 0) {
+
+    // Toggle base quantity column button 
+    // Toggle base quantity column button 
+    let baseQuantityVisible = false;
+
+    $('#add-base-quantity').on('click', function () {
+      baseQuantityVisible = !baseQuantityVisible;
+
+      const $table = $('.invoice-table');
+      const $theadRow = $table.find('thead tr');
+      const $headerCells = $theadRow.find('th');
+
+      if (baseQuantityVisible) {
+        $(this).text('Hide Base Quantity Column');
+        $headerCells.eq(5).text('Price');
+        $('<th class="base-quantity-header">Price per Quantity</th>').insertAfter($headerCells.eq(5));
+
+        // Add input column to each main line item
+        $table.find('tr.line-item').each(function () {
+          $('<td class="base-quantity-cell"><input type="number" name="invoice[price_per_quantity]" class="form-control price-per-quantity" step="0.01"></td>')
+            .insertAfter($(this).find('td').eq(5));
+        });
+
+        // Add an empty <td> at the second-to-last position for NON-line-item rows only
+        $table.find('tr').not('.line-item').each(function () {
+          const $tds = $(this).find('td');
+          if ($tds.length > 2 && !$(this).find('.empty-added').length) {
+            $('<td class="empty-added"></td>').insertBefore($tds.last());
+          }
+        });
+
+        $('.optional-field-row td[colspan]').attr('colspan', 10);
+      } else {
+        $(this).text('Show Base Quantity Column');
+        $headerCells.eq(5).text('Price per unit');
+        $('.base-quantity-header').remove();
+        $('.base-quantity-cell').remove();
+        $('.empty-added').remove();
+        $('.optional-field-row td[colspan]').attr('colspan', 9);
+      }
+
+      recalculateTotals();
+    });
+
+
+
+    // Update discount type input when select changes
+    $(document).on('change', 'select[name*="[optional_fields][discount.discount_type.select"], select[name*="[optional_fields][charge.charge_type.select"]', function () {
+      const selectedValue = $(this).val();
+      const selectName = $(this).attr('name');
+
+      const match = selectName.match(/invoice\[line_items_attributes\]\[(\d+)\]/);
+      if (!match) return;
+      const index = match[1];
+
+      let inputName = '';
+
+      if (selectName.includes('discount.discount_type.select')) {
+        inputName = `invoice[line_items_attributes][${index}][optional_fields][discount.edit_type_(if needed).text.4]`;
+      } else if (selectName.includes('charge.charge_type.select')) {
+        inputName = `invoice[line_items_attributes][${index}][optional_fields][charge.edit_type_(if needed).text.4]`;
+      } else {
+        return;
+      }
+
+      $(`input[name="${inputName}"]`).val(selectedValue);
+    });
+
+    // Update description input when reason code is selected
+    $(document).on('change', 'select.reason-code', function () {
+      const selectedText = $(this).find('option:selected').text();
+      const $descriptionInput = $(this).siblings('input.description-edit');
+      $descriptionInput.val(selectedText);
+      UpdteDiscountsJSON();
+    });
+
+
+    function recalculateTotals() {
+      let subtotal = 0;
+      let totalTax = 0;
+      let discountAmount = 0;
+      let chargeAmount = 0;
+      let fixedTax = 0;
+
+      $('#line-items .line-item').each(function () {
+        const $row = $(this);
+        const qty = parseFloat($row.find('.quantity').val()) || 0;
+        const price = parseCurrency($row.find('.price').val());
+        const pricePerQty = parseCurrency($row.find('.price-per-quantity').val()) || 0; // Use parseCurrency for safety
+        const taxRate = parseFloat($row.find('.tax').val()) || 0;
+
+        const lineIndex = $row.data('line-index');
+
+        // Base line value before adjustments
+        let base = (pricePerQty && pricePerQty !== 0)
+          ? (qty * price) / pricePerQty
+          : qty * price;
+
+        // --- Discount Calculation ---
+        let discount = 0;
+        let discountTax = 0;
+        const $discountRows = $(`.optional-field-row[data-optional-group="discount"][data-line-index="${lineIndex}"]`);
+        $discountRows.each(function () {
+          const $dRow = $(this);
+          const dval = parseCurrency($dRow.find('input[name*="discount.amount"]').val()) || 0;
+          const unit = $dRow.find('select[name*="discount.unit.select(php,%).2"]').val();
+          const dType = $dRow.find('select[name*="discount.discount_type"]').val();
+
+          const dAmount = (unit === "%") ? base * (dval / 100) : dval;
+
+          if (dType === "Taxes") {
+            discountTax += dAmount;
+          } else {
+            discount += dAmount;
+          }
+
+          // Format discount total
+          $dRow.find('.optional-total[data-total-type="discount"]').text(formatCurrency(dAmount));
+          $dRow.find('.optional-total-input').val(dAmount.toFixed(2));
+        });
+
+
+        // --- Charge Calculation ---
+        let charge = 0;
+        let extraTax = 0;
+        const $chargeRows = $(`.optional-field-row[data-optional-group="charge"][data-line-index="${lineIndex}"]`);
+        $chargeRows.each(function () {
+          const $cRow = $(this);
+          const cval = parseCurrency($cRow.find('input[name*="charge.amount"]').val()) || 0;
+          const unit = $cRow.find('select[name*="charge.unit.select(php,%).2"]').val();
+          const cType = $cRow.find('select[name*="charge.charge_type"]').val();
+
+          const cAmount = (unit === "%") ? base * (cval / 100) : cval;
+
+          if (cType === "Taxes") {
+            extraTax += cAmount;
+          } else {
+            charge += cAmount;
+          }
+
+          // Format charge total
+          $cRow.find('.optional-total[data-total-type="charge"]').text(formatCurrency(cAmount));
+          $cRow.find('.optional-total-input').val(cAmount.toFixed(2));
+        });
+
+
+        // Final line total
+        let lineTotal = base + charge - discount;
+        let lineTotalwithTax = lineTotal + extraTax + (lineTotal * (taxRate / 100)) - discountTax;
+        $row.find('.total').text(formatCurrency(lineTotalwithTax));
+
+
+        let $totalInput = $row.find('input[name*="[total]"]');
+        if ($totalInput.length === 0) {
           $totalInput = $('<input>', {
-              type: 'hidden',
-              name: `invoice[line_items_attributes][${lineIndex}][total]`,
-              class: 'line-total-input'
+            type: 'hidden',
+            name: `invoice[line_items_attributes][${lineIndex}][total]`,
+            class: 'line-total-input'
           });
           $row.append($totalInput);
-      }
-      $totalInput.val(lineTotal.toFixed(2));
+        }
+        $totalInput.val(lineTotalwithTax.toFixed(2)); // Keep raw value for hidden input
 
-      // Accumulate overall totals
-      subtotal += lineTotal;
-      totalTax += lineTotal * (taxRate / 100) + extraTax - discountTax;
+        // Accumulate overall totals
+        subtotal += lineTotal;
+        totalTax += lineTotal * (taxRate / 100) + extraTax - discountTax;
+      });
+
+
+      // --- Global price adjustments ---
+      // --- Global price adjustments ---
+      $('.discount-item').each(function () {
+        const $row = $(this);
+
+        const type = ($row.find('select.price-adjustment-unit').val() || "").trim();
+        const isPercent = $row.find('select.unit-type').val() === "true";
+        const qty = parseCurrency($row.find('.amount').val());
+
+        let value = isPercent ? subtotal * (qty / 100) : qty;
+
+        // Format global adjustment totals
+        if (type === "discount") {
+          discountAmount += value;
+          $row.find('.total').text(`-${formatCurrency(value)}`);
+        } else if (type === "charge") {
+          chargeAmount += value;
+          $row.find('.total').text(`+${formatCurrency(value)}`);
+        } else if (type === "fixedtax") {
+          fixedTax += value;
+          $row.find('.total').text(`+${formatCurrency(value)}`);
+        } else {
+          // fallback for unexpected values & ensure we always format
+          $row.find('.total').text(formatCurrency(value));
+          // If type is not recognized but we have value, maybe we should add it?
+          // For now, assuming standard types. If user adds custom types, they might need handling.
+          // But based on provided snippet, type is standard.
+        }
+      });
+
+      const adjustedSubtotal = subtotal - discountAmount + chargeAmount;
+      const grandTotal = adjustedSubtotal + totalTax + fixedTax;
+
+      const totalsJson = {
+        subtotal: adjustedSubtotal.toFixed(2),
+        tax: (totalTax + fixedTax).toFixed(2),
+        grand_total: grandTotal.toFixed(2)
+      };
+
+      $('#total_amount_json').val(JSON.stringify(totalsJson));
+      $('.subtotal-amount').text(formatCurrency(totalsJson.subtotal));
+      $('.total-tax-amount').text(formatCurrency(totalsJson.tax));
+      $('.grand-total-amount').text(formatCurrency(totalsJson.grand_total));
+    }
+
+    $(document).on(
+      'input change',
+      '#line-items .line-item input, #line-items .discount-item input, #line-items .discount-item select, .optional-field-row input, .optional-field-row select',
+      function () {
+        recalculateTotals();
+      }
+    );
+
+    // Auto-format price fields on blur
+    $(document).on('blur', '.price, .amount, .optional-field-row input[placeholder="Amount"]', function () {
+      $(this).val(formatCurrency($(this).val()));
+    });
+
+    $('#recipient_company_id').on('change', function () {
+      const selected = $(this).find('option:selected');
+
+      $('#company_name').text(selected.data('name') || '');
+      $('#company_address').text(selected.data('address') || '');
+      $('#company_country').text("Philippines");
+      $('#company_number').text('Company ' + (selected.data('company-id-type') || '') + ' number : ' + (selected.data('company-id-number') || '-'));
+      $('#company_tax_number').text('Tax ' + (selected.data('tax-id-type') || '') + ' number : ' + (selected.data('tax-id-number') || '-'));
+
+      $('#recipient-preview').removeClass('d-none');
+      $('#recipient_company_id').addClass('d-none');
+    });
+
+    $('#change-recipient').on('click', function (e) {
+      e.preventDefault();
+      $('#recipient-preview').addClass('d-none');
+      $('#recipient_company_id').removeClass('d-none');
+      $('#recipient_company_id').val('');
+    });
+
+    // Handle location selection changes
+    $(".location-select").on("change", function () {
+      const type = $(this).data("type");
+      const selectedId = $(this).val();
+      const hiddenField = $(`#${type}_location_id`);
+
+      if (hiddenField.length) {
+        hiddenField.val(selectedId);
+      }
     });
 
 
-    // --- Global price adjustments ---
-    $('#line-items .discount-item').each(function () {
-      const $row = $(this);
-
-      const type = $row.find('select.price-adjustment-unit').val(); 
-      const isPercent = $row.find('select.unit-type').val() === "true";
-      const qty = parseFloat($row.find('.amount').val()) || 0;
-
-      let value = isPercent ? subtotal * (qty / 100) : qty;
-
-      if (type === "discount") {
-        discountAmount += value;
-        $row.find('.total').text(`-${value.toFixed(2)}`);
-      } else if (type === "charge") {
-        chargeAmount += value;
-        $row.find('.total').text(`+${value.toFixed(2)}`);
-      } else if (type === "fixedtax") {
-        fixedTax += value;
-        $row.find('.total').text(`+${value.toFixed(2)}`);
-      } else {
-        // fallback for unexpected values
-        $row.find('.total').text(value.toFixed(2));
-      }
-    });
-
-    const adjustedSubtotal = subtotal - discountAmount + chargeAmount;
-    const grandTotal = adjustedSubtotal + totalTax + fixedTax;
-
-    const totalsJson = {
-      subtotal: adjustedSubtotal.toFixed(2),
-      tax: (totalTax + fixedTax).toFixed(2),
-      grand_total: grandTotal.toFixed(2)
-    };
-
-    $('#total_amount_json').val(JSON.stringify(totalsJson));
-    $('.subtotal-amount').text(totalsJson.subtotal);
-    $('.total-tax-amount').text(totalsJson.tax);
-    $('.grand-total-amount').text(totalsJson.grand_total);
-  }
-
-  $(document).on(
-    'input change',
-    '#line-items .line-item input, #line-items .discount-item input, #line-items .discount-item select, .optional-field-row input, .optional-field-row select',
-    function () {
-      recalculateTotals();
-    }
-  );
-
-  $('#recipient_company_id').on('change', function () {
-    const selected = $(this).find('option:selected');
-
-    $('#company_name').text(selected.data('name') || '');
-    $('#company_address').text(selected.data('address') || '');
-    $('#company_country').text("Philippines");
-    $('#company_number').text('Company ' + (selected.data('company-id-type') || '') + ' number : ' + (selected.data('company-id-number') || '-'));
-    $('#company_tax_number').text('Tax '+ (selected.data('tax-id-type') || '') +' number : ' + (selected.data('tax-id-number') || '-'));
-
-    $('#recipient-preview').removeClass('d-none');
-    $('#recipient_company_id').addClass('d-none');
-  });
-
-  $('#change-recipient').on('click', function (e) {
-    e.preventDefault();
-    $('#recipient-preview').addClass('d-none');
-    $('#recipient_company_id').removeClass('d-none');
-    $('#recipient_company_id').val('');
-  });
-
-  // Handle location selection changes
-  $(".location-select").on("change", function () {
-    const type = $(this).data("type");
-    const selectedId = $(this).val();
-    const hiddenField = $(`#${type}_location_id`);
-
-    if (hiddenField.length) {
-      hiddenField.val(selectedId);
-    }
-  });
-
-
-  // INVOICE EDIT PAGE JS 
+    // INVOICE EDIT PAGE JS 
 
     const selected = $('#recipient_company_id option:selected');
     if (selected.val()) {
@@ -1220,9 +1243,9 @@ $('#add-base-quantity').on('click', function () {
         let label = parts.length > 2 ? parts[1] : groupKey;
 
         label = label
-          .replace(/_/g, ' ')                
-          .replace(/([a-z])([A-Z])/g, '$1 $2') 
-          .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2') 
+          .replace(/_/g, ' ')
+          .replace(/([a-z])([A-Z])/g, '$1 $2')
+          .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
           .replace(/\b\w/g, l => l.toUpperCase());
 
         if (groupKey.toLowerCase() === 'fileid' && parts.length === 2) {
@@ -1241,7 +1264,7 @@ $('#add-base-quantity').on('click', function () {
           value,
           selectOptions
         });
-      }); 
+      });
 
       // Render
       Object.entries(groups).forEach(([groupKey, fields]) => {
@@ -1341,7 +1364,7 @@ $('#add-base-quantity').on('click', function () {
           <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description" required></td>
           <td><input type="number" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][unit]" class="form-control unit" value="pcs" required></td>
-          <td><input type="number" name="invoice[line_items_attributes][${index}][price]" class="form-control price" step="0.01" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][price]" class="form-control price" required></td>
           <td><input type="number" name="invoice[line_items_attributes][${index}][tax]" class="form-control tax" step="0.01" required></td>
           <td class="text-end total">0.00</td>
           <td>
@@ -1381,7 +1404,7 @@ $('#add-base-quantity').on('click', function () {
         $html.find('.description').val(item.description);
         $html.find('.quantity').val(item.quantity);
         $html.find('.unit').val(item.unit);
-        $html.find('.price').val(item.price);
+        $html.find('.price').val(formatCurrency(item.price));
         $html.find('.tax').val(item.tax);
 
         if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
@@ -1411,33 +1434,33 @@ $('#add-base-quantity').on('click', function () {
                 value: fields[def.name] || ""
               }))
               : Object.entries(fields).map(([rawKey, val]) => {
-                  let type = "text", value = "", options = [];
+                let type = "text", value = "", options = [];
 
-                  if (typeof val === "object") {
-                    value = val.value || "";
-                    type = val.type || "text";
+                if (typeof val === "object") {
+                  value = val.value || "";
+                  type = val.type || "text";
+                } else {
+                  value = val;
+                }
+
+                const label = rawKey.split('.')[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+                if (rawKey.includes('select(')) {
+                  const match = rawKey.match(/select\((.*?)\)/);
+                  const optionSource = match?.[1]?.trim() || '';
+                  type = "select";
+
+                  // ✅ Handle external constants
+                  if (optionSource === "DISCOUNT_OPTIONS") {
+                    options = DISCOUNT_OPTIONS;
+                  } else if (optionSource === "COUNTRY_OPTIONS") {
+                    options = COUNTRY_OPTIONS;
                   } else {
-                    value = val;
+                    options = optionSource.split(',').map(opt => opt.trim());
                   }
+                }
 
-                  const label = rawKey.split('.')[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-                  if (rawKey.includes('select(')) {
-                    const match = rawKey.match(/select\((.*?)\)/);
-                    const optionSource = match?.[1]?.trim() || '';
-                    type = "select";
-
-                    // ✅ Handle external constants
-                    if (optionSource === "DISCOUNT_OPTIONS") {
-                      options = DISCOUNT_OPTIONS;
-                    } else if (optionSource === "COUNTRY_OPTIONS") {
-                      options = COUNTRY_OPTIONS;
-                    } else {
-                      options = optionSource.split(',').map(opt => opt.trim());
-                    }
-                  }
-
-                  return { name: rawKey, label, type, value, options };
+                return { name: rawKey, label, type, value, options };
               });
 
             let newRowHtml = "";
@@ -1447,7 +1470,7 @@ $('#add-base-quantity').on('click', function () {
             );
 
             if (isDiscountOrCharge) {
-              const orderedKeys = ["", "discount_type", "charge_type", "edit_type", "unit", "quantity", "total"];
+              const orderedKeys = ["", "discount_type", "charge_type", "edit_type", "amount", "quantity", "unit", "total"];
               const orderedFields = [];
               orderedKeys.forEach(key => {
                 const found = fieldsToRender.find(f =>
@@ -1462,7 +1485,7 @@ $('#add-base-quantity').on('click', function () {
 
                 if (field.type === "select") {
                   const optionsHtml = field.options.map(opt =>
-                    `<option value="${opt}" ${opt === field.value ? "selected" : ""}>${opt}</option>`
+                    `<option value="${opt}" ${opt.toLowerCase() === (field.value || '').toLowerCase() ? "selected" : ""}>${opt}</option>`
                   ).join("");
                   inputHtml = `
                     <select name="${inputName}" class="form-select form-select-sm">
@@ -1722,7 +1745,7 @@ $('#add-base-quantity').on('click', function () {
         const unitType = adjustment.unit_type === "%" ? "true" : "false";
         const description = adjustment.description ?? "";
         const descriptionEdit = adjustment.description_edit ?? "";
-        const totalFormatted = `${unitType === "true" ? "+" : "+"}${parseFloat(amount).toFixed(2)}`;
+        const totalFormatted = `${unitType === "true" ? "+" : "+"}${formatCurrency(amount)}`;
 
         return `
           <tr class="discount-item">
@@ -1740,7 +1763,7 @@ $('#add-base-quantity').on('click', function () {
               </select>
             </td>
             <td class="align-top">
-              <input type="number" class="form-control amount" value="${amount}" data-field="amount">
+              <input type="text" class="form-control amount" value="${formatCurrency(amount)}" data-field="amount">
             </td>
             <td class="align-top">
               <select class="form-select unit-type" data-field="unit_type">
@@ -1780,7 +1803,7 @@ $('#add-base-quantity').on('click', function () {
     });
 
     // Check if form has hidden inputs with space-separated key-value pairs
-    $('[data-field-type="invoice_form_fields"]').each(function() {
+    $('[data-field-type="invoice_form_fields"]').each(function () {
       let val = $(this).val();
 
       try {
@@ -1848,7 +1871,7 @@ $('#add-base-quantity').on('click', function () {
       const $saveDraftBtn = $("input[value='Save As Draft']");
       const $sendBtn = $("#send_invoice_btn");
 
-      $errorDiv.text(""); 
+      $errorDiv.text("");
       let hasError = false;
 
       $.each(this.files, function (_, file) {
@@ -1876,7 +1899,7 @@ $('#add-base-quantity').on('click', function () {
       }
     });
 
-    $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function(e) {
+    $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function (e) {
       payment_terms_json_edit
       let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : this.id === "view_invoice_btn" ? "#view_invoicepayment_terms_json" : "#payment_terms_json_edit";
       if (!$(inputId).val() || $(inputId).val() === "[]" || $(inputId).val() === "{}") {
@@ -1930,8 +1953,8 @@ $('#add-base-quantity').on('click', function () {
             const $col = $(this);
             let label = $col.find('label').text().trim().replace(/[:]+$/, '') || 'Date';
             const $input = $col.find('input, select');
-            const value = $input.is('select') 
-              ? $input.find('option:selected').text().trim() 
+            const value = $input.is('select')
+              ? $input.find('option:selected').text().trim()
               : $input.val()?.trim() || '';
 
             if (!value) return;
@@ -1985,7 +2008,7 @@ $('#add-base-quantity').on('click', function () {
             $opt.find('input, select, span.optional-total').each(function () {
               const $el = $(this);
               const name = $el.attr('name') || '';
-              const val = $el.is('select') 
+              const val = $el.is('select')
                 ? $el.find('option:selected').text().trim()
                 : $el.is('span') ? $el.text().trim() : $el.val();
               if (val) vals[name] = val;
@@ -2014,7 +2037,7 @@ $('#add-base-quantity').on('click', function () {
         const adjustments = $('.discount-item');
         if (adjustments.length) {
           lineItems += '<tr><td colspan="8" class="fw-bold text-muted table-light py-3">Price Adjustments</td></tr>';
-          
+
           adjustments.each(function () {
             const $row = $(this);
             const fields = {
@@ -2054,7 +2077,7 @@ $('#add-base-quantity').on('click', function () {
         const $paymentGroups = $('#payment_terms_parent_div .payment-term-group');
         if ($paymentGroups.length) {
           paymentTermsHtml = '<h5 class="mb-3 fw-semibold">Payment Terms</h5><ol class="ps-3 mb-0">';
-          
+
           $paymentGroups.each(function () {
             const $group = $(this);
             const title = $group.find('h5').text().trim() || 'Payment';
@@ -2073,7 +2096,7 @@ $('#add-base-quantity').on('click', function () {
                 ${rows ? `<table class="table table-sm table-borderless mt-2"><tbody>${rows}</tbody></table>` : ''}
               </li>`;
           });
-          
+
           paymentTermsHtml += '</ol>';
         }
 
@@ -2081,7 +2104,7 @@ $('#add-base-quantity').on('click', function () {
         const buildFieldSection = (selector, fields) => {
           const $el = $(selector);
           if (!$el.length) return '';
-          
+
           const values = fields.map(f => getVal(`${selector} ${f.selector}`)).filter(Boolean);
           if (!values.length) return '';
 
@@ -2103,7 +2126,7 @@ $('#add-base-quantity').on('click', function () {
           { selector: '[name="invoice[delivery_details_tax_number]"]', label: 'Tax Number', width: 8 }
         ];
 
-        const deliveryHtml = buildFieldSection('#delivery_details_parent_div', deliveryFields) 
+        const deliveryHtml = buildFieldSection('#delivery_details_parent_div', deliveryFields)
           ? `<h5 class="mb-3 fw-semibold">Delivery details</h5><div class="row">${buildFieldSection('#delivery_details_parent_div', deliveryFields)}</div>`
           : '';
 

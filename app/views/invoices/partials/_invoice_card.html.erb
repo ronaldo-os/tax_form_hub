@@ -133,9 +133,9 @@
                   <td><%= item["description"] %></td>
                   <td><%= item["quantity"] %></td>
                   <td><%= item["unit"] %></td>
-                  <td><%= item["price"] %></td>
+                  <td><%= number_with_precision(item["price"].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></td>
                   <td><%= item["tax"] %></td>
-                  <td class="text-end fw-semibold"><%= item["total"] || "" %></td>
+                  <td class="text-end fw-semibold"><%= number_with_precision(item["total"].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></td>
                 </tr>
 
                 <!-- Optional fields -->
@@ -168,10 +168,13 @@
                         </td>
 
                         <td>
-                          <% qty_key = "qty.text.2" %>
-                          <% if fields[qty_key].present? %>
-                            <label class="fw-bold small d-block">Quantity</label>
-                            <span class="text-muted small"><%= fields[qty_key] %></span>
+                          <% 
+                            amount_key = fields.keys.find { |k| k.include?('amount.text') || k.include?('quantity.text') } 
+                            label_txt = amount_key&.include?('amount') ? 'Amount' : 'Quantity'
+                          %>
+                          <% if amount_key && fields[amount_key].present? %>
+                            <label class="fw-bold small d-block"><%= label_txt %></label>
+                            <span class="text-muted small"><%= number_with_precision(fields[amount_key].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></span>
                           <% end %>
                         </td>
 
@@ -181,7 +184,7 @@
                           <% total_key = "total.text_only.2" %>
                           <% if fields[total_key].present? %>
                             <label class="fw-bold small d-block">Total</label>
-                            <span class="text-muted small"><%= fields[total_key] %></span>
+                            <span class="text-muted small"><%= number_with_precision(fields[total_key].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></span>
                           <% end %>
                         </td>
                       </tr>
@@ -214,7 +217,13 @@
                       <td style="text-align: left;">
                         <% unless value.blank? %>
                           <label class="fw-bold small d-block"><%= field.humanize %></label>
-                          <span class="text-muted small"><%= value %></span>
+                          <span class="text-muted small">
+                            <% if field == "amount" %>
+                              <%= number_with_precision(value.to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %>
+                            <% else %>
+                              <%= value %>
+                            <% end %>
+                          </span>
                         <% end %>
                       </td>
                     <% end %>
@@ -225,7 +234,7 @@
                     <td class="text-end fw-semibold">
                       <% unless adjustment["total"].blank? %>
                         <label class="fw-bold small d-block">Total</label>
-                        <span class="text-muted small"><%= adjustment["total"] %></span>
+                        <span class="text-muted small"><%= number_with_precision(adjustment["total"].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></span>
                       <% end %>
                     </td>
                   </tr>
@@ -241,20 +250,20 @@
           <p class="mb-1">
             Subtotal excl. taxes:
             <span class="fw-semibold">
-              <%= number_with_precision(@invoice.total.dig("subtotal").to_f, precision: 2) %>
+              <%= number_with_precision(@invoice.total.dig("subtotal").to_f, precision: 2, delimiter: ',') %>
             </span>
           </p>
           <p class="mb-1">
             Total taxes:
             <span class="fw-semibold">
-              <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2) %>
+              <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
             </span>
           </p>
           <hr>
           <p class="fs-5 fw-bold mb-0">
             Total <%= @invoice.currency %>:
             <span class="grand-total-static text-primary">
-              <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2) %>
+              <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2, delimiter: ',') %>
             </span>
           </p>
         </div>
