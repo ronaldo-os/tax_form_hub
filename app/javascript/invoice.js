@@ -855,18 +855,20 @@ if (
       $('#line-items').on('click', '.remove-line', function () {
         const $lineItem = $(this).closest('tr');
 
-        let $next = $lineItem.next();
-        const $relatedRows = [];
+        if ($lineItem.hasClass('line-item')) {
+          let $next = $lineItem.next();
+          const $relatedRows = [];
 
-        while ($next.length && !$next.hasClass('line-item')) {
-          if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
-            $relatedRows.push($next);
+          while ($next.length && !$next.hasClass('line-item')) {
+            if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
+              $relatedRows.push($next);
+            }
+            $next = $next.next();
           }
-          $next = $next.next();
+          $relatedRows.forEach($row => $row.remove());
         }
 
         $lineItem.remove();
-        $relatedRows.forEach($row => $row.remove());
 
         updateRemoveButtons();
         recalculateTotals();
@@ -1010,10 +1012,13 @@ if (
           ? (qty * price) / pricePerQty
           : qty * price;
 
+        // Find associated optional rows (siblings until next line item)
+        const $optionalRows = $row.nextUntil('.line-item', '.optional-field-row');
+
         // --- Discount Calculation ---
         let discount = 0;
         let discountTax = 0;
-        const $discountRows = $(`.optional-field-row[data-optional-group="discount"][data-line-index="${lineIndex}"]`);
+        const $discountRows = $optionalRows.filter('[data-optional-group="discount"]');
         $discountRows.each(function () {
           const $dRow = $(this);
           const dval = parseCurrency($dRow.find('input[name*="discount.amount"]').val()) || 0;
@@ -1037,7 +1042,7 @@ if (
         // --- Charge Calculation ---
         let charge = 0;
         let extraTax = 0;
-        const $chargeRows = $(`.optional-field-row[data-optional-group="charge"][data-line-index="${lineIndex}"]`);
+        const $chargeRows = $optionalRows.filter('[data-optional-group="charge"]');
         $chargeRows.each(function () {
           const $cRow = $(this);
           const cval = parseCurrency($cRow.find('input[name*="charge.amount"]').val()) || 0;
@@ -1105,9 +1110,6 @@ if (
         } else {
           // fallback for unexpected values & ensure we always format
           $row.find('.total').text(formatCurrency(value));
-          // If type is not recognized but we have value, maybe we should add it?
-          // For now, assuming standard types. If user adds custom types, they might need handling.
-          // But based on provided snippet, type is standard.
         }
       });
 
@@ -1603,7 +1605,8 @@ if (
           });
         }
 
-        recalculateTotals();
+        if (window.invoiceInitTimeout) clearTimeout(window.invoiceInitTimeout);
+        window.invoiceInitTimeout = setTimeout(recalculateTotals, 100);
       });
 
       // Initialize Flatpickr for date fields
