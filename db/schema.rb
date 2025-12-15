@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_08_26_035222) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_15_080902) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -128,6 +128,16 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_26_035222) do
     t.index ["user_id"], name: "index_locations_on_user_id"
   end
 
+  create_table "networks", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_networks_on_company_id"
+    t.index ["user_id", "company_id"], name: "index_networks_on_user_id_and_company_id", unique: true
+    t.index ["user_id"], name: "index_networks_on_user_id"
+  end
+
   create_table "recommendations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
@@ -171,6 +181,8 @@ ActiveRecord::Schema[7.2].define(version: 2025_08_26_035222) do
   add_foreign_key "invoices", "locations", column: "tax_representative_location_id"
   add_foreign_key "invoices", "users"
   add_foreign_key "locations", "users"
+  add_foreign_key "networks", "companies"
+  add_foreign_key "networks", "users"
   add_foreign_key "recommendations", "companies"
   add_foreign_key "recommendations", "users"
 end

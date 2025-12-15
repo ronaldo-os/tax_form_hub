@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   get "recurring_invoices/index"
   get "recurring_invoices/disable"
   resources :locations
+  resources :networks, only: [:index, :create, :destroy]
   get "invoices/index"
   devise_for :users, controllers: {
     registrations: 'users/registrations',

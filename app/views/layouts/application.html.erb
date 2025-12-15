@@ -82,6 +82,13 @@
               <div class="app-text">Recurring Items</div>
             <% end %>
           </li>
+
+          <li class="<%= 'app-active' if request.path.starts_with?(networks_path) %>">
+            <%= link_to networks_path do %>
+              <div class="app-icon"><i class="fa-solid fa-network-wired z-1"></i></div>
+              <div class="app-text">Network</div>
+            <% end %>
+          </li>
         </div>
 
         <!-- Bottom Section -->

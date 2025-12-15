@@ -24,7 +24,7 @@ class InvoicesController < ApplicationController
   def show
     @invoice = Invoice.find(params[:id])
     @recipient_company = @invoice.recipient_company
-    @recipient_companies = Company.where.not(user_id: current_user.id)
+    @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
 
     @ship_from_location = Location.find(@invoice.ship_from_location_id) if @invoice.ship_from_location_id.present?
@@ -43,7 +43,7 @@ class InvoicesController < ApplicationController
 
 
   def new
-    @recipient_companies = Company.where.not(user_id: current_user.id)
+    @recipient_companies = current_user.connected_companies
     @locations_by_type = Location.all.group_by(&:location_type)
 
     if params[:template_id].present?
@@ -85,7 +85,7 @@ class InvoicesController < ApplicationController
 
   def edit
     @invoice = current_user.invoices.find(params[:id])
-    @recipient_companies = Company.where.not(user_id: current_user.id)
+    @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
   end
 
