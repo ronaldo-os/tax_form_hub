@@ -1,6 +1,7 @@
 //= link_tree ../images
-//= link company.css
-//= link invoices.css
-//= link responsive.css
+//= link_directory ../stylesheets .css
+//= link_tree ../../javascript .js
+//= link_tree ../../../vendor/javascript .js
+
 //= link application.css
 //= link_tree ../builds

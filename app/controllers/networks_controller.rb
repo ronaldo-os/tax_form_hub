@@ -32,7 +32,7 @@ class NetworksController < ApplicationController
     @network = current_user.networks.build(company: company)
 
     if @network.save
-      redirect_to networks_path(query: params[:query]), notice: "#{company.name} added to your network."
+      redirect_to networks_path, notice: "#{company.name} added to your network."
     else
       redirect_to networks_path(query: params[:query]), alert: "Failed to add company."
     end

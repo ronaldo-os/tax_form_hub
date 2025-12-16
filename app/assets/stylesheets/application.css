@@ -502,3 +502,12 @@ table.dataTable.dtr-inline.collapsed > tbody > tr > td {
   --bs-pagination-active-bg: var(--main-color);
   --bs-pagination-active-border-color: var(--main-color);
 }
+
+/* Company Link Hover Effect */
+.company-link-hover {
+  transition: color 200ms ease-in-out;
+}
+
+.company-link-hover:hover {
+  color: #00aeff !important;
+}

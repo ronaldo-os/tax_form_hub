@@ -1,51 +1,57 @@
 <% content_for :page_title, "My Network" %>
 
-<div class="container py-4">
+
+
+<div class="container py-4 py-md-5">
   <!-- Search Section -->
   <div class="card shadow-sm border-0 mb-5">
     <div class="card-body p-4">
       <h5 class="card-title mb-3">Add Company to Network</h5>
-      <%= form_with url: networks_path, method: :get, class: "row g-3" do |f| %>
-        <div class="col-md-10">
-          <%= f.text_field :query, 
-              value: params[:query], 
-              class: "form-control", 
-              placeholder: "Search for companies to connect with..." %>
-        </div>
-        <div class="col-md-2 d-grid">
-          <%= f.submit "Search", class: "btn btn-primary" %>
-        </div>
-      <% end %>
-
-      <% if @search_results.present? %>
-        <div class="mt-4">
-          <h6 class="text-muted mb-3">Found <%= @search_results.count %> companies:</h6>
-          <div class="list-group">
-            <% @search_results.each do |company| %>
-              <div class="list-group-item d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center gap-3">
-                  <div class="rounded-circle bg-light border d-flex justify-content-center align-items-center" style="width: 48px; height: 48px; overflow: hidden;">
-                     <% if company.profile_image.attached? %>
-                        <%= image_tag company.profile_image.variant(resize_to_limit: [100, 100]), class: "img-fluid" %>
-                     <% else %>
-                        <i class="fas fa-building text-secondary"></i>
-                     <% end %>
-                  </div>
-                  <div>
-                    <h6 class="mb-0 fw-bold"><%= company.name %></h6>
-                    <small class="text-muted"><%= company.industry.presence || "Unknown Industry" %> • <%= company.address.presence || "Unknown Location" %></small>
-                  </div>
-                </div>
-                <%= button_to "Add to Network", networks_path(company_id: company.id, query: params[:query]), method: :post, class: "btn btn-sm btn-outline-primary" %>
-              </div>
-            <% end %>
+      <div class="position-relative">
+        <%= form_with url: networks_path, method: :get, class: "row g-3", id: "network_search_form", data: { turbo_frame: "search_results" } do |f| %>
+          <div class="col-12">
+            <%= f.text_field :query, 
+                value: params[:query], 
+                class: "form-control", 
+                id: "company_search_input",
+                placeholder: "Type to search companies...",
+                autocomplete: "off" %>
           </div>
-        </div>
-      <% elsif params[:query].present? %>
-        <div class="mt-4 text-center text-muted">
-          No companies found matching "<%= params[:query] %>" (that aren't already in your network).
-        </div>
-      <% end %>
+          <%= f.submit "Search", class: "d-none" %>
+        <% end %>
+
+        <turbo-frame id="search_results">
+          <% if @search_results.present? %>
+            <div class="position-absolute w-100 bg-white shadow-lg rounded-bottom border mt-1" style="z-index: 1050; max-height: 400px; overflow-y: auto;">
+              <h6 class="text-muted p-3 mb-0 border-bottom bg-light sticky-top small">Found <%= @search_results.count %> matches:</h6>
+              <div class="list-group list-group-flush">
+                <% @search_results.each do |company| %>
+                  <div class="list-group-item d-flex justify-content-between align-items-center p-3">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="rounded-circle bg-light border d-flex justify-content-center align-items-center flex-shrink-0" style="width: 40px; height: 40px; overflow: hidden;">
+                         <% if company.profile_image.attached? %>
+                            <%= image_tag company.profile_image.variant(resize_to_limit: [100, 100]), class: "img-fluid" %>
+                         <% else %>
+                            <i class="fas fa-building text-secondary"></i>
+                         <% end %>
+                      </div>
+                      <div>
+                        <h6 class="mb-0 fw-bold small"><%= company.name %></h6>
+                        <small class="text-muted" style="font-size: 0.8rem;"><%= company.industry.presence || "Unknown Industry" %> • <%= company.address.presence || "Unknown" %></small>
+                      </div>
+                    </div>
+                    <%= button_to "Add", networks_path(company_id: company.id, query: params[:query]), method: :post, class: "btn btn-sm btn-primary py-1 px-3", data: { turbo_frame: "_top" } %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% elsif params[:query].present? %>
+            <div class="position-absolute w-100 bg-white shadow rounded mt-1 p-3 text-center text-muted border" style="z-index: 1050;">
+              No matches found for "<%= params[:query] %>" (or already connected).
+            </div>
+          <% end %>
+        </turbo-frame>
+      </div>
     </div>
   </div>
 
@@ -80,7 +86,9 @@
                 </div>
               </div>
               
-              <h5 class="card-title fw-bold text-truncate"><%= company.name %></h5>
+              <h5 class="card-title fw-bold text-truncate">
+                <%= link_to company.name, company_path(company), class: "text-decoration-none text-dark company-link-hover" %>
+              </h5>
               <p class="card-text text-muted small mb-2">
                 <i class="fas fa-tag me-1"></i> <%= company.industry.presence || "N/A" %>
               </p>

@@ -1,8 +1,10 @@
+import "./network_search";
 // Page specific JS are now loaded in their respective views
 // import "./client_submissions";
 // import "./admin_client_submissions";
 // import "./edit_profile";
 // import "./index_invoice.js";
+// import "./network_search";
 // import "./invoice";
 // import "./view_invoice.js";
 // import "./locations";
@@ -11,6 +13,7 @@
 
 
 import Rails from "@rails/ujs";
+import "@hotwired/turbo-rails";
 Rails.start();
 
 
@@ -121,21 +124,21 @@ $(document).ready(function () {
         let messageHtml;
 
         if (messages.length > 1) {
-            messageHtml = `<ol class="mb-0 ps-3">${messages.map(m => `<li>${m}</li>`).join("")}</ol>`;
+            messageHtml = `< ol class="mb-0 ps-3" > ${messages.map(m => `<li>${m}</li>`).join("")}</ol > `;
         } else {
-            messageHtml = `<span>${messages[0]}</span>`;
+            messageHtml = `< span > ${messages[0]}</span > `;
         }
 
         const flashHtml = `
-            <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start" 
-                 role="alert" 
-                 style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+    < div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start"
+role = "alert"
+style = "position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;" >
                 <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_${type}"></i>
                 <div>
                     ${messageHtml}
                 </div>
-            </div>
-        `;
+            </div >
+    `;
         $('body').prepend(flashHtml);
 
         setTimeout(function () {
