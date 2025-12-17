@@ -39,11 +39,16 @@ $(document).ready(function () {
     });
 
     // Sidenav toggle function 
-    $(function () {
+    function initSidebar() {
         const $menuToggle = $("#desktop_menu_toggle");
         const $mobileToggle = $("#mobile_menu_toggle");
         const $sidebar = $(".app-sidebar");
         const $menuListItems = $(".app-menu-list li, .app-bottom li");
+
+        // Remove existing handlers to prevent duplicate binding
+        $menuToggle.off("click");
+        $mobileToggle.off("click");
+        $menuListItems.off("click");
 
         // === Desktop toggle ===
         $menuToggle.on("click", function () {
@@ -66,7 +71,10 @@ $(document).ready(function () {
                 $mobileToggle.removeClass("app-active");
             }
         });
-    });
+    }
+
+    $(document).on("turbo:load", initSidebar);
+    $(document).ready(initSidebar);
 
 
     $(function () {

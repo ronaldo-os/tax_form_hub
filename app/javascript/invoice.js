@@ -1,4 +1,5 @@
 import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS, INVOICE_INFO_OPTIONAL_FIELDS, OPTIONAL_FIELDS } from "./long_select_options/options";
+import { initCompanySelector } from "./invoice_company_selector";
 
 if (
   window.location.pathname === "/invoices/new" ||
@@ -18,6 +19,7 @@ if (
   }
 
   $(document).ready(function () {
+    initCompanySelector();
     recalculateTotals();
 
     // Build options for optional fields dropdown
@@ -1141,6 +1143,7 @@ if (
       $(this).val(formatCurrency($(this).val()));
     });
 
+    /*
     $('#recipient_company_id').on('change', function () {
       const selected = $(this).find('option:selected');
 
@@ -1160,6 +1163,7 @@ if (
       $('#recipient_company_id').removeClass('d-none');
       $('#recipient_company_id').val('');
     });
+    */
 
     // Handle location selection changes
     $(".location-select").on("change", function () {

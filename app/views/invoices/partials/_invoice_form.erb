@@ -9,49 +9,31 @@
 
           <div class="col-md-6 mb-3">
             <%= f.label :To, class: "form-label" %>
-            <%= select_tag "invoice[recipient_company_id]",
-                options_for_select(
-                  @recipient_companies.map { |c|
-                    [
-                      c.name,
-                      c.id,
-                      {
-                        'data-name': c.name,
-                        'data-website': c.website,
-                        'data-industry': c.industry,
-                        'data-ownership': c.ownership,
-                        'data-address': c.address,
-                        'data-phone': c.phone,
-                        'data-description': c.description,
-                        'data-size': c.size,
-                        'data-share-capital': c.share_capital,
-                        'data-registration-address': c.registration_address,
-                        'data-email-address': c.email_address,
-                        'data-company-id-type': c.company_id_type,
-                        'data-company-id-number': c.company_id_number,
-                        'data-tax-id-type': c.tax_id_type,
-                        'data-tax-id-number': c.tax_id_number,
-                        'data-internal-identifier': c.internal_identifier
-                      }
-                    ]
-                  },
-                  @invoice.recipient_company_id
-                ),
-                prompt: "Select a company",
-                class: "form-select",
-                id: "recipient_company_id",
-                required: true
-              %>
+            
+            <% current_recipient = @invoice.recipient_company %>
+            <%= f.hidden_field :recipient_company_id, id: "recipient_company_id", required: true %>
 
+            <div id="company_selector_interface" class="<%= current_recipient ? 'd-none' : '' %>">
+              <div class="position-relative">
+                <input type="text" id="company_search_input" class="form-control" placeholder="Search for a company..." autocomplete="off">
+                <div id="company_search_spinner" class="position-absolute end-0 top-50 translate-middle-y me-3 d-none">
+                  <div class="spinner-border spinner-border-sm text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </div>
+                <div id="company_search_dropdown" class="list-group position-absolute w-100 shadow-sm d-none" style="z-index: 1000; max-height: 300px; overflow-y: auto;">
+                </div>
+              </div>
+            </div>
 
-            <!-- Company preview will be inserted here -->
-            <div id="recipient-preview" class="p-3 rounded border bg-light-subtle d-none">
-              <h6 class="fw-bold mb-2" id="company_name"></h6>
-              <p class="mb-1 text-muted" id="company_address"></p>
-              <p class="mb-1 text-muted" id="company_country"></p>
+            <!-- Company preview -->
+            <div id="recipient-preview" class="p-3 rounded border bg-light-subtle <%= current_recipient ? '' : 'd-none' %>">
+              <h6 class="fw-bold mb-2" id="company_name"><%= current_recipient&.name %></h6>
+              <p class="mb-1 text-muted" id="company_address"><%= current_recipient&.address %></p>
+              <p class="mb-1 text-muted" id="company_country">Philippines</p>
               <hr>
-              <p class="mb-1 small"><strong id="company_number"></strong></p>
-              <p class="mb-0 small"><strong id="company_tax_number"></strong></p>
+              <p class="mb-1 small"><strong id="company_number">Company <%= current_recipient&.company_id_type %> number : <%= current_recipient&.company_id_number || '-' %></strong></p>
+              <p class="mb-0 small"><strong id="company_tax_number">Tax <%= current_recipient&.tax_id_type %> number : <%= current_recipient&.tax_id_number || '-' %></strong></p>
 
               <a href="#" class="text-primary small d-block mt-2" id="change-recipient">
                 Change recipient

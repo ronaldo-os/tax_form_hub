@@ -17,8 +17,8 @@
   },
   "scripts": {
     "build": "esbuild app/javascript/*.* --bundle --minify --sourcemap --outdir=app/assets/builds",
-    "build:css": "esbuild app/assets/stylesheets/application.css --bundle --minify --sourcemap --outfile=app/assets/builds/application.css",
+    "build:css": "esbuild app/assets/stylesheets/src/application.css --bundle --minify --sourcemap --outfile=app/assets/builds/application.css",
     "build:watch": "esbuild app/javascript/*.* --bundle --sourcemap --outdir=app/assets/builds --watch",
-    "build:css:watch": "esbuild app/assets/stylesheets/application.css --bundle --sourcemap --outfile=app/assets/builds/application.css --watch"
+    "build:css:watch": "esbuild app/assets/stylesheets/src/application.css --bundle --sourcemap --outfile=app/assets/builds/application.css --watch"
   }
 }

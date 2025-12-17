@@ -13,6 +13,25 @@ class NetworksController < ApplicationController
                                .where.not(id: existing_ids)
                                .limit(20)
     end
+
+    respond_to do |format|
+      format.html
+      format.json do
+        if params[:query].present?
+          msg = "%#{params[:query]}%"
+          network_companies = current_user.connected_companies.where("name ILIKE ?", msg)
+          
+          existing_ids = current_user.connected_company_ids + current_user.company_ids
+          other_companies = Company.where("name ILIKE ?", msg).where.not(id: existing_ids).limit(20)
+          
+          render json: { network: network_companies.as_json(methods: [:address, :tax_id_number, :website, :industry, :ownership, :phone, :description, :size, :share_capital, :registration_address, :email_address, :company_id_type, :company_id_number, :tax_id_type, :internal_identifier]), 
+                         other: other_companies.as_json(methods: [:address, :tax_id_number, :website, :industry, :ownership, :phone, :description, :size, :share_capital, :registration_address, :email_address, :company_id_type, :company_id_number, :tax_id_type, :internal_identifier]) }
+        else
+          render json: { network: current_user.connected_companies.as_json(methods: [:address, :tax_id_number, :website, :industry, :ownership, :phone, :description, :size, :share_capital, :registration_address, :email_address, :company_id_type, :company_id_number, :tax_id_type, :internal_identifier]), 
+                         other: [] }
+        end
+      end
+    end
   end
 
   def create
