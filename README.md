@@ -23,10 +23,10 @@ yarn install
 yarn build
 
 3. **Set Up the Database**
-rails db:setup
-rails db:create
-rails db:migrate
-rails db:seed
+bundle exec rails db:setup
+bundle exec rails db:create
+bundle exec rails db:migrate
+bundle exec rails db:seed
 
 4. **Configure Environment Variables**
 rename env.sample to .env and populate it.

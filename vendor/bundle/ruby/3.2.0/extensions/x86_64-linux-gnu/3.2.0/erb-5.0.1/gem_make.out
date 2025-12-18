@@ -1,0 +1,18 @@
+current directory: /home/rparalejas/projects/tax_form_hub/vendor/bundle/ruby/3.2.0/gems/erb-5.0.1/ext/erb/escape
+/usr/bin/ruby3.2 -I/usr/lib/ruby/vendor_ruby extconf.rb
+creating Makefile
+
+current directory: /home/rparalejas/projects/tax_form_hub/vendor/bundle/ruby/3.2.0/gems/erb-5.0.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251218-17390-slrb0c sitelibdir\=./.gem.20251218-17390-slrb0c clean
+
+current directory: /home/rparalejas/projects/tax_form_hub/vendor/bundle/ruby/3.2.0/gems/erb-5.0.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251218-17390-slrb0c sitelibdir\=./.gem.20251218-17390-slrb0c
+compiling escape.c
+linking shared-object erb/escape.so
+
+current directory: /home/rparalejas/projects/tax_form_hub/vendor/bundle/ruby/3.2.0/gems/erb-5.0.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251218-17390-slrb0c sitelibdir\=./.gem.20251218-17390-slrb0c install
+/usr/bin/install -c -m 0755 escape.so ./.gem.20251218-17390-slrb0c/erb
+
+current directory: /home/rparalejas/projects/tax_form_hub/vendor/bundle/ruby/3.2.0/gems/erb-5.0.1/ext/erb/escape
+make DESTDIR\= sitearchdir\=./.gem.20251218-17390-slrb0c sitelibdir\=./.gem.20251218-17390-slrb0c clean
