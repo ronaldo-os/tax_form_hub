@@ -4,6 +4,8 @@
     <thead class="table-light">
       <tr>
         <th>ID</th>
+        <th>Company</th>
+        <th>Invoice #</th>
         <th>Details</th>
         <th>Form 2307</th>
         <th>Deposit Slip</th>
@@ -22,6 +24,9 @@
                         class: "text-decoration-none",
                         data: { bs_toggle: "modal", bs_target: "#submissionModal" } %>
           </td>
+
+          <td><%= submission.company&.name || submission.company_name %></td>
+          <td><%= submission.invoice&.invoice_number %></td>
 
           <td><%= truncate(submission.details, length: 50) %></td>
 

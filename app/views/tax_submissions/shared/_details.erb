@@ -22,6 +22,18 @@
         <% end %>
       </div>
 
+      <!-- Company -->
+      <div class="col-md-4">
+        <p class="text-muted mb-1">Company</p>
+        <p class="fw-semibold fs-6"><%= @tax_submission.company&.name || @tax_submission.company_name %></p>
+      </div>
+
+      <!-- Invoice # -->
+      <div class="col-md-4">
+        <p class="text-muted mb-1">Invoice #</p>
+        <p class="fw-semibold fs-6"><%= @tax_submission.invoice&.invoice_number || "N/A" %></p>
+      </div>
+
       <!-- Details -->
       <div class="col-md-12">
         <p class="text-muted mb-1">Details</p>

@@ -75,5 +75,32 @@ if (window.location.pathname === "/") {
                 headers: { Accept: "text/javascript" }
             });
         }
+        // Fetch invoices based on selected company
+        $("#company_select").on("change", function () {
+            const companyId = $(this).val();
+            const $invoiceSelect = $("#invoice_select");
+
+            $invoiceSelect.empty().append('<option value="">Select Invoice</option>');
+
+            if (companyId) {
+                $.ajax({
+                    url: "/tax_submissions/fetch_invoices",
+                    data: { company_id: companyId },
+                    dataType: "json",
+                    success: function (data) {
+                        data.forEach(function (invoice) {
+                            $invoiceSelect.append(
+                                `<option value="${invoice.id}">${invoice.invoice_number}</option>`
+                            );
+                        });
+                    }
+                });
+            }
+        });
+        // Reopen modal if there are errors
+        if ($("#has_submission_errors").val() === "true") {
+            const submitModal = new bootstrap.Modal($("#submitDocsModal")[0]);
+            submitModal.show();
+        }
     });
 }

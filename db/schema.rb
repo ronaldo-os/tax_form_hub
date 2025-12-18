@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_15_080902) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_18_094348) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -157,6 +157,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_15_080902) do
     t.boolean "processed"
     t.boolean "archived"
     t.string "company_name"
+    t.bigint "company_id", null: false
+    t.bigint "invoice_id", null: false
+    t.index ["company_id"], name: "index_tax_submissions_on_company_id"
+    t.index ["invoice_id"], name: "index_tax_submissions_on_invoice_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -185,4 +189,6 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_15_080902) do
   add_foreign_key "networks", "users"
   add_foreign_key "recommendations", "companies"
   add_foreign_key "recommendations", "users"
+  add_foreign_key "tax_submissions", "companies"
+  add_foreign_key "tax_submissions", "invoices"
 end

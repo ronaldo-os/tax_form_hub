@@ -58,3 +58,7 @@ gem "dotenv-rails"
 gem "whenever", require: false
 
 gem "jsbundling-rails", "~> 1.3"
+
+group :development do
+  gem "foreman"
+end

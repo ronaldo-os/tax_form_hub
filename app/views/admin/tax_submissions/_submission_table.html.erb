@@ -5,6 +5,8 @@
         <tr>
           <th>ID</th>
           <th>Email</th>
+          <th>Company</th>
+          <th>Invoice #</th>
           <th>Details</th>
           <th>Form 2307</th>
           <th>Deposit Slip</th>
@@ -28,6 +30,8 @@
             </td>
 
             <td><%= submission.email.presence || "N/A" %></td>
+            <td><%= submission.company&.name || submission.company_name %></td>
+            <td><%= submission.invoice&.invoice_number %></td>
             <td><%= truncate(submission.details, length: 50) %></td>
 
             <!-- Form 2307 -->

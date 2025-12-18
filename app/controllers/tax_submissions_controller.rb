@@ -4,12 +4,16 @@ class TaxSubmissionsController < ApplicationController
   def home
     return redirect_to admin_tax_submissions_path if current_user&.superadmin?
 
-    @tax_submission = TaxSubmission.new
-    if current_user
-      @tax_submissions        = TaxSubmission.where(email: current_user.email).order(created_at: :desc)
-      @unarchived_submissions = TaxSubmission.where(email: current_user.email, archived: [false, nil]).order(created_at: :desc)
-      @archived_submissions   = TaxSubmission.where(email: current_user.email, archived: true).order(created_at: :desc)
-    end
+    @tax_submission ||= TaxSubmission.new
+    prepare_home_data if current_user
+  end
+
+  def fetch_invoices
+    @invoices = current_user.invoices.where(
+      recipient_company_id: params[:company_id],
+      status: ["active", "sent", "draft"]
+    )
+    render json: @invoices.map { |i| { id: i.id, invoice_number: i.invoice_number } }
   end
 
   def update
@@ -38,8 +42,9 @@ class TaxSubmissionsController < ApplicationController
       TaxSubmissionMailer.notify_superadmins(@tax_submission).deliver_later
       redirect_to root_path, notice: "Submission successful."
     else
+      prepare_home_data if current_user
       flash.now[:alert] = "Submission failed. Please check the form for errors."
-      render :new, status: :unprocessable_entity
+      render :home, status: :unprocessable_entity
     end
   end
 
@@ -59,9 +64,17 @@ class TaxSubmissionsController < ApplicationController
 
   private
 
+  def prepare_home_data
+    @companies = current_user.connected_companies
+    @tax_submissions        = TaxSubmission.where(email: current_user.email).order(created_at: :desc)
+    @unarchived_submissions = TaxSubmission.where(email: current_user.email, archived: [false, nil]).order(created_at: :desc)
+    @archived_submissions   = TaxSubmission.where(email: current_user.email, archived: true).order(created_at: :desc)
+  end
+
   def tax_submission_params
     params.require(:tax_submission).permit(
-      :company_name,
+      :company_id,
+      :invoice_id,
       :form_2307,
       { deposit_slip: [] },
       :details

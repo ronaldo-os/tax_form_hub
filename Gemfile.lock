@@ -105,6 +105,7 @@ GEM
     erb (5.0.1)
     erubi (1.13.1)
     ffi (1.17.2-x86_64-linux-gnu)
+    foreman (0.89.1)
     globalid (1.2.1)
       activesupport (>= 6.1)
     i18n (1.14.7)
@@ -305,6 +306,7 @@ DEPENDENCIES
   debug
   devise
   dotenv-rails
+  foreman
   image_processing (~> 1.2)
   jbuilder
   jsbundling-rails (~> 1.3)
