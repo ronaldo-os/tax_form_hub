@@ -17,10 +17,10 @@ import "@hotwired/turbo-rails";
 Rails.start();
 
 
-$(document).ready(function () {
+function initApplication() {
 
-    // password toggle handler
-    $(document).on('click', '.toggle-password-icon', function (event) {
+    // password toggle handler - delegated event
+    $(document).off('click.pw-toggle').on('click.pw-toggle', '.toggle-password-icon', function (event) {
         event.preventDefault();
 
         const $icon = $(this);
@@ -39,55 +39,49 @@ $(document).ready(function () {
     });
 
     // Sidenav toggle function 
-    function initSidebar() {
-        const $menuToggle = $("#desktop_menu_toggle");
-        const $mobileToggle = $("#mobile_menu_toggle");
-        const $sidebar = $(".app-sidebar");
-        const $menuListItems = $(".app-menu-list li, .app-bottom li");
+    const $menuToggle = $("#desktop_menu_toggle");
+    const $mobileToggle = $("#mobile_menu_toggle");
+    const $sidebar = $(".app-sidebar");
+    const $menuListItems = $(".app-menu-list li, .app-bottom li");
 
-        // Remove existing handlers to prevent duplicate binding
-        $menuToggle.off("click");
-        $mobileToggle.off("click");
-        $menuListItems.off("click");
+    // Remove existing handlers to prevent duplicate binding
+    $menuToggle.off("click");
+    $mobileToggle.off("click");
+    $menuListItems.off("click");
 
-        // === Desktop toggle ===
-        $menuToggle.on("click", function () {
-            $menuToggle.toggleClass("app-active");
-            $sidebar.toggleClass("app-active");
-        });
-
-        // === Mobile toggle ===
-        $mobileToggle.on("click", function () {
-            $mobileToggle.toggleClass("app-active");
-            $sidebar.toggleClass("app-active");
-        });
-
-        $menuListItems.on("click", function () {
-            $menuListItems.removeClass("app-active");
-            $(this).addClass("app-active");
-
-            if (window.innerWidth <= 768) {
-                $sidebar.removeClass("app-active");
-                $mobileToggle.removeClass("app-active");
-            }
-        });
-    }
-
-    $(document).on("turbo:load", initSidebar);
-    $(document).ready(initSidebar);
-
-
-    $(function () {
-        $('[data-bs-toggle="tooltip"]').tooltip();
+    // === Desktop toggle ===
+    $menuToggle.on("click", function () {
+        $menuToggle.toggleClass("app-active");
+        $sidebar.toggleClass("app-active");
     });
 
+    // === Mobile toggle ===
+    $mobileToggle.on("click", function () {
+        $mobileToggle.toggleClass("app-active");
+        $sidebar.toggleClass("app-active");
+    });
+
+    $menuListItems.on("click", function () {
+        $menuListItems.removeClass("app-active");
+        $(this).addClass("app-active");
+
+        if (window.innerWidth <= 768) {
+            $sidebar.removeClass("app-active");
+            $mobileToggle.removeClass("app-active");
+        }
+    });
+
+    $('[data-bs-toggle="tooltip"]').tooltip();
+
+    // Alert auto-dismiss
     setTimeout(function () {
         $('.custom_tfh_alert').fadeOut(500, function () {
             $(this).remove();
         });
     }, 5000);
 
-    $('.zoom-link').on('click', function (e) {
+    // Zoom link
+    $('.zoom-link').off('click.zoom').on('click.zoom', function (e) {
         e.preventDefault();
         const imgUrl = $(this).data('img-url');
         $('#modalImage').attr('src', imgUrl);
@@ -110,7 +104,7 @@ $(document).ready(function () {
         return integerPart + decimalPart;
     }
 
-    $inputs.on("input", function () {
+    $inputs.off("input.currency").on("input.currency", function () {
         let $this = $(this);
         let val = $this.val().replace(/[^0-9.]/g, "");
 
@@ -121,32 +115,32 @@ $(document).ready(function () {
         $this.val(formatWithCommas(val));
     });
 
-    $inputs.on("blur", function () {
+    $inputs.off("blur.currency").on("blur.currency", function () {
         $(this).val(formatWithCommas($(this).val()));
     });
 
-    function showFlashMessage(message, type = "danger") {
+    window.showFlashMessage = function (message, type = "danger") {
         $('.custom_tfh_alert').remove();
 
         let messages = message.split(/<br\s*\/?>/i).map(m => m.trim()).filter(Boolean);
         let messageHtml;
 
         if (messages.length > 1) {
-            messageHtml = `< ol class="mb-0 ps-3" > ${messages.map(m => `<li>${m}</li>`).join("")}</ol > `;
+            messageHtml = `<ol class="mb-0 ps-3">${messages.map(m => `<li>${m}</li>`).join("")}</ol>`;
         } else {
-            messageHtml = `< span > ${messages[0]}</span > `;
+            messageHtml = `<span>${messages[0]}</span>`;
         }
 
         const flashHtml = `
-    < div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start"
-role = "alert"
-style = "position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;" >
+            <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start"
+                role="alert"
+                style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
                 <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_${type}"></i>
                 <div>
                     ${messageHtml}
                 </div>
-            </div >
-    `;
+            </div>
+        `;
         $('body').prepend(flashHtml);
 
         setTimeout(function () {
@@ -154,20 +148,7 @@ style = "position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400p
                 $(this).remove();
             });
         }, 5000);
-    }
-
-    window.showFlashMessage = showFlashMessage;
-
-    // Remove "Show _ entries" and "Search:" labels on datatables.
-    // Moved to initComplete in specific JS files to avoid race conditions and support code splitting.
-
-    // $('div.dataTables_length label').contents().filter(function () {
-    //     return this.nodeType === 3;
-    // }).remove();
-
-    // $('div.dataTables_filter label').contents().filter(function () {
-    //     return this.nodeType === 3;
-    // }).remove();
+    };
 
     $('div.dataTables_filter input').attr('placeholder', 'Search...');
 
@@ -191,15 +172,28 @@ style = "position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400p
     });
 
     // When a tab becomes visible, recalc the datatable layout
-    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+    $(document).off('shown.bs.tab.dt').on('shown.bs.tab.dt', 'a[data-bs-toggle="tab"]', function (e) {
         $.fn.dataTable
             .tables({ visible: true, api: true })
             .columns.adjust()
             .responsive.recalc();
     });
+}
 
+// Bind to Turbo Load
+document.addEventListener("turbo:load", initApplication);
+// Also bind to DOMContentLoaded for initial non-Turbo load if any
+document.addEventListener("DOMContentLoaded", initApplication);
 
-
+// Global Teardown for DataTables to fix Turbo Caching issues
+document.addEventListener("turbo:before-cache", function () {
+    if ($.fn.DataTable) {
+        $('.dataTable').each(function () {
+            // Destroy the DataTable, removing the structure, so the cache saves a clean table
+            const dt = $(this).DataTable();
+            if (dt) dt.destroy();
+        });
+    }
 });
 
 

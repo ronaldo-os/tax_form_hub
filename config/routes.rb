@@ -19,7 +19,7 @@ Rails.application.routes.draw do
   root "tax_submissions#home"
   get "tax_submissions/home"
 
-  resources :tax_submissions, only: [:new, :create, :show, :destroy, :update] do
+  resources :tax_submissions, only: [:index, :new, :create, :show, :destroy, :update] do
     collection do
       get :fetch_invoices
     end

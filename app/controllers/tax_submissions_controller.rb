@@ -8,6 +8,19 @@ class TaxSubmissionsController < ApplicationController
     prepare_home_data if current_user
   end
 
+  def index
+    return redirect_to root_path, alert: "Access denied." unless current_user&.company_id.present?
+
+    scope = TaxSubmission.where(company_id: current_user.company_id)
+    @unarchived_submissions = scope.where(archived: [false, nil]).order(created_at: :desc)
+    @archived_submissions = scope.where(archived: true).order(created_at: :desc)
+
+    if params[:q].present?
+      @unarchived_submissions = @unarchived_submissions.where("email ILIKE ?", "%#{params[:q]}%")
+      @archived_submissions = @archived_submissions.where("email ILIKE ?", "%#{params[:q]}%")
+    end
+  end
+
   def fetch_invoices
     @invoices = current_user.invoices.where(
       recipient_company_id: params[:company_id],
@@ -17,15 +30,22 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def update
-    if @tax_submission.email == current_user.email && @tax_submission.update(update_params)
-      message = if update_params.key?(:archived)
-        @tax_submission.archived? ? "Submission archived." : "Submission unarchived."
-      else
-        "Submission updated."
-      end
-      redirect_to root_path, notice: message
+    is_owner = current_user.company_id.present? && @tax_submission.company_id == current_user.company_id
+    is_submitter = @tax_submission.email == current_user.email
+
+    if (is_owner || is_submitter) && @tax_submission.update(update_params)
+      message =
+        if update_params.key?(:reviewed) || update_params.key?(:processed)
+          generate_status_message
+        elsif update_params.key?(:archived)
+          @tax_submission.archived? ? "Submission archived." : "Submission unarchived."
+        else
+          "Submission updated."
+        end
+
+      redirect_back fallback_location: root_path, notice: message
     else
-      redirect_to root_path, alert: "Update failed or unauthorized."
+      redirect_back fallback_location: root_path, alert: "Update failed or unauthorized."
     end
   end
 
@@ -82,10 +102,22 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def update_params
-    params.require(:tax_submission).permit(:archived)
+    params.require(:tax_submission).permit(:archived, :reviewed, :processed)
   end
 
   def set_tax_submission
     @tax_submission = TaxSubmission.find(params[:id])
+  end
+
+  def generate_status_message
+    if @tax_submission.reviewed? && @tax_submission.processed?
+      "Submission marked as reviewed and processed."
+    elsif @tax_submission.reviewed?
+      "Submission marked as reviewed."
+    elsif @tax_submission.processed?
+      "Submission marked as processed."
+    else
+      "Submission status updated."
+    end
   end
 end

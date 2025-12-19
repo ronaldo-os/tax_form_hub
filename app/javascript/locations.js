@@ -1,77 +1,82 @@
-if (window.location.pathname.includes("/locations")) {
-    $(function () {
+function initLocationsPage() {
+    if (!window.location.pathname.includes("/locations")) return;
 
-        const $table = $('#location-table').DataTable({
-            responsive: true,
-            autoWidth: false,
-            destroy: true,
-            initComplete: function () {
-                const api = this.api();
-                const $container = $(api.table().container());
+    const $table = $('#location-table').DataTable({
+        responsive: true,
+        autoWidth: false,
+        destroy: true,
+        initComplete: function () {
+            const api = this.api();
+            const $container = $(api.table().container());
 
-                // Remove "Show _ entries" and "Search:" labels
-                $container.find('div.dataTables_length label').contents().filter(function () {
-                    return this.nodeType === 3;
-                }).remove();
+            // Remove "Show _ entries" and "Search:" labels
+            $container.find('div.dataTables_length label').contents().filter(function () {
+                return this.nodeType === 3;
+            }).remove();
 
-                $container.find('div.dataTables_filter label').contents().filter(function () {
-                    return this.nodeType === 3;
-                }).remove();
-            }
-        });
+            $container.find('div.dataTables_filter label').contents().filter(function () {
+                return this.nodeType === 3;
+            }).remove();
+        }
+    });
 
-        const $form = $('#locationModal form');
+    const $form = $('#locationModal form');
 
-        const resetForm = (action = '/locations', method = null) => {
-            $form[0].reset();
-            $form.attr('action', action);
-            $form.find('input[name="_method"]').remove();
-            if (method) {
-                $form.append(`<input type="hidden" name="_method" value="${method}">`);
-            }
-        };
+    const resetForm = (action = '/locations', method = null) => {
+        $form[0].reset();
+        $form.attr('action', action);
+        $form.find('input[name="_method"]').remove();
+        if (method) {
+            $form.append(`<input type="hidden" name="_method" value="${method}">`);
+        }
+    };
 
-        // Handle Add (dropdown option click)
-        $(document).on('click', '.location-option', function (e) {
-            e.preventDefault();
-            const type = $(this).data('location-type');
-            resetForm();
-            $('#locationModalLabel').text(`Create a new ${type.toLowerCase()} location`);
-            $('#modal_location_type').val(type);
-        });
+    // Handle Add (dropdown option click)
+    $(document).off('click.location-option').on('click.location-option', '.location-option', function (e) {
+        e.preventDefault();
+        const type = $(this).data('location-type');
+        resetForm();
+        $('#locationModalLabel').text(`Create a new ${type.toLowerCase()} location`);
+        $('#modal_location_type').val(type);
+    });
 
-        // Handle Edit
-        $(document).on('click', '.edit-location', function (e) {
-            e.preventDefault();
-            const loc = $(this).data();
-            resetForm(`/locations/${loc.id}`, 'patch');
+    // Handle Edit
+    $(document).off('click.edit-location').on('click.edit-location', '.edit-location', function (e) {
+        e.preventDefault();
+        const loc = $(this).data();
+        resetForm(`/locations/${loc.id}`, 'patch');
 
-            $('#locationModalLabel').text(`Edit ${loc.locationType} Location`);
-            $('#modal_location_type').val(loc.locationType);
-            $('#location_location_name').val(loc.locationName);
-            $('#location_country').val(loc.country);
-            $('#location_company_name').val(loc.companyName);
-            $('#location_tax_number').val(loc.taxNumber);
-            $('#location_post_box').val(loc.postBox);
-            $('#location_street').val(loc.street);
-            $('#location_building').val(loc.building);
-            $('#location_additional_street').val(loc.additionalStreet);
-            $('#location_zip_code').val(loc.zipCode);
-            $('#location_city').val(loc.city);
+        $('#locationModalLabel').text(`Edit ${loc.locationType} Location`);
+        $('#modal_location_type').val(loc.locationType);
+        $('#location_location_name').val(loc.locationName);
+        $('#location_country').val(loc.country);
+        $('#location_company_name').val(loc.companyName);
+        $('#location_tax_number').val(loc.taxNumber);
+        $('#location_post_box').val(loc.postBox);
+        $('#location_street').val(loc.street);
+        $('#location_building').val(loc.building);
+        $('#location_additional_street').val(loc.additionalStreet);
+        $('#location_zip_code').val(loc.zipCode);
+        $('#location_city').val(loc.city);
 
-            new bootstrap.Modal('#locationModal').show();
-        });
+        new bootstrap.Modal('#locationModal').show();
+    });
 
-        // Form success (ajax:success for Turbo / Rails UJS)
-        $form.on('ajax:success', function () {
-            $('#locationModal').modal('hide');
-            $table.ajax.reload(null, false);
-            this.reset();
-        });
+    // Form success (ajax:success for Turbo / Rails UJS)
+    $form.off('ajax:success').on('ajax:success', function () {
+        $('#locationModal').modal('hide');
+        $table.ajax.reload(null, false);
+        this.reset();
+    });
 
-        // Form error
-        $form.on('ajax:error', function () {
-            showFlashMessage("Failed to save location.", "danger");
-        });
+    // Form error
+    $form.off('ajax:error').on('ajax:error', function () {
+        showFlashMessage("Failed to save location.", "danger");
     });
 }
+
+document.addEventListener("turbo:load", initLocationsPage);
+document.addEventListener("DOMContentLoaded", initLocationsPage);
+
+// Init immediately to catch late-loading scripts
+initLocationsPage();

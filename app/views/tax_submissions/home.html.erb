@@ -10,8 +10,10 @@
       <a class="nav-link" data-bs-toggle="tab" href="#archived">Archived</a>
     </li>
 
-    <li class="ms-auto">
-      <!-- Button instead of link -->
+    <li class="ms-auto d-flex gap-2">
+      <% if current_user.company_id.present? %>
+        <%= link_to "Incoming Submissions", tax_submissions_path, class: "btn btn-outline-primary btn-md" %>
+      <% end %>
       <button class="btn btn-primary btn-md" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
         Submit Documents
       </button>

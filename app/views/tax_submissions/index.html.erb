@@ -1,0 +1,52 @@
+<% content_for :page_title, "Incoming Submissions" %>
+<%= javascript_include_tag "admin_client_submissions", "data-turbo-track": "reload", type: "module" %>
+
+<div class="container py-2 py-md-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="h4 mb-0">Incoming Submissions</h2>
+    <%= link_to "Back to Dashboard", root_path, class: "btn btn-outline-secondary btn-sm" %>
+  </div>
+
+  <ul class="custom_nav_tabs nav nav-tabs mb-3" id="submissionTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#activeSubmissions" type="button" role="tab" aria-controls="activeSubmissions" aria-selected="true">
+        Active Submissions
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archivedSubmissions" type="button" role="tab" aria-controls="archivedSubmissions" aria-selected="false">
+        Archived Submissions
+      </button>
+    </li>
+  </ul>
+
+  <div class="tab-content" id="submissionTabsContent">
+    <!-- Active Tab -->
+    <div class="tab-pane fade show active" id="activeSubmissions" role="tabpanel" aria-labelledby="active-tab">
+      <%= render partial: "submission_table_incoming", locals: { submissions: @unarchived_submissions, table_id: "taxSubmissionsTableActive", archived_table: false } %>
+    </div>
+
+    <!-- Archived Tab -->
+    <div class="tab-pane fade" id="archivedSubmissions" role="tabpanel" aria-labelledby="archived-tab">
+      <%= render partial: "submission_table_incoming", locals: { submissions: @archived_submissions, table_id: "taxSubmissionsTableArchived", archived_table: true } %>
+    </div>
+  </div>
+</div>
+
+<!-- View tax Modal -->
+<div class="modal fade" id="submissionModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title">Submission Overview</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="submissionModalBody">
+        <div class="text-center p-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-3">Loading...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
