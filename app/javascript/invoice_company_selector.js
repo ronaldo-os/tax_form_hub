@@ -33,12 +33,14 @@ export function initCompanySelector() {
         }, 300);
     });
 
-    // Hide dropdown on click outside
-    document.addEventListener('click', (e) => {
+    const clickHandler = (e) => {
         if (!input.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.classList.add('d-none');
         }
-    });
+    };
+
+    // Hide dropdown on click outside
+    document.addEventListener('click', clickHandler);
 
     function fetchCompanies(query) {
         if (spinner) spinner.classList.remove('d-none');
@@ -147,4 +149,9 @@ export function initCompanySelector() {
         });
         changeBtn.dataset.listenerAttached = "true";
     }
+
+    // Return cleanup function
+    return function cleanup() {
+        document.removeEventListener('click', clickHandler);
+    };
 }

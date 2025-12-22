@@ -1,25 +1,37 @@
 import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS, INVOICE_INFO_OPTIONAL_FIELDS, OPTIONAL_FIELDS } from "./long_select_options/options";
 import { initCompanySelector } from "./invoice_company_selector";
 
-if (
-  window.location.pathname === "/invoices/new" ||
-  window.location.pathname.match(/^\/invoices\/\d+\/edit$/) // matches /invoices/123/edit
-) {
-  // universal functions
-  function formatCurrency(value) {
-    if (value === null || value === undefined || value === '') return '0.00';
-    let num = parseFloat(String(value).replace(/,/g, ''));
-    if (isNaN(num)) num = 0;
-    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+// Variable to hold the cleanup function for company selector
+let companySelectorCleanup = null;
 
-  function parseCurrency(value) {
-    if (!value) return 0;
-    return parseFloat(String(value).replace(/,/g, '')) || 0;
-  }
+const initInvoiceForm = () => {
+  if (
+    window.location.pathname === "/invoices/new" ||
+    window.location.pathname.match(/^\/invoices\/\d+\/edit$/) // matches /invoices/123/edit
+  ) {
+    // Cleanup previous company selector listener if exists
+    if (companySelectorCleanup) {
+      companySelectorCleanup();
+      companySelectorCleanup = null;
+    }
 
-  $(document).ready(function () {
-    initCompanySelector();
+    // Cleanup previous document listeners for invoice form
+    $(document).off('.invoice_form');
+
+    // universal functions
+    function formatCurrency(value) {
+      if (value === null || value === undefined || value === '') return '0.00';
+      let num = parseFloat(String(value).replace(/,/g, ''));
+      if (isNaN(num)) num = 0;
+      return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function parseCurrency(value) {
+      if (!value) return 0;
+      return parseFloat(String(value).replace(/,/g, '')) || 0;
+    }
+
+    companySelectorCleanup = initCompanySelector();
     recalculateTotals();
 
     // Build options for optional fields dropdown
@@ -184,13 +196,13 @@ if (
 
 
     // Remove group inside #invoice_details_parent_div
-    $(document).on('click', '#invoice_details_parent_div .remove-group', function () {
+    $(document).on('click.invoice_form', '#invoice_details_parent_div .remove-group', function () {
       $(this).closest('[data-optional-group]').remove();
       updateInvoiceInfoJSON();
     });
 
     // Track input changes in optional fields inside #invoice_details_parent_div
-    $(document).on('input change', '#invoice_details_parent_div .optional-input, #invoice_details_parent_div [data-optional-group] input, #invoice_details_parent_div [data-optional-group] select, #invoice_details_parent_div [data-optional-group] textarea', function () {
+    $(document).on('input.invoice_form change.invoice_form', '#invoice_details_parent_div .optional-input, #invoice_details_parent_div [data-optional-group] input, #invoice_details_parent_div [data-optional-group] select, #invoice_details_parent_div [data-optional-group] textarea', function () {
       updateInvoiceInfoJSON();
     });
 
@@ -337,12 +349,12 @@ if (
     });
 
     // Handle input changes in payment term fields
-    $(document).on('input change', '.payment-term-input', function () {
+    $(document).on('input.invoice_form change.invoice_form', '.payment-term-input', function () {
       updatePaymentTermsJSON();
     });
 
     // Remove group
-    $(document).on('click', '.remove-group', function () {
+    $(document).on('click.invoice_form', '.remove-group', function () {
       $(this).closest('.payment-term-group').remove();
       updatePaymentTermsJSON();
     });
@@ -379,7 +391,7 @@ if (
 
     //----------------------------------------------------- PAYMENT TERMS LOCATIONS BUTTON TOGGLE
 
-    $(document).on('click', '.location-toggle-btn', function () {
+    $(document).on('click.invoice_form', '.location-toggle-btn', function () {
       const $btn = $(this);
       const type = $btn.data('type');
       const wrapperId = `#${type.toLowerCase().replace(/ /g, '_')}_selector_wrapper`;
@@ -437,7 +449,10 @@ if (
 
     //----------------------------------------------------- ADD FOOTER BUTTON TOGGLE
 
-    $(document).ready(function () {
+    //----------------------------------------------------- ADD FOOTER BUTTON TOGGLE
+
+    // Use a direct execution instead of document.ready inside the init function
+    (function () {
       const $button = $('.add-footer-toggle-btn');
       const $target = $('#footer_wrapper_parent_div');
       const $notes = $('#invoice_footer_notes');
@@ -450,19 +465,23 @@ if (
         $button.text('+ Add footer notes');
       }
 
-      // Toggle action
-      $button.on('click', function () {
+      // Toggle action - Use off().on() to prevent duplicate bindings if not using document delegation, 
+      // but since these are specific elements found by selector, just ensuring we don't double bind
+      $button.off('click').on('click', function () {
         $target.slideToggle(300, function () {
           const isVisible = $target.is(':visible');
           $button.text(isVisible ? '− Remove footer notes' : '+ Add footer notes');
         });
       });
-    });
+    })();
 
 
-    $(document).ready(function () {
+
+    // Initialize country select
+    (function () {
 
       const $select = $('#initial_delivery_details_country');
+
 
       if ($select.length) {
         $.each(COUNTRY_OPTIONS, function (i, country) {
@@ -526,7 +545,12 @@ if (
         updateRemoveButtons();
       });
 
-      $(document).on('click', '.toggle-dropdown', function () {
+      $('#add-line').off('click').on('click', function () {
+        $('#line-items').append(getLineItemHTML(lineIndex++));
+        updateRemoveButtons();
+      });
+
+      $(document).on('click.invoice_form', '.toggle-dropdown', function () {
         const $btn = $(this);
         const $currentLineItem = $btn.closest('tr');
         let $next = $currentLineItem.next();
@@ -652,7 +676,9 @@ if (
         ],
       };
 
-      $(document).on('change', 'select[name*="[optional_fields][discount.discount_type]"], select[name*="[optional_fields][charge.charge_type]"]', function () {
+
+
+      $(document).on('change.invoice_form', 'select[name*="[optional_fields][discount.discount_type]"], select[name*="[optional_fields][charge.charge_type]"]', function () {
         const $select = $(this);
         const selectedValue = $select.val();
         const $rowGroup = $select.closest('tr.optional-field-row');
@@ -673,7 +699,7 @@ if (
         }
       });
 
-      $(document).on('change', 'select[id^="additional_field_"]', function () {
+      $(document).on('change.invoice_form', 'select[id^="additional_field_"]', function () {
         const $select = $(this);
         const selectedKey = $select.val();
         const selectedText = $select.find("option:selected").text();
@@ -789,16 +815,17 @@ if (
       });
 
 
-      $(document).on('click', '.remove-group', function () {
+
+      $(document).on('click.invoice_form', '.remove-group', function () {
         $(this).closest('tr.optional-field-row').remove();
         updateCurrencyFields();
       });
 
 
       // Remove dynamically added group
-      $(document).on('click', '.remove-group', function () {
-        $(this).closest('tr.optional-field-row').remove();
-      });
+      /* Duplicate handler removed - already handled by the handler above */
+
+
 
       $('#add-discount-row').on('click', function () {
         const newRow = `
@@ -1146,17 +1173,17 @@ if (
     /*
     $('#recipient_company_id').on('change', function () {
       const selected = $(this).find('option:selected');
-
+    
       $('#company_name').text(selected.data('name') || '');
       $('#company_address').text(selected.data('address') || '');
       $('#company_country').text("Philippines");
       $('#company_number').text('Company ' + (selected.data('company-id-type') || '') + ' number : ' + (selected.data('company-id-number') || '-'));
       $('#company_tax_number').text('Tax ' + (selected.data('tax-id-type') || '') + ' number : ' + (selected.data('tax-id-number') || '-'));
-
+    
       $('#recipient-preview').removeClass('d-none');
       $('#recipient_company_id').addClass('d-none');
     });
-
+    
     $('#change-recipient').on('click', function (e) {
       e.preventDefault();
       $('#recipient-preview').addClass('d-none');
@@ -2249,8 +2276,10 @@ if (
           modal.show();
         });
       });
-    });
+    })();
 
 
-  });
-}
+  }
+};
+
+document.addEventListener("turbo:load", initInvoiceForm);
