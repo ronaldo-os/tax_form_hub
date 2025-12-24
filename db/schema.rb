@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_18_094348) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_24_085319) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -159,7 +159,9 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_18_094348) do
     t.string "company_name"
     t.bigint "company_id", null: false
     t.bigint "invoice_id", null: false
+    t.integer "user_transaction_id"
     t.index ["company_id"], name: "index_tax_submissions_on_company_id"
+    t.index ["email", "user_transaction_id"], name: "index_tax_submissions_on_email_and_user_transaction_id"
     t.index ["invoice_id"], name: "index_tax_submissions_on_invoice_id"
   end
 

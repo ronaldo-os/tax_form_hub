@@ -6,4 +6,13 @@ class TaxSubmission < ApplicationRecord
   belongs_to :invoice
 
   validates :company_id, :invoice_id, presence: true
+
+  before_create :set_transaction_id
+
+  private
+
+  def set_transaction_id
+    last_id = TaxSubmission.where(email: email).maximum(:user_transaction_id) || 0
+    self.user_transaction_id = last_id + 1
+  end
 end
