@@ -8,6 +8,18 @@
         <p class="fw-semibold fs-6"><%= @tax_submission.user_transaction_id %></p>
       </div>
 
+      <!-- Invoice # -->
+      <div class="col-md-4">
+        <p class="text-muted mb-1">Invoice #</p>
+        <p class="fw-semibold fs-6">
+          <% if @tax_submission.invoice %>
+            <%= link_to @tax_submission.invoice.invoice_number, invoice_path(@tax_submission.invoice), class: "text-decoration-none text-primary", target: "_blank" %>
+          <% else %>
+            N/A
+          <% end %>
+        </p>
+      </div>
+
       <!-- Status -->
       <div class="col-md-4">
         <p class="text-muted mb-1">Status</p>
@@ -23,15 +35,9 @@
       </div>
 
       <!-- Company -->
-      <div class="col-md-4">
+      <div class="col-md-12">
         <p class="text-muted mb-1">Company</p>
         <p class="fw-semibold fs-6"><%= @tax_submission.company&.name || @tax_submission.company_name %></p>
-      </div>
-
-      <!-- Invoice # -->
-      <div class="col-md-4">
-        <p class="text-muted mb-1">Invoice #</p>
-        <p class="fw-semibold fs-6"><%= @tax_submission.invoice&.invoice_number || "N/A" %></p>
       </div>
 
       <!-- Details -->
