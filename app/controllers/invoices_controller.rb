@@ -1,9 +1,11 @@
 class InvoicesController < ApplicationController
   def index
-    @invoices_sale = current_user.invoices.where(invoice_type: "sale", archived: false).order(issue_date: :desc)
-    @invoices_sale_archived = current_user.invoices.where(invoice_type: "sale", archived: true).order(issue_date: :desc)
-    @invoices_purchase = current_user.invoices.where(invoice_type: "purchase", archived: false).order(issue_date: :desc)
-    @invoices_purchase_archived = current_user.invoices.where(invoice_type: "purchase", archived: true).order(issue_date: :desc)
+    base_scope = current_user.invoices.includes(:recipient_company, :ship_from_location, :remit_to_location, :tax_representative_location)
+    
+    @invoices_sale = base_scope.where(invoice_type: "sale", archived: false).order(issue_date: :desc)
+    @invoices_sale_archived = base_scope.where(invoice_type: "sale", archived: true).order(issue_date: :desc)
+    @invoices_purchase = base_scope.where(invoice_type: "purchase", archived: false).order(issue_date: :desc)
+    @invoices_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true).order(issue_date: :desc)
 
     # month ranges (use Time.current so it respects time zone)
     current_month_range = Time.current.beginning_of_month..Time.current.end_of_month
@@ -27,9 +29,9 @@ class InvoicesController < ApplicationController
     @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
 
-    @ship_from_location = Location.find(@invoice.ship_from_location_id) if @invoice.ship_from_location_id.present?
-    @remit_to_location_id = Location.find(@invoice.remit_to_location_id) if @invoice.remit_to_location_id.present?
-    @tax_representative_location_id = Location.find(@invoice.tax_representative_location_id) if @invoice.tax_representative_location_id.present?
+    @ship_from_location = @invoice.ship_from_location
+    @remit_to_location_id = @invoice.remit_to_location
+    @tax_representative_location_id = @invoice.tax_representative_location
 
     respond_to do |format|
       format.html

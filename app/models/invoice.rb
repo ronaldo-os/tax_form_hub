@@ -2,6 +2,10 @@ class Invoice < ApplicationRecord
   belongs_to :user
   belongs_to :recipient_company, class_name: 'Company', optional: true
   belongs_to :recurring_origin_invoice, class_name: "Invoice", optional: true
+  
+  belongs_to :ship_from_location, class_name: "Location", optional: true
+  belongs_to :remit_to_location, class_name: "Location", optional: true
+  belongs_to :tax_representative_location, class_name: "Location", optional: true
   has_many :recurring_invoices, class_name: "Invoice", foreign_key: :recurring_origin_invoice_id
   has_many :tax_submissions
   has_many_attached :attachments

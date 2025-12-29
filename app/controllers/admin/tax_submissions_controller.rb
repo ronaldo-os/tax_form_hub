@@ -5,8 +5,12 @@ class Admin::TaxSubmissionsController < ApplicationController
 
 
   def index
-    @unarchived_submissions = TaxSubmission.where(archived: [false, nil]).order(created_at: :desc)
-    @archived_submissions = TaxSubmission.where(archived: true).order(created_at: :desc)
+    scope = TaxSubmission.includes(:company, :invoice)
+                         .with_attached_form_2307
+                         .with_attached_deposit_slip
+
+    @unarchived_submissions = scope.where(archived: [false, nil]).order(created_at: :desc)
+    @archived_submissions = scope.where(archived: true).order(created_at: :desc)
 
     if params[:q].present?
       @unarchived_submissions = @unarchived_submissions.where("email ILIKE ?", "%#{params[:q]}%")

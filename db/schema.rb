@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2025_12_24_085319) do
+ActiveRecord::Schema[7.2].define(version: 2025_12_29_073629) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -104,7 +104,10 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_24_085319) do
     t.integer "sale_from_id"
     t.boolean "archived", default: false
     t.integer "recurring_origin_invoice_id"
+    t.index ["recipient_company_id", "status"], name: "index_invoices_on_recipient_and_status"
+    t.index ["recurring_origin_invoice_id"], name: "index_invoices_on_recurring_origin_invoice_id"
     t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
+    t.index ["sale_from_id"], name: "index_invoices_on_sale_from_id"
     t.index ["ship_from_location_id"], name: "index_invoices_on_ship_from_location_id"
     t.index ["tax_representative_location_id"], name: "index_invoices_on_tax_representative_location_id"
     t.index ["user_id"], name: "index_invoices_on_user_id"
@@ -160,7 +163,12 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_24_085319) do
     t.bigint "company_id", null: false
     t.bigint "invoice_id", null: false
     t.integer "user_transaction_id"
+    t.index ["company_id", "archived", "created_at"], name: "index_tax_submissions_on_company_archived_created"
+    t.index ["company_id", "archived", "created_at"], name: "index_tax_submissions_on_company_archived_created_at", order: { created_at: :desc }
+    t.index ["company_id", "created_at"], name: "index_tax_submissions_on_company_id_and_created_at"
     t.index ["company_id"], name: "index_tax_submissions_on_company_id"
+    t.index ["email", "archived", "created_at"], name: "index_tax_submissions_on_email_archived_created"
+    t.index ["email", "created_at"], name: "index_tax_submissions_on_email_and_created_at"
     t.index ["email", "user_transaction_id"], name: "index_tax_submissions_on_email_and_user_transaction_id"
     t.index ["invoice_id"], name: "index_tax_submissions_on_invoice_id"
   end
@@ -175,6 +183,7 @@ ActiveRecord::Schema[7.2].define(version: 2025_12_24_085319) do
     t.datetime "updated_at", null: false
     t.string "role", default: "user"
     t.integer "company_id"
+    t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end

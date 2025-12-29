@@ -12,6 +12,10 @@ class TaxSubmissionsController < ApplicationController
     return redirect_to root_path, alert: "Access denied." unless current_user&.company_id.present?
 
     scope = TaxSubmission.where(company_id: current_user.company_id)
+                         .includes(:company, :invoice)
+                         .with_attached_form_2307
+                         .with_attached_deposit_slip
+
     @unarchived_submissions = scope.where(archived: [false, nil]).order(created_at: :desc)
     @archived_submissions = scope.where(archived: true).order(created_at: :desc)
 
@@ -22,7 +26,8 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def fetch_invoices
-    @invoices = current_user.invoices.where(
+    # Optimized to select only necessary columns (avoids loading full objects)
+    @invoices = current_user.invoices.select(:id, :invoice_number).where(
       recipient_company_id: params[:company_id],
       status: ["active", "sent", "draft"]
     )
@@ -86,9 +91,12 @@ class TaxSubmissionsController < ApplicationController
 
   def prepare_home_data
     @companies = current_user.connected_companies
-    @tax_submissions        = TaxSubmission.where(email: current_user.email).order(created_at: :desc)
-    @unarchived_submissions = TaxSubmission.where(email: current_user.email, archived: [false, nil]).order(created_at: :desc)
-    @archived_submissions   = TaxSubmission.where(email: current_user.email, archived: true).order(created_at: :desc)
+    
+    base_scope = TaxSubmission.where(email: current_user.email).includes(:company).with_attached_form_2307
+    
+    @tax_submissions        = base_scope.order(created_at: :desc)
+    @unarchived_submissions = base_scope.where(archived: [false, nil]).order(created_at: :desc)
+    @archived_submissions   = base_scope.where(archived: true).order(created_at: :desc)
   end
 
   def tax_submission_params
