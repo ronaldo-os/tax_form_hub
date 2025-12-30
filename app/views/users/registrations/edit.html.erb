@@ -66,43 +66,58 @@
             <% if @minimum_password_length %>
               <small class="text-muted d-block mb-2">(<%= @minimum_password_length %> characters minimum)</small>
             <% end %>
-            <div class="input-group input-group-lg">
+            <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:password].any? %>">
               <%= f.password_field :password,
                     autocomplete: "new-password",
-                    class: "form-control toggle-password-input rounded-start-3 border-end-0",
+                    class: "form-control toggle-password-input rounded-start-3 border-end-0 #{'is-invalid' if resource.errors[:password].any?}",
                     id: "password" %>
-              <span class="input-group-text bg-white rounded-end-3 border-start-0">
+              <span class="input-group-text bg-white rounded-end-3 border-start-0 <%= 'border-danger' if resource.errors[:password].any? %>">
                 <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
               </span>
             </div>
+            <% if resource.errors[:password].any? %>
+              <div class="text-danger small mt-2">
+                <%= resource.errors[:password].first.capitalize %>
+              </div>
+            <% end %>
           </div>
 
           <!-- Password Confirmation -->
           <div class="mb-4">
             <%= f.label :password_confirmation, class: "form-label fw-semibold" %>
-            <div class="input-group input-group-lg">
+            <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:password_confirmation].any? %>">
               <%= f.password_field :password_confirmation,
                     autocomplete: "new-password",
-                    class: "form-control toggle-password-input rounded-start-3 border-end-0",
+                    class: "form-control toggle-password-input rounded-start-3 border-end-0 #{'is-invalid' if resource.errors[:password_confirmation].any?}",
                     id: "password_confirmation" %>
-              <span class="input-group-text bg-white rounded-end-3 border-start-0">
+              <span class="input-group-text bg-white rounded-end-3 border-start-0 <%= 'border-danger' if resource.errors[:password_confirmation].any? %>">
                 <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
               </span>
             </div>
+            <% if resource.errors[:password_confirmation].any? %>
+              <div class="text-danger small mt-2">
+                <%= resource.errors[:password_confirmation].first.capitalize %>
+              </div>
+            <% end %>
           </div>
 
           <!-- Current Password -->
           <div class="mb-4">
             <%= f.label :current_password, "Current Password", class: "form-label fw-semibold" %>
-            <div class="input-group input-group-lg">
+            <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:current_password].any? %>">
               <%= f.password_field :current_password,
                     autocomplete: "current-password",
-                    class: "form-control toggle-password-input rounded-start-3 border-end-0",
+                    class: "form-control toggle-password-input rounded-start-3 border-end-0 #{'is-invalid' if resource.errors[:current_password].any?}",
                     id: "current_password" %>
-              <span class="input-group-text bg-white rounded-end-3 border-start-0">
+              <span class="input-group-text bg-white rounded-end-3 border-start-0 <%= 'border-danger' if resource.errors[:current_password].any? %>">
                 <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
               </span>
             </div>
+            <% if resource.errors[:current_password].any? %>
+              <div class="text-danger small mt-2">
+                <%= resource.errors[:current_password].first.capitalize %>
+              </div>
+            <% end %>
           </div>
 
           <!-- Actions -->

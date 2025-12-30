@@ -34,12 +34,14 @@ a {
 }
 
 .form-control:not(textarea),
-.form-select {
+.form-select,
+.input-group-text {
   height: calc(1.6em + 0.75rem + 2px);
 }
 
 .form-control,
-.form-select {
+.form-select,
+.input-group-text {
   padding: 0.375rem 0.75rem;
   font-size: 1rem;
   border-radius: var(--bs-border-radius-lg) !important;
@@ -53,9 +55,15 @@ a {
   margin-bottom: 5px;
 }
 
-input, select, textarea {
+input,
+select,
+textarea {
   border-radius: var(--bs-border-radius-md) !important;
   border: 1px solid #d1d1d1 !important;
+}
+
+.input-group .field_with_errors {
+  display: contents;
 }
 
 /* Buttons */
@@ -174,7 +182,13 @@ input, select, textarea {
 }
 
 /* Container */
-.container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+.container,
+.container-fluid,
+.container-lg,
+.container-md,
+.container-sm,
+.container-xl,
+.container-xxl {
   padding-left: calc(var(--bs-gutter-x) * 2);
 }
 
@@ -457,7 +471,8 @@ input, select, textarea {
   color: var(--app-clr, #00aeff);
 }
 
-.app-header .app-text, .app-bottom {
+.app-header .app-text,
+.app-bottom {
   margin-left: 8px;
 }
 
@@ -467,8 +482,8 @@ input, select, textarea {
   text-align: center !important;
 }
 
-table.dataTable.dtr-inline.collapsed > tbody > tr > td.dtr-control,
-table.dataTable.dtr-inline.collapsed > tbody > tr > td {
+table.dataTable.dtr-inline.collapsed>tbody>tr>td.dtr-control,
+table.dataTable.dtr-inline.collapsed>tbody>tr>td {
   text-align: left !important;
 }
 

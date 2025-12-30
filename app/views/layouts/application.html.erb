@@ -25,7 +25,7 @@
   <body data-devise="<%= devise_controller? %>" class="bg-light">
 
 
-  <% unless devise_controller? && !(controller_name == "registrations" && action_name == "edit") %>
+  <% unless devise_controller? && !(controller_name == "registrations" && (action_name == "edit" || action_name == "update")) %>
     <div class="app-menu-toggle" id="desktop_menu_toggle">
       <i class="fa-solid fa-chevron-right"></i>
     </div>
@@ -125,7 +125,7 @@
   <% end %>
 
 
-  <% if devise_controller? && !(controller_name == "registrations" && action_name == "edit") %>
+  <% if devise_controller? && !(controller_name == "registrations" && (action_name == "edit" || action_name == "update")) %>
     <%= yield %>
   <% end %>
 
