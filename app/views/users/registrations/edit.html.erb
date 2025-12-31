@@ -122,7 +122,7 @@
 
           <!-- Actions -->
           <div class="d-flex justify-content-between gap-3 mt-5">
-            <%= link_to "Back", root_path, class: "btn btn-light" %>
+            <%= link_to "Back", session[:profile_back_url] || root_path, class: "btn btn-light" %>
             <%= f.submit "Update Profile", class: "btn btn-primary", id: "update-profile-btn" %>
           </div>
 

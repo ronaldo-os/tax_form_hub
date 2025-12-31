@@ -374,7 +374,7 @@
                             style="width: 170px; height: 170px; display: flex; align-items: center; justify-content: center; background-color: #f9f9f9;">
                           <% if attachment.content_type.start_with?("image/") %>
                             <% begin %>
-                              <%= image_tag attachment.variant(resize_to_limit: [200, 200]).processed,
+                              <%= image_tag attachment,
                                     style: "max-width: 170px; max-height: 170px; object-fit: contain;",
                                     class: "d-block",
                                     alt: attachment.filename.to_s %>

@@ -1,6 +1,11 @@
 class Users::RegistrationsController < Devise::RegistrationsController
   before_action :configure_sign_up_params, only: [:create]
   before_action :configure_account_update_params, only: [:update]
+  before_action :store_profile_back_url, only: [:edit]
+
+  def edit
+    super
+  end
 
   def create
     build_resource(sign_up_params)
@@ -72,5 +77,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   def after_update_path_for(resource)
     edit_profile_path
+  end
+
+  private
+
+  def store_profile_back_url
+    return if request.referrer.blank?
+    return if request.referrer.include?(edit_profile_path)
+
+    session[:profile_back_url] = request.referrer
   end
 end

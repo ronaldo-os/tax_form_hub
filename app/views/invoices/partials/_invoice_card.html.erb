@@ -399,8 +399,9 @@
                   <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
                     <% if attachment.image? %>
                       <%= link_to url_for(attachment), target: "_blank" do %>
-                        <%= image_tag attachment.variant(resize_to_limit: [300, 300]),
-                                      class: "img-fluid rounded mb-2" %>
+                        <%= image_tag attachment,
+                                      class: "img-fluid rounded mb-2",
+                                      style: "max-height: 300px; object-fit: contain;" %>
                       <% end %>
                     <% elsif attachment.content_type == "application/pdf" %>
                       <%= link_to url_for(attachment), target: "_blank" do %>
