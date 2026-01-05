@@ -44,6 +44,13 @@ const initInvoiceForm = () => {
     $("#additional_field_0").html(buildOptions(OPTIONAL_FIELDS));
     $(".invoice_info_select").html(buildOptions(INVOICE_INFO_OPTIONAL_FIELDS));
 
+    // Suggest invoice number
+    $(document).on('click', '#use_suggested_invoice_number', function (e) {
+      e.preventDefault();
+      const suggested = $(this).text().trim();
+      $('input[name="invoice[invoice_number]"]').val(suggested);
+    });
+
 
     //----------------------------------------------------- INVOICE NUMBER SECTION: Add optional Field
 

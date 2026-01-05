@@ -47,6 +47,11 @@
 
             <%= f.label :invoice_number, class: "form-label" %>
             <%= f.text_field :invoice_number, class: "form-control", required: true %>
+            <% if @suggested_invoice_number.present? && @invoice.new_record? %>
+                <div class="form-text">
+                    Suggested: <a href="#" id="use_suggested_invoice_number" class="text-decoration-none"><%= @suggested_invoice_number %></a>
+                </div>
+            <% end %>
 
             <div class="row mt-3">
               <div class="col-md-6">

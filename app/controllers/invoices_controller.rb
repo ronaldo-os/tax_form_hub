@@ -69,6 +69,8 @@ class InvoicesController < ApplicationController
     else
       @invoice = Invoice.new
       last_invoice = Invoice.where(user_id: current_user.id).order(created_at: :desc).first
+      @suggested_invoice_number = next_invoice_number_suggestion
+
       if last_invoice
         @recipient_note = last_invoice.recipient_note if last_invoice.save_notes_for_future
         @footer_notes   = last_invoice.footer_notes   if last_invoice.save_footer_notes_for_future
@@ -510,5 +512,18 @@ class InvoicesController < ApplicationController
     end
 
     permitted
+  end
+
+  def next_invoice_number_suggestion
+    last_number = current_user.invoices.order(:created_at).pluck(:invoice_number).compact.last
+    return nil unless last_number
+
+    if last_number =~ /\d+$/
+      prefix = last_number.gsub(/\d+$/, "")
+      num = last_number.match(/(\d+)$/)[1].to_i + 1
+      "#{prefix}#{num.to_s.rjust(3, '0')}"
+    else
+      "#{last_number}-001"
+    end
   end
 end
