@@ -1904,6 +1904,60 @@ const initInvoiceForm = () => {
       updateCurrencyFields();
     });
 
+    // DataTransfer to manage file additions/removals
+    const attachmentDataTransfer = new DataTransfer();
+
+function updateNewAttachmentPreviews() {
+    const $container = $('#new_attachments_preview');
+    $container.empty();
+
+    Array.from(attachmentDataTransfer.files).forEach((file, index) => {
+        let contentHtml = '';
+        if (file.type.startsWith('image/')) {
+            const objectUrl = URL.createObjectURL(file);
+            contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 150px; object-fit: contain;">`;
+        } else {
+            contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
+        }
+
+        const html = `
+           <div class="col-md-3 mb-3">
+             <div class="card h-100 d-flex flex-column">
+               <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
+                 ${contentHtml}
+               </div>
+               <div class="p-2 text-center mt-auto border-top">
+                 <small class="d-block text-truncate w-100 mb-2 fw-bold" title="${file.name}">${file.name}</small>
+                 <button type="button" class="btn btn-sm btn-outline-danger remove-new-attachment w-100" data-index="${index}">
+                   <i class="bi bi-trash"></i> Remove
+                 </button>
+               </div>
+             </div>
+           </div>
+         `;
+        $container.append(html);
+    });
+}
+
+
+    $(document).on("click", ".remove-new-attachment", function () {
+      const index = $(this).data('index');
+      const dt = new DataTransfer();
+
+      Array.from(attachmentDataTransfer.files).forEach((file, i) => {
+        if (i !== index) {
+          dt.items.add(file);
+        }
+      });
+
+      attachmentDataTransfer.items.clear();
+      Array.from(dt.files).forEach(file => attachmentDataTransfer.items.add(file));
+
+      // Update input files
+      $('#attachments')[0].files = attachmentDataTransfer.files;
+      updateNewAttachmentPreviews();
+    });
+
     $(document).on("change", "#attachments", function () {
       const allowedTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf"];
       const maxSize = 10 * 1024 * 1024;
@@ -1915,29 +1969,50 @@ const initInvoiceForm = () => {
       $errorDiv.text("");
       let hasError = false;
 
+      // Add newly selected files to our DataTransfer object
+      // check for duplicates if necessary (optional), here we just append valid ones
       $.each(this.files, function (_, file) {
         if (!allowedTypes.includes(file.type)) {
           $errorDiv.text(file.name + " is not a valid file. Only JPEG, PNG, GIF, and PDF are allowed.");
-          $("#attachments").val("");
           hasError = true;
-          return false;
+          return true; // continue
         }
 
         if (file.size > maxSize) {
           $errorDiv.text(file.name + " exceeds the 10MB size limit.");
-          $("#attachments").val("");
           hasError = true;
-          return false;
+          return true; // continue
         }
+
+        // Add to DataTransfer
+        attachmentDataTransfer.items.add(file);
       });
 
+      // Clear the input value so the same file can be selected again if needed (though we just added it)
+      // Actually, we must set the input files to the DataTransfer files
+      this.files = attachmentDataTransfer.files;
+
       if (hasError) {
-        $saveDraftBtn.prop("disabled", true);
-        $sendBtn.prop("disabled", true);
-      } else {
+        // If there was an error with the *current* batch, we might want to clear the invalid ones
+        // For simplicity, we just show the error. The valid files from this batch were already added above.
+        // If we want to strictly block, we could clear everything, but that's annoying for users.
+        // We'll just disable buttons if there's an error message currently visible (or maybe just clear the message if valid ones exist?)
+        // Let's stick to the existing logic: if error, buttons disabled.
+
+        // If we have at least some valid files in the DataTransfer, maybe we should allow it?
+        // But the error text needs to be addressed.
+        // For now, let's just render what we have.
+      }
+
+      if (attachmentDataTransfer.files.length > 0 && !hasError) {
         $saveDraftBtn.prop("disabled", false);
         $sendBtn.prop("disabled", false);
+      } else if (hasError) {
+        $saveDraftBtn.prop("disabled", true);
+        $sendBtn.prop("disabled", true);
       }
+
+      updateNewAttachmentPreviews();
     });
 
     $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function (e) {
@@ -2269,6 +2344,110 @@ const initInvoiceForm = () => {
                     <h5 class="mb-3 fw-bold">Message:</h5>
                     <p>${invoice.note.replace(/\n/g, '<br>')}</p>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <hr>
+
+            <!-- Attachments Section -->
+            <div class="row">
+              <div class="col-12">
+                <h4 class="mb-3">Attachments</h4>
+                <div class="row" id="preview_attachments_container">
+                  ${(function () {
+            let attachmentsHtml = '';
+            let hasAttachments = false;
+
+            // 1. Existing Attachments
+            $('input[name="invoice[remove_attachment_ids][]"]').each(function () {
+              const $checkbox = $(this);
+              if (!$checkbox.is(':checked')) {
+                const $wrapper = $checkbox.closest('.border');
+                let filename = '';
+                let imgSrc = null;
+
+                const $img = $wrapper.find('img');
+                const $link = $wrapper.find('a');
+
+                if ($img.length) {
+                  filename = $img.attr('alt') || 'Image';
+                  imgSrc = $img.attr('src');
+                } else if ($link.length) {
+                  filename = $link.text().trim() || 'Document';
+                }
+
+                if (filename) {
+                  hasAttachments = true;
+                  let contentHtml = '';
+
+                  if (imgSrc) {
+                    contentHtml = `<img src="${imgSrc}" class="img-fluid rounded mb-2" style="max-height: 200px; object-fit: contain;">`;
+                  } else {
+                    contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
+                  }
+
+                  attachmentsHtml += `
+                                    <div class="col-md-4 mb-4 d-flex">
+                                      <div class="card h-100 w-100 d-flex flex-column">
+                                        <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
+                                          ${contentHtml}
+                                        </div>
+                                        <div class="text-center mt-auto bg-light py-2">
+                                           <div class="d-flex flex-column align-items-center">
+                                             <span class="mb-2 text-truncate" style="max-width: 100%;" title="${filename}">
+                                               ${filename}
+                                             </span>
+                                             <span class="badge bg-secondary">Existing</span>
+                                           </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                 `;
+                }
+              }
+            });
+
+            // 2. New Attachments
+            const fileInput = $('#attachments')[0];
+            if (fileInput && fileInput.files && fileInput.files.length > 0) {
+              hasAttachments = true;
+              Array.from(fileInput.files).forEach(file => {
+                let contentHtml = '';
+
+                // Check if it's an image
+                if (file.type.startsWith('image/')) {
+                  const objectUrl = URL.createObjectURL(file);
+                  contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 200px; object-fit: contain;">`;
+                } else {
+                  contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
+                }
+
+                attachmentsHtml += `
+                                <div class="col-md-4 mb-4 d-flex">
+                                  <div class="card h-100 w-100 d-flex flex-column">
+                                    <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
+                                      ${contentHtml}
+                                    </div>
+                                    <div class="text-center mt-auto bg-light py-2">
+                                       <div class="d-flex flex-column align-items-center">
+                                         <span class="mb-2 text-truncate" style="max-width: 100%;" title="${file.name}">
+                                           ${file.name}
+                                         </span>
+                                         <span class="badge bg-success">New</span>
+                                       </div>
+                                    </div>
+                                  </div>
+                                </div>
+                            `;
+              });
+            }
+
+            if (!hasAttachments) {
+              return '<p class="text-muted">No attachments uploaded.</p>';
+            }
+            return attachmentsHtml;
+          })()}
                 </div>
               </div>
             </div>
