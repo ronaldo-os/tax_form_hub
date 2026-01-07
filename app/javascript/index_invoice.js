@@ -203,6 +203,28 @@ function initInvoicePage() {
             }
         }
     });
+
+    // File list handler for dynamic modals
+    $(document).off('change', '.file-upload-input').on('change', '.file-upload-input', function () {
+        const $input = $(this);
+        const targetSelector = $input.data('list-target');
+        const isMultiple = $input.data('multiple');
+        const $list = $(targetSelector).empty();
+
+        const files = Array.from(this.files);
+        if (!files.length) return;
+
+        const displayFiles = isMultiple ? files : [files[0]];
+        displayFiles.forEach(file => {
+            const size = Math.round(file.size / 1024);
+            $list.append(`
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${file.name}
+                    <span class="badge bg-secondary rounded-pill">${size} KB</span>
+                </li>
+            `);
+        });
+    });
 }
 
 document.addEventListener("turbo:load", initInvoicePage);

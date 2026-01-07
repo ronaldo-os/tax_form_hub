@@ -114,6 +114,14 @@
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 
+              <% if table_id == "purchases-table" %>
+                 <li>
+                   <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#submitTaxModal-<%= invoice.id %>">
+                     Submit Tax Documents
+                   </a>
+                 </li>
+              <% end %>
+
               <% if invoice.archived? %>
                 <li>
                   <%= link_to "Unarchive", unarchive_invoice_path(invoice), method: :patch, class: "dropdown-item" %>
@@ -135,6 +143,9 @@
 
             </ul>
           </div>
+          <% if table_id == "purchases-table" %>
+            <%= render partial: 'invoices/partials/submit_tax_documents_modal', locals: { invoice: invoice } %>
+          <% end %>
         </td>
 
       </tr>

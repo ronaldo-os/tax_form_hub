@@ -65,11 +65,20 @@ class TaxSubmissionsController < ApplicationController
     if @tax_submission.save
       TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later
       TaxSubmissionMailer.notify_superadmins(@tax_submission).deliver_later
-      redirect_to root_path, notice: "Submission successful."
+      
+      if params[:redirect_url].present?
+        redirect_to params[:redirect_url], notice: "Submission successful."
+      else
+        redirect_to root_path, notice: "Submission successful."
+      end
     else
-      prepare_home_data if current_user
-      flash.now[:alert] = "Submission failed. Please check the form for errors."
-      render :home, status: :unprocessable_entity
+      if params[:redirect_url].present?
+        redirect_to params[:redirect_url], alert: "Submission failed. " + @tax_submission.errors.full_messages.join(", ")
+      else
+        prepare_home_data if current_user
+        flash.now[:alert] = "Submission failed. Please check the form for errors."
+        render :home, status: :unprocessable_entity
+      end
     end
   end
 
