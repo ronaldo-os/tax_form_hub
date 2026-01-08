@@ -1,13 +1,10 @@
 function initCompanyPage() {
-    // Only run if we are on the companies page (or consistent selector)
     if (!window.location.pathname.includes("/companies")) {
         return;
     }
 
     const $companyForm = $('form[action*="/companies"]');
     if ($companyForm.length === 0 && !window.location.pathname.endsWith("/new")) {
-        // Allow for new company page which might not have ID updates yet but does have form
-        // or just checking pathname is often enough if the JS is specific
     }
 
     function updateLabel(selectId, labelId, defaultText) {
