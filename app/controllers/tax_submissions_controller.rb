@@ -67,7 +67,13 @@ class TaxSubmissionsController < ApplicationController
       TaxSubmissionMailer.notify_superadmins(@tax_submission).deliver_later
       
       if params[:redirect_url].present?
-        redirect_to params[:redirect_url], notice: "Submission successful."
+        url = params[:redirect_url]
+        if url.include?("/invoices") && !url.include?("tab=")
+          tab = @tax_submission.invoice.invoice_type == 'purchase' ? 'purchases' : 'sales'
+          separator = url.include?('?') ? '&' : '?'
+          url = "#{url}#{separator}tab=#{tab}"
+        end
+        redirect_to url, notice: "Submission successful."
       else
         redirect_to root_path, notice: "Submission successful."
       end
