@@ -19,7 +19,7 @@ class TaxSubmission < ApplicationRecord
   end
 
   def set_transaction_id
-    last_id = TaxSubmission.where(email: email).maximum(:user_transaction_id) || 0
+    last_id = TaxSubmission.where(company_id: company_id).maximum(:user_transaction_id) || 0
     self.user_transaction_id = last_id + 1
   end
 end
