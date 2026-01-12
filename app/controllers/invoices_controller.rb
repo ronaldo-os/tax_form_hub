@@ -67,9 +67,9 @@ class InvoicesController < ApplicationController
       @save_footer_notes_for_future  = template.save_footer_notes_for_future
 
     else
-      @invoice = Invoice.new
-      last_invoice = Invoice.where(user_id: current_user.id).order(created_at: :desc).first
-      @suggested_invoice_number = next_invoice_number_suggestion
+      @invoice = Invoice.new(invoice_type: params[:invoice_type] || 'sale')
+      last_invoice = current_user.invoices.where(invoice_type: @invoice.invoice_type).order(created_at: :desc).first
+      @suggested_invoice_number = next_invoice_number_suggestion(@invoice.invoice_type)
 
       if last_invoice
         @recipient_note = last_invoice.recipient_note if last_invoice.save_notes_for_future
@@ -514,9 +514,9 @@ class InvoicesController < ApplicationController
     permitted
   end
 
-  def next_invoice_number_suggestion
-    last_number = current_user.invoices.order(:created_at).pluck(:invoice_number).compact.last
-    return nil unless last_number
+  def next_invoice_number_suggestion(type = 'sale')
+    last_number = current_user.invoices.where(invoice_type: type).order(:created_at).pluck(:invoice_number).compact.last
+    return "000-001" unless last_number  # Default for first invoice
 
     if last_number =~ /\d+$/
       prefix = last_number.gsub(/\d+$/, "")
