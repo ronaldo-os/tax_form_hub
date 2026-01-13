@@ -2,7 +2,9 @@
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "company", media: "all" %>
 <% end %>
-<%= javascript_include_tag "companies", "data-turbo-track": "reload", type: "module" %>
+<% content_for :javascripts do %>
+  <%= javascript_include_tag "companies", "data-turbo-track": "reload", type: "module" %>
+<% end %>
 
 <div class="container py-2 py-md-5">
   <div class="d-flex justify-content-end align-items-end mb-3">
@@ -15,7 +17,7 @@
       <div class="card shadow-sm rounded-3 border-0 mob-mb-4">
         <div class="card-body p-4">
 
-          <%= form_with(model: @company, local: true, html: { multipart: true }) do |f| %>            
+          <%= form_with(model: @company, local: true, html: { multipart: true, data: { turbo: false } }) do |f| %>            
             <!-- Profile Image -->
             <div class="mb-5 text-center">
               <div id="image-preview-wrapper" 
