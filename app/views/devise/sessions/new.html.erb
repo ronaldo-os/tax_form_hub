@@ -6,7 +6,16 @@
         <%= form_for(resource, as: resource_name, url: session_path(resource_name)) do |f| %>
           <div class="mb-3">
             <%= f.label :email, class: "form-label" %>
-            <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control" %>
+            <%= f.email_field :email,
+                  autofocus: true,
+                  autocomplete: "email",
+                  class: "form-control",
+                  data: {
+                    controller: "email-validation",
+                    action: "input->email-validation#validate",
+                    email_validation_target: "input"
+                  } %>
+            <div data-email-validation-target="error" class="invalid-feedback" style="display: none;"></div>
           </div>
 
           <div class="mb-3">

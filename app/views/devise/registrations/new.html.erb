@@ -7,7 +7,17 @@
 
           <div class="mb-3">
             <%= f.label :email, class: "form-label" %>
-            <%= f.email_field :email, autofocus: true, autocomplete: "email", class: "form-control", required: true %>
+            <%= f.email_field :email,
+                  autofocus: true,
+                  autocomplete: "email",
+                  class: "form-control",
+                  required: true,
+                  data: {
+                    controller: "email-validation",
+                    action: "input->email-validation#validate",
+                    email_validation_target: "input"
+                  } %>
+            <div data-email-validation-target="error" class="invalid-feedback" style="display: none;"></div>
           </div>
 
           <div class="mb-3">

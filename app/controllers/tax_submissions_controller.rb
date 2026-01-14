@@ -21,11 +21,23 @@ class TaxSubmissionsController < ApplicationController
     end
   end
 
-  def update
-    if @tax_submission.update(tax_submission_params)
-      redirect_back fallback_location: root_path, notice: "Submission updated."
+  def create
+    @tax_submission = TaxSubmission.new(tax_submission_params)
+    
+    if @tax_submission.save
+      redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
     else
-      redirect_back fallback_location: root_path, alert: "Failed to update."
+      redirect_back fallback_location: root_path, alert: "Failed to submit tax documents: #{@tax_submission.errors.full_messages.join(', ')}"
+    end
+  end
+
+  def update
+    redirect_target = params[:redirect_url].presence || root_path
+    
+    if @tax_submission.update(tax_submission_params)
+      redirect_to redirect_target, notice: "Submission updated."
+    else
+      redirect_to redirect_target, alert: "Failed to update."
     end
   end
 
