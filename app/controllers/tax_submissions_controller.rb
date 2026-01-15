@@ -22,7 +22,15 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def create
-    @tax_submission = TaxSubmission.new(tax_submission_params)
+    invoice = Invoice.find_by(id: tax_submission_params[:invoice_id])
+    
+    # Identify the target company (Issuer for Purchase, Recipient/MyCompany for Sale)
+    target_company = invoice&.sale_from || invoice&.recipient_company
+    
+    # Merge the correct company_id into params
+    submission_params = tax_submission_params.merge(company_id: target_company&.id)
+
+    @tax_submission = TaxSubmission.new(submission_params)
     
     if @tax_submission.save
       redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
@@ -44,23 +52,45 @@ class TaxSubmissionsController < ApplicationController
   private
 
   def load_submissions
-    # Assuming 'incoming' submissions means submissions sent to companies owned by the user.
-    company_ids = current_user.companies.pluck(:id)
+    # Show submissions that are EITHER:
+    # 1. Received BY my company ('incoming' - traditional view)
+    # 2. Sent FOR an invoice where I am the Recipient (I submitted it to the Vendor)
+    
+    my_company_ids = current_user.companies.pluck(:id)
     
     # Eager load associations
     scope = TaxSubmission.includes(:company, :invoice)
                          .with_attached_form_2307
                          .with_attached_deposit_slip
-                         .where(company_id: company_ids)
+                         
+    # Get invoices where I am the recipient
+    invoice_ids_where_i_am_recipient = Invoice.where(recipient_company_id: my_company_ids).select(:id)
 
-    @unarchived_submissions = scope.where(archived: [false, nil]).order(created_at: :desc)
-    @archived_submissions = scope.where(archived: true).order(created_at: :desc)
+    @unarchived_submissions = scope.where(company_id: my_company_ids)
+                                   .or(scope.where(invoice_id: invoice_ids_where_i_am_recipient))
+                                   .where(archived: [false, nil])
+                                   .order(created_at: :desc)
+                                   
+    @archived_submissions = scope.where(company_id: my_company_ids)
+                                 .or(scope.where(invoice_id: invoice_ids_where_i_am_recipient))
+                                 .where(archived: true)
+                                 .order(created_at: :desc)
     
     Rails.logger.info "DEBUG: Loaded #{@unarchived_submissions.count} unarchived submissions"
   end
 
   def set_tax_submission
-    @tax_submission = TaxSubmission.where(company_id: current_user.companies.pluck(:id)).find_by(id: params[:id])
+    # Allow finding submission if:
+    # 1. It belongs to one of my companies (Incoming)
+    # 2. It belongs to an invoice where I am the recipient (Outgoing)
+    
+    my_company_ids = current_user.companies.pluck(:id)
+    scope = TaxSubmission.all
+    invoice_ids_where_i_am_recipient = Invoice.where(recipient_company_id: my_company_ids).select(:id)
+    
+    @tax_submission = scope.where(company_id: my_company_ids)
+                           .or(scope.where(invoice_id: invoice_ids_where_i_am_recipient))
+                           .find_by(id: params[:id])
     
     unless @tax_submission
       respond_to do |format|

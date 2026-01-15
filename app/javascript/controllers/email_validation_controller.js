@@ -27,7 +27,7 @@ export default class extends Controller {
             this.errorTarget.style.display = "block"
 
             // Hide after 2 seconds
-            setTimeout(() => {
+            setTimeout(() => {1
                 this.hideError()
             }, 2000)
         }

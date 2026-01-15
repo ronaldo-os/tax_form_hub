@@ -1,6 +1,7 @@
 class Invoice < ApplicationRecord
   belongs_to :user
   belongs_to :recipient_company, class_name: 'Company', optional: true
+  belongs_to :sale_from, class_name: 'Company', optional: true
   belongs_to :recurring_origin_invoice, class_name: "Invoice", optional: true
   
   belongs_to :ship_from_location, class_name: "Location", optional: true
