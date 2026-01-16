@@ -208,7 +208,7 @@ class InvoicesController < ApplicationController
       duplicated_invoice = @invoice.dup
       duplicated_invoice.assign_attributes(
         user_id: recipient_user.id,
-        sale_from_id: @invoice.user.company&.id,
+        sale_from_id: @invoice.user.company&.id || @invoice.user.companies.first&.id,
         status: "pending",
         invoice_type: "purchase"
       )
@@ -284,7 +284,7 @@ class InvoicesController < ApplicationController
       duplicated_invoice = original.dup
       duplicated_invoice.assign_attributes(
         user_id: recipient_user.id,
-        sale_from_id: original.user.company&.id,
+        sale_from_id: original.user.company&.id || original.user.companies.first&.id,
         status: "pending",
         invoice_type: "purchase"
       )

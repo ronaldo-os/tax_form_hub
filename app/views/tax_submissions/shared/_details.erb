@@ -3,13 +3,13 @@
 
     <div class="row g-4">
       <!-- Submission ID -->
-      <div class="col-md-4">
+      <div class="col-md-3">
         <p class="text-muted mb-1">Transaction ID</p>
         <p class="fw-semibold fs-6"><%= @tax_submission.user_transaction_id %></p>
       </div>
 
       <!-- Invoice # -->
-      <div class="col-md-4">
+      <div class="col-md-3">
         <p class="text-muted mb-1">Invoice #</p>
         <p class="fw-semibold fs-6">
           <% if @tax_submission.invoice %>
@@ -21,7 +21,7 @@
       </div>
 
       <!-- Status -->
-      <div class="col-md-4">
+      <div class="col-md-3">
         <p class="text-muted mb-1">Status</p>
         <% if @tax_submission.reviewed? && @tax_submission.processed? %>
           <span class="badge rounded-pill bg-success px-3 py-2">Processed &amp; Reviewed</span>
@@ -34,12 +34,17 @@
         <% end %>
       </div>
 
+      <!-- Email -->
+      <div class="col-md-3">
+        <p class="text-muted mb-1">Email</p>
+        <p class="fw-semibold fs-6"><%= @tax_submission.email.presence || @tax_submission.invoice&.user&.email || "N/A" %></p>
+      </div>
+
       <!-- Company -->
       <div class="col-md-12">
         <p class="text-muted mb-1">Company</p>
-        <p class="fw-semibold fs-6"><%= @tax_submission.company&.name || @tax_submission.company_name %></p>
+        <p class="fw-semibold fs-6"><%= @tax_submission.invoice&.recipient_company&.name || @tax_submission.company&.name || @tax_submission.company_name %></p>
       </div>
-
       <!-- Details -->
       <div class="col-md-12">
         <p class="text-muted mb-1">Details</p>

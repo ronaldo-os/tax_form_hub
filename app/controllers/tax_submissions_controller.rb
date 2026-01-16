@@ -27,8 +27,11 @@ class TaxSubmissionsController < ApplicationController
     # Identify the target company (Issuer for Purchase, Recipient/MyCompany for Sale)
     target_company = invoice&.sale_from || invoice&.recipient_company
     
-    # Merge the correct company_id into params
-    submission_params = tax_submission_params.merge(company_id: target_company&.id)
+    # Merge the correct company_id and sender email into params
+    submission_params = tax_submission_params.merge(
+      company_id: target_company&.id,
+      email: tax_submission_params[:email].presence || current_user.email
+    )
 
     @tax_submission = TaxSubmission.new(submission_params)
     
@@ -59,7 +62,7 @@ class TaxSubmissionsController < ApplicationController
     my_company_ids = current_user.companies.pluck(:id)
     
     # Eager load associations
-    scope = TaxSubmission.includes(:company, :invoice)
+    scope = TaxSubmission.includes(:company, invoice: [:recipient_company, :user])
                          .with_attached_form_2307
                          .with_attached_deposit_slip
                          
@@ -67,12 +70,10 @@ class TaxSubmissionsController < ApplicationController
     invoice_ids_where_i_am_recipient = Invoice.where(recipient_company_id: my_company_ids).select(:id)
 
     @unarchived_submissions = scope.where(company_id: my_company_ids)
-                                   .or(scope.where(invoice_id: invoice_ids_where_i_am_recipient))
                                    .where(archived: [false, nil])
                                    .order(created_at: :desc)
                                    
     @archived_submissions = scope.where(company_id: my_company_ids)
-                                 .or(scope.where(invoice_id: invoice_ids_where_i_am_recipient))
                                  .where(archived: true)
                                  .order(created_at: :desc)
     
@@ -89,7 +90,6 @@ class TaxSubmissionsController < ApplicationController
     invoice_ids_where_i_am_recipient = Invoice.where(recipient_company_id: my_company_ids).select(:id)
     
     @tax_submission = scope.where(company_id: my_company_ids)
-                           .or(scope.where(invoice_id: invoice_ids_where_i_am_recipient))
                            .find_by(id: params[:id])
     
     unless @tax_submission

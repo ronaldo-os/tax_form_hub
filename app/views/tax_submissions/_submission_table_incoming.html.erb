@@ -29,8 +29,8 @@
 
             </td>
 
-            <td><%= submission.email.presence || "N/A" %></td>
-            <td><%= submission.company&.name || submission.company_name %></td>
+            <td><%= submission.email.presence || submission.invoice&.user&.email || "N/A" %></td>
+            <td><%= submission.invoice&.recipient_company&.name || submission.company&.name || submission.company_name %></td>
             <td><%= submission.invoice&.invoice_number %></td>
             <td><%= truncate(submission.details, length: 50) %></td>
 
