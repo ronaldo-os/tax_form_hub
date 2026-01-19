@@ -22,7 +22,26 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def create
+    # Validate invoice selection
+    if tax_submission_params[:invoice_id].blank?
+      @tax_submission = TaxSubmission.new(tax_submission_params)
+      @tax_submission.errors.add(:invoice_id, "must be selected")
+      @companies = current_user.companies
+      load_submissions
+      
+      respond_to do |format|
+        format.html { render :home }
+        format.turbo_stream { redirect_back fallback_location: root_path, alert: "Please select an invoice number." }
+      end
+      return
+    end
+    
     invoice = Invoice.find_by(id: tax_submission_params[:invoice_id])
+    
+    unless invoice
+      redirect_back fallback_location: root_path, alert: "The selected invoice could not be found. Please try again."
+      return
+    end
     
     # Identify the target company (Issuer for Purchase, Recipient/MyCompany for Sale)
     target_company = invoice&.sale_from || invoice&.recipient_company
@@ -38,7 +57,14 @@ class TaxSubmissionsController < ApplicationController
     if @tax_submission.save
       redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
     else
-      redirect_back fallback_location: root_path, alert: "Failed to submit tax documents: #{@tax_submission.errors.full_messages.join(', ')}"
+      error_message = @tax_submission.errors.full_messages.join(', ')
+      @companies = current_user.companies
+      load_submissions
+      
+      respond_to do |format|
+        format.html { render :home }
+        format.turbo_stream { redirect_back fallback_location: root_path, alert: "Failed to submit tax documents: #{error_message}" }
+      end
     end
   end
 
@@ -50,6 +76,36 @@ class TaxSubmissionsController < ApplicationController
     else
       redirect_to redirect_target, alert: "Failed to update."
     end
+  end
+
+  def fetch_invoices
+    company_id = params[:company_id]
+    
+    if company_id.blank?
+      render json: [], status: :ok
+      return
+    end
+    
+    # Find invoices where the selected company is involved
+    # For tax submissions, we want invoices where:
+    # 1. The company is the issuer (sale_from) - for purchase invoices
+    # 2. The company is the recipient - for sale invoices created by current user
+    invoices = Invoice.where(
+      "(sale_from_id = ? OR (recipient_company_id = ? AND user_id = ?))",
+      company_id,
+      company_id,
+      current_user.id
+    ).where(archived: [false, nil])
+     .order(created_at: :desc)
+     .select(:id, :invoice_number, :invoice_type, :created_at)
+    
+    render json: invoices.map { |inv| 
+      { 
+        id: inv.id, 
+        invoice_number: inv.invoice_number,
+        invoice_type: inv.invoice_type
+      } 
+    }
   end
 
   private

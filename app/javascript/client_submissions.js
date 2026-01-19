@@ -88,7 +88,8 @@ function initClientSubmissionsPage() {
         const companyId = $(this).val();
         const $invoiceSelect = $("#invoice_select");
 
-        $invoiceSelect.empty().append('<option value="">Select Invoice</option>');
+        // Clear and show loading state
+        $invoiceSelect.empty().append('<option value="">Loading invoices...</option>').prop('disabled', true);
 
         if (companyId) {
             $.ajax({
@@ -96,13 +97,30 @@ function initClientSubmissionsPage() {
                 data: { company_id: companyId },
                 dataType: "json",
                 success: function (data) {
-                    data.forEach(function (invoice) {
-                        $invoiceSelect.append(
-                            `<option value="${invoice.id}">${invoice.invoice_number}</option>`
-                        );
-                    });
+                    $invoiceSelect.empty().append('<option value="">Select Invoice</option>');
+
+                    if (data.length === 0) {
+                        $invoiceSelect.append('<option value="" disabled>No invoices available for this company</option>');
+                    } else {
+                        data.forEach(function (invoice) {
+                            $invoiceSelect.append(
+                                `<option value="${invoice.id}">${invoice.invoice_number}</option>`
+                            );
+                        });
+                    }
+                    $invoiceSelect.prop('disabled', false);
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error fetching invoices:", error);
+                    $invoiceSelect.empty().append('<option value="" disabled>Error loading invoices. Please try again.</option>');
+                    $invoiceSelect.prop('disabled', false);
+
+                    // Show user-friendly alert
+                    alert("Unable to load invoices. Please refresh the page and try again.");
                 }
             });
+        } else {
+            $invoiceSelect.empty().append('<option value="">Select Invoice</option>').prop('disabled', false);
         }
     });
 
@@ -114,6 +132,26 @@ function initClientSubmissionsPage() {
             submitModal.show();
         }
     }
+
+    // Form validation before submission
+    $(document).off("submit", "#submitDocsModal form").on("submit", "#submitDocsModal form", function (e) {
+        const companyId = $("#company_select").val();
+        const invoiceId = $("#invoice_select").val();
+
+        if (!companyId) {
+            e.preventDefault();
+            alert("Please select a company before submitting.");
+            return false;
+        }
+
+        if (!invoiceId) {
+            e.preventDefault();
+            alert("Please select an invoice number before submitting. If no invoices are available, please create an invoice first.");
+            return false;
+        }
+
+        return true;
+    });
 }
 
 document.addEventListener("turbo:load", initClientSubmissionsPage);

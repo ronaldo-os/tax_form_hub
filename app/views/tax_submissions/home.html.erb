@@ -62,6 +62,7 @@
             <div class="col-12">
               <%= f.label :invoice_id, "Invoice Number", class: "form-label fw-semibold small text-muted" %>
               <%= f.select :invoice_id, [], { prompt: "Select Invoice" }, { class: "form-select rounded-3", id: "invoice_select", required: true } %>
+              <small class="form-text text-muted">Please select a company first to load available invoices.</small>
             </div>
 
             <div class="col-12">
