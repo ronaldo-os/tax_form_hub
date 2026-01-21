@@ -4,12 +4,12 @@ class TaxSubmissionsController < ApplicationController
 
   def index
     Rails.logger.info "DEBUG: TaxSubmissionsController#index executing"
-    load_submissions
+    load_incoming_submissions
   end
 
   def home
     Rails.logger.info "DEBUG: TaxSubmissionsController#home executing"
-    load_submissions
+    load_sent_submissions
     @companies = current_user.companies
     @tax_submission = TaxSubmission.new # For the modal form
   end
@@ -43,8 +43,10 @@ class TaxSubmissionsController < ApplicationController
       return
     end
     
-    # Identify the target company (Issuer for Purchase, Recipient/MyCompany for Sale)
-    target_company = invoice&.sale_from || invoice&.recipient_company
+    # Identify the target company (Vendor for Purchase, Customer for Sale)
+    # For purchase: documents go to the seller (sale_from). If nil (manual), we try recipient_company.
+    # For sale: documents go to the customer (recipient_company).
+    target_company = invoice.invoice_type == 'purchase' ? (invoice.sale_from || invoice.recipient_company) : invoice.recipient_company
     
     # Merge the correct company_id and sender email into params
     submission_params = tax_submission_params.merge(
@@ -110,21 +112,10 @@ class TaxSubmissionsController < ApplicationController
 
   private
 
-  def load_submissions
-    # Show submissions that are EITHER:
-    # 1. Received BY my company ('incoming' - traditional view)
-    # 2. Sent FOR an invoice where I am the Recipient (I submitted it to the Vendor)
-    
+  def load_incoming_submissions
     my_company_ids = current_user.companies.pluck(:id)
+    scope = submission_scope
     
-    # Eager load associations
-    scope = TaxSubmission.includes(:company, invoice: [:recipient_company, :user])
-                         .with_attached_form_2307
-                         .with_attached_deposit_slip
-                         
-    # Get invoices where I am the recipient
-    invoice_ids_where_i_am_recipient = Invoice.where(recipient_company_id: my_company_ids).select(:id)
-
     @unarchived_submissions = scope.where(company_id: my_company_ids)
                                    .where(archived: [false, nil])
                                    .order(created_at: :desc)
@@ -132,8 +123,30 @@ class TaxSubmissionsController < ApplicationController
     @archived_submissions = scope.where(company_id: my_company_ids)
                                  .where(archived: true)
                                  .order(created_at: :desc)
+  end
+
+  def load_sent_submissions
+    my_company_ids = current_user.companies.pluck(:id)
+    scope = submission_scope
     
-    Rails.logger.info "DEBUG: Loaded #{@unarchived_submissions.count} unarchived submissions"
+    # Invoices where I am the creator or my company is the recipient (i.e., I'm the buyer)
+    related_invoice_ids = Invoice.where("user_id = ? OR recipient_company_id IN (?)", current_user.id, my_company_ids).pluck(:id)
+
+    @unarchived_submissions = scope.where(invoice_id: related_invoice_ids)
+                                   .where.not(company_id: my_company_ids) # Focus on what I sent to others
+                                   .where(archived: [false, nil])
+                                   .order(created_at: :desc)
+                                   
+    @archived_submissions = scope.where(invoice_id: related_invoice_ids)
+                                 .where.not(company_id: my_company_ids)
+                                 .where(archived: true)
+                                 .order(created_at: :desc)
+  end
+
+  def submission_scope
+    TaxSubmission.includes(:company, invoice: [:recipient_company, :user, :sale_from])
+                 .with_attached_form_2307
+                 .with_attached_deposit_slip
   end
 
   def set_tax_submission
@@ -157,6 +170,6 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def tax_submission_params
-    params.require(:tax_submission).permit(:reviewed, :processed, :archived, :company_id, :invoice_id, :details, :form_2307, deposit_slip: [])
+    params.require(:tax_submission).permit(:reviewed, :processed, :archived, :company_id, :invoice_id, :details, :email, :form_2307, deposit_slip: [])
   end
 end

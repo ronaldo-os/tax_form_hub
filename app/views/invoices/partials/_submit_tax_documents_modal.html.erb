@@ -10,30 +10,17 @@
       <div class="modal-body p-4 pt-0">
         <%= form_with model: TaxSubmission.new, url: tax_submissions_path, local: true, multipart: true do |f| %>
           <%= f.hidden_field :invoice_id, value: invoice.id %>
-          <% 
-             # For purchase invoices, we want the Issuer (sale_from).
-             # For sale invoices, we are the issuer, but the form asks for 'Company Name' which usually implies the counterparty?
-             # Actually, looking at the layout: 
-             # "Company Name" label suggests the Entity associated with the tax document.
-             # If I am submitting tax docs for a Purchase I made, I am submitting them TO the Vendor (Issuer).
-             # So the Company Name should be the Vendor's name.
-             
-             target_company = invoice.sale_from 
-             if target_company.nil? && invoice.invoice_type == 'sale'
-               # If sale, I am the issuer, so maybe it means my company? 
-               # Or more likely, there is no 'sale_from' on a sale invoice usually (it's implicit).
-               # But for Purchase invoice, sale_from is CRITICAL.
-               target_company = invoice.recipient_company 
-             end
-          %>
-          <%= f.hidden_field :company_id, value: (invoice.sale_from_id || (invoice.invoice_type == 'sale' ? invoice.recipient_company_id : nil)) %>
           <%= hidden_field_tag :redirect_url, invoices_path(request.query_parameters.merge(tab: invoice.invoice_type == 'purchase' ? 'purchases' : 'sales')) %>
+
 
           <div class="row g-3">
 
             <div class="col-12">
               <label class="form-label fw-semibold small text-muted" for="company_name_<%= invoice.id %>">Company Name</label>
-              <input class="form-control rounded-3" type="text" value="<%= (invoice.sale_from || (invoice.invoice_type == 'sale' ? invoice.recipient_company : nil))&.name || 'Unknown Company' %>" readonly disabled>
+              <% 
+                 target_company = invoice.invoice_type == 'purchase' ? (invoice.sale_from || invoice.recipient_company) : invoice.recipient_company
+              %>
+              <input class="form-control rounded-3" type="text" value="<%= target_company&.name || 'Unknown Company' %>" readonly disabled>
             </div>
 
             <div class="col-12">

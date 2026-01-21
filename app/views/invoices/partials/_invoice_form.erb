@@ -30,7 +30,9 @@
             <div id="recipient-preview" class="p-3 rounded border bg-light-subtle <%= current_recipient ? '' : 'd-none' %>">
               <h6 class="fw-bold mb-2" id="company_name"><%= current_recipient&.name %></h6>
               <p class="mb-1 text-muted" id="company_address"><%= current_recipient&.address %></p>
-              <p class="mb-1 text-muted" id="company_country">Philippines</p>
+              <p class="mb-1 text-muted" id="company_country" data-country="<%= current_recipient&.country %>">
+                <%= current_recipient&.country.presence || (current_recipient&.address.present? ? "Philippines" : "No country selected") %>
+              </p>
               <hr>
               <p class="mb-1 small"><strong id="company_number">Company <%= current_recipient&.company_id_type %> number : <%= current_recipient&.company_id_number || '-' %></strong></p>
               <p class="mb-0 small"><strong id="company_tax_number">Tax <%= current_recipient&.tax_id_type %> number : <%= current_recipient&.tax_id_number || '-' %></strong></p>

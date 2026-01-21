@@ -127,7 +127,8 @@ export function initCompanySelector() {
     function updatePreview(company) {
         document.getElementById('company_name').textContent = company.name || '';
         document.getElementById('company_address').textContent = company.address || '';
-        document.getElementById('company_country').textContent = "Philippines";
+        document.getElementById('company_country').textContent = company.country || (company.address ? "Philippines" : "No country selected");
+        document.getElementById('company_country').dataset.country = company.country || '';
 
         const companyIdStr = company.company_id_number || '-';
         const companyIdType = company.company_id_type || '';
