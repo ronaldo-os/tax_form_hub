@@ -20,6 +20,9 @@ class InvoicesController < ApplicationController
     @invoice_trends_purchase = build_invoice_trends(@invoices_purchase)
 
     @active_tab = params[:tab] || 'sales'
+
+    # HTTP Caching
+    fresh_when etag: [@invoices_sale, @invoices_purchase, @active_tab], last_modified: [@invoices_sale, @invoices_purchase].map { |s| s.maximum(:updated_at) }.compact.max
   end
 
 
@@ -32,6 +35,8 @@ class InvoicesController < ApplicationController
     @ship_from_location = @invoice.ship_from_location
     @remit_to_location_id = @invoice.remit_to_location
     @tax_representative_location_id = @invoice.tax_representative_location
+
+    fresh_when @invoice
 
     respond_to do |format|
       format.html
@@ -363,15 +368,11 @@ class InvoicesController < ApplicationController
       label       = month_start.strftime("%b")
 
       month_scope = relation.where(issue_date: month_start..month_end)
+      counts_by_status = month_scope.unscope(:order).group(:status).count
+      total_count = counts_by_status.values.sum
 
       statuses.each do |status|
-        count =
-          if status == "total"
-            month_scope.count
-          else
-            month_scope.where(status: status).count
-          end
-
+        count = (status == "total") ? total_count : (counts_by_status[status] || 0)
         trends[status] ||= []
         trends[status] << { month: label, count: count }
       end
@@ -384,15 +385,21 @@ class InvoicesController < ApplicationController
     statuses = %w[draft sent paid pending]
     stats = {}
 
+    relation_unscoped = relation.unscope(:order)
+
+    overall_counts = relation_unscoped.group(:status).count
+    current_counts = relation_unscoped.where(issue_date: current_range).group(:status).count
+    last_counts    = relation_unscoped.where(issue_date: last_range).group(:status).count
+
     (["total"] + statuses).each do |status|
       if status == "total"
-        overall = relation.count
-        current = relation.where(issue_date: current_range).count
-        last    = relation.where(issue_date: last_range).count
+        overall = overall_counts.values.sum
+        current = current_counts.values.sum
+        last    = last_counts.values.sum
       else
-        overall = relation.where(status: status).count
-        current = relation.where(status: status, issue_date: current_range).count
-        last    = relation.where(status: status, issue_date: last_range).count
+        overall = overall_counts[status] || 0
+        current = current_counts[status] || 0
+        last    = last_counts[status] || 0
       end
 
       percent_change =

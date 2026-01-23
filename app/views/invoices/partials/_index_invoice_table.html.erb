@@ -37,7 +37,7 @@
                             <div class="col-md-6 mb-3">
                             <% if file.content_type.start_with?("image/") %>
                                 <%= link_to url_for(file), target: "_blank" do %>
-                                <img src="<%= url_for(file) %>" class="img-fluid rounded border" alt="Attachment">
+                                <img src="<%= url_for(file) %>" class="img-fluid rounded border" alt="Attachment" loading="lazy">
                                 <% end %>
                             <% elsif file.content_type == "application/pdf" %>
                                 <div class="d-flex align-items-center justify-content-between border p-2 rounded">

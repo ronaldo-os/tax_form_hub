@@ -26,9 +26,25 @@ threads threads_count, threads_count
 # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
 port ENV.fetch("PORT", 3000)
 
+# Specifies the number of `workers` to boot in clustered mode.
+# Workers are forked internal processes to handle concurrent requests.
+workers ENV.fetch("WEB_CONCURRENCY") { 2 }
+
+# Use the `preload_app!` method when specifying a `workers` number.
+# This directive tells Puma to first boot the application and load code
+# before forking the application. This takes advantage of Copy On Write
+# process behavior so workers use less memory.
+preload_app!
+
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
 
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
+
+on_worker_boot do
+  # Worker specific setup for Rails 4.1+
+  # See: https://devcenter.heroku.com/articles/deploying-rails-applications-with-the-puma-web-server#on-worker-boot
+  ActiveRecord::Base.establish_connection if defined?(ActiveRecord)
+end

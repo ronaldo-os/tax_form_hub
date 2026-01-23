@@ -70,15 +70,19 @@
       <div class="card mb-4">
         <div class="card-body p-3">
           <h5>Active Sales</h5>
-          <%= render partial: 'invoices/partials/index_invoice_table',
-                     locals: { invoices: @invoices_sale, table_id: 'sales-table' } %>
+          <% cache [current_user, @invoices_sale, 'active'] do %>
+            <%= render partial: 'invoices/partials/index_invoice_table',
+                       locals: { invoices: @invoices_sale, table_id: 'sales-table' } %>
+          <% end %>
         </div>
       </div>
       <div class="card">
         <div class="card-body p-3">
           <h5>Archived Sales</h5>
-          <%= render partial: 'invoices/partials/index_invoice_table',
-                     locals: { invoices: @invoices_sale_archived, table_id: 'sales-archived-table' } %>
+          <% cache [current_user, @invoices_sale_archived, 'archived'] do %>
+            <%= render partial: 'invoices/partials/index_invoice_table',
+                       locals: { invoices: @invoices_sale_archived, table_id: 'sales-archived-table' } %>
+          <% end %>
         </div>
       </div>
     </div>
@@ -123,15 +127,19 @@
       <div class="card mb-4">
         <div class="card-body p-3">
           <h5>Active Purchases</h5>
-          <%= render partial: 'invoices/partials/index_invoice_table',
-                     locals: { invoices: @invoices_purchase, table_id: 'purchases-table' } %>
+          <% cache [current_user, @invoices_purchase, 'active'] do %>
+            <%= render partial: 'invoices/partials/index_invoice_table',
+                       locals: { invoices: @invoices_purchase, table_id: 'purchases-table' } %>
+          <% end %>
         </div>
       </div>
       <div class="card">
         <div class="card-body p-3">
           <h5 class="mt-4">Archived Purchases</h5>
-          <%= render partial: 'invoices/partials/index_invoice_table',
-                     locals: { invoices: @invoices_purchase_archived, table_id: 'purchases-archived-table' } %>
+          <% cache [current_user, @invoices_purchase_archived, 'archived'] do %>
+            <%= render partial: 'invoices/partials/index_invoice_table',
+                       locals: { invoices: @invoices_purchase_archived, table_id: 'purchases-archived-table' } %>
+          <% end %>
         </div>
       </div>
     </div>

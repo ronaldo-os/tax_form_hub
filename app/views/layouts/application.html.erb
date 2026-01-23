@@ -19,7 +19,7 @@
 
     <%= yield :stylesheets %>
 
-    <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module", defer: true %>
     <%= yield :javascripts %>
   </head>
   <body data-devise="<%= devise_controller? %>" class="bg-light">

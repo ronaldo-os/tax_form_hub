@@ -5,6 +5,7 @@ class TaxSubmissionsController < ApplicationController
   def index
     Rails.logger.info "DEBUG: TaxSubmissionsController#index executing"
     load_incoming_submissions
+    fresh_when etag: @unarchived_submissions, last_modified: @unarchived_submissions.maximum(:updated_at)
   end
 
   def home
@@ -12,6 +13,7 @@ class TaxSubmissionsController < ApplicationController
     load_sent_submissions
     @companies = current_user.companies
     @tax_submission = TaxSubmission.new # For the modal form
+    fresh_when etag: @unarchived_submissions, last_modified: @unarchived_submissions.maximum(:updated_at)
   end
 
   def show

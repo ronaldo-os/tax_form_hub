@@ -32,6 +32,7 @@ class RecurringInvoicesController < ApplicationController
         end
       end
     end
+    fresh_when etag: current_user.invoices, last_modified: current_user.invoices.maximum(:updated_at)
   end
 
   def update

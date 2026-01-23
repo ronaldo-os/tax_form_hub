@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_20_052345) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_23_095802) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -67,9 +67,32 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_20_052345) do
     t.index ["user_id"], name: "index_companies_on_user_id"
   end
 
+  create_table "credit_notes", force: :cascade do |t|
+    t.bigint "invoice_id", null: false
+    t.bigint "user_id", null: false
+    t.string "credit_note_number", null: false
+    t.decimal "credit_amount", precision: 12, scale: 2, null: false
+    t.string "currency", null: false
+    t.text "reason"
+    t.string "status", default: "issued"
+    t.date "issue_date", null: false
+    t.string "original_invoice_number"
+    t.bigint "created_by_user_id", null: false
+    t.datetime "created_by_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.jsonb "reference_data", default: {}
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_user_id"], name: "index_credit_notes_on_created_by_user_id"
+    t.index ["credit_note_number"], name: "index_credit_notes_on_credit_note_number", unique: true
+    t.index ["invoice_id", "status"], name: "index_credit_notes_on_invoice_and_status"
+    t.index ["invoice_id"], name: "index_credit_notes_on_invoice_id"
+    t.index ["user_id", "created_at"], name: "index_credit_notes_on_user_and_created_at"
+    t.index ["user_id"], name: "index_credit_notes_on_user_id"
+  end
+
   create_table "invoices", force: :cascade do |t|
     t.bigint "user_id"
-    t.string "recipient_company_id"
+    t.bigint "recipient_company_id"
     t.string "invoice_number"
     t.date "issue_date"
     t.string "currency"
@@ -102,9 +125,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_20_052345) do
     t.jsonb "total", default: {}, null: false
     t.string "invoice_type"
     t.string "status", default: "draft"
-    t.integer "sale_from_id"
+    t.bigint "sale_from_id"
     t.boolean "archived", default: false
-    t.integer "recurring_origin_invoice_id"
+    t.bigint "recurring_origin_invoice_id"
+    t.string "invoice_category", default: "standard"
+    t.bigint "credit_note_original_invoice_id"
     t.index ["recipient_company_id", "status"], name: "index_invoices_on_recipient_and_status"
     t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
     t.index ["ship_from_location_id"], name: "index_invoices_on_ship_from_location_id"
@@ -186,6 +211,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_20_052345) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "companies", "users"
+  add_foreign_key "credit_notes", "invoices"
+  add_foreign_key "credit_notes", "users"
+  add_foreign_key "credit_notes", "users", column: "created_by_user_id"
+  add_foreign_key "invoices", "invoices", column: "credit_note_original_invoice_id"
   add_foreign_key "invoices", "locations", column: "remit_to_location_id"
   add_foreign_key "invoices", "locations", column: "ship_from_location_id"
   add_foreign_key "invoices", "locations", column: "tax_representative_location_id"
