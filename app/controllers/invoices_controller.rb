@@ -52,6 +52,7 @@ class InvoicesController < ApplicationController
   def new
     @recipient_companies = current_user.connected_companies
     @locations_by_type = Location.all.group_by(&:location_type)
+    @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
 
     if params[:template_id].present?
       template = Invoice.find(params[:template_id])
@@ -96,6 +97,7 @@ class InvoicesController < ApplicationController
     @invoice = current_user.invoices.find(params[:id])
     @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
+    @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
   end
 
   def create

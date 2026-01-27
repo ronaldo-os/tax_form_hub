@@ -26,10 +26,66 @@ const initInvoiceForm = () => {
       return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function buildTaxOptions(selectedRate) {
+      if (!window.TAX_RATES) return '<option value="0">0%</option>';
+      let options = `<option value="" disabled ${selectedRate === undefined || selectedRate === null ? 'selected' : ''}>Select Tax</option>`;
+
+      window.TAX_RATES.forEach(tax => {
+        const isSelected = selectedRate !== undefined && selectedRate !== null && parseFloat(selectedRate) === parseFloat(tax.rate);
+        options += `<option value="${tax.rate}" ${isSelected ? 'selected' : ''}>${tax.name}</option>`;
+      });
+      options += `<option value="custom" class="fw-bold text-primary">+ Manage/Add Custom Tax</option>`;
+      return options;
+    }
+
     function parseCurrency(value) {
       if (!value) return 0;
       return parseFloat(String(value).replace(/,/g, '')) || 0;
     }
+
+    // Function to generate line item HTML (Unified)
+    function getLineItemHTML(index) {
+      return `
+        <tr class="line-item" data-line-index="${index}">
+          <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][item_id]" class="form-control item-id" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description" required></td>
+          <td><input type="number" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][unit]" class="form-control unit" value="pcs" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][price]" class="form-control price" required></td>
+          <td><select name="invoice[line_items_attributes][${index}][tax]" class="form-select tax" required>${buildTaxOptions()}</select></td>
+          <td class="text-end total">0.00</td>
+          <td>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
+          </td>
+        </tr>
+        <tr class="dropdown_per_line hidden" data-line-index="${index}">
+          <td colspan="3">
+            <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select optional-type">
+              <option value="">Add optional field</option>
+              ${buildOptions(OPTIONAL_FIELDS)}
+            </select>
+          </td>
+          <td colspan="6" class="optional-fields-container"></td>
+        </tr>
+      `;
+    }
+
+    let lineIndex = 1; // Global counter for new lines
+
+    function updateRemoveButtons() {
+      const lineItemCount = $('#line-items .line-item').length;
+      const discountItemCount = $('#line-items .discount-item').length;
+
+      // Hide all remove buttons by default
+      $('#line-items .remove-line').hide();
+
+      // If there is more than one item in total, show all remove buttons
+      if (lineItemCount + discountItemCount > 1) {
+        $('#line-items .remove-line').show();
+      }
+    }
+
 
     companySelectorCleanup = initCompanySelector();
     recalculateTotals();
@@ -499,62 +555,29 @@ const initInvoiceForm = () => {
         });
       }
 
-      let lineIndex = 1;
-
-      // Utility Functions
-      function updateRemoveButtons() {
-        const lineItemCount = $('#line-items .line-item').length;
-        const discountItemCount = $('#line-items .discount-item').length;
-
-        // Hide all remove buttons by default
-        $('#line-items .remove-line').hide();
-
-        // If there is more than one item in total, show all remove buttons
-        if (lineItemCount + discountItemCount > 1) {
-          if (lineItemCount === 1 && discountItemCount) {
-            $('#line-items .discount-item .remove-line').show();
-          } else {
-            $('#line-items .remove-line').show();
-          }
-        }
-      }
-
-      function getLineItemHTML(new_record_id) {
-        return `
-        <tr class="line-item" data-line-index="${new_record_id}">
-          <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][item_id]" class="form-control item-id" required></td>
-          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][description]" class="form-control description" required></td>
-          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][quantity]" class="form-control quantity" value="1" required></td>
-          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][unit]" class="form-control unit" value="pcs" required></td>
-          <td><input type="text" name="invoice[line_items_attributes][${new_record_id}][price]" class="form-control price" required></td>
-          <td><input type="number" name="invoice[line_items_attributes][${new_record_id}][tax]" class="form-control tax" step="0.01" required></td>
-          <td class="text-end total">0.00</td>
-          <td>
-            <button type="button" class="btn btn-sm btn-outline-danger remove-line">&minus;</button>
-          </td>
-        </tr>
-        <tr class="dropdown_per_line hidden">
-          <td colspan="3">
-            <select name="additional_field_${new_record_id}" id="additional_field_${new_record_id}" class="no-label form-select">
-              <option value="">Add optional field</option>
-              ${buildOptions(OPTIONAL_FIELDS)}
-            </select>
-          </td>
-          <td colspan="6"></td>
-        </tr>
-      `;
-      }
-
       // In your event listener for adding a line
-      $('#add-line').on('click', function () {
+      $('#add-line').off('click.invoice_form').on('click.invoice_form', function () {
         $('#line-items').append(getLineItemHTML(lineIndex++));
         updateRemoveButtons();
+        recalculateTotals();
       });
 
-      $('#add-line').off('click').on('click', function () {
-        $('#line-items').append(getLineItemHTML(lineIndex++));
-        updateRemoveButtons();
+      $(document).on('click.invoice_form', '.toggle-dropdown', function () {
+        const $btn = $(this);
+        const $currentLineItem = $btn.closest('tr');
+        let $next = $currentLineItem.next();
+        const $toggleRows = [];
+
+        while ($next.length && !$next.hasClass('line-item')) {
+          if ($next.hasClass('optional-field-row') || $next.hasClass('dropdown_per_line')) {
+            $toggleRows.push($next);
+          }
+          $next = $next.next();
+        }
+
+        const shouldShow = $toggleRows.length > 0 && !$toggleRows[0].is(':visible');
+        $toggleRows.forEach($row => $row.toggle(shouldShow));
+        $btn.text(shouldShow ? '−' : '+');
       });
 
       $(document).on('click.invoice_form', '.toggle-dropdown', function () {
@@ -806,6 +829,7 @@ const initInvoiceForm = () => {
         $dropdownRow.before(newRowHtml);
         $select.val('');
         updateCurrencyFields();
+        recalculateTotals();
 
         // ✅ Initialize Flatpickr for date fields (only show on click)
         $dropdownRow.prev().find('.flatpickr-date').each(function () {
@@ -815,7 +839,7 @@ const initInvoiceForm = () => {
             clickOpens: false,
           });
 
-          $(this).on('click', function () {
+          $(this).off('click').on('click', function () {
             fp.open();
           });
         });
@@ -917,7 +941,7 @@ const initInvoiceForm = () => {
       });
 
 
-    });
+    })();
 
     // Update hidden field for price_adjustments
     function updateDiscountsJSON() {
@@ -1165,12 +1189,13 @@ const initInvoiceForm = () => {
     }
 
     $(document).on(
-      'input change',
-      '#line-items .line-item input, #line-items .discount-item input, #line-items .discount-item select, .optional-field-row input, .optional-field-row select',
+      'input.invoice_form change.invoice_form',
+      '#line-items .line-item input, #line-items .line-item select, #line-items .discount-item input, #line-items .discount-item select, .optional-field-row input, .optional-field-row select',
       function () {
         recalculateTotals();
       }
     );
+
 
     // Auto-format price fields on blur
     $(document).on('blur', '.price, .amount, .optional-field-row input[placeholder="Amount"]', function () {
@@ -1395,32 +1420,6 @@ const initInvoiceForm = () => {
       }
     });
 
-    // Function to generate line item HTML
-    function getLineItemHTML(index) {
-      return `
-        <tr class="line-item" data-line-index="${index}">
-          <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-          <td><input type="text" name="invoice[line_items_attributes][${index}][item_id]" class="form-control item-id" required></td>
-          <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description" required></td>
-          <td><input type="number" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
-          <td><input type="text" name="invoice[line_items_attributes][${index}][unit]" class="form-control unit" value="pcs" required></td>
-          <td><input type="text" name="invoice[line_items_attributes][${index}][price]" class="form-control price" required></td>
-          <td><input type="number" name="invoice[line_items_attributes][${index}][tax]" class="form-control tax" step="0.01" required></td>
-          <td class="text-end total">0.00</td>
-          <td>
-            <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
-          </td>
-        </tr>
-        <tr class="dropdown_per_line" data-line-index="${index}">
-          <td colspan="3">
-            <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select optional-type">
-              ${buildOptions(OPTIONAL_FIELDS)}
-            </select>
-          </td>
-          <td colspan="6" class="optional-fields-container"></td>
-        </tr>
-      `;
-    }
 
     // Initialize line items from JSON data and show optional fields
     $(function () {
@@ -1445,7 +1444,17 @@ const initInvoiceForm = () => {
         $html.find('.quantity').val(item.quantity);
         $html.find('.unit').val(item.unit);
         $html.find('.price').val(formatCurrency(item.price));
-        $html.find('.tax').val(item.tax);
+
+        const $taxSelect = $html.find('.tax');
+        if (item.tax !== undefined && item.tax !== null) {
+          $taxSelect.val(item.tax);
+          // Legacy handling
+          if (!$taxSelect.val()) {
+            const customOpt = $(`<option value="${item.tax}">${item.tax}% (Custom)</option>`);
+            $taxSelect.find('option:last').before(customOpt);
+            $taxSelect.val(item.tax);
+          }
+        }
 
         if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
 
@@ -1907,17 +1916,17 @@ const initInvoiceForm = () => {
     // DataTransfer to manage file additions/removals
     const attachmentDataTransfer = new DataTransfer();
 
-function updateNewAttachmentPreviews() {
-    const $container = $('#new_attachments_preview');
-    $container.empty();
+    function updateNewAttachmentPreviews() {
+      const $container = $('#new_attachments_preview');
+      $container.empty();
 
-    Array.from(attachmentDataTransfer.files).forEach((file, index) => {
+      Array.from(attachmentDataTransfer.files).forEach((file, index) => {
         let contentHtml = '';
         if (file.type.startsWith('image/')) {
-            const objectUrl = URL.createObjectURL(file);
-            contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 150px; object-fit: contain;">`;
+          const objectUrl = URL.createObjectURL(file);
+          contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 150px; object-fit: contain;">`;
         } else {
-            contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
+          contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
         }
 
         const html = `
@@ -1936,8 +1945,8 @@ function updateNewAttachmentPreviews() {
            </div>
          `;
         $container.append(html);
-    });
-}
+      });
+    }
 
 
     $(document).on("click", ".remove-new-attachment", function () {
@@ -1993,15 +2002,6 @@ function updateNewAttachmentPreviews() {
       this.files = attachmentDataTransfer.files;
 
       if (hasError) {
-        // If there was an error with the *current* batch, we might want to clear the invalid ones
-        // For simplicity, we just show the error. The valid files from this batch were already added above.
-        // If we want to strictly block, we could clear everything, but that's annoying for users.
-        // We'll just disable buttons if there's an error message currently visible (or maybe just clear the message if valid ones exist?)
-        // Let's stick to the existing logic: if error, buttons disabled.
-
-        // If we have at least some valid files in the DataTransfer, maybe we should allow it?
-        // But the error text needs to be addressed.
-        // For now, let's just render what we have.
       }
 
       if (attachmentDataTransfer.files.length > 0 && !hasError) {
@@ -2016,7 +2016,6 @@ function updateNewAttachmentPreviews() {
     });
 
     $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function (e) {
-      payment_terms_json_edit
       let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : this.id === "view_invoice_btn" ? "#view_invoicepayment_terms_json" : "#payment_terms_json_edit";
       if (!$(inputId).val() || $(inputId).val() === "[]" || $(inputId).val() === "{}") {
         e.preventDefault();
@@ -2025,7 +2024,7 @@ function updateNewAttachmentPreviews() {
     });
 
     // Invoice Preview Modal
-    $(document).ready(function () {
+    (function () {
       const $previewBtn = $('#preview-invoice-btn');
       const $previewCard = $('#invoicePreviewCard');
       const modal = new bootstrap.Modal($('#invoicePreviewModal')[0]);
@@ -2465,6 +2464,163 @@ function updateNewAttachmentPreviews() {
     })();
 
 
+    // -------------------------------------------------------------------------
+    // TAX MANAGEMENT LOGIC
+    // -------------------------------------------------------------------------
+
+    // 1. Open Modal on Custom Selection
+    $(document).on('change.invoice_form', '.tax', function () {
+      if ($(this).val() === 'custom') {
+        const modalEl = document.getElementById('taxManagementModal');
+        if (modalEl) {
+          const bs = (typeof bootstrap !== 'undefined') ? bootstrap : (window.bootstrap || null);
+          if (bs && bs.Modal) {
+            const modal = bs.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+          } else {
+            console.error("Bootstrap is not defined");
+            alert("Unable to open settings. Please refresh the page.");
+          }
+        }
+        $(this).val(''); // Reset to avoid sticking on "custom"
+      }
+    });
+
+    // 2. Populate Modal List
+    const $modalEl = $('#taxManagementModal');
+    if ($modalEl.length) {
+      $modalEl.off('shown.bs.modal').on('shown.bs.modal', function () {
+        renderTaxList();
+        $('#new-tax-name').val('');
+        $('#new-tax-rate').val('');
+        $('#tax-error').text('');
+      });
+    }
+
+    function renderTaxList() {
+      const $list = $('#tax-rate-list');
+      $list.empty();
+
+      if (!window.TAX_RATES) return;
+
+      window.TAX_RATES.forEach(tax => {
+        const isSystem = !tax.custom;
+        const deleteBtn = isSystem ? '' :
+          `<button class="btn btn-sm btn-outline-danger delete-tax-btn float-end" data-id="${tax.id}" style="font-size: 0.7rem;">Delete</button>`;
+
+        const item = `
+            <li class="list-group-item">
+              <span class="fw-bold">${tax.name}</span> (${tax.rate}%)
+              ${deleteBtn}
+            </li>
+          `;
+        $list.append(item);
+      });
+    }
+
+    // 3. Add Tax Rate
+    $('#add-tax-btn').off('click').on('click', function (e) {
+      e.preventDefault();
+      const name = $('#new-tax-name').val().trim();
+      const rate = $('#new-tax-rate').val();
+
+      if (!name || !rate) {
+        $('#tax-error').text('Name and Rate are required.');
+        return;
+      }
+
+      const rateNum = parseFloat(rate);
+      if (isNaN(rateNum) || rateNum < 0 || rateNum > 100) {
+        $('#tax-error').text('Rate must be between 0 and 100.');
+        return;
+      }
+
+      const $btn = $(this);
+      $btn.prop('disabled', true).text('Adding...');
+
+      $.ajax({
+        url: '/tax_rates',
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        data: { tax_rate: { name: name, rate: rate } },
+        success: function (response) {
+          if (response.success) {
+            const newTax = {
+              id: response.tax_rate.id,
+              name: response.tax_rate.name,
+              rate: response.tax_rate.rate,
+              custom: true
+            };
+
+            window.TAX_RATES.push(newTax);
+            refreshAllTaxSelects(newTax.rate);
+            renderTaxList();
+
+            $('#new-tax-name').val('');
+            $('#new-tax-rate').val('');
+            $('#tax-error').text('');
+
+            // Hide modal
+            const modalEl = document.getElementById('taxManagementModal');
+            if (modalEl) {
+              const modal = bootstrap.Modal.getInstance(modalEl);
+              if (modal) modal.hide();
+            }
+          }
+        },
+        error: function (xhr) {
+          const err = xhr.responseJSON?.errors?.join(', ') || 'Failed to add tax rate.';
+          $('#tax-error').text(err);
+        },
+        complete: function () {
+          $btn.prop('disabled', false).text('Add');
+        }
+      });
+    });
+
+    // 4. Delete Tax Rate
+    $(document).on('click.invoice_form', '.delete-tax-btn', function () {
+      if (!confirm('Are you sure you want to delete this custom tax rate?')) return;
+
+      const id = $(this).data('id');
+      const $btn = $(this);
+      $btn.prop('disabled', true).text('...');
+
+      $.ajax({
+        url: `/tax_rates/${id}`,
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function (response) {
+          if (response.success) {
+            window.TAX_RATES = window.TAX_RATES.filter(t => t.id != id);
+            renderTaxList();
+            refreshAllTaxSelects();
+          }
+        },
+        error: function () {
+          alert('Failed to delete tax rate.');
+          $btn.prop('disabled', false).text('Delete');
+        }
+      });
+    });
+
+    function refreshAllTaxSelects(newRateToSelect) {
+      $('.tax').each(function () {
+        const $select = $(this);
+        const currentVal = $select.val();
+
+        // Rebuild options
+        const targetVal = (currentVal && currentVal !== 'custom') ? currentVal : newRateToSelect;
+
+        const newHtml = buildTaxOptions(targetVal);
+        $select.html(newHtml);
+      });
+      recalculateTotals();
+    }
   }
 };
 
