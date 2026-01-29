@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_01_27_015250) do
+ActiveRecord::Schema[7.2].define(version: 2026_01_28_002920) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -204,6 +204,15 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_27_015250) do
     t.index ["invoice_id"], name: "index_tax_submissions_on_invoice_id"
   end
 
+  create_table "units", force: :cascade do |t|
+    t.string "name"
+    t.bigint "company_id"
+    t.boolean "custom", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_units_on_company_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -237,4 +246,5 @@ ActiveRecord::Schema[7.2].define(version: 2026_01_27_015250) do
   add_foreign_key "tax_rates", "companies"
   add_foreign_key "tax_submissions", "companies"
   add_foreign_key "tax_submissions", "invoices"
+  add_foreign_key "units", "companies"
 end

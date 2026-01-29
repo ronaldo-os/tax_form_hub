@@ -2,6 +2,7 @@ class Company < ApplicationRecord
   has_one_attached :profile_image
   has_many :recommendations, dependent: :destroy
   has_many :networks, dependent: :destroy
+  has_many :units, dependent: :destroy
   belongs_to :user, optional: true
 
   INDUSTRIES = [

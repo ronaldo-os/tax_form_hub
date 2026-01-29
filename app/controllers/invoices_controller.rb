@@ -53,6 +53,7 @@ class InvoicesController < ApplicationController
     @recipient_companies = current_user.connected_companies
     @locations_by_type = Location.all.group_by(&:location_type)
     @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
+    @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
 
     if params[:template_id].present?
       template = Invoice.find(params[:template_id])
@@ -98,6 +99,7 @@ class InvoicesController < ApplicationController
     @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
     @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
+    @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
   end
 
   def create
@@ -110,6 +112,7 @@ class InvoicesController < ApplicationController
     @invoice = current_user.invoices.build(clean_params)
     @invoice.invoice_type ||= "sale"
     @invoice.status ||= "draft"
+    @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
 
     if params[:invoice][:line_items_attributes].present?
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
@@ -180,6 +183,10 @@ class InvoicesController < ApplicationController
         redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
       end
     else
+      @recipient_companies = current_user.connected_companies
+      @locations_by_type = current_user.locations.group_by(&:location_type)
+      @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
+      @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
       render :edit
     end
   end

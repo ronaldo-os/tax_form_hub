@@ -38,6 +38,23 @@ const initInvoiceForm = () => {
       return options;
     }
 
+    function buildUnitOptions(selectedUnit) {
+      if (!window.UNIT_OPTIONS || window.UNIT_OPTIONS.length === 0) {
+        let opts = `<option value="pcs" ${selectedUnit === 'pcs' ? 'selected' : ''}>pcs</option>`;
+        opts += `<option value="custom" class="fw-bold text-primary">+ Manage/Add Unit</option>`;
+        return opts;
+      }
+      let baseOpts = '';
+      window.UNIT_OPTIONS.forEach(u => {
+        baseOpts += `<option value="${u.name}" ${u.name === selectedUnit ? 'selected' : ''}>${u.name}</option>`;
+      });
+      if (selectedUnit && selectedUnit !== 'custom' && !window.UNIT_OPTIONS.find(u => u.name === selectedUnit)) {
+        baseOpts = `<option value="${selectedUnit}" selected>${selectedUnit} (Legacy)</option>` + baseOpts;
+      }
+      baseOpts += `<option value="custom" class="fw-bold text-primary">+ Manage/Add Unit</option>`;
+      return baseOpts;
+    }
+
     function parseCurrency(value) {
       if (!value) return 0;
       return parseFloat(String(value).replace(/,/g, '')) || 0;
@@ -50,8 +67,8 @@ const initInvoiceForm = () => {
           <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][item_id]" class="form-control item-id" required></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description" required></td>
-          <td><input type="number" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
-          <td><input type="text" name="invoice[line_items_attributes][${index}][unit]" class="form-control unit" value="pcs" required></td>
+          <td><input type="text" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
+          <td><select name="invoice[line_items_attributes][${index}][unit]" class="form-select unit" required>${buildUnitOptions('pcs')}</select></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][price]" class="form-control price" required></td>
           <td><select name="invoice[line_items_attributes][${index}][tax]" class="form-select tax" required>${buildTaxOptions()}</select></td>
           <td class="text-end total">0.00</td>
@@ -89,6 +106,78 @@ const initInvoiceForm = () => {
 
     companySelectorCleanup = initCompanySelector();
     recalculateTotals();
+
+    // Unit Management Logic
+    function updateUnitList() {
+      const $list = $('#unit-list');
+      $list.empty();
+      if (!window.UNIT_OPTIONS) return;
+      window.UNIT_OPTIONS.forEach(u => {
+        const deleteBtn = u.custom ? `<button class="btn btn-sm btn-outline-danger delete-unit-btn" data-id="${u.id}">&times;</button>` : '';
+        $list.append(`<li class="list-group-item d-flex justify-content-between align-items-center">${u.name} ${deleteBtn}</li>`);
+      });
+    }
+
+    $(document).on('change.invoice_form', '.unit', function () {
+      if ($(this).val() === 'custom') {
+        const modalId = 'unitManagementModal';
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+          const modal = new bootstrap.Modal(modalElement);
+          updateUnitList();
+          modal.show();
+        }
+        // Revert selection to avoid staying on 'custom'
+        // If it's a new line, default to pcs. If editing, ideally we'd revert to previous, 
+        // but for now pcs is a safe fallback for the UI state.
+        $(this).val('pcs');
+      }
+    });
+
+    $('#add-unit-btn').on('click', function () {
+      const name = $('#new-unit-name').val();
+      if (!name) return;
+      $('#unit-error').text("");
+      $.ajax({
+        url: '/units',
+        method: 'POST',
+        dataType: 'json',
+        headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') },
+        data: { unit: { name: name } },
+        success: function (resp) {
+          window.UNIT_OPTIONS.push({ id: resp.id, name: resp.name, custom: true });
+          updateUnitList();
+          $('#new-unit-name').val('');
+          $('.unit').each(function () {
+            const val = $(this).val();
+            $(this).html(buildUnitOptions(val));
+            $(this).val(val);
+          });
+        },
+        error: function (err) {
+          $('#unit-error').text("Failed to add unit. It might already exist.");
+        }
+      });
+    });
+
+    $(document).on('click', '.delete-unit-btn', function () {
+      const id = $(this).data('id');
+      $.ajax({
+        url: `/units/${id}`,
+        method: 'DELETE',
+        dataType: 'json',
+        headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') },
+        success: function () {
+          window.UNIT_OPTIONS = window.UNIT_OPTIONS.filter(u => u.id != id);
+          updateUnitList();
+          $('.unit').each(function () {
+            const val = $(this).val();
+            $(this).html(buildUnitOptions(val));
+            $(this).val(val);
+          });
+        }
+      });
+    });
 
     // Build options for optional fields dropdown
     function buildOptions(fields) {
@@ -1442,7 +1531,9 @@ const initInvoiceForm = () => {
         $html.find('.item-id').val(item.item_id);
         $html.find('.description').val(item.description);
         $html.find('.quantity').val(item.quantity);
-        $html.find('.unit').val(item.unit);
+        const $unitSelect = $html.find('.unit');
+        $unitSelect.html(buildUnitOptions(item.unit));
+        $unitSelect.val(item.unit);
         $html.find('.price').val(formatCurrency(item.price));
 
         const $taxSelect = $html.find('.tax');

@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   resources :networks, only: [:index, :create, :destroy]
   get "invoices/index"
   resources :tax_rates, only: [:create, :destroy]
+  resources :units, only: [:create, :destroy]
   devise_for :users, controllers: {
     registrations: 'users/registrations',
     passwords: "users/passwords"

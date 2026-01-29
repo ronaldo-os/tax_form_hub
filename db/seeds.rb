@@ -23,3 +23,12 @@ else
   superadmin.update!(company: company)
   puts "✅ Company created and linked to Superadmin: #{company.name}"
 end
+
+# Seed standard units
+standard_units = ["pcs", "h", "kg", "box"]
+standard_units.each do |unit_name|
+  Unit.find_or_create_by!(name: unit_name, company: nil) do |u|
+    u.custom = false
+  end
+end
+puts "✅ Standard units seeded: #{standard_units.join(', ')}"
