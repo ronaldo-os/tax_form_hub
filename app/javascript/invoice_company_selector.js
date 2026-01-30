@@ -12,11 +12,21 @@ export function initCompanySelector() {
 
     let debounceTimer;
 
-    // On focus, load defaults (user's network)
+    // Pre-fetch network list immediately on init
+    fetchCompanies('');
+
+    // On focus, show dropdown if not already visible
     input.addEventListener('focus', () => {
-        if (input.dataset.loadedDefault !== "true") {
-            fetchCompanies('');
+        if (input.dataset.loadedDefault === "true") {
+            dropdown.classList.remove('d-none');
         } else {
+            fetchCompanies('');
+        }
+    });
+
+    // Use mousedown for faster response than click/focus
+    input.addEventListener('mousedown', () => {
+        if (input.dataset.loadedDefault === "true") {
             dropdown.classList.remove('d-none');
         }
     });
@@ -45,8 +55,17 @@ export function initCompanySelector() {
     function fetchCompanies(query) {
         if (spinner) spinner.classList.remove('d-none');
 
+        // If query is empty and we haven't loaded defaults, show a small loading indicator in dropdown too
+        if (query === '' && input.dataset.loadedDefault !== "true") {
+            dropdown.innerHTML = '<div class="list-group-item text-muted small"><div class="spinner-border spinner-border-sm me-2" role="status"></div>Loading network...</div>';
+            dropdown.classList.remove('d-none');
+        }
+
         fetch(`/networks.json?query=${encodeURIComponent(query)}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
             .then(data => {
                 if (spinner) spinner.classList.add('d-none');
                 renderDropdown(data, query);
@@ -57,18 +76,20 @@ export function initCompanySelector() {
             .catch(err => {
                 console.error("Error fetching companies:", err);
                 if (spinner) spinner.classList.add('d-none');
+                dropdown.innerHTML = '<div class="list-group-item text-danger small">Error loading companies. Please try again.</div>';
+                dropdown.classList.remove('d-none');
             });
     }
 
     function renderDropdown(data, query) {
         dropdown.innerHTML = '';
-        dropdown.classList.remove('d-none');
 
         const hasNetwork = data.network && data.network.length > 0;
         const hasOther = data.other && data.other.length > 0;
 
         if (!hasNetwork && !hasOther) {
             dropdown.innerHTML = '<div class="list-group-item text-muted small">No companies found</div>';
+            dropdown.classList.remove('d-none');
             return;
         }
 
@@ -93,6 +114,8 @@ export function initCompanySelector() {
                 dropdown.appendChild(createItem(company, 'other'));
             });
         }
+
+        dropdown.classList.remove('d-none');
     }
 
     function createItem(company, type) {
