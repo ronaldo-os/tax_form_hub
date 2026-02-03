@@ -597,7 +597,6 @@ const initInvoiceForm = () => {
     });
   });
 
-  //----------------------------------------------------- ADD FOOTER BUTTON TOGGLE
 
   //----------------------------------------------------- ADD FOOTER BUTTON TOGGLE
 
@@ -606,8 +605,9 @@ const initInvoiceForm = () => {
     const $button = $('.add-footer-toggle-btn');
     const $target = $('#footer_wrapper_parent_div');
     const $notes = $('#invoice_footer_notes');
+    const notesVal = $notes.val() || '';
 
-    if ($notes.val().trim() !== '') {
+    if (notesVal.trim() !== '') {
       $target.show();
       $button.text('− Remove footer notes');
     } else {
@@ -625,9 +625,6 @@ const initInvoiceForm = () => {
     });
   })();
 
-
-
-  // Initialize country select
   (function () {
 
     const $select = $('#initial_delivery_details_country');
@@ -1134,7 +1131,7 @@ const initInvoiceForm = () => {
     const selectedText = $(this).find('option:selected').text();
     const $descriptionInput = $(this).siblings('input.description-edit');
     $descriptionInput.val(selectedText);
-    UpdteDiscountsJSON();
+    updateDiscountsJSON();
   });
 
 

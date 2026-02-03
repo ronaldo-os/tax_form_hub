@@ -1,7 +1,7 @@
 <table class="table table-hover" id="<%= table_id %>">
   <thead class="table-light">
     <tr>
-      <th>Invoice #</th>
+      <th><%= local_assigns[:title] || 'Invoice' %> #</th>
       <th>Total</th>
       <th>Issue Date</th>
       <th>Attachment</th>
@@ -12,7 +12,9 @@
   <tbody>
     <% invoices.each do |invoice| %>
       <tr>
-        <td><%= link_to invoice.invoice_number, invoice_path(invoice) %></td>
+        <td>
+          <%= link_to invoice.invoice_number, invoice_path(invoice) %>
+        </td>
         <td>
           <%= invoice.currency + ' ' + number_with_delimiter(invoice.total["grand_total"].to_f, delimiter: ",") %>
         </td>
@@ -59,7 +61,13 @@
             </div>
         <% end %>
         </td>
-        <td><%= invoice.status.to_s.capitalize %></td>
+        <td>
+          <% if invoice.quote? && invoice.invoice_type == "purchase" && invoice.status == "sent" %>
+            Received
+          <% else %>
+            <%= invoice.status.to_s.capitalize %>
+          <% end %>
+        </td>
         <td>
           <div class="dropdown text-center">
             <button class="btn btn-link text-dark p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_" data-bs-toggle="dropdown" aria-expanded="false">
@@ -80,7 +88,7 @@
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 
-              <% if invoice.status != "draft" && !["purchases-table", "purchases-archived-table"].include?(table_id) %>
+              <% if invoice.status != "draft" && !["purchases-table", "purchases-archived-table", "received-quotes-table", "received-quotes-archived-table"].include?(table_id) %>
                 <li>
                   <%= link_to "Use as draft",
                       new_invoice_path(template_id: invoice.id),
@@ -88,7 +96,7 @@
                 </li>
               <% end %>
 
-              <% if invoice.status == "approved" || invoice.status == "sent" %>
+              <% if (invoice.status == "approved" || invoice.status == "sent") && !["received-quotes-table", "received-quotes-archived-table"].include?(table_id) %>
                 <li>
                   <%= link_to "Mark as Paid", mark_as_paid_invoice_path(invoice),
                       method: :patch,

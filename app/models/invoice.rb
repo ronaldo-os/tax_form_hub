@@ -14,6 +14,7 @@ class Invoice < ApplicationRecord
   after_update :sync_archived_status, if: :saved_change_to_archived?
 
   enum invoice_type: { sale: 'sale', purchase: 'purchase' }
+  enum invoice_category: { standard: 'standard', credit_note: 'credit_note', quote: 'quote' }
 
   validate :attachments_type_allowed
 

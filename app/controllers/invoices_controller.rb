@@ -2,10 +2,15 @@ class InvoicesController < ApplicationController
   def index
     base_scope = current_user.invoices.includes(:recipient_company, :ship_from_location, :remit_to_location, :tax_representative_location)
     
-    @invoices_sale = base_scope.where(invoice_type: "sale", archived: false).order(issue_date: :desc)
-    @invoices_sale_archived = base_scope.where(invoice_type: "sale", archived: true).order(issue_date: :desc)
-    @invoices_purchase = base_scope.where(invoice_type: "purchase", archived: false).order(issue_date: :desc)
-    @invoices_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true).order(issue_date: :desc)
+    @invoices_sale = base_scope.where(invoice_type: "sale", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc)
+    @invoices_sale_archived = base_scope.where(invoice_type: "sale", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc)
+    @invoices_purchase = base_scope.where(invoice_type: "purchase", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc)
+    @invoices_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc)
+
+    @quotes_sale = base_scope.where(invoice_type: "sale", archived: false, invoice_category: "quote").order(issue_date: :desc)
+    @quotes_sale_archived = base_scope.where(invoice_type: "sale", archived: true, invoice_category: "quote").order(issue_date: :desc)
+    @quotes_purchase = base_scope.where(invoice_type: "purchase", archived: false, invoice_category: "quote").order(issue_date: :desc)
+    @quotes_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true, invoice_category: "quote").order(issue_date: :desc)
 
     # month ranges (use Time.current so it respects time zone)
     current_month_range = Time.current.beginning_of_month..Time.current.end_of_month
@@ -19,7 +24,7 @@ class InvoicesController < ApplicationController
     @invoice_trends_sale     = build_invoice_trends(@invoices_sale)
     @invoice_trends_purchase = build_invoice_trends(@invoices_purchase)
 
-    @active_tab = params[:tab] || 'sales'
+    @active_tab = params[:tab] || 'sales-invoices'
 
     # HTTP Caching
     fresh_when etag: [@invoices_sale, @invoices_purchase, @active_tab], last_modified: [@invoices_sale, @invoices_purchase].map { |s| s.maximum(:updated_at) }.compact.max
@@ -74,9 +79,9 @@ class InvoicesController < ApplicationController
       @save_footer_notes_for_future  = template.save_footer_notes_for_future
 
     else
-      @invoice = Invoice.new(invoice_type: params[:invoice_type] || 'sale')
-      last_invoice = current_user.invoices.where(invoice_type: @invoice.invoice_type).order(created_at: :desc).first
-      @suggested_invoice_number = next_invoice_number_suggestion(@invoice.invoice_type)
+      @invoice = Invoice.new(invoice_type: params[:invoice_type] || 'sale', invoice_category: params[:category] || 'standard')
+      last_invoice = current_user.invoices.where(invoice_type: @invoice.invoice_type, invoice_category: @invoice.invoice_category).order(created_at: :desc).first
+      @suggested_invoice_number = next_invoice_number_suggestion(@invoice.invoice_type, @invoice.invoice_category)
 
       if last_invoice
         @recipient_note = last_invoice.recipient_note if last_invoice.save_notes_for_future
@@ -123,7 +128,8 @@ class InvoicesController < ApplicationController
     end
 
     if @invoice.save
-      redirect_to invoices_path, notice: "Invoice created successfully."
+      category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
+      redirect_to invoices_path, notice: "#{category_name} created successfully."
     else
       render :new
     end
@@ -178,7 +184,8 @@ class InvoicesController < ApplicationController
         recipient_user = Company.find_by(id: @invoice.recipient_company_id)&.user
         InvoiceMailer.invoice_sent(@invoice, recipient_user).deliver_later if recipient_user
 
-        redirect_to invoice_path(@invoice), notice: "Invoice sent successfully."
+        category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
+        redirect_to invoice_path(@invoice), notice: "#{category_name} sent successfully."
       else
         redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
       end
@@ -236,7 +243,8 @@ class InvoicesController < ApplicationController
           )
         end
         InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
-        redirect_to invoices_path, notice: "Invoice sent successfully"
+        category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
+        redirect_to invoices_path, notice: "#{category_name} sent successfully"
       else
         redirect_to invoices_path, alert: "Invoice created, but failed to send to recipient."
       end
@@ -309,7 +317,8 @@ class InvoicesController < ApplicationController
         original.update(status: "sent")
 
         InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
-        redirect_to invoice_path(original), notice: "Invoice sent successfully."
+        category_name = original.standard? ? "Invoice" : original.invoice_category.humanize
+        redirect_to invoice_path(original), notice: "#{category_name} sent successfully."
       else
         redirect_to invoices_path, alert: "Failed to duplicate invoice."
       end
@@ -358,7 +367,8 @@ class InvoicesController < ApplicationController
       purchase_invoice = Invoice.find_by(sale_from_id: sale_invoice.id, invoice_type: "purchase")
       purchase_invoice&.update(status: "paid")
       tab = sale_invoice.invoice_type == "purchase" ? "purchases" : "sales"
-      redirect_to invoices_path(tab: tab), notice: "Invoice marked as paid."
+      category_name = sale_invoice.standard? ? "Invoice" : sale_invoice.invoice_category.humanize
+      redirect_to invoices_path(tab: tab), notice: "#{category_name} marked as paid."
     else
       tab = sale_invoice.invoice_type == "purchase" ? "purchases" : "sales"
       redirect_to invoices_path(tab: tab), alert: "Failed to update invoice."
@@ -486,6 +496,7 @@ class InvoicesController < ApplicationController
       :save_footer_notes_for_future,
       :save_payment_terms_for_future,
       :invoice_type,
+    :invoice_category,
 
       # delivery details
       :delivery_details_postbox,
@@ -530,9 +541,9 @@ class InvoicesController < ApplicationController
     permitted
   end
 
-  def next_invoice_number_suggestion(type = 'sale')
-    last_number = current_user.invoices.where(invoice_type: type).order(:created_at).pluck(:invoice_number).compact.last
-    return "000-001" unless last_number  # Default for first invoice
+  def next_invoice_number_suggestion(type = 'sale', category = 'standard')
+    last_number = current_user.invoices.where(invoice_type: type, invoice_category: category).order(:created_at).pluck(:invoice_number).compact.last
+    return (category == 'quote' ? "Q-000-001" : "000-001") unless last_number  # Default for first invoice
 
     if last_number =~ /\d+$/
       prefix = last_number.gsub(/\d+$/, "")

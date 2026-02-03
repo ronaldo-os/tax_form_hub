@@ -59,7 +59,7 @@ function initInvoicePage() {
     }
 
     // Initialize all DataTables
-    $('#sales-table, #purchases-table, #sales-archived-table, #purchases-archived-table').DataTable({
+    $('#sales-table, #purchases-table, #sales-archived-table, #purchases-archived-table, #sent-quotes-table, #sent-quotes-archived-table, #received-quotes-table, #received-quotes-archived-table').DataTable({
         responsive: true,
         autoWidth: false,
         destroy: true, // Important for Turbo

@@ -3,7 +3,7 @@
     <div class="card-body">
       <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
 
-        <h5 class="text-secondary">Invoice Details</h5>
+        <h5 class="text-secondary"><%= @invoice.quote? ? 'Quote Details' : 'Invoice Details' %></h5>
         
         <div class="row">
 
@@ -47,7 +47,7 @@
           <div class="col-md-6">
 
 
-            <%= f.label :invoice_number, class: "form-label" %>
+            <%= f.label @invoice.quote? ? :quote_number : :invoice_number, class: "form-label" %>
             <%= f.text_field :invoice_number, class: "form-control", required: true %>
             <% if @suggested_invoice_number.present? && @invoice.new_record? %>
                 <div class="form-text">
@@ -132,7 +132,7 @@
           <tbody id="line-items" data-line-items='<%= raw(@invoice.line_items_data.to_json) %>'>
             <% unless action_name == "edit" %>
               <% unless params[:template_id].present? %>
-                <tr class="line-item" data-line-index="0" test>
+                <tr class="line-item" data-line-index="0">
                   <td>
                     <button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button>
                   </td>
@@ -214,6 +214,7 @@
 
         <div class="row">
           <div class="col-md-6">
+            <% unless @invoice.quote? %>
             <div id="payment_terms_parent_div">
             </div>
             <select name="payment_terms_select" id="payment_terms_select" class="form-select mb-3" data-optional-group="0">
@@ -357,11 +358,9 @@
             locations: @locations_by_type["Tax Representative"] || [],
             selected_location_id: @invoice.tax_representative_location_id
             } %>
-
-
+            <% end %>
           </div>
-          
-          <div class="col-md-6">
+          <div class="<%= @invoice.quote? ? 'col-md-12 mt-4' : 'col-md-6' %>">
             <div class="mb-3 mob-mt-2">
               <%= f.label :recipient_note, "Write a message to the recipient", class: "form-label" %>
               <%= f.text_area :recipient_note, class: "form-control", rows: 5, placeholder: "Enter your message...", value: @recipient_note.presence || @invoice&.recipient_note %>
@@ -379,7 +378,7 @@
 
             <div class="mb-3">
               <%= f.label :attachments, class: "form-label" %>
-<div id="new_attachments_preview" class="row mt-3"></div>
+              <div id="new_attachments_preview" class="row mt-3"></div>
               <%= f.file_field :attachments, 
                     class: "form-control", 
                     multiple: true, 
@@ -434,8 +433,6 @@
               </div>
             <% end %>
 
-
-
           </div>
         </div>
 
@@ -449,7 +446,7 @@
                     class: "btn btn-secondary btn-md discard-btn",
                     data: { confirm: "Are you sure you want to discard this invoice?" } %>
 
-                <%= f.submit "Save As Draft", class: "btn btn-secondary btn-md" %>
+                <%= f.submit @invoice.quote? ? "Save Quote As Draft" : "Save As Draft", class: "btn btn-secondary btn-md" %>
               <% else %>
                 <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
               <% end %>
@@ -462,7 +459,7 @@
               </button>
 
               <% if action_name != "edit" %>
-                <%= f.submit "Send",
+                <%= f.submit @invoice.quote? ? "Send Quote" : "Send",
                     class: "btn btn-primary btn-md",
                     formaction: create_and_send_invoices_path,
                     formmethod: :post,
@@ -485,6 +482,7 @@
 
 
         <div id="hidden_fields_container" class="d-none">
+            <%= f.hidden_field :invoice_category %>
             <%= f.hidden_field :total, id: 'total_amount_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :price_adjustments, value: @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :payment_terms, value: (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json', data: { field_type: 'invoice_form_fields' } %>
@@ -496,6 +494,7 @@
             <%= hidden_field_tag :payment_terms_json_edit, (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json_edit', data: { field_type: 'invoice_form_fields' } %>
             <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit', data: { field_type: 'invoice_form_fields' } %>
         </div>
+    <% unless @invoice.quote? %>
     <div class="card-footer bg-white pb-3">
         <button type="button" class="btn btn-primary btn-sm add-footer-toggle-btn mt-3">
           + Add footer notes
@@ -518,6 +517,7 @@
             </div>
         </div>
     </div>
+    <% end %>
     <% end %>
   </div>
 </div>
