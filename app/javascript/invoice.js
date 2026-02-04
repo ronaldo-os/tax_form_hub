@@ -2112,12 +2112,18 @@ const initInvoiceForm = () => {
   // Invoice Preview Modal
   (function () {
     const $previewBtn = $('#preview-invoice-btn');
+    const modalEl = $('#invoicePreviewModal')[0];
+
+    if (!$previewBtn.length || !modalEl) return;
+
+    // Remove any lingering backdrops from previous instances
+    $('.modal-backdrop').remove();
+    $('body').removeClass('modal-open').css('overflow', '').css('padding-right', '');
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     const $previewCard = $('#invoicePreviewCard');
-    const modal = new bootstrap.Modal($('#invoicePreviewModal')[0]);
 
-    if (!$previewBtn.length) return;
-
-    $previewBtn.on('click', function () {
+    $previewBtn.off('click.invoice_preview').on('click.invoice_preview', function () {
       const formData = Object.fromEntries($('form').serializeArray().map(f => [f.name, f.value]));
 
       // Helper functions
@@ -2135,12 +2141,14 @@ const initInvoiceForm = () => {
       };
 
       // Basic invoice fields
+      const isQuote = $('input[name="invoice[invoice_category]"]').val() === 'quote';
       const invoice = {
         issueDate: formData['invoice[issue_date]'] || '—',
         number: formData['invoice[invoice_number]'] || '—',
         currency: formData['invoice[currency]'] || '—',
         note: getVal('#invoice_recipient_note'),
-        footer: getVal('#invoice_footer_notes')
+        footer: getVal('#invoice_footer_notes'),
+        isQuote: isQuote
       };
 
       // Optional fields
@@ -2369,7 +2377,7 @@ const initInvoiceForm = () => {
           <div class="card shadow-sm border-0" id="invoice_card">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold mb-0">Invoice Details</h4>
+                <h4 class="fw-bold mb-0">${invoice.isQuote ? 'Quote Details' : 'Invoice Details'}</h4>
                 <span class="badge px-3 py-2 fs-6 bg-secondary-subtle text-muted">DRAFT</span>
               </div>
 
@@ -2388,7 +2396,7 @@ const initInvoiceForm = () => {
                 <div class="col-md-6">
                   <div class="mob-p-0 p-3">
                     <div class="row mb-1">
-                      <div class="col-md-6"><p class="mb-0"><strong>Invoice No.:</strong> ${invoice.number}</p></div>
+                      <div class="col-md-6"><p class="mb-0"><strong>${invoice.isQuote ? 'Quote No.:' : 'Invoice No.:'}</strong> ${invoice.number}</p></div>
                       <div class="col-md-6"><p class="mb-0"><strong>Issue Date:</strong> ${invoice.issueDate}</p></div>
                     </div>
                     <p class="mb-1"><strong>Currency:</strong> ${invoice.currency}</p>
@@ -2415,16 +2423,18 @@ const initInvoiceForm = () => {
               <hr>
 
               <div class="row">
-                <div class="col-md-6">
-                  ${paymentTermsHtml || '<h5 class="mb-3">Payment Terms</h5><p class="text-muted">No payment terms provided.</p>'}
-                  <hr>
-                  ${deliveryHtml || '<h5 class="mb-3 fw-semibold">Delivery details</h5><p class="text-muted">No delivery details provided.</p>'}
-                  ${shipFromHtml || '<h5 class="mb-3 fw-semibold">Ship from details</h5><p class="text-muted">No Ship From details provided.</p>'}
-                  ${remitToHtml || '<h5 class="mb-3 fw-semibold">Remit to details</h5><p class="text-muted">No remit to details provided.</p>'}
-                  ${taxRepHtml || '<h5 class="mb-3 fw-semibold">Tax representative details</h5><p class="text-muted">No tax representative details provided.</p>'}
-                </div>
+                ${!invoice.isQuote ? `
+                  <div class="col-md-6">
+                    ${paymentTermsHtml || '<h5 class="mb-3">Payment Terms</h5><p class="text-muted">No payment terms provided.</p>'}
+                    <hr>
+                    ${deliveryHtml || '<h5 class="mb-3 fw-semibold">Delivery details</h5><p class="text-muted">No delivery details provided.</p>'}
+                    ${shipFromHtml || '<h5 class="mb-3 fw-semibold">Ship from details</h5><p class="text-muted">No Ship From details provided.</p>'}
+                    ${remitToHtml || '<h5 class="mb-3 fw-semibold">Remit to details</h5><p class="text-muted">No remit to details provided.</p>'}
+                    ${taxRepHtml || '<h5 class="mb-3 fw-semibold">Tax representative details</h5><p class="text-muted">No tax representative details provided.</p>'}
+                  </div>
+                ` : ''}
 
-                <div class="col-md-6">
+                <div class="${invoice.isQuote ? 'col-md-12' : 'col-md-6'}">
                   <div class="mb-3">
                     <h5 class="mb-3 fw-bold">Message:</h5>
                     <p>${invoice.note.replace(/\n/g, '<br>')}</p>
@@ -2436,9 +2446,8 @@ const initInvoiceForm = () => {
             <hr>
 
             <!-- Attachments Section -->
-            <div class="row">
+            <div class="row ps-3 pe-3">
               <div class="col-12">
-                <h4 class="mb-3">Attachments</h4>
                 <div class="row" id="preview_attachments_container">
                   ${(function () {
           let attachmentsHtml = '';
@@ -2537,9 +2546,11 @@ const initInvoiceForm = () => {
               </div>
             </div>
 
-            <div class="card-footer bg-white">
-              <p class="mb-0">${invoice.footer.replace(/\n/g, '<br>')}</p>
-            </div>
+            ${!invoice.isQuote ? `
+              <div class="card-footer bg-white">
+                <p class="mb-0">${invoice.footer.replace(/\n/g, '<br>')}</p>
+              </div>
+            ` : ''}
           </div>`;
 
       $previewCard.stop(true, true).fadeOut(150, function () {

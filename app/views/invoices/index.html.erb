@@ -80,9 +80,9 @@
       <div class="card mb-4">
         <div class="card-body p-3">
           <h5>Active Sales Invoices</h5>
-          <% cache [current_user, @invoices_sale, 'active'] do %>
+          <% cache [current_user, @invoices_sale, 'sales_active'] do %>
             <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @invoices_sale, table_id: 'sales-table' } %>
+                       locals: { invoices: @invoices_sale, table_id: 'sales-table', active_tab: 'sales-invoices' } %>
           <% end %>
         </div>
       </div>
@@ -90,9 +90,9 @@
       <div class="card">
         <div class="card-body p-3">
           <h5>Archived Sales Invoices</h5>
-          <% cache [current_user, @invoices_sale_archived, 'archived'] do %>
+          <% cache [current_user, @invoices_sale_archived, 'sales_archived'] do %>
             <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @invoices_sale_archived, table_id: 'sales-archived-table' } %>
+                       locals: { invoices: @invoices_sale_archived, table_id: 'sales-archived-table', active_tab: 'sales-invoices' } %>
           <% end %>
         </div>
       </div>
@@ -103,9 +103,9 @@
       <div class="card mb-4">
         <div class="card-body p-3">
           <h5>Active Sent Quotes</h5>
-          <% cache [current_user, @quotes_sale, 'quotes_active'] do %>
+          <% cache [current_user, @quotes_sale, 'quotes_sale_active'] do %>
             <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @quotes_sale, table_id: 'sent-quotes-table', title: 'Quote' } %>
+                       locals: { invoices: @quotes_sale, table_id: 'sent-quotes-table', title: 'Quote', active_tab: 'sent-quotes' } %>
           <% end %>
         </div>
       </div>
@@ -113,9 +113,9 @@
       <div class="card">
         <div class="card-body p-3">
           <h5>Archived Sent Quotes</h5>
-          <% cache [current_user, @quotes_sale_archived, 'quotes_archived'] do %>
+          <% cache [current_user, @quotes_sale_archived, 'quotes_sale_archived'] do %>
             <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @quotes_sale_archived, table_id: 'sent-quotes-archived-table', title: 'Quote' } %>
+                       locals: { invoices: @quotes_sale_archived, table_id: 'sent-quotes-archived-table', title: 'Quote', active_tab: 'sent-quotes' } %>
           <% end %>
         </div>
       </div>
@@ -158,9 +158,9 @@
       <div class="card mb-4">
         <div class="card-body p-3">
           <h5>Active Purchase Invoices</h5>
-          <% cache [current_user, @invoices_purchase, 'active'] do %>
+          <% cache [current_user, @invoices_purchase, 'purchase_active'] do %>
             <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @invoices_purchase, table_id: 'purchases-table' } %>
+                       locals: { invoices: @invoices_purchase, table_id: 'purchases-table', active_tab: 'purchase-invoices' } %>
           <% end %>
         </div>
       </div>
@@ -168,9 +168,9 @@
       <div class="card">
         <div class="card-body p-3">
           <h5>Archived Purchase Invoices</h5>
-          <% cache [current_user, @invoices_purchase_archived, 'archived'] do %>
+          <% cache [current_user, @invoices_purchase_archived, 'purchase_archived'] do %>
             <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @invoices_purchase_archived, table_id: 'purchases-archived-table' } %>
+                       locals: { invoices: @invoices_purchase_archived, table_id: 'purchases-archived-table', active_tab: 'purchase-invoices' } %>
           <% end %>
         </div>
       </div>
@@ -181,9 +181,9 @@
       <div class="card mb-4">
         <div class="card-body p-3">
           <h5>Active Received Quotes</h5>
-          <% cache [current_user, @quotes_purchase, 'quotes_active'] do %>
+          <% cache [current_user, @quotes_purchase, 'quotes_purchase_active'] do %>
             <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @quotes_purchase, table_id: 'received-quotes-table', title: 'Quote' } %>
+                       locals: { invoices: @quotes_purchase, table_id: 'received-quotes-table', title: 'Quote', active_tab: 'received-quotes' } %>
           <% end %>
         </div>
       </div>
@@ -191,9 +191,9 @@
       <div class="card">
         <div class="card-body p-3">
           <h5>Archived Received Quotes</h5>
-          <% cache [current_user, @quotes_purchase_archived, 'quotes_archived'] do %>
+          <% cache [current_user, @quotes_purchase_archived, 'quotes_purchase_archived'] do %>
             <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @quotes_purchase_archived, table_id: 'received-quotes-archived-table', title: 'Quote' } %>
+                       locals: { invoices: @quotes_purchase_archived, table_id: 'received-quotes-archived-table', title: 'Quote', active_tab: 'received-quotes' } %>
           <% end %>
         </div>
       </div>

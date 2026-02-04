@@ -258,7 +258,7 @@ class InvoicesController < ApplicationController
   def destroy
     @invoice = Invoice.find(params[:id])
     @invoice.destroy
-    redirect_to invoices_path, notice: "Invoice deleted successfully."
+    redirect_to invoices_path(tab: params[:tab]), notice: "Invoice deleted successfully."
   end
 
   def duplicate_as_purchase
@@ -331,9 +331,9 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.update(status: "approved")
       update_original_sale_status(invoice, "approved")
-      redirect_to invoices_path(tab: "purchases"), notice: "Invoice approved."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice approved."
     else
-      redirect_to invoices_path(tab: "purchases"), alert: "Failed to approve invoice."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Failed to approve invoice."
     end
   end
 
@@ -341,23 +341,23 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.update(status: "denied")
       update_original_sale_status(invoice, "denied")
-      redirect_to invoices_path(tab: "purchases"), notice: "Invoice denied."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice denied."
     else
-      redirect_to invoices_path(tab: "purchases"), alert: "Failed to deny invoice."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Failed to deny invoice."
     end
   end
 
   def archive
     invoice = current_user.invoices.find(params[:id])
     invoice.update(archived: true)
-    tab = invoice.invoice_type == "purchase" ? "purchases" : "sales"
+    tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
     redirect_to invoices_path(tab: tab), notice: "Invoice archived."
   end
 
   def unarchive
     invoice = current_user.invoices.find(params[:id])
     invoice.update(archived: false)
-    tab = invoice.invoice_type == "purchase" ? "purchases" : "sales"
+    tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
     redirect_to invoices_path(tab: tab), notice: "Invoice unarchived."
   end
 
@@ -366,11 +366,11 @@ class InvoicesController < ApplicationController
     if sale_invoice.update(status: "paid")
       purchase_invoice = Invoice.find_by(sale_from_id: sale_invoice.id, invoice_type: "purchase")
       purchase_invoice&.update(status: "paid")
-      tab = sale_invoice.invoice_type == "purchase" ? "purchases" : "sales"
+      tab = params[:tab] || (sale_invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
       category_name = sale_invoice.standard? ? "Invoice" : sale_invoice.invoice_category.humanize
       redirect_to invoices_path(tab: tab), notice: "#{category_name} marked as paid."
     else
-      tab = sale_invoice.invoice_type == "purchase" ? "purchases" : "sales"
+      tab = params[:tab] || (sale_invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
       redirect_to invoices_path(tab: tab), alert: "Failed to update invoice."
     end
   end
