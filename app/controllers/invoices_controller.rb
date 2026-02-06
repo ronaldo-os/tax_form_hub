@@ -60,6 +60,10 @@ class InvoicesController < ApplicationController
     @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
     @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
 
+    if params[:category] == 'credit_note' || params[:original_invoice_id].present? || (@invoice&.credit_note?)
+      @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'denied']).order(issue_date: :desc)
+    end
+
     if params[:template_id].present?
       template = Invoice.find(params[:template_id])
 
@@ -78,6 +82,26 @@ class InvoicesController < ApplicationController
       @save_notes_for_future         = template.save_notes_for_future
       @save_footer_notes_for_future  = template.save_footer_notes_for_future
 
+    elsif params[:original_invoice_id].present?
+      original = Invoice.find(params[:original_invoice_id])
+      @invoice = Invoice.new(
+        original.attributes.except("id", "created_at", "updated_at", "status", "invoice_number", "user_id", "invoice_category", "invoice_info", "total")
+      )
+      @invoice.user_id = current_user.id
+      @invoice.invoice_category = "credit_note"
+      @invoice.credit_note_original_invoice_id = original.id
+      @invoice.status = "draft"
+      @invoice.invoice_type = original.invoice_type # Keep same type (sale or purchase)
+      
+      # Pre-fill line items
+      @invoice.line_items_data = original.line_items_data
+      
+      # Pre-fill other notes if requested
+      @recipient_note = original.recipient_note
+      @footer_notes   = original.footer_notes
+      @payment_terms  = original.payment_terms
+      
+      @suggested_invoice_number = next_invoice_number_suggestion(@invoice.invoice_type, @invoice.invoice_category)
     else
       @invoice = Invoice.new(invoice_type: params[:invoice_type] || 'sale', invoice_category: params[:category] || 'standard')
       last_invoice = current_user.invoices.where(invoice_type: @invoice.invoice_type, invoice_category: @invoice.invoice_category).order(created_at: :desc).first
@@ -105,6 +129,10 @@ class InvoicesController < ApplicationController
     @locations_by_type = current_user.locations.group_by(&:location_type)
     @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
     @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
+    
+    if @invoice.credit_note?
+      @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'denied']).order(issue_date: :desc)
+    end
   end
 
   def create
@@ -496,7 +524,8 @@ class InvoicesController < ApplicationController
       :save_footer_notes_for_future,
       :save_payment_terms_for_future,
       :invoice_type,
-    :invoice_category,
+      :invoice_category,
+      :credit_note_original_invoice_id,
 
       # delivery details
       :delivery_details_postbox,

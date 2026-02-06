@@ -14,6 +14,9 @@
       <tr>
         <td>
           <%= link_to invoice.invoice_number, invoice_path(invoice) %>
+          <% if invoice.credit_note? %>
+            <span class="badge bg-info-subtle text-info ms-1">CN</span>
+          <% end %>
         </td>
         <td>
           <%= invoice.currency + ' ' + number_with_delimiter(invoice.total["grand_total"].to_f, delimiter: ",") %>
@@ -103,6 +106,15 @@
                       data: { confirm: "Mark this invoice as paid?" },
                       class: "dropdown-item" %>
                 </li>
+
+                <% if invoice.standard? && invoice.invoice_type == "sale" && ["sent", "approved", "paid"].include?(invoice.status) %>
+                  <li>
+                    <%= link_to "Create Credit Note", 
+                        new_invoice_path(original_invoice_id: invoice.id, category: "credit_note", tab: local_assigns[:active_tab]), 
+                        class: "dropdown-item" %>
+                  </li>
+                <% end %>
+
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 

@@ -33,6 +33,7 @@
     <!-- Create Invoice button aligned right -->
     <div class="ms-auto d-flex gap-2">
       <%= link_to 'Create Quote', new_invoice_path(category: 'quote'), class: 'btn btn-outline-primary' %>
+      <%= link_to 'Create Credit Note', new_invoice_path(category: 'credit_note'), class: 'btn btn-outline-secondary' %>
       <%= link_to 'Create Invoice', new_invoice_path, class: 'btn btn-primary' %>
     </div>
   </div>

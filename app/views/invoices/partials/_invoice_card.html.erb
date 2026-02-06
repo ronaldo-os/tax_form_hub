@@ -3,7 +3,15 @@
     <div class="card-body">
       <!-- Header -->
       <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-bold mb-0"><%= invoice.quote? ? 'Quote Details' : 'Invoice Details' %></h4>
+        <h4 class="fw-bold mb-0">
+          <%= if invoice.quote?
+                'Quote Details'
+              elsif invoice.credit_note?
+                'Credit Note Details'
+              else
+                'Invoice Details'
+              end %>
+        </h4>
         <span class="badge px-3 py-2 fs-6 
           <%= case @invoice.status
               when "sent"     then "bg-primary-subtle text-primary"
@@ -36,10 +44,16 @@
 
         <div class="col-md-6">
           <div class="row mt-3 mb-3">
-              <div class="col-md-6 mb-2">
-                  <%= f.label :invoice_number, invoice.quote? ? "Quote Number" : "Invoice Number", class: "h6 form-label" %>
+                  <%= f.label :invoice_number, invoice.quote? ? "Quote Number" : (invoice.credit_note? ? "Credit Note Number" : "Invoice Number"), class: "h6 form-label" %>
                   <p class="mb-1"><%= @invoice.invoice_number %></p>
               </div>
+
+              <% if @invoice.credit_note? && @invoice.original_invoice.present? %>
+                <div class="col-md-6 mb-2">
+                    <h6 class="form-label">Original Invoice</h6>
+                    <p class="mb-1"><%= link_to @invoice.original_invoice.invoice_number, invoice_path(@invoice.original_invoice) %></p>
+                </div>
+              <% end %>
 
               <div class="col-md-6 mb-2">
                   <%= f.label :issue_date, class: "h6 form-label" %>
@@ -266,6 +280,22 @@
               <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2, delimiter: ',') %>
             </span>
           </p>
+          
+          <% if @invoice.standard? && @invoice.credit_notes.any? %>
+            <hr>
+            <p class="mb-1">
+              Total Credited:
+              <span class="fw-semibold text-danger">
+                - <%= number_with_precision(@invoice.total_credited, precision: 2, delimiter: ',') %>
+              </span>
+            </p>
+            <p class="fs-5 fw-bold mb-0">
+              Remaining Balance <%= @invoice.currency %>:
+              <span class="text-success">
+                <%= number_with_precision(@invoice.remaining_balance, precision: 2, delimiter: ',') %>
+              </span>
+            </p>
+          <% end %>
         </div>
 
 
