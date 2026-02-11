@@ -32,7 +32,7 @@ class InvoicesController < ApplicationController
 
 
   def show
-    @invoice = Invoice.find(params[:id])
+    @invoice = current_user.invoices.find(params[:id])
     @recipient_company = @invoice.recipient_company
     @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
@@ -41,12 +41,10 @@ class InvoicesController < ApplicationController
     @remit_to_location_id = @invoice.remit_to_location
     @tax_representative_location_id = @invoice.tax_representative_location
 
-    fresh_when @invoice
-
     respond_to do |format|
-      format.html
-      format.json { render json: @invoice } # keep JSON if you want
-      format.js   # optional if you want a JS template
+      format.html { fresh_when @invoice }
+      format.json { render json: @invoice.as_json(include: :recipient_company) }
+      format.js
       format.any(:pdf, :html) do
         render partial: "invoices/partials/invoice_card", locals: { invoice: @invoice }
       end
@@ -85,22 +83,12 @@ class InvoicesController < ApplicationController
     elsif params[:original_invoice_id].present?
       original = Invoice.find(params[:original_invoice_id])
       @invoice = Invoice.new(
-        original.attributes.except("id", "created_at", "updated_at", "status", "invoice_number", "user_id", "invoice_category", "invoice_info", "total")
+        user_id: current_user.id,
+        invoice_category: "credit_note",
+        credit_note_original_invoice_id: original.id,
+        status: "draft",
+        invoice_type: original.invoice_type
       )
-      @invoice.user_id = current_user.id
-      @invoice.invoice_category = "credit_note"
-      @invoice.credit_note_original_invoice_id = original.id
-      @invoice.status = "draft"
-      @invoice.invoice_type = original.invoice_type # Keep same type (sale or purchase)
-      
-      # Pre-fill line items
-      @invoice.line_items_data = original.line_items_data
-      
-      # Pre-fill other notes if requested
-      @recipient_note = original.recipient_note
-      @footer_notes   = original.footer_notes
-      @payment_terms  = original.payment_terms
-      
       @suggested_invoice_number = next_invoice_number_suggestion(@invoice.invoice_type, @invoice.invoice_category)
     else
       @invoice = Invoice.new(invoice_type: params[:invoice_type] || 'sale', invoice_category: params[:category] || 'standard')
@@ -159,6 +147,7 @@ class InvoicesController < ApplicationController
       category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
       redirect_to invoices_path, notice: "#{category_name} created successfully."
     else
+      set_form_resources
       render :new
     end
   end
@@ -218,10 +207,7 @@ class InvoicesController < ApplicationController
         redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
       end
     else
-      @recipient_companies = current_user.connected_companies
-      @locations_by_type = current_user.locations.group_by(&:location_type)
-      @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
-      @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
+      set_form_resources
       render :edit
     end
   end
@@ -277,6 +263,7 @@ class InvoicesController < ApplicationController
         redirect_to invoices_path, alert: "Invoice created, but failed to send to recipient."
       end
     else
+      set_form_resources
       render :new
     end
   end
@@ -351,6 +338,8 @@ class InvoicesController < ApplicationController
         redirect_to invoices_path, alert: "Failed to duplicate invoice."
       end
     else
+      @invoice = original # Ensure @invoice is set for the edit view
+      set_form_resources
       render :edit
     end
   end
@@ -580,6 +569,17 @@ class InvoicesController < ApplicationController
       "#{prefix}#{num.to_s.rjust(3, '0')}"
     else
       "#{last_number}-001"
+    end
+  end
+
+  def set_form_resources
+    @recipient_companies = current_user.connected_companies
+    @locations_by_type = current_user.locations.group_by(&:location_type)
+    @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
+    @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
+    
+    if @invoice&.credit_note?
+      @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'denied']).order(issue_date: :desc)
     end
   end
 end

@@ -243,6 +243,7 @@
         <div class="row">
           <div class="col-md-6">
             <% unless @invoice.quote? %>
+            <% unless @invoice.credit_note? %>
             <div id="payment_terms_parent_div">
             </div>
             <select name="payment_terms_select" id="payment_terms_select" class="form-select mb-3" data-optional-group="0">
@@ -263,7 +264,9 @@
                     ) %>
               <%= f.label :save_payment_terms_for_future, "Save payment terms and means for future invoices", class: "form-check-label" %>
             </div>
+            <% end %>
 
+            <% unless @invoice.credit_note? %>
             <hr>
 
             <button type="button" class="btn btn-primary btn-sm w-100"
@@ -364,14 +367,17 @@
                 </div>
               </div>
             </div>
+            <% end %>
 
 
+            <% unless @invoice.credit_note? %>
             <%= render partial: "invoices/partials/create_invoice_location_selector",
             locals: {
             type: "Ship From",
             locations: @locations_by_type["Ship From"] || [],
             selected_location_id: @invoice.ship_from_location_id
             } %>
+            <% end %>
 
             <%= render partial: "invoices/partials/create_invoice_location_selector",
             locals: {
@@ -636,4 +642,4 @@
       </div>
     </div>
   </div>
-</div>
+</div></div>

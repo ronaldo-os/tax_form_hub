@@ -20,7 +20,8 @@ class Invoice < ApplicationRecord
   
   validates :credit_note_original_invoice_id, presence: true, if: :credit_note?
   validate :attachments_type_allowed
-  validate :credit_note_amount_within_balance, if: :credit_note?
+  validates :credit_note_original_invoice_id, presence: true, if: :credit_note?
+  validate :attachments_type_allowed
 
   def line_items
     line_items_data || []
@@ -29,16 +30,6 @@ class Invoice < ApplicationRecord
   def grand_total
     total["grand_total"].to_f
   end
-
-  def total_credited
-    credit_notes.sum { |cn| cn.grand_total }
-  end
-
-  def remaining_balance
-    [grand_total - total_credited, 0].max
-  end
-
-
 
   private
 
@@ -57,18 +48,6 @@ class Invoice < ApplicationRecord
       unless allowed_types.include?(file.blob.content_type)
         errors.add(:attachments, "must be PDF or image files (JPEG, PNG).")
       end
-    end
-  end
-
-  def credit_note_amount_within_balance
-    return unless original_invoice
-    
-    # When updating an existing credit note, we need to exclude its own amount from the calculation
-    other_credit_notes_total = original_invoice.credit_notes.where.not(id: id).sum { |cn| cn.grand_total }
-    available_balance = original_invoice.grand_total - other_credit_notes_total
-    
-    if grand_total > available_balance
-      errors.add(:base, "Credit note total (#{grand_total}) cannot exceed the remaining balance of the original invoice (#{available_balance.round(2)})")
     end
   end
 end

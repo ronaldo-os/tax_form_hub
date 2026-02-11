@@ -280,24 +280,6 @@
               <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2, delimiter: ',') %>
             </span>
           </p>
-          
-          <% if @invoice.standard? && @invoice.credit_notes.any? %>
-            <hr>
-            <p class="mb-1">
-              Total Credited:
-              <span class="fw-semibold text-danger">
-                - <%= number_with_precision(@invoice.total_credited, precision: 2, delimiter: ',') %>
-              </span>
-            </p>
-            <p class="fs-5 fw-bold mb-0">
-              Remaining Balance <%= @invoice.currency %>:
-              <span class="text-success">
-                <%= number_with_precision(@invoice.remaining_balance, precision: 2, delimiter: ',') %>
-              </span>
-            </p>
-          <% end %>
-        </div>
-
 
         <% unless @invoice.quote? %>
         <hr class="mt-2">
@@ -409,6 +391,7 @@
               <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @remit_to_location_id, type_name: "Remit To Location" } if @remit_to_location_id.present? %>
               <%= render partial: "invoices/partials/view_invoice_location_details", locals: { location: @tax_representative_location_id, type_name: "Tax Representative Location" } if @tax_representative_location_id.present? %>
           </div>
+        </div>
         <% end %>
 
           <div class="<%= @invoice.quote? ? 'col-md-12 mt-4' : 'col-md-6' %>">
@@ -471,5 +454,6 @@
       </div>
       <% end %>
     <% end %>
+    </div>
   </div>
 </div>

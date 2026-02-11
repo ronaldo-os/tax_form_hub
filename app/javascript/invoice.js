@@ -89,70 +89,15 @@ const initInvoiceForm = () => {
   let lineIndex = 1; // Global counter for new lines
 
   // Credit Note Invoice Selector Logic (Dropdown)
-  function performCreditInvoiceLookup(invoiceId) {
-    if (!invoiceId) {
-      $('#credit_note_original_invoice_id').val('');
-      $('#original_invoice_status_badge').html('<span class="badge bg-secondary">Not Linked</span>');
-      return;
-    }
-
-    $('#credit_note_lookup_error').addClass('d-none');
-
-    $.ajax({
-      url: `/invoices/${invoiceId}.json`,
-      method: 'GET',
-      success: function (data) {
-        // Update hidden field and badge (hidden field might be redundant now if using select)
-        $('#credit_note_original_invoice_id').val(data.id);
-        $('#original_invoice_status_badge').html(`<span class="badge bg-success">Linked: ${data.invoice_number}</span>`);
-
-        // Pre-fill recipient
-        if (data.recipient_company_id) {
-          const company = data.recipient_company;
-          $('#recipient_company_id').val(data.recipient_company_id);
-          $('#company_name').text(company.name);
-          $('#company_address').text(company.address);
-          $('#company_country').text(company.country || 'Philippines').attr('data-country', company.country);
-          $('#company_number').text(`Company ${company.company_id_type || ''} number : ${company.company_id_number || '-'}`);
-          $('#company_tax_number').text(`Tax ${company.tax_id_type || ''} number : ${company.tax_id_number || '-'}`);
-
-          $('#company_selector_interface').addClass('d-none');
-          $('#recipient-preview').removeClass('d-none');
-        }
-
-        // Set Currency
-        $(`#invoice_currency option[value="${data.currency}"]`).prop('selected', true);
-        $('.currency_type').text(data.currency);
-
-        // Pre-fill line items
-        if (data.line_items_data && data.line_items_data.length > 0) {
-          $('#line-items').empty();
-          lineIndex = 0;
-          data.line_items_data.forEach(item => {
-            $('#add-line').click(); // Use the existing add-line button to ensure all bindings work
-            const $row = $('#line-items .line-item').last();
-            $row.find('.item-id').val(item.item_id);
-            $row.find('.description').val(item.description);
-            $row.find('.quantity').val(item.quantity);
-            $row.find('.unit').val(item.unit);
-            $row.find('.price').val(item.price);
-            $row.find('.tax').val(item.tax);
-          });
-          recalculateTotals();
-        }
-
-        // Set other notes
-        if ($('#invoice_recipient_note').length) $('#invoice_recipient_note').val(data.recipient_note);
-        if ($('#invoice_footer_notes').length) $('#invoice_footer_notes').val(data.footer_notes);
-      },
-      error: function () {
-        alert('Failed to fetch invoice data.');
-      }
-    });
-  }
-
   $(document).on('change.invoice_form', '#credit_note_original_invoice_id', function () {
-    performCreditInvoiceLookup($(this).val());
+    const invoiceId = $(this).val();
+    const invoiceNumber = $(this).find('option:selected').text();
+
+    if (invoiceId) {
+      $('#original_invoice_status_badge').html(`<span class="badge bg-success">Linked: ${invoiceNumber}</span>`);
+    } else {
+      $('#original_invoice_status_badge').html('<span class="badge bg-secondary">Not Linked</span>');
+    }
   });
 
   function updateRemoveButtons() {
@@ -1586,6 +1531,13 @@ const initInvoiceForm = () => {
       return;
     }
 
+    if (!Array.isArray(data) || data.length === 0) return;
+
+    $lineItems.empty();
+
+    // Update global lineIndex to avoid conflicts with new lines
+    lineIndex = data.length;
+
     data.forEach((item, i) => {
       const $html = $(getLineItemHTML(i));
       $lineItems.append($html);
@@ -1806,7 +1758,10 @@ const initInvoiceForm = () => {
       }
 
       if (window.invoiceInitTimeout) clearTimeout(window.invoiceInitTimeout);
-      window.invoiceInitTimeout = setTimeout(recalculateTotals, 100);
+      window.invoiceInitTimeout = setTimeout(() => {
+        recalculateTotals();
+        updateRemoveButtons();
+      }, 100);
     });
 
     // Initialize Flatpickr for date fields

@@ -27,15 +27,15 @@
 }
 
 #invoice_card tr {
-    page-break-inside: avoid;
+  page-break-inside: avoid;
 }
 
 #invoice_card table {
-    page-break-inside: auto;
+  page-break-inside: auto;
 }
 
 #invoice_card thead {
-    display: table-header-group;
+  display: table-header-group;
 }
 
 .card-filter {
@@ -45,7 +45,7 @@
 
 .card-filter:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .card-filter.active {
