@@ -229,7 +229,7 @@
       </div>
 
       <!-- Totals -->
-      <div class="card border-0 shadow-sm p-3 text-end">
+      <div class="card border-0 shadow-sm p-3 text-end mb-3">
         <p class="mb-1">Subtotal excl. taxes: <strong><span class="subtotal-amount">0.00</span></strong></p>
         <p class="mb-1">Total taxes: <strong><span class="total-tax-amount">0.00</span> <span class="currency_type">PHP</span></strong></p>
         <hr>
@@ -528,7 +528,7 @@
             <%= hidden_field_tag :payment_terms_json_edit, (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json_edit', data: { field_type: 'invoice_form_fields' } %>
             <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit', data: { field_type: 'invoice_form_fields' } %>
         </div>
-    <% unless @invoice.quote? %>
+    <% unless @invoice.quote? || @invoice.credit_note? %>
     <div class="card-footer bg-white pb-3">
         <button type="button" class="btn btn-primary btn-sm add-footer-toggle-btn mt-3">
           + Add footer notes
@@ -560,7 +560,15 @@
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fw-bold"><%= @invoice.quote? ? 'Quote Preview' : 'Invoice Preview' %></h5>
+        <h5 class="modal-title fw-bold">
+          <%= if @invoice.quote?
+                'Quote Preview'
+              elsif @invoice.credit_note?
+                'Credit Note Preview'
+              else
+                'Invoice Preview'
+              end %>
+        </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">

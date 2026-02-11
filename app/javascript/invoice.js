@@ -2124,6 +2124,10 @@ const initInvoiceForm = () => {
   });
 
   $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function (e) {
+    // Skip payment terms validation for Credit Notes
+    const category = $('input[name="invoice[invoice_category]"]').val();
+    if (category === 'credit_note') return;
+
     let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : this.id === "view_invoice_btn" ? "#view_invoicepayment_terms_json" : "#payment_terms_json_edit";
     if (!$(inputId).val() || $(inputId).val() === "[]" || $(inputId).val() === "{}") {
       e.preventDefault();
@@ -2163,14 +2167,18 @@ const initInvoiceForm = () => {
       };
 
       // Basic invoice fields
-      const isQuote = $('input[name="invoice[invoice_category]"]').val() === 'quote';
+      const category = $('input[name="invoice[invoice_category]"]').val();
+      const isQuote = category === 'quote';
+      const isCreditNote = category === 'credit_note';
+
       const invoice = {
         issueDate: formData['invoice[issue_date]'] || '—',
         number: formData['invoice[invoice_number]'] || '—',
         currency: formData['invoice[currency]'] || '—',
         note: getVal('#invoice_recipient_note'),
         footer: getVal('#invoice_footer_notes'),
-        isQuote: isQuote
+        isQuote: isQuote,
+        isCreditNote: isCreditNote
       };
 
       // Optional fields
@@ -2305,30 +2313,34 @@ const initInvoiceForm = () => {
 
       // Payment terms
       let paymentTermsHtml = '';
-      const $paymentGroups = $('#payment_terms_parent_div .payment-term-group');
-      if ($paymentGroups.length) {
-        paymentTermsHtml = '<h5 class="mb-3 fw-semibold">Payment Terms</h5><ol class="ps-3 mb-0">';
+      if (!invoice.isCreditNote) {
+        const $paymentGroups = $('#payment_terms_parent_div .payment-term-group');
+        if ($paymentGroups.length) {
+          paymentTermsHtml = '<h5 class="mb-3 fw-semibold">Payment Terms</h5><ol class="ps-3 mb-0">';
 
-        $paymentGroups.each(function () {
-          const $group = $(this);
-          const title = $group.find('h5').text().trim() || 'Payment';
-          let rows = '';
+          $paymentGroups.each(function () {
+            const $group = $(this);
+            const title = $group.find('h5').text().trim() || 'Payment';
+            let rows = '';
 
-          $group.find('.payment-term-input').each(function () {
-            const $input = $(this);
-            const label = $input.closest('.mb-3').find('label').text().trim().replace('(optional)', '').trim();
-            const value = $input.val()?.trim();
-            if (value) rows += `<tr><td class="text-start" style="width: 40%;">${label}</td><td class="text-start">${value}</td></tr>`;
+            $group.find('.payment-term-input').each(function () {
+              const $input = $(this);
+              const label = $input.closest('.mb-3').find('label').text().trim().replace('(optional)', '').trim();
+              const value = $input.val()?.trim();
+              if (value) rows += `<tr><td class="text-start" style="width: 40%;">${label}</td><td class="text-start">${value}</td></tr>`;
+            });
+
+            paymentTermsHtml += `
+                <li class="mb-3">
+                  <h6 class="fw-bold d-inline">${title}</h6>
+                  ${rows ? `<table class="table table-sm table-borderless mt-2"><tbody>${rows}</tbody></table>` : ''}
+                </li>`;
           });
 
-          paymentTermsHtml += `
-              <li class="mb-3">
-                <h6 class="fw-bold d-inline">${title}</h6>
-                ${rows ? `<table class="table table-sm table-borderless mt-2"><tbody>${rows}</tbody></table>` : ''}
-              </li>`;
-        });
-
-        paymentTermsHtml += '</ol>';
+          paymentTermsHtml += '</ol>';
+        } else {
+          paymentTermsHtml = '<h5 class="mb-3 fw-semibold">Payment Terms</h5><p class="text-muted fst-italic">No payment terms provided.</p>';
+        }
       }
 
       // Delivery details
@@ -2357,9 +2369,9 @@ const initInvoiceForm = () => {
         { selector: '[name="invoice[delivery_details_tax_number]"]', label: 'Tax Number', width: 8 }
       ];
 
-      const deliveryHtml = buildFieldSection('#delivery_details_parent_div', deliveryFields)
+      const deliveryHtml = (!invoice.isCreditNote && buildFieldSection('#delivery_details_parent_div', deliveryFields))
         ? `<h5 class="mb-3 fw-semibold">Delivery details</h5><div class="row">${buildFieldSection('#delivery_details_parent_div', deliveryFields)}</div>`
-        : '';
+        : ((!invoice.isCreditNote) ? '<h5 class="mb-3 fw-semibold">Delivery details</h5><p class="text-muted fst-italic">No delivery details provided.</p>' : '');
 
       // Location details renderer
       const renderLocationDetails = (selector, title, outputId) => {
@@ -2390,16 +2402,19 @@ const initInvoiceForm = () => {
             </div>`;
       };
 
-      const shipFromHtml = renderLocationDetails('#ship_from_details', 'Ship From Location Details', 'ship_from_location_details');
-      const remitToHtml = renderLocationDetails('#remit_to_details', 'Remit To Location Details', 'remit_to_location_details');
-      const taxRepHtml = renderLocationDetails('#tax_representative_details', 'Tax Representative Location Details', 'tax_representative_location_details');
+      const shipFromHtml = (!invoice.isCreditNote) ?
+        (renderLocationDetails('#ship_from_details', 'Ship From details', 'ship_from_location_details') || '<h5 class="mb-3 fw-semibold">Ship from details</h5><p class="text-muted fst-italic">No Ship From details provided.</p>') : '';
+      const remitToHtml = renderLocationDetails('#remit_to_details', 'Remit To details', 'remit_to_location_details') || '<h5 class="mb-3 fw-semibold">Remit to details</h5><p class="text-muted fst-italic">No Remit To details provided.</p>';
+      const taxRepHtml = renderLocationDetails('#tax_representative_details', 'Tax Representative details', 'tax_representative_location_details') || '<h5 class="mb-3 fw-semibold">Tax Representative details</h5><p class="text-muted fst-italic">No Tax Representative details provided.</p>';
 
       // Build final HTML
       const html = `
           <div class="card shadow-sm border-0" id="invoice_card">
             <div class="card-body">
               <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold mb-0">${invoice.isQuote ? 'Quote Details' : 'Invoice Details'}</h4>
+                <h4 class="fw-bold mb-0">
+                  ${invoice.isQuote ? 'Quote Details' : (invoice.isCreditNote ? 'Credit Note Details' : 'Invoice Details')}
+                </h4>
                 <span class="badge px-3 py-2 fs-6 bg-secondary-subtle text-muted">DRAFT</span>
               </div>
 
@@ -2447,12 +2462,17 @@ const initInvoiceForm = () => {
               <div class="row">
                 ${!invoice.isQuote ? `
                   <div class="col-md-6">
-                    ${paymentTermsHtml || '<h5 class="mb-3">Payment Terms</h5><p class="text-muted">No payment terms provided.</p>'}
-                    <hr>
-                    ${deliveryHtml || '<h5 class="mb-3 fw-semibold">Delivery details</h5><p class="text-muted">No delivery details provided.</p>'}
-                    ${shipFromHtml || '<h5 class="mb-3 fw-semibold">Ship from details</h5><p class="text-muted">No Ship From details provided.</p>'}
-                    ${remitToHtml || '<h5 class="mb-3 fw-semibold">Remit to details</h5><p class="text-muted">No remit to details provided.</p>'}
-                    ${taxRepHtml || '<h5 class="mb-3 fw-semibold">Tax representative details</h5><p class="text-muted">No tax representative details provided.</p>'}
+                    ${remitToHtml}
+                    ${taxRepHtml}
+
+                    ${!invoice.isCreditNote ? `
+                      <hr class="my-4">
+                      ${shipFromHtml}
+                      <hr class="my-4">
+                      ${paymentTermsHtml}
+                      <hr class="my-4">
+                      ${deliveryHtml}
+                    ` : ''}
                   </div>
                 ` : ''}
 
@@ -2568,7 +2588,7 @@ const initInvoiceForm = () => {
               </div>
             </div>
 
-            ${!invoice.isQuote ? `
+            ${!invoice.isQuote && !invoice.isCreditNote ? `
               <div class="card-footer bg-white">
                 <p class="mb-0">${invoice.footer.replace(/\n/g, '<br>')}</p>
               </div>

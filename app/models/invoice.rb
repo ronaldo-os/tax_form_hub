@@ -20,8 +20,7 @@ class Invoice < ApplicationRecord
   
   validates :credit_note_original_invoice_id, presence: true, if: :credit_note?
   validate :attachments_type_allowed
-  validates :credit_note_original_invoice_id, presence: true, if: :credit_note?
-  validate :attachments_type_allowed
+
 
   def line_items
     line_items_data || []

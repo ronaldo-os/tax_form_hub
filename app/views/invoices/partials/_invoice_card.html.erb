@@ -124,7 +124,6 @@
           </div>
         </div>
 
-        </div>
 
         <div class="table-responsive">
           <table class="table align-middle table-hover text-nowrap mt-4">
@@ -260,7 +259,7 @@
 
 
         <!-- Totals -->
-        <div class="card border-0 shadow-sm p-3 text-end mb-2">
+        <div class="card border-0 shadow-sm p-3 text-end mb-3">
           <p class="mb-1">
             Subtotal excl. taxes:
             <span class="fw-semibold">
@@ -280,7 +279,7 @@
               <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2, delimiter: ',') %>
             </span>
           </p>
-
+        </div>
         <% unless @invoice.quote? %>
         <hr class="mt-2">
 
