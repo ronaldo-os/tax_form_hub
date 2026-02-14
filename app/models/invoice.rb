@@ -15,7 +15,10 @@ class Invoice < ApplicationRecord
 
   after_update :sync_archived_status, if: :saved_change_to_archived?
 
+  # Explicitly declare attribute types for enums to prevent 'Undeclared attribute type' errors in some contexts
+  attribute :invoice_type, :string
   enum invoice_type: { sale: 'sale', purchase: 'purchase' }
+  attribute :invoice_category, :string, default: 'standard'
   enum invoice_category: { standard: 'standard', credit_note: 'credit_note', quote: 'quote' }
   
   validates :credit_note_original_invoice_id, presence: true, if: :credit_note?
