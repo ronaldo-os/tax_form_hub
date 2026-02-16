@@ -4,4 +4,16 @@ set -e
 # Default to port 3000 if not specified
 export PORT="${PORT:-3000}"
 
+# Check if node_modules exists, if not run npm install
+if [ ! -d "node_modules" ]; then
+  echo "== node_modules missing. Running npm install... =="
+  npm install
+fi
+
+# Check if esbuild is available
+if ! npx esbuild --version > /dev/null 2>&1; then
+  echo "== esbuild not found. Attempting to install... =="
+  npm install
+fi
+
 exec bundle exec foreman start -f Procfile.dev --env /dev/null "$@"
