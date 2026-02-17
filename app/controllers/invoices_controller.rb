@@ -1,16 +1,20 @@
 class InvoicesController < ApplicationController
+  before_action :set_form_resources, only: [:new, :edit, :create, :update]
   def index
-    base_scope = current_user.invoices.includes(:recipient_company, :ship_from_location, :remit_to_location, :tax_representative_location)
+    # Eager load associations to prevent N+1 queries
+    base_scope = current_user.invoices
+      .includes(:recipient_company, :ship_from_location, :remit_to_location, :tax_representative_location)
     
-    @invoices_sale = base_scope.where(invoice_type: "sale", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc)
-    @invoices_sale_archived = base_scope.where(invoice_type: "sale", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc)
-    @invoices_purchase = base_scope.where(invoice_type: "purchase", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc)
-    @invoices_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc)
+    # Limit results to most recent 100 per category to prevent loading thousands of records
+    @invoices_sale = base_scope.where(invoice_type: "sale", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
+    @invoices_sale_archived = base_scope.where(invoice_type: "sale", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
+    @invoices_purchase = base_scope.where(invoice_type: "purchase", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
+    @invoices_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
 
-    @quotes_sale = base_scope.where(invoice_type: "sale", archived: false, invoice_category: "quote").order(issue_date: :desc)
-    @quotes_sale_archived = base_scope.where(invoice_type: "sale", archived: true, invoice_category: "quote").order(issue_date: :desc)
-    @quotes_purchase = base_scope.where(invoice_type: "purchase", archived: false, invoice_category: "quote").order(issue_date: :desc)
-    @quotes_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true, invoice_category: "quote").order(issue_date: :desc)
+    @quotes_sale = base_scope.where(invoice_type: "sale", archived: false, invoice_category: "quote").order(issue_date: :desc).limit(100)
+    @quotes_sale_archived = base_scope.where(invoice_type: "sale", archived: true, invoice_category: "quote").order(issue_date: :desc).limit(100)
+    @quotes_purchase = base_scope.where(invoice_type: "purchase", archived: false, invoice_category: "quote").order(issue_date: :desc).limit(100)
+    @quotes_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true, invoice_category: "quote").order(issue_date: :desc).limit(100)
 
     # month ranges (use Time.current so it respects time zone)
     current_month_range = Time.current.beginning_of_month..Time.current.end_of_month
@@ -32,7 +36,8 @@ class InvoicesController < ApplicationController
 
 
   def show
-    @invoice = current_user.invoices.find(params[:id])
+    # Eager load associations only if needed (based on response format)
+    @invoice = current_user.invoices.includes(:recipient_company, :ship_from_location, :remit_to_location, :tax_representative_location).find(params[:id])
     @recipient_company = @invoice.recipient_company
     @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
@@ -53,14 +58,6 @@ class InvoicesController < ApplicationController
 
 
   def new
-    @recipient_companies = current_user.connected_companies
-    @locations_by_type = Location.all.group_by(&:location_type)
-    @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
-    @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
-
-    if params[:category] == 'credit_note' || params[:original_invoice_id].present? || (@invoice&.credit_note?)
-      @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'denied']).order(issue_date: :desc)
-    end
 
     if params[:template_id].present?
       template = Invoice.find(params[:template_id])
@@ -113,14 +110,6 @@ class InvoicesController < ApplicationController
 
   def edit
     @invoice = current_user.invoices.find(params[:id])
-    @recipient_companies = current_user.connected_companies
-    @locations_by_type = current_user.locations.group_by(&:location_type)
-    @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
-    @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
-    
-    if @invoice.credit_note?
-      @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'denied']).order(issue_date: :desc)
-    end
   end
 
   def create
@@ -133,7 +122,6 @@ class InvoicesController < ApplicationController
     @invoice = current_user.invoices.build(clean_params)
     @invoice.invoice_type ||= "sale"
     @invoice.status ||= "draft"
-    @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
 
     if params[:invoice][:line_items_attributes].present?
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
@@ -575,11 +563,22 @@ class InvoicesController < ApplicationController
   def set_form_resources
     @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
-    @tax_rates = TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate)
-    @units = Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name)
+    # Memoize tax rates and units to avoid duplicate queries on form rerender
+    @tax_rates = tax_rates_for_company
+    @units = units_for_company
     
     if @invoice&.credit_note?
       @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'denied']).order(issue_date: :desc)
     end
+  end
+
+  # Memoized helper for tax rates (cached per request)
+  def tax_rates_for_company
+    @tax_rates_cache ||= TaxRate.where(custom: false).or(TaxRate.where(company_id: current_user.company_id)).order(:rate).to_a
+  end
+
+  # Memoized helper for units (cached per request)
+  def units_for_company
+    @units_cache ||= Unit.where(company_id: current_user.company_id).or(Unit.where(custom: false)).order(:name).to_a
   end
 end
