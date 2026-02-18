@@ -21,6 +21,13 @@
 
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module", defer: true %>
     <%= yield :javascripts %>
+
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      })();
+    </script>
   </head>
   <body data-devise="<%= devise_controller? %>" class="bg-light">
 
@@ -105,6 +112,13 @@
               <div class="app-icon"><i class="fa-solid fa-building z-1"></i></div>
               <div class="app-text">Company Profile</div>
             <% end %>
+          </li>
+
+          <li id="theme_toggle_btn" style="cursor: pointer;">
+            <a>
+              <div class="app-icon"><i class="fa-solid fa-moon z-1"></i></div>
+              <div class="app-text">Dark Mode</div>
+            </a>
           </li>
 
           <li>
