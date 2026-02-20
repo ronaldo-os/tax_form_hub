@@ -36,7 +36,7 @@
             </div>
 
             <!-- Company preview -->
-            <div id="recipient-preview" class="p-3 rounded border bg-light-subtle <%= current_recipient ? '' : 'd-none' %>">
+            <div id="recipient-preview" class="p-3 rounded border bg-body-tertiary <%= current_recipient ? '' : 'd-none' %>">
               <h6 class="fw-bold mb-2" id="company_name"><%= current_recipient&.name %></h6>
               <p class="mb-1 text-muted" id="company_address"><%= current_recipient&.address %></p>
               <p class="mb-1 text-muted" id="company_country" data-country="<%= current_recipient&.country %>">
@@ -470,7 +470,7 @@
           </div>
         </div>
 
-        <nav class="navbar navbar-light bg-white fixed-bottom py-2" id="form_actions_fixed_navbar">
+        <nav class="navbar border-top bg-body-tertiary fixed-bottom py-2" id="form_actions_fixed_navbar">
           <div class="container d-flex justify-content-between align-items-center" id="action_buttons_container">
 
             <!-- Left side -->
@@ -529,7 +529,7 @@
             <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit', data: { field_type: 'invoice_form_fields' } %>
         </div>
     <% unless @invoice.quote? || @invoice.credit_note? %>
-    <div class="card-footer bg-white pb-3">
+    <div class="card-footer pb-3">
         <button type="button" class="btn btn-primary btn-sm add-footer-toggle-btn mt-3">
           + Add footer notes
         </button>

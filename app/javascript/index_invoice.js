@@ -107,9 +107,15 @@ function initInvoicePage() {
 
         $.get(`/invoices/${invoiceId}`, { partial: true }, function (html) {
             const temp = document.createElement('div');
+            temp.classList.add('force-light-mode');
+            temp.setAttribute('data-theme', 'light');
+            temp.setAttribute('data-bs-theme', 'light');
             temp.innerHTML = html;
             temp.style.position = 'absolute';
             temp.style.left = '-9999px';
+            temp.style.width = '1000px';
+            temp.style.background = 'white';
+            temp.style.color = 'black';
             temp.style.visibility = 'hidden';
             document.body.appendChild(temp);
 
@@ -172,10 +178,33 @@ function initInvoicePage() {
                 }
             };
 
+            const htmlElement = document.documentElement;
+            const currentDataTheme = htmlElement.getAttribute('data-theme');
+            const currentBSTheme = htmlElement.getAttribute('data-bs-theme');
+
+            // Force light mode on root temporarily for high-fidelity capture
+            htmlElement.setAttribute('data-theme', 'light');
+            htmlElement.setAttribute('data-bs-theme', 'light');
+
             html2pdf().set(opt).from(invoice).save().then(() => {
+                // Restore themes
+                if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
+                else htmlElement.removeAttribute('data-theme');
+
+                if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
+                else htmlElement.removeAttribute('data-bs-theme');
+
                 if (document.body.contains(temp)) document.body.removeChild(temp);
             }).catch((error) => {
                 console.error('Error generating PDF:', error);
+
+                // Restore themes
+                if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
+                else htmlElement.removeAttribute('data-theme');
+
+                if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
+                else htmlElement.removeAttribute('data-bs-theme');
+
                 alert('Failed to generate PDF. Please try again.');
                 if (document.body.contains(temp)) document.body.removeChild(temp);
             });

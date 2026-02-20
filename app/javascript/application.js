@@ -17,53 +17,66 @@ import "@hotwired/turbo-rails";
 Rails.start();
 
 
-function initApplication() {
-    // Theme Toggle Logic
-    const themeToggleBtn = document.getElementById('theme_toggle_btn');
 
-    // Ensure theme is synced from localStorage (especially after Turbo navigation)
+function updateThemeUI(theme) {
+    const btn = document.getElementById('theme_toggle_btn');
+    if (!btn) {
+        console.warn('Theme button not found');
+        return;
+    }
+
+    // Find the icon and text - they're inside the <a> tag
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('.app-text');
+
+    if (theme === 'dark') {
+        if (icon) {
+            icon.classList.remove('fa-moon');
+            icon.classList.add('fa-sun');
+        }
+        if (text) text.textContent = 'Light Mode';
+    } else {
+        if (icon) {
+            icon.classList.remove('fa-sun');
+            icon.classList.add('fa-moon');
+        }
+        if (text) text.textContent = 'Dark Mode';
+    }
+}
+
+function handleThemeToggle(e) {
+    e.preventDefault();
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+
+    console.log('Theme toggle clicked. Current:', currentTheme, 'New:', newTheme);
+
+    document.documentElement.setAttribute('data-theme', newTheme);
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeUI(newTheme);
+}
+
+// Event delegation handler for theme toggle clicks
+function handleThemeToggleEvent(e) {
+    const themeBtn = e.target.closest('#theme_toggle_btn');
+    if (themeBtn) {
+        handleThemeToggle(e);
+    }
+}
+
+function initApplication() {
+    // Theme Toggle Logic - Ensure theme is synced from localStorage (especially after Turbo navigation)
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
+
+    // Initial UI update
     updateThemeUI(savedTheme);
 
-    function updateThemeUI(theme) {
-        if (!themeToggleBtn) return;
-        const icon = themeToggleBtn.querySelector('.app-icon i');
-        const text = themeToggleBtn.querySelector('.app-text');
-
-        if (theme === 'dark') {
-            if (icon) {
-                icon.classList.remove('fa-moon');
-                icon.classList.add('fa-sun');
-            }
-            if (text) text.textContent = 'Light Mode';
-        } else {
-            if (icon) {
-                icon.classList.remove('fa-sun');
-                icon.classList.add('fa-moon');
-            }
-            if (text) text.textContent = 'Dark Mode';
-        }
-    }
-
-    if (themeToggleBtn) {
-        // Remove existing listener to prevent duplicates - using replaceChild is a clean way
-        const newBtn = themeToggleBtn.cloneNode(true);
-        themeToggleBtn.parentNode.replaceChild(newBtn, themeToggleBtn);
-
-        newBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-
-            document.documentElement.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeUI(newTheme);
-        });
-
-        // Re-fetch the button after replacement so we can update it if needed later in this same tick (unlikely)
-        // updateThemeUI(savedTheme); // UI already updated above
-    }
+    // Setup theme toggle button listener using vanilla JS event delegation
+    document.removeEventListener('click', handleThemeToggleEvent);
+    document.addEventListener('click', handleThemeToggleEvent);
 
     // password toggle handler - delegated event
     $(document).off('click.pw-toggle').on('click.pw-toggle', '.toggle-password-icon', function (event) {

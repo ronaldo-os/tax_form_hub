@@ -8,11 +8,18 @@ $(document).on('click', '#download_button', function () {
 
     // Create a temp container for the clone
     const temp = document.createElement('div');
+    temp.classList.add('force-light-mode');
+    temp.setAttribute('data-theme', 'light');
+    temp.setAttribute('data-bs-theme', 'light');
+
     // Position off-screen but visible for rendering
     temp.style.position = 'absolute';
     temp.style.left = '-9999px';
     temp.style.top = '0';
-    temp.style.width = '100%'; // Ensure it has width
+    temp.style.width = '1000px'; // Set a fixed width for consistent PDF layout
+    temp.style.background = 'white';
+    temp.style.color = 'black';
+    temp.style.visibility = 'hidden';
     temp.appendChild(clone);
     document.body.appendChild(temp);
 
@@ -83,11 +90,34 @@ $(document).on('click', '#download_button', function () {
         }
     };
 
+    const html = document.documentElement;
+    const currentDataTheme = html.getAttribute('data-theme');
+    const currentBSTheme = html.getAttribute('data-bs-theme');
+
+    // Force light mode on root temporarily for high-fidelity capture
+    html.setAttribute('data-theme', 'light');
+    html.setAttribute('data-bs-theme', 'light');
+
     html2pdf().set(opt).from(invoice).save().then(() => {
+        // Restore themes
+        if (currentDataTheme) html.setAttribute('data-theme', currentDataTheme);
+        else html.removeAttribute('data-theme');
+
+        if (currentBSTheme) html.setAttribute('data-bs-theme', currentBSTheme);
+        else html.removeAttribute('data-bs-theme');
+
         // Clean up
         document.body.removeChild(temp);
     }).catch((error) => {
         console.error('Error generating PDF:', error);
+
+        // Restore themes
+        if (currentDataTheme) html.setAttribute('data-theme', currentDataTheme);
+        else html.removeAttribute('data-theme');
+
+        if (currentBSTheme) html.setAttribute('data-bs-theme', currentBSTheme);
+        else html.removeAttribute('data-bs-theme');
+
         alert('Failed to generate PDF. Please try again.');
         if (document.body.contains(temp)) {
             document.body.removeChild(temp);

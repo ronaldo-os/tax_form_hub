@@ -51,7 +51,7 @@ class InvoicesController < ApplicationController
       format.json { render json: @invoice.as_json(include: :recipient_company) }
       format.js
       format.any(:pdf, :html) do
-        render partial: "invoices/partials/invoice_card", locals: { invoice: @invoice }
+        render partial: "invoices/partials/invoice_card", locals: { invoice: @invoice }, layout: "pdf"
       end
     end
   end

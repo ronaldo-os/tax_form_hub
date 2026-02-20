@@ -23,7 +23,7 @@
 }
 
 #invoice-preview .line-item td {
-  border-top: 2px solid #f0f0f0;
+  border-top: 2px solid var(--border-color);
 }
 
 #invoice_card tr {
@@ -49,12 +49,12 @@
 }
 
 .card-filter.active {
-  border: 2px solid #00aeff;
+  border: 2px solid var(--main-color);
   box-shadow: 0 0 10px rgba(13, 110, 253, 0.25);
 }
 
 .card-filter.active p,
 .card-filter.active i {
-  color: #00aeff !important;
+  color: var(--main-color) !important;
   font-weight: 600;
 }

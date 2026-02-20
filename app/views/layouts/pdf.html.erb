@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html data-bs-theme="light">
+  <head>
+    <title>Invoice PDF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    
+    <%= stylesheet_link_tag "application", media: "all", "data-turbo-track": "reload" %>
+  </head>
+  <body class="bg-white">
+    <div class="container mt-4">
+      <%= yield %>
+    </div>
+  </body>
+</html>

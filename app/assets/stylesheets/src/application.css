@@ -1,10 +1,13 @@
-:root {
+:root,
+[data-theme="light"] {
   --main-color: #00aeff;
   --active-color: #20b9ff;
   --app-clr: rgb(240 240 240);
   --side-app-bg: #00aeff;
   --bg-body: rgb(240, 240, 240);
   --bg-sidebar: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
   --text-main: #212529;
   --text-sidebar: #333333;
   --border-color: #d1d1d1;
@@ -20,13 +23,16 @@
 
 [data-theme="dark"] {
   --app-clr: #1a1d21;
+  --side-app-bg: #00aeff;
   --bg-body: #1a1d21;
   --bg-sidebar: #212529;
+  --bg-secondary: #2c3034;
+  --bg-tertiary: #25292d;
   --text-main: #f8f9fa;
   --text-sidebar: #f8f9fa;
   --border-color: #495057;
   --card-bg: #212529;
-  --input-bg: #2c3034;
+  --input-bg: #2b3035;
   --input-text: #f8f9fa;
   --table-bg: #212529;
   --table-border-color: #343a40;
@@ -46,8 +52,52 @@ body {
   color: var(--text-main);
 }
 
+.bg-body-secondary {
+  background-color: var(--bg-secondary) !important;
+}
+
+.bg-body-tertiary {
+  background-color: var(--bg-tertiary) !important;
+}
+
 .bg-light {
   background-color: var(--bg-body) !important;
+}
+
+/* Helper to force light mode context for PDF generation */
+.force-light-mode {
+  --app-clr: rgb(240 240 240) !important;
+  --bg-body: rgb(240, 240, 240) !important;
+  --bg-sidebar: #ffffff !important;
+  --bg-secondary: #f8f9fa !important;
+  --bg-tertiary: #f1f3f5 !important;
+  --text-main: #212529 !important;
+  --text-sidebar: #333333 !important;
+  --border-color: #d1d1d1 !important;
+  --card-bg: #ffffff !important;
+  --input-bg: #ffffff !important;
+  --input-text: #212529 !important;
+  --table-bg: #ffffff !important;
+  --table-border-color: #ffffff !important;
+  --modal-content-bg: #ffffff !important;
+  --modal-content-color: #212529 !important;
+  --text-muted: #6c757d !important;
+  background-color: var(--bg-body) !important;
+  color: var(--text-main) !important;
+}
+
+.force-light-mode .card {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+  border-color: #ededed !important;
+}
+
+.force-light-mode .text-muted {
+  color: var(--text-muted) !important;
+}
+
+.force-light-mode .bg-body-tertiary {
+  background-color: var(--bg-tertiary) !important;
 }
 
 .text-primary {
@@ -592,6 +642,74 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 
 .dataTables_wrapper .dataTables_info,
 .dataTables_wrapper .dataTables_paginate {
+  color: var(--text-main) !important;
+}
+
+/* Enhanced Dark Mode Datatable Styles */
+.table {
+  color: var(--text-main);
+}
+
+.table thead th {
+  background-color: var(--table-bg);
+  color: var(--text-main);
+  border-color: var(--table-border-color);
+}
+
+.table tbody td {
+  background-color: var(--table-bg);
+  color: var(--text-main);
+  border-color: var(--table-border-color);
+}
+
+.table tbody tr:hover {
+  background-color: var(--input-bg);
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--input-bg);
+  color: var(--text-main);
+}
+
+.dataTables_wrapper {
+  color: var(--text-main);
+}
+
+.dataTables_filter input {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dataTables_filter input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.dataTables_paginate .paginate_button {
+  color: var(--text-main) !important;
+  background-color: var(--table-bg) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dataTables_paginate .paginate_button:hover {
+  background-color: var(--input-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.dataTables_paginate .paginate_button.active {
+  background-color: var(--main-color) !important;
+  border-color: var(--main-color) !important;
+  color: #ffffff !important;
+}
+
+.dataTables_length select.form-select {
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--border-color) !important;
+}
+
+.dataTables_length label {
   color: var(--text-main) !important;
 }
 

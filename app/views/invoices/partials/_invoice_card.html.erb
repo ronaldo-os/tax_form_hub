@@ -30,7 +30,7 @@
         <!-- Company Info -->
         <div class="col-md-6">
           <% if @recipient_company.present? %>
-            <div class="p-3 rounded border bg-light-subtle">
+            <div class="p-3 rounded border bg-body-tertiary">
               <h6 class="fw-bold mb-2"><%= @recipient_company.name %></h6>
               <p class="mb-1 text-muted"><%= @recipient_company.address %></p>
               <p class="mb-1 text-muted">Philippines</p>
@@ -448,7 +448,7 @@
         </div>
 
       <% unless @invoice.quote? %>
-      <div class="card-footer bg-white">
+      <div class="card-footer">
         <p><%= simple_format(@invoice.footer_notes) %></p>
       </div>
       <% end %>
