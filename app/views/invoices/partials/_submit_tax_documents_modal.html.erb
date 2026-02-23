@@ -10,7 +10,7 @@
       <div class="modal-body p-4 pt-0">
         <%= form_with model: TaxSubmission.new, url: tax_submissions_path, local: true, multipart: true do |f| %>
           <%= f.hidden_field :invoice_id, value: invoice.id %>
-          <%= hidden_field_tag :redirect_url, invoices_path(request.query_parameters.merge(tab: invoice.invoice_type == 'purchase' ? 'purchases' : 'sales')) %>
+          <%= hidden_field_tag :redirect_url, invoices_path(request.query_parameters.merge(tab: invoice.invoice_type == 'purchase' ? 'purchase-invoices' : 'sales-invoices')) %>
 
 
           <div class="row g-3">

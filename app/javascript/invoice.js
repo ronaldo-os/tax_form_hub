@@ -2669,8 +2669,8 @@ const initInvoiceForm = () => {
     }
 
     const rateNum = parseFloat(rate);
-    if (isNaN(rateNum) || rateNum < 0 || rateNum > 100) {
-      $('#tax-error').text('Rate must be between 0 and 100.');
+    if (isNaN(rateNum) || rateNum < -100 || rateNum > 100) {
+      $('#tax-error').text('Rate must be between -100 and 100.');
       return;
     }
 
