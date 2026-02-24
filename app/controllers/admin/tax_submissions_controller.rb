@@ -13,8 +13,8 @@ class Admin::TaxSubmissionsController < ApplicationController
     @archived_submissions = scope.where(archived: true).order(created_at: :desc)
 
     if params[:q].present?
-      @unarchived_submissions = @unarchived_submissions.where("email ILIKE ?", "%#{params[:q]}%")
-      @archived_submissions = @archived_submissions.where("email ILIKE ?", "%#{params[:q]}%")
+      @unarchived_submissions = @unarchived_submissions.where("email ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(params[:q])}%")
+      @archived_submissions = @archived_submissions.where("email ILIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(params[:q])}%")
     end
   end
 

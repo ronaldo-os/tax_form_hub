@@ -27,7 +27,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
         respond_with resource, location: after_inactive_sign_up_path_for(resource)
       end
     else
-      flash.now[:alert] = resource.errors.full_messages.join("<br>").html_safe
+      flash.now[:alert] = resource.errors.full_messages.join("\n")
       clean_up_passwords resource
       set_minimum_password_length
       render :new, status: :unprocessable_entity
@@ -46,7 +46,7 @@ class Users::RegistrationsController < Devise::RegistrationsController
       bypass_sign_in resource, scope: resource_name if sign_in_after_change_password?
       respond_with resource, location: after_update_path_for(resource)
     else
-      flash.now[:alert] = resource.errors.full_messages.join("<br>").html_safe
+      flash.now[:alert] = resource.errors.full_messages.join("\n")
       clean_up_passwords resource
       set_minimum_password_length
       render :edit, status: :unprocessable_entity

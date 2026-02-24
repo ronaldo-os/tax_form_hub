@@ -6,7 +6,7 @@ class Users::PasswordsController < Devise::PasswordsController
     if successfully_sent?(resource)
       respond_with({}, location: after_sending_reset_password_instructions_path_for(resource_name))
     else
-      flash[:alert] = resource.errors.full_messages.join("<br>").html_safe
+      flash[:alert] = resource.errors.full_messages.join("\n")
       redirect_to new_password_path(resource_name)
     end
   end
