@@ -11,7 +11,7 @@ class TaxSubmissionsController < ApplicationController
   def home
     Rails.logger.info "DEBUG: TaxSubmissionsController#home executing"
     load_sent_submissions
-    @companies = current_user.companies
+    @companies = current_user.connected_companies
     @tax_submission = TaxSubmission.new # For the modal form
     fresh_when etag: @unarchived_submissions, last_modified: @unarchived_submissions.maximum(:updated_at)
   end
@@ -28,7 +28,7 @@ class TaxSubmissionsController < ApplicationController
     if tax_submission_params[:invoice_id].blank?
       @tax_submission = TaxSubmission.new(tax_submission_params)
       @tax_submission.errors.add(:invoice_id, "must be selected")
-      @companies = current_user.companies
+      @companies = current_user.connected_companies
       load_submissions
       
       respond_to do |format|
@@ -62,7 +62,7 @@ class TaxSubmissionsController < ApplicationController
       redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
     else
       error_message = @tax_submission.errors.full_messages.join(', ')
-      @companies = current_user.companies
+      @companies = current_user.connected_companies
       load_submissions
       
       respond_to do |format|
@@ -152,16 +152,20 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def set_tax_submission
-    # Allow finding submission if:
-    # 1. It belongs to one of my companies (Incoming)
-    # 2. It belongs to an invoice where I am the recipient (Outgoing)
-    
     my_company_ids = current_user.companies.pluck(:id)
-    scope = TaxSubmission.all
-    invoice_ids_where_i_am_recipient = Invoice.where(recipient_company_id: my_company_ids).select(:id)
     
-    @tax_submission = scope.where(company_id: my_company_ids)
-                           .find_by(id: params[:id])
+    # Identify invoices related to the user (either as creator or where their company is the recipient)
+    related_invoice_ids = Invoice.where("user_id = ? OR recipient_company_id IN (?)", 
+                                        current_user.id, 
+                                        my_company_ids).select(:id)
+    
+    # Allow finding if:
+    # 1. It belongs to one of my companies (Incoming)
+    # 2. It belongs to an invoice I'm involved in (Outgoing)
+    @tax_submission = TaxSubmission.where("company_id IN (?) OR invoice_id IN (?)", 
+                                          my_company_ids, 
+                                          related_invoice_ids)
+                                   .find_by(id: params[:id])
     
     unless @tax_submission
       respond_to do |format|

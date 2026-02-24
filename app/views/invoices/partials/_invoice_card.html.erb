@@ -19,7 +19,7 @@
               when "denied"   then "bg-danger-subtle text-danger"
               when "paid"     then "bg-info-subtle text-info"
               when "draft"    then "bg-secondary-subtle text-muted"
-              else "bg-light text-dark"
+              else "bg-light text-muted"
           end %>">
           <%= @invoice.status.to_s.upcase %>
         </span>
