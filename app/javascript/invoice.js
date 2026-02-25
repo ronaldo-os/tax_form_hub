@@ -2157,13 +2157,22 @@ const initInvoiceForm = () => {
       const getVal = (selector, fallback = '') => $(selector).val()?.trim() || fallback;
       const stripLabel = (text, label) => text.replace(label, '').trim() || '-';
 
-      // Company details
+      // Recipient company details ("To" section)
       const company = {
         name: getText('#company_name'),
         address: getText('#company_address', ''),
         country: getText('#company_country', ''),
         number: stripLabel(getText('#company_number'), 'Company number :'),
         taxNumber: stripLabel(getText('#company_tax_number'), 'Tax number :')
+      };
+
+      // Sender details ("From" section) pulled from hidden inputs added in form
+      const sender = {
+        name: $('#sender_name').val() || '—',
+        address: $('#sender_address').val() || '',
+        country: $('#sender_country').val() || '',
+        number: $('#sender_company_number').val() || '',
+        taxNumber: $('#sender_tax_number').val() || ''
       };
 
       // Basic invoice fields
@@ -2420,8 +2429,19 @@ const initInvoiceForm = () => {
 
               <div class="row g-4">
                 <div class="col-md-6">
+                  <div class="p-3 rounded border bg-light-subtle mb-3">
+                    <h6 class="fw-bold mb-2">From</h6>
+                    <p class="mb-1">${sender.name}</p>
+                    <p class="mb-1 text-muted">${sender.address}</p>
+                    <p class="mb-1 text-muted">${sender.country}</p>
+                    <hr>
+                    <p class="mb-1 small">Company ${$('#sender_company_id_type').val() || ''} number: <strong>${sender.number}</strong></p>
+                    <p class="mb-0 small">Tax ${$('#sender_tax_id_type').val() || ''} number: <strong>${sender.taxNumber}</strong></p>
+                  </div>
+
                   <div class="p-3 rounded border bg-light-subtle">
-                    <h6 class="fw-bold mb-2">${company.name}</h6>
+                    <h6 class="fw-bold mb-2">To</h6>
+                    <p class="mb-1">${company.name}</p>
                     <p class="mb-1 text-muted">${company.address}</p>
                     <p class="mb-1 text-muted">${company.country}</p>
                     <hr>
@@ -2589,7 +2609,7 @@ const initInvoiceForm = () => {
             </div>
 
             ${!invoice.isQuote && !invoice.isCreditNote ? `
-              <div class="card-footer bg-white">
+              <div class="card-footer">
                 <p class="mb-0">${invoice.footer.replace(/\n/g, '<br>')}</p>
               </div>
             ` : ''}

@@ -3,7 +3,7 @@ class InvoicesController < ApplicationController
   def index
     # Eager load associations to prevent N+1 queries
     base_scope = current_user.invoices
-      .includes(:recipient_company, :ship_from_location, :remit_to_location, :tax_representative_location)
+      .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
     
     # Limit results to most recent 100 per category to prevent loading thousands of records
     @invoices_sale = base_scope.where(invoice_type: "sale", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
@@ -37,8 +37,14 @@ class InvoicesController < ApplicationController
 
   def show
     # Eager load associations only if needed (based on response format)
-    @invoice = current_user.invoices.includes(:recipient_company, :ship_from_location, :remit_to_location, :tax_representative_location).find(params[:id])
+    # load associations needed for view and PDF; include sale_from so we can
+    # show the sender company without extra queries
+    @invoice = current_user.invoices
+      .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
+      .find(params[:id])
+
     @recipient_company = @invoice.recipient_company
+    @sender_company = @invoice.sale_from || @invoice.user.company
     @recipient_companies = current_user.connected_companies
     @locations_by_type = current_user.locations.group_by(&:location_type)
 

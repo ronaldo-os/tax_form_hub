@@ -12,8 +12,10 @@ export function initCompanySelector() {
 
     let debounceTimer;
 
-    // Pre-fetch network list immediately on init
-    fetchCompanies('');
+
+    if (input) {
+      input.dataset.loadedDefault = "false";
+    }
 
     // On focus, show dropdown if not already visible
     input.addEventListener('focus', () => {

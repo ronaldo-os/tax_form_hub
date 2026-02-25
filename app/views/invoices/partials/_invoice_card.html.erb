@@ -25,45 +25,59 @@
         </span>
       </div>
       <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
-        <div class="row">
+        <div class="row mb-4">
+          <!-- Sender and recipient details (professional invoice style) -->
+          <% sender = invoice.sale_from || invoice.user.company %>
+          <% recipient = invoice.recipient_company %>
 
-        <!-- Company Info -->
-        <div class="col-md-6">
-          <% if @recipient_company.present? %>
-            <div class="p-3 rounded border bg-body-tertiary">
-              <h6 class="fw-bold mb-2"><%= @recipient_company.name %></h6>
-              <p class="mb-1 text-muted"><%= @recipient_company.address %></p>
-              <p class="mb-1 text-muted">Philippines</p>
-              <hr>
-              <p class="mb-1 small">Company <%= @recipient_company.company_id_type.presence || '-' %> number: <strong><%= @recipient_company.company_id_number.presence || '-' %></strong></p>
-              <p class="mb-0 small">Tax <%= @recipient_company.tax_id_type.presence || '-' %> number: <strong><%= @recipient_company.tax_id_number.presence || '-' %></strong></p>
+          <div class="col-md-6">
+            <% if sender.present? %>
+              <div class="p-3 rounded border bg-body-tertiary mb-3">
+                <h6 class="fw-bold mb-2">From</h6>
+                <p class="mb-1"><%= sender.name %></p>
+                <p class="mb-1 text-muted"><%= sender.address %></p>
+                <p class="mb-1 text-muted"><%= sender.country.presence || 'Philippines' %></p>
+                <hr>
+                <p class="mb-1 small">Company <%= sender.company_id_type.presence || '-' %> number: <strong><%= sender.company_id_number.presence || '-' %></strong></p>
+                <p class="mb-0 small">Tax <%= sender.tax_id_type.presence || '-' %> number: <strong><%= sender.tax_id_number.presence || '-' %></strong></p>
+              </div>
+            <% end %>
+
+            <% if recipient.present? %>
+              <div class="p-3 rounded border bg-body-tertiary">
+                <h6 class="fw-bold mb-2">To</h6>
+                <p class="mb-1"><%= recipient.name %></p>
+                <p class="mb-1 text-muted"><%= recipient.address %></p>
+                <p class="mb-1 text-muted"><%= recipient.country.presence || 'Philippines' %></p>
+                <hr>
+                <p class="mb-1 small">Company <%= recipient.company_id_type.presence || '-' %> number: <strong><%= recipient.company_id_number.presence || '-' %></strong></p>
+                <p class="mb-0 small">Tax <%= recipient.tax_id_type.presence || '-' %> number: <strong><%= recipient.tax_id_number.presence || '-' %></strong></p>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="col-md-6">
+            <div class="row mt-3 mb-3">
+              <%= f.label :invoice_number, invoice.quote? ? "Quote Number" : (invoice.credit_note? ? "Credit Note Number" : "Invoice Number"), class: "h6 form-label" %>
+              <p class="mb-1"><%= invoice.invoice_number %></p>
             </div>
-          <% end %>
-        </div>
 
-
-        <div class="col-md-6">
-          <div class="row mt-3 mb-3">
-                  <%= f.label :invoice_number, invoice.quote? ? "Quote Number" : (invoice.credit_note? ? "Credit Note Number" : "Invoice Number"), class: "h6 form-label" %>
-                  <p class="mb-1"><%= @invoice.invoice_number %></p>
-              </div>
-
-              <% if @invoice.credit_note? && @invoice.original_invoice.present? %>
-                <div class="col-md-6 mb-2">
-                    <h6 class="form-label">Original Invoice</h6>
-                    <p class="mb-1"><%= link_to @invoice.original_invoice.invoice_number, invoice_path(@invoice.original_invoice) %></p>
-                </div>
-              <% end %>
-
+            <% if invoice.credit_note? && invoice.original_invoice.present? %>
               <div class="col-md-6 mb-2">
-                  <%= f.label :issue_date, class: "h6 form-label" %>
-                  <p class="mb-1"><%= @invoice.issue_date %></p>
+                <h6 class="form-label">Original Invoice</h6>
+                <p class="mb-1"><%= link_to invoice.original_invoice.invoice_number, invoice_path(invoice.original_invoice) %></p>
               </div>
+            <% end %>
 
-              <%= f.label :currency, class: "h6 form-label" %>
-              <p class="mb-3"><%= @invoice.currency %></p>
+            <div class="col-md-6 mb-2">
+              <%= f.label :issue_date, class: "h6 form-label" %>
+              <p class="mb-1"><%= invoice.issue_date %></p>
+            </div>
 
-              <% if @invoice.invoice_info.is_a?(Hash) %>
+            <%= f.label :currency, class: "h6 form-label" %>
+            <p class="mb-3"><%= invoice.currency %></p>
+
+            <% if invoice.invoice_info.is_a?(Hash) %>
                 <% 
                   input_types = %w[text date select number checkbox radio textarea]
                   grouped = @invoice.invoice_info.group_by { |k, _| k.split('.').first }

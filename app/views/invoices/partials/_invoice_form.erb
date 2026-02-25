@@ -518,6 +518,16 @@
         <div id="hidden_fields_container" class="d-none">
             <%= f.hidden_field :invoice_category %>
             <%= f.hidden_field :total, id: 'total_amount_json', data: { field_type: 'invoice_form_fields' } %>
+
+            <!-- hidden sender info for preview logic -->
+            <% sender = @invoice.sale_from || current_user.company %>
+            <%= hidden_field_tag 'sender_name', sender&.name, id: 'sender_name' %>
+            <%= hidden_field_tag 'sender_address', sender&.address, id: 'sender_address' %>
+            <%= hidden_field_tag 'sender_country', sender&.country.presence || 'Philippines', id: 'sender_country' %>
+            <%= hidden_field_tag 'sender_company_number', sender&.company_id_number, id: 'sender_company_number' %>
+            <%= hidden_field_tag 'sender_company_id_type', sender&.company_id_type, id: 'sender_company_id_type' %>
+            <%= hidden_field_tag 'sender_tax_number', sender&.tax_id_number, id: 'sender_tax_number' %>
+            <%= hidden_field_tag 'sender_tax_id_type', sender&.tax_id_type, id: 'sender_tax_id_type' %>
             <%= f.hidden_field :price_adjustments, value: @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :payment_terms, value: (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :invoice_info, value: @invoice.invoice_info.to_json.html_safe, id: 'optional_fields_json', data: { field_type: 'invoice_form_fields' } %>

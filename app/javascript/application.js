@@ -24,7 +24,7 @@ function updateThemeUI(theme) {
         console.warn('Theme button not found');
         return;
     }
-
+    
     // Find the icon and text - they're inside the <a> tag
     const icon = btn.querySelector('i');
     const text = btn.querySelector('.app-text');
@@ -50,9 +50,8 @@ function handleThemeToggle(e) {
     const newTheme = currentTheme === 'light' ? 'dark' : 'light';
 
     console.log('Theme toggle clicked. Current:', currentTheme, 'New:', newTheme);
-
+    
     document.documentElement.setAttribute('data-theme', newTheme);
-    document.documentElement.setAttribute('data-bs-theme', newTheme);
     localStorage.setItem('theme', newTheme);
     updateThemeUI(newTheme);
 }
@@ -69,8 +68,7 @@ function initApplication() {
     // Theme Toggle Logic - Ensure theme is synced from localStorage (especially after Turbo navigation)
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
-    document.documentElement.setAttribute('data-bs-theme', savedTheme);
-
+    
     // Initial UI update
     updateThemeUI(savedTheme);
 
