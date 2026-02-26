@@ -651,8 +651,8 @@ const initInvoiceForm = () => {
       });
     }
 
-    // In your event listener for adding a line
-    $('#add-line').off('click.invoice_form').on('click.invoice_form', function () {
+    // Event listener for adding a line - using delegation for robustness
+    $(document).off('click.invoice_form', '#add-line').on('click.invoice_form', '#add-line', function () {
       $('#line-items').append(getLineItemHTML(lineIndex++));
       updateRemoveButtons();
       recalculateTotals();
@@ -671,26 +671,19 @@ const initInvoiceForm = () => {
         $next = $next.next();
       }
 
-      const shouldShow = $toggleRows.length > 0 && !$toggleRows[0].is(':visible');
-      $toggleRows.forEach($row => $row.toggle(shouldShow));
-      $btn.text(shouldShow ? '−' : '+');
-    });
+      if ($toggleRows.length === 0) return;
 
-    $(document).on('click.invoice_form', '.toggle-dropdown', function () {
-      const $btn = $(this);
-      const $currentLineItem = $btn.closest('tr');
-      let $next = $currentLineItem.next();
-      const $toggleRows = [];
+      const firstRow = $toggleRows[0];
+      const shouldShow = !($(firstRow).is(':visible') && !$(firstRow).hasClass('hidden'));
 
-      while ($next.length && !$next.hasClass('line-item')) {
-        if ($next.hasClass('optional-field-row') || $next.hasClass('dropdown_per_line')) {
-          $toggleRows.push($next);
+      $toggleRows.forEach(row => {
+        const $row = $(row);
+        if (shouldShow) {
+          $row.show().removeClass('hidden');
+        } else {
+          $row.hide();
         }
-        $next = $next.next();
-      }
-
-      const shouldShow = $toggleRows.length > 0 && !$toggleRows[0].is(':visible');
-      $toggleRows.forEach($row => $row.toggle(shouldShow));
+      });
       $btn.text(shouldShow ? '−' : '+');
     });
 

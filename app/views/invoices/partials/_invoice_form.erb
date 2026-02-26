@@ -477,12 +477,12 @@
             <div class="d-flex gap-2">
               <% if action_name != "edit" %>
                 <%= link_to "Discard", invoices_path,
-                    class: "btn btn-secondary btn-md discard-btn",
+                    class: "btn btn-back btn-md discard-btn",
                     data: { confirm: "Are you sure you want to discard this invoice?" } %>
 
-                <%= f.submit @invoice.quote? ? "Save Quote As Draft" : "Save As Draft", class: "btn btn-secondary btn-md" %>
+                <%= f.submit @invoice.quote? ? "Save Quote As Draft" : "Save As Draft", class: "btn btn-back btn-md" %>
               <% else %>
-                <%= link_to "Back", invoices_path, class: "btn btn-secondary btn-md" %>
+                <%= link_to "Back", invoices_path, class: "btn btn-back btn-md" %>
               <% end %>
             </div>
 

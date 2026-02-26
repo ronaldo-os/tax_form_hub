@@ -180,17 +180,22 @@ textarea {
 
 /* Buttons */
 .btn {
-  border-radius: 5px !important;
+  border-radius: 6px !important;
+  font-weight: 400 !important;
+  transition: all 0.2s ease-in-out;
 }
 
-.btn-primary {
-  background-color: #00aeff !important;
-  border-color: #00aeff !important;
+.btn-primary,
+.btn-primary:focus {
+  background-color: var(--main-color) !important;
+  border-color: var(--main-color) !important;
+  color: #ffffff !important;
 }
 
 .btn-primary:hover {
-  background-color: #20b9ff !important;
-  border-color: #20b9ff !important;
+  background-color: var(--active-color) !important;
+  border-color: var(--active-color) !important;
+  color: #ffffff !important;
 }
 
 .btn-outline-primary {
@@ -198,6 +203,7 @@ textarea {
   --bs-btn-border-color: var(--main-color);
   --bs-btn-hover-bg: var(--main-color);
   --bs-btn-hover-border-color: var(--main-color);
+  --bs-btn-hover-color: #ffffff;
   --bs-btn-active-bg: var(--main-color);
   --bs-btn-active-border-color: var(--main-color);
   --bs-btn-disabled-color: var(--main-color);
@@ -207,14 +213,54 @@ textarea {
 .btn-success {
   background-color: #0077ff !important;
   border-color: #0077ff !important;
-  color: #fff !important;
+  color: #ffffff !important;
 }
 
 .btn-success:hover,
 .btn-success:focus {
   background-color: #0087e6 !important;
   border-color: #0087e6 !important;
-  color: #fff !important;
+  color: #ffffff !important;
+}
+
+.btn-secondary {
+  background-color: #6c757d !important;
+  border-color: #6c757d !important;
+  color: #ffffff !important;
+}
+
+.btn-secondary:hover {
+  background-color: #5a6268 !important;
+  border-color: #545b62 !important;
+  color: #ffffff !important;
+}
+
+/* Back/Light buttons */
+.btn-light,
+.btn-back {
+  background-color: var(--bg-secondary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.btn-light:hover,
+.btn-back:hover {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--text-muted);
+  --bs-btn-border-color: var(--border-color);
+  --bs-btn-hover-bg: var(--bg-tertiary);
+  --bs-btn-hover-border-color: var(--border-color);
+  --bs-btn-hover-color: var(--text-main);
+  --bs-btn-active-bg: var(--bg-tertiary);
+  --bs-btn-active-border-color: var(--border-color);
+  --bs-btn-disabled-color: var(--text-muted);
+  --bs-btn-disabled-border-color: var(--border-color);
+  border: 1px solid var(--border-color) !important;
 }
 
 /* Cards */
