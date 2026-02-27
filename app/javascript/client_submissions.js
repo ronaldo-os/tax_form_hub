@@ -17,6 +17,7 @@ function initClientSubmissionsPage() {
             pageLength: 10,
             lengthChange: true,
             destroy: true,
+            stateSave: true,
             initComplete: function () {
                 const api = this.api();
                 const $container = $(api.table().container());
@@ -35,11 +36,23 @@ function initClientSubmissionsPage() {
         tables.push(table);
     });
 
-    $('a[data-bs-toggle="tab"]').off('shown.bs.tab.client').on('shown.bs.tab.client', function () {
+    // Tab persistence and table adjustment
+    $('a[data-bs-toggle="tab"]').off('shown.bs.tab.client').on('shown.bs.tab.client', function (e) {
+        const targetId = $(e.target).attr('href');
+        sessionStorage.setItem('activeClientSubmissionsTab', targetId);
         tables.forEach(function (table) {
             table.columns.adjust().responsive.recalc();
         });
     });
+
+    const activeTabHref = sessionStorage.getItem('activeClientSubmissionsTab');
+    if (activeTabHref) {
+        const tabEl = document.querySelector(`a[data-bs-toggle="tab"][href="${activeTabHref}"]`);
+        if (tabEl) {
+            const tabTrigger = bootstrap.Tab.getOrCreateInstance(tabEl);
+            tabTrigger.show();
+        }
+    }
 
     // Show the selected file and its size in a list format
     function updateFileList(inputSelector, listSelector, multiple = true) {

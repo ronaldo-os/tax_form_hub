@@ -158,13 +158,18 @@ a {
   margin-bottom: 5px;
 }
 
-input,
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]),
 select,
 textarea {
   border-radius: var(--bs-border-radius-md) !important;
   border: 1px solid var(--border-color) !important;
   background-color: var(--input-bg) !important;
   color: var(--input-text) !important;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  border-radius: 0;
 }
 
 .input-group-text {

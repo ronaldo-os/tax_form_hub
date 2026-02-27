@@ -258,10 +258,7 @@
             <div class="form-check mb-4">
               <%= f.check_box :save_payment_terms_for_future,
                     class: "form-check-input",
-                    checked: ( @save_payment_terms_for_future.present? ||
-                      (@invoice.persisted? && @invoice.save_payment_terms_for_future?) ||
-                      (!@invoice.persisted? && @payment_terms.present?)
-                    ) %>
+                    checked: ( @save_payment_terms_for_future || @invoice.save_payment_terms_for_future? ) %>
               <%= f.label :save_payment_terms_for_future, "Save payment terms and means for future invoices", class: "form-check-label" %>
             </div>
             <% end %>

@@ -73,12 +73,12 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def update
-    redirect_target = params[:redirect_url].presence || root_path
-    
     if @tax_submission.update(tax_submission_params)
-      redirect_to redirect_target, notice: "Submission updated."
+      notice = "Submission updated."
+      redirect_back fallback_location: root_path, notice: notice
     else
-      redirect_to redirect_target, alert: "Failed to update."
+      alert = "Failed to update."
+      redirect_back fallback_location: root_path, alert: alert
     end
   end
 

@@ -538,7 +538,7 @@ const initInvoiceForm = () => {
       result[groupKey] = fields;
     });
 
-    $('#payment_terms_json').val(JSON.stringify(result));
+    $('#payment_terms_json, #payment_terms_json_edit').val(JSON.stringify(result));
   }
 
   // ----------------------------------------------------- DELIVERY DETAILS BUTTON TOGGLE
@@ -1059,7 +1059,7 @@ const initInvoiceForm = () => {
       });
     });
 
-    $('#price_adjustments_json').val(JSON.stringify(discounts));
+    $('#price_adjustments_json, #price_adjustments_json_edit').val(JSON.stringify(discounts));
   }
 
 

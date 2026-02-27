@@ -16,6 +16,7 @@ function initSubmissionTables() {
                 lengthChange: true,
                 pageLength: 10,
                 destroy: true,
+                stateSave: true,
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search submissions...",
@@ -40,12 +41,19 @@ function initSubmissionTables() {
         }
     });
 
-    // Unbind previously attached events to prevent duplication on reload
-    $('button[data-bs-toggle="tab"], a[data-bs-toggle="tab"]').off('shown.bs.tab.dt').on('shown.bs.tab.dt', function () {
+    // Tab persistence and table adjustment
+    $('button[data-bs-toggle="tab"]').off('shown.bs.tab').on('shown.bs.tab', function (e) {
+        sessionStorage.setItem('activeIncomingSubmissionsTab', $(e.target).attr('id'));
         submissionTables.forEach(function (table) {
             table.columns.adjust().responsive.recalc();
         });
     });
+
+    const activeTabId = sessionStorage.getItem('activeIncomingSubmissionsTab');
+    if (activeTabId && document.getElementById(activeTabId)) {
+        const tabTrigger = bootstrap.Tab.getOrCreateInstance(document.getElementById(activeTabId));
+        tabTrigger.show();
+    }
 
 
     $('.auto-submit').off('change.auto-submit').on('change.auto-submit', function () {

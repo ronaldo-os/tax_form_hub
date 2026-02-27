@@ -176,8 +176,8 @@ class InvoicesController < ApplicationController
     end
 
     # Handle payment terms JSON edit
-    if clean_params[:payment_terms_json_edit].present?
-      @invoice.payment_terms_data = JSON.parse(clean_params[:payment_terms_json_edit]) rescue {}
+    if params[:payment_terms_json_edit].present?
+      @invoice.payment_terms = JSON.parse(params[:payment_terms_json_edit]) rescue {}
       clean_params.delete(:payment_terms_json_edit)
     end
 
@@ -292,8 +292,8 @@ class InvoicesController < ApplicationController
     end
 
     # Handle payment terms JSON edit
-    if clean_params[:payment_terms_json_edit].present?
-      original.payment_terms_data = JSON.parse(clean_params[:payment_terms_json_edit]) rescue {}
+    if params[:payment_terms_json_edit].present?
+      original.payment_terms = JSON.parse(params[:payment_terms_json_edit]) rescue {}
       clean_params.delete(:payment_terms_json_edit)
     end
 
