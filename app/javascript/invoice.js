@@ -30,7 +30,7 @@ const initInvoiceForm = () => {
 
     window.TAX_RATES.forEach(tax => {
       const isSelected = selectedRate !== undefined && selectedRate !== null && parseFloat(selectedRate) === parseFloat(tax.rate);
-      options += `<option value="${tax.rate}" ${isSelected ? 'selected' : ''}>${tax.name}</option>`;
+      options += `<option value="${tax.rate}" data-name="${tax.name}" ${isSelected ? 'selected' : ''}>${tax.name}</option>`;
     });
     options += `<option value="custom" class="fw-bold text-primary">+ Manage/Add Custom Tax</option>`;
     return options;
@@ -1146,13 +1146,16 @@ const initInvoiceForm = () => {
     let discountAmount = 0;
     let chargeAmount = 0;
     let fixedTax = 0;
+    let taxBreakdown = {};
 
     $('#line-items .line-item').each(function () {
       const $row = $(this);
       const qty = parseFloat($row.find('.quantity').val()) || 0;
       const price = parseCurrency($row.find('.price').val());
       const pricePerQty = parseCurrency($row.find('.price-per-quantity').val()) || 0; // Use parseCurrency for safety
-      const taxRate = parseFloat($row.find('.tax').val()) || 0;
+      const $taxSelect = $row.find('.tax');
+      const taxRate = parseFloat($taxSelect.val()) || 0;
+      const taxName = $taxSelect.find('option:selected').attr('data-name') || "Taxes";
 
       const lineIndex = $row.data('line-index');
 
@@ -1230,8 +1233,15 @@ const initInvoiceForm = () => {
       $totalInput.val(lineTotalwithTax.toFixed(2)); // Keep raw value for hidden input
 
       // Accumulate overall totals
+      const lineTax = lineTotal * (taxRate / 100) + extraTax - discountTax;
       subtotal += lineTotal;
-      totalTax += lineTotal * (taxRate / 100) + extraTax - discountTax;
+      totalTax += lineTax;
+
+      if (lineTax !== 0) {
+        if (!taxBreakdown[taxName]) taxBreakdown[taxName] = { tax: 0, basis: 0 };
+        taxBreakdown[taxName].tax += lineTax;
+        taxBreakdown[taxName].basis += lineTotal;
+      }
     });
 
 
@@ -1255,6 +1265,8 @@ const initInvoiceForm = () => {
         $row.find('.total').text(`+${formatCurrency(value)}`);
       } else if (type === "fixedtax") {
         fixedTax += value;
+        if (!taxBreakdown["Fixed Tax"]) taxBreakdown["Fixed Tax"] = { tax: 0, basis: subtotal };
+        taxBreakdown["Fixed Tax"].tax += value;
         $row.find('.total').text(`+${formatCurrency(value)}`);
       } else {
         // fallback for unexpected values & ensure we always format
@@ -1268,13 +1280,36 @@ const initInvoiceForm = () => {
     const totalsJson = {
       subtotal: adjustedSubtotal.toFixed(2),
       tax: (totalTax + fixedTax).toFixed(2),
-      grand_total: grandTotal.toFixed(2)
+      grand_total: grandTotal.toFixed(2),
+      tax_breakdown: taxBreakdown
     };
 
     $('#total_amount_json').val(JSON.stringify(totalsJson));
     $('.subtotal-amount').text(formatCurrency(totalsJson.subtotal));
     $('.total-tax-amount').text(formatCurrency(totalsJson.tax));
     $('.grand-total-amount').text(formatCurrency(totalsJson.grand_total));
+
+    const $breakdownContainer = $('#tax-breakdown-container');
+    if ($breakdownContainer.length) {
+      $breakdownContainer.empty();
+      const taxKeys = Object.keys(taxBreakdown);
+      const currency = $('.currency_type').first().text();
+
+      if (taxKeys.length > 0) {
+        taxKeys.forEach(name => {
+          const data = taxBreakdown[name];
+          if (data.tax !== 0) {
+            $breakdownContainer.append(`<p class="mb-1">${name} <i>of ${formatCurrency(data.basis)} ${currency}</i> <span class="ms-4 fw-bold">${formatCurrency(data.tax)}</span></p>`);
+          }
+        });
+      }
+
+      if (totalTax + fixedTax !== 0) {
+        $('#total-taxes-row').show();
+      } else {
+        $('#total-taxes-row').hide();
+      }
+    }
   }
 
   $(document).on(
@@ -1546,12 +1581,6 @@ const initInvoiceForm = () => {
       const $taxSelect = $html.find('.tax');
       if (item.tax !== undefined && item.tax !== null) {
         $taxSelect.val(item.tax);
-        // Legacy handling
-        if (!$taxSelect.val()) {
-          const customOpt = $(`<option value="${item.tax}">${item.tax}% (Custom)</option>`);
-          $taxSelect.find('option:last').before(customOpt);
-          $taxSelect.val(item.tax);
-        }
       }
 
       if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
@@ -2310,7 +2339,8 @@ const initInvoiceForm = () => {
       const totals = {
         subtotal: getText('.subtotal-amount', '0.00'),
         tax: getText('.total-tax-amount', '0.00'),
-        total: getText('.grand-total-amount', '0.00')
+        total: getText('.grand-total-amount', '0.00'),
+        breakdownHtml: $('#tax-breakdown-container').html() || ''
       };
 
       // Payment terms
@@ -2464,10 +2494,23 @@ const initInvoiceForm = () => {
                 </table>
               </div>
 
-              <div class="text-end mt-4">
-                <p class="mb-1">Subtotal excl. taxes: <span class="fw-semibold">${totals.subtotal}</span></p>
-                <p class="mb-1">Total taxes: <span class="fw-semibold">${totals.tax}</span></p>
-                <p class="fs-5 fw-bold mt-2">Total ${invoice.currency}: <span>${totals.total}</span></p>
+              <div class="card border-0 shadow-sm p-4 text-end mt-4">
+                <p class="mb-1">
+                  Subtotal excl. taxes
+                  <span class="ms-4 fw-bold">${totals.subtotal}</span>
+                </p>
+                ${totals.breakdownHtml}
+                <div class="mt-3">
+                  <h4 class="fw-bold mb-0">
+                    Total ${invoice.currency}
+                    <span class="ms-5">${totals.total}</span>
+                  </h4>
+                  ${parseFloat(totals.tax) !== 0 ? `
+                    <p class="text-muted mb-0 mt-1" style="font-size: 0.9rem;">
+                      Total taxes ${totals.tax} ${invoice.currency}
+                    </p>
+                  ` : ''}
+                </div>
               </div>
 
               <hr>

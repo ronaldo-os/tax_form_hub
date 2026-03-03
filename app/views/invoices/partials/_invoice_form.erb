@@ -185,7 +185,7 @@
                     <select name="invoice[line_items_attributes][0][tax]" class="form-select tax" required>
                       <option value="" disabled selected>Select Tax</option>
                       <% @tax_rates.each do |tax| %>
-                        <option value="<%= tax.rate %>"><%= tax.name %></option>
+                        <option value="<%= tax.rate %>" data-name="<%= tax.name %>"><%= tax.name %></option>
                       <% end %>
                       <option value="custom" class="fw-bold text-primary">+ Manage/Add Custom Tax</option>
                     </select>
@@ -229,13 +229,23 @@
       </div>
 
       <!-- Totals -->
-      <div class="card border-0 shadow-sm p-3 text-end mb-3">
-        <p class="mb-1">Subtotal excl. taxes: <strong><span class="subtotal-amount">0.00</span></strong></p>
-        <p class="mb-1">Total taxes: <strong><span class="total-tax-amount">0.00</span> <span class="currency_type">PHP</span></strong></p>
-        <hr>
-        <h5 class="fw-bold">Grand Total <span class="currency_type">PHP</span>: 
-          <span class="grand-total-amount text-primary">0.00</span>
-        </h5>
+      <div class="card border-0 shadow-sm p-4 text-end mb-3">
+        <p class="mb-1">
+          Subtotal excl. taxes
+          <span class="ms-4 fw-bold subtotal-amount">0.00</span>
+        </p>
+        
+        <div id="tax-breakdown-container"></div>
+
+        <div class="mt-3">
+          <h4 class="fw-bold mb-0">
+            Total <span class="currency_type">PHP</span>
+            <span class="ms-5 grand-total-amount">0.00</span>
+          </h4>
+          <p class="text-muted mb-0 mt-1" id="total-taxes-row" style="font-size: 0.9rem;">
+            Total taxes <span class="total-tax-amount">0.00</span> <span class="currency_type">PHP</span>
+          </p>
+        </div>
       </div>
 
         <hr>
