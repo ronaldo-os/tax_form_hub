@@ -1,9 +1,15 @@
-<% content_for :page_title, "Incoming Submissions" %>
+<% 
+  company_name = current_user.company&.name
+  full_title_incoming = company_name.present? ? "#{company_name} Incoming Submissions" : "Incoming Submissions"
+  display_company = company_name.present? ? truncate(company_name, length: 30) : nil
+  display_title_incoming = display_company ? "#{display_company} Incoming Submissions" : "Incoming Submissions"
+%>
+<% content_for :page_title, full_title_incoming %>
 <%= javascript_include_tag "admin_client_submissions", "data-turbo-track": "reload", type: "module" %>
 
 <div class="container py-2 py-md-5">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h4 mb-0">Incoming Submissions</h2>
+    <h2 class="h4 mb-0" title="<%= company_name %>"><%= display_title_incoming %></h2>
     <%= link_to "Back to Dashboard", root_path, class: "btn btn-back btn-sm" %>
   </div>
 

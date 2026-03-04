@@ -37,17 +37,17 @@ function initClientSubmissionsPage() {
     });
 
     // Tab persistence and table adjustment
-    $('a[data-bs-toggle="tab"]').off('shown.bs.tab.client').on('shown.bs.tab.client', function (e) {
-        const targetId = $(e.target).attr('href');
-        sessionStorage.setItem('activeClientSubmissionsTab', targetId);
+    $('button[data-bs-toggle="tab"]').off('shown.bs.tab.client').on('shown.bs.tab.client', function (e) {
+        const targetId = $(e.target).attr('id');
+        sessionStorage.setItem('activeClientSubmissionsTabId', targetId);
         tables.forEach(function (table) {
             table.columns.adjust().responsive.recalc();
         });
     });
 
-    const activeTabHref = sessionStorage.getItem('activeClientSubmissionsTab');
-    if (activeTabHref) {
-        const tabEl = document.querySelector(`a[data-bs-toggle="tab"][href="${activeTabHref}"]`);
+    const activeTabId = sessionStorage.getItem('activeClientSubmissionsTabId');
+    if (activeTabId && document.getElementById(activeTabId)) {
+        const tabEl = document.getElementById(activeTabId);
         if (tabEl) {
             const tabTrigger = bootstrap.Tab.getOrCreateInstance(tabEl);
             tabTrigger.show();

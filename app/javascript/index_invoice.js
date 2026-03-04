@@ -226,9 +226,9 @@ function initInvoicePage() {
         if ($.fn.DataTable && tableSelector) {
             const table = $(tableSelector).DataTable();
             if (status) {
-                table.column(4).search(status, true, false).draw();
+                table.column(5).search(status, true, false).draw();
             } else {
-                table.column(4).search("").draw();
+                table.column(5).search("").draw();
             }
         }
     });

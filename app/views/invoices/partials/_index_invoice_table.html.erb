@@ -1,7 +1,12 @@
+<% 
+  is_purchase = table_id.to_s.include?('purchase') || table_id.to_s.include?('received')
+  counterparty_label = is_purchase ? 'Supplier Name' : 'Customer Name'
+%>
 <table class="table table-hover" id="<%= table_id %>">
   <thead class="table-light">
     <tr>
       <th><%= local_assigns[:title] || 'Invoice' %> #</th>
+      <th><%= counterparty_label %></th>
       <th>Total</th>
       <th>Issue Date</th>
       <th>Attachment</th>
@@ -17,6 +22,12 @@
           <% if invoice.credit_note? %>
             <span class="badge bg-info-subtle text-info ms-1">CN</span>
           <% end %>
+        </td>
+        <td style="max-width: 200px;">
+          <% name = is_purchase ? (invoice.sale_from&.name || "—") : (invoice.recipient_company&.name || "—") %>
+          <div class="text-truncate" title="<%= name %>">
+            <%= name %>
+          </div>
         </td>
         <td>
           <%= invoice.currency + ' ' + number_with_delimiter(invoice.total["grand_total"].to_f, delimiter: ",") %>
