@@ -14,6 +14,19 @@ class TaxRatesController < ApplicationController
     end
   end
 
+  def update
+    @tax_rate = TaxRate.find(params[:id])
+    if @tax_rate.custom && @tax_rate.company == current_user.company
+      if @tax_rate.update(tax_rate_params)
+        render json: { success: true, tax_rate: @tax_rate }
+      else
+        render json: { success: false, errors: @tax_rate.errors.full_messages }, status: :unprocessable_entity
+      end
+    else
+      render json: { success: false, message: "Unauthorized or System Rate" }, status: :unauthorized
+    end
+  end
+
   def destroy
     @tax_rate = TaxRate.find(params[:id])
     if @tax_rate.custom && @tax_rate.company == current_user.company

@@ -5,6 +5,7 @@
 <%= javascript_include_tag "view_invoice", "data-turbo-track": "reload", type: "module" %>
 
 <%= hidden_field_tag :payment_terms, @invoice.payment_terms.to_json.html_safe, id: 'view_invoicepayment_terms_json' %>
+<%= hidden_field_tag 'invoice[invoice_category]', @invoice.invoice_category %>
 <div class="container mt-5">
   <div class="d-flex justify-content-between mt-5 mb-3">
     <div>

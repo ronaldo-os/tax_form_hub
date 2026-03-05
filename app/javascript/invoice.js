@@ -2146,11 +2146,11 @@ const initInvoiceForm = () => {
   });
 
   $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function (e) {
-    // Skip payment terms validation for Credit Notes
+    // Skip payment terms validation for Credit Notes and Quotes
     const category = $('input[name="invoice[invoice_category]"]').val();
-    if (category === 'credit_note') return;
+    if (category === 'credit_note' || category === 'quote') return;
 
-    let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : this.id === "view_invoice_btn" ? "#view_invoicepayment_terms_json" : "#payment_terms_json_edit";
+    let inputId = this.id === "send_invoice_btn" ? "#payment_terms_json" : (this.id === "view_invoice_send_btn" ? "#view_invoicepayment_terms_json" : "#payment_terms_json_edit");
     if (!$(inputId).val() || $(inputId).val() === "[]" || $(inputId).val() === "{}") {
       e.preventDefault();
       showFlashMessage("Please add payment terms before sending it to recipient.", "danger");
@@ -2345,7 +2345,7 @@ const initInvoiceForm = () => {
 
       // Payment terms
       let paymentTermsHtml = '';
-      if (!invoice.isCreditNote) {
+      if (!invoice.isCreditNote && !invoice.isQuote) {
         const $paymentGroups = $('#payment_terms_parent_div .payment-term-group');
         if ($paymentGroups.length) {
           paymentTermsHtml = '<h5 class="mb-3 fw-semibold">Payment Terms</h5><ol class="ps-3 mb-0">';
@@ -2686,11 +2686,11 @@ const initInvoiceForm = () => {
   if ($modalEl.length) {
     $modalEl.off('shown.bs.modal').on('shown.bs.modal', function () {
       renderTaxList();
-      $('#new-tax-name').val('');
-      $('#new-tax-rate').val('');
-      $('#tax-error').text('');
+      resetTaxForm();
     });
   }
+
+  let editingTaxId = null;
 
   function renderTaxList() {
     const $list = $('#tax-rate-list');
@@ -2700,20 +2700,34 @@ const initInvoiceForm = () => {
 
     window.TAX_RATES.forEach(tax => {
       const isSystem = !tax.custom;
-      const deleteBtn = isSystem ? '' :
-        `<button class="btn btn-sm btn-outline-danger delete-tax-btn float-end" data-id="${tax.id}" style="font-size: 0.7rem;">Delete</button>`;
+      const buttons = isSystem ? '' : `
+        <div class="float-end">
+          <button class="btn btn-sm btn-outline-primary edit-tax-btn me-1" data-id="${tax.id}" style="font-size: 0.7rem;">Edit</button>
+          <button class="btn btn-sm btn-outline-danger delete-tax-btn" data-id="${tax.id}" style="font-size: 0.7rem;">Delete</button>
+        </div>
+      `;
 
       const item = `
             <li class="list-group-item">
               <span class="fw-bold">${tax.name}</span> (${tax.rate}%)
-              ${deleteBtn}
+              ${buttons}
             </li>
           `;
       $list.append(item);
     });
   }
 
-  // 3. Add Tax Rate
+  function resetTaxForm() {
+    editingTaxId = null;
+    $('#new-tax-name').val('');
+    $('#new-tax-rate').val('');
+    $('#add-tax-btn').text('Add');
+    $('#tax-form-title').text('Add Custom Tax Rate');
+    $('#tax-error').text('');
+    $('.cancel-tax-btn').remove();
+  }
+
+  // 3. Add/Update Tax Rate
   $('#add-tax-btn').off('click').on('click', function (e) {
     e.preventDefault();
     const name = $('#new-tax-name').val().trim();
@@ -2731,48 +2745,83 @@ const initInvoiceForm = () => {
     }
 
     const $btn = $(this);
-    $btn.prop('disabled', true).text('Adding...');
+    const isEditing = editingTaxId !== null;
+    $btn.prop('disabled', true).text(isEditing ? 'Updating...' : 'Adding...');
+
+    const url = isEditing ? `/tax_rates/${editingTaxId}` : '/tax_rates';
+    const method = isEditing ? 'PATCH' : 'POST';
 
     $.ajax({
-      url: '/tax_rates',
-      method: 'POST',
+      url: url,
+      method: method,
       headers: {
         'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')
       },
       data: { tax_rate: { name: name, rate: rate } },
       success: function (response) {
         if (response.success) {
-          const newTax = {
+          const updatedTax = {
             id: response.tax_rate.id,
             name: response.tax_rate.name,
             rate: response.tax_rate.rate,
             custom: true
           };
 
-          window.TAX_RATES.push(newTax);
-          refreshAllTaxSelects(newTax.rate);
+          if (isEditing) {
+            const index = window.TAX_RATES.findIndex(t => t.id == editingTaxId);
+            if (index !== -1) window.TAX_RATES[index] = updatedTax;
+            showFlashMessage("Tax rate updated successfully.", "success");
+            editingTaxId = null;
+          } else {
+            window.TAX_RATES.push(updatedTax);
+            showFlashMessage("Tax rate added successfully.", "success");
+          }
+
+          refreshAllTaxSelects(updatedTax.rate);
           renderTaxList();
 
-          $('#new-tax-name').val('');
-          $('#new-tax-rate').val('');
-          $('#tax-error').text('');
+          resetTaxForm();
 
-          // Hide modal
-          const modalEl = document.getElementById('taxManagementModal');
-          if (modalEl) {
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            if (modal) modal.hide();
-          }
+          // If not complex, just hide modal or let user stay
+          // Requirement: Display success message and refresh list.
+          // For now we stay in the modal and show the refreshed list.
         }
       },
       error: function (xhr) {
-        const err = xhr.responseJSON?.errors?.join(', ') || 'Failed to add tax rate.';
+        const err = xhr.responseJSON?.errors?.join(', ') || 'Failed to process tax rate.';
         $('#tax-error').text(err);
       },
       complete: function () {
-        $btn.prop('disabled', false).text('Add');
+        $btn.prop('disabled', false).text(editingTaxId !== null ? 'Update' : 'Add');
       }
     });
+  });
+
+  // 3.5 Edit Tax Rate Button Click
+  $(document).on('click.invoice_form', '.edit-tax-btn', function () {
+    const id = $(this).data('id');
+    const tax = window.TAX_RATES.find(t => t.id == id);
+    if (!tax) return;
+
+    editingTaxId = id;
+    $('#new-tax-name').val(tax.name);
+    $('#new-tax-rate').val(tax.rate);
+    $('#add-tax-btn').text('Update');
+    $('#tax-form-title').text('Edit Tax Rate');
+    $('#tax-error').text('');
+
+    // Add Cancel Button if not already there
+    if ($('.cancel-tax-btn').length === 0) {
+      $('#add-tax-btn').after('<button type="button" class="btn btn-outline-secondary cancel-tax-btn">Cancel Edit</button>');
+    }
+
+    // Smooth scroll to form
+    const $form = $('#new-tax-name').closest('.row');
+    $form[0].scrollIntoView({ behavior: 'smooth' });
+  });
+
+  $(document).on('click.invoice_form', '.cancel-tax-btn', function () {
+    resetTaxForm();
   });
 
   // 4. Delete Tax Rate
