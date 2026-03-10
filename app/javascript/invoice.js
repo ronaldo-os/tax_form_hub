@@ -16,6 +16,16 @@ const initInvoiceForm = () => {
   // Cleanup previous document listeners for invoice form
   $(document).off('.invoice_form');
 
+  // Clear attachment-related fields when form initializes
+  const fileInput = document.getElementById('attachments');
+  if (fileInput) {
+    fileInput.value = '';
+  }
+  const previewContainer = document.getElementById('new_attachments_preview');
+  if (previewContainer) {
+    previewContainer.innerHTML = '';
+  }
+
   // universal functions
   function formatCurrency(value) {
     if (value === null || value === undefined || value === '') return '0.00';
