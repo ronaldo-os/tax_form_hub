@@ -2118,8 +2118,10 @@ const initInvoiceForm = () => {
     $errorDiv.text("");
     let hasError = false;
 
+    // Clear previous files and reset DataTransfer to only contain newly selected files
+    attachmentDataTransfer.items.clear();
+
     // Add newly selected files to our DataTransfer object
-    // check for duplicates if necessary (optional), here we just append valid ones
     $.each(this.files, function (_, file) {
       if (!allowedTypes.includes(file.type)) {
         $errorDiv.text(file.name + " is not a valid file. Only JPEG, PNG, GIF, and PDF are allowed.");
@@ -2137,8 +2139,7 @@ const initInvoiceForm = () => {
       attachmentDataTransfer.items.add(file);
     });
 
-    // Clear the input value so the same file can be selected again if needed (though we just added it)
-    // Actually, we must set the input files to the DataTransfer files
+    // Set the input files to the DataTransfer files
     this.files = attachmentDataTransfer.files;
 
     if (hasError) {
