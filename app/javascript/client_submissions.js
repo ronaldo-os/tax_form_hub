@@ -117,7 +117,7 @@ function initClientSubmissionsPage() {
                     } else {
                         data.forEach(function (invoice) {
                             $invoiceSelect.append(
-                                `<option value="${invoice.id}">${invoice.invoice_number}</option>`
+                                `<option value="${invoice.id}">${invoice.display_name}</option>`
                             );
                         });
                     }

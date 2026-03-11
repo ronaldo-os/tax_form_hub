@@ -40,10 +40,16 @@
         <p class="fw-semibold fs-6"><%= @tax_submission.email.presence || @tax_submission.invoice&.user&.email || "N/A" %></p>
       </div>
 
-      <!-- Company -->
-      <div class="col-md-12">
-        <p class="text-muted mb-1">Company</p>
-        <p class="fw-semibold fs-6"><%= @tax_submission.invoice&.recipient_company&.name || @tax_submission.company&.name || @tax_submission.company_name %></p>
+      <!-- Submitted By -->
+      <div class="col-md-6">
+        <p class="text-muted mb-1">Submitted By</p>
+        <p class="fw-semibold fs-6"><%= @tax_submission.invoice&.sale_from&.name || @tax_submission.invoice&.user&.company&.name || "N/A" %></p>
+      </div>
+
+      <!-- Submitted To -->
+      <div class="col-md-6">
+        <p class="text-muted mb-1">Submitted To</p>
+        <p class="fw-semibold fs-6"><%= @tax_submission.company&.name || @tax_submission.invoice&.recipient_company&.name || @tax_submission.company_name || "N/A" %></p>
       </div>
       <!-- Details -->
       <div class="col-md-12">

@@ -19,7 +19,10 @@ class TaxSubmission < ApplicationRecord
   end
 
   def set_transaction_id
-    last_id = TaxSubmission.where(company_id: company_id).maximum(:user_transaction_id) || 0
+    sender_user_id = invoice&.user_id
+    last_id = TaxSubmission.joins(:invoice)
+                            .where(invoices: { user_id: sender_user_id })
+                            .maximum(:user_transaction_id) || 0
     self.user_transaction_id = last_id + 1
   end
 end

@@ -90,24 +90,20 @@ class TaxSubmissionsController < ApplicationController
       return
     end
     
-    # Find invoices where the selected company is involved
-    # For tax submissions, we want invoices where:
-    # 1. The company is the issuer (sale_from) - for purchase invoices
-    # 2. The company is the recipient - for sale invoices created by current user
-    invoices = Invoice.where(
-      "(sale_from_id = ? OR (recipient_company_id = ? AND user_id = ?))",
-      company_id,
-      company_id,
-      current_user.id
-    ).where(archived: [false, nil])
-     .order(created_at: :desc)
-     .select(:id, :invoice_number, :invoice_type, :created_at)
+    # Only fetch Sale invoices created by the current user where the selected company is the recipient.
+    # We exclude quotes as they are not subject to tax submissions.
+    invoices = current_user.invoices
+                           .where(invoice_type: 'sale')
+                           .where(recipient_company_id: company_id)
+                           .where(archived: [false, nil])
+                           .where.not(invoice_category: 'quote')
+                           .order(created_at: :desc)
     
     render json: invoices.map { |inv| 
       { 
         id: inv.id, 
         invoice_number: inv.invoice_number,
-        invoice_type: inv.invoice_type
+        display_name: inv.invoice_number # Reverted to just the number since type is now filtered
       } 
     }
   end

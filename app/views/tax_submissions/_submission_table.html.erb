@@ -25,7 +25,7 @@
                         data: { bs_toggle: "modal", bs_target: "#submissionModal" } %>
           </td>
 
-          <td><%= submission.company&.name || submission.company_name %></td>
+          <td><%= submission.company&.name || submission.invoice&.recipient_company&.name || submission.company_name %></td>
           <td><%= submission.invoice&.invoice_number %></td>
 
           <td><%= truncate(submission.details, length: 50) %></td>
