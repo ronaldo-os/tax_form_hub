@@ -161,7 +161,7 @@
                   <td><%= item["quantity"] %></td>
                   <td><%= item["unit"] %></td>
                   <td><%= number_with_precision(item["price"].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></td>
-                  <td><%= item["tax"] %></td>
+                   <td><%= item["tax"].present? ? "#{item['tax']}%" : "-" %></td>
                   <td class="text-end fw-semibold"><%= number_with_precision(item["total"].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></td>
                 </tr>
 
@@ -313,7 +313,7 @@
                 <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2, delimiter: ',') %>
               </span>
             </h4>
-            <% if @invoice.total.dig("tax").to_f != 0 %>
+            <% if @invoice.total.dig("tax").to_f != 0 || @invoice.total["tax_breakdown"].present? %>
               <p class="text-muted mb-0 mt-1" style="font-size: 0.9rem;">
                 Total taxes <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %> <%= @invoice.currency %>
               </p>

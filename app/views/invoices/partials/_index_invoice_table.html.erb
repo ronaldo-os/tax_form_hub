@@ -18,7 +18,7 @@
     <% invoices.each do |invoice| %>
       <tr>
         <td>
-          <%= link_to invoice.invoice_number, invoice_path(invoice) %>
+          <%= link_to invoice.invoice_number, invoice_path(invoice, tab: local_assigns[:active_tab]) %>
           <% if invoice.credit_note? %>
             <span class="badge bg-info-subtle text-info ms-1">CN</span>
           <% end %>

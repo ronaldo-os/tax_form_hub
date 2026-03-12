@@ -185,7 +185,7 @@
                     <select name="invoice[line_items_attributes][0][tax]" class="form-select tax" required>
                       <option value="" disabled selected>Select Tax</option>
                       <% @tax_rates.each do |tax| %>
-                        <option value="<%= tax.rate %>" data-name="<%= tax.name %>"><%= tax.name %></option>
+                        <option value="<%= tax.rate %>" data-name="<%= tax.name %>"><%= tax.rate.to_f.to_s.sub(/\.0$/, '') %>%</option>
                       <% end %>
                       <option value="custom" class="fw-bold text-primary">+ Manage/Add Custom Tax</option>
                     </select>
@@ -483,13 +483,13 @@
             <!-- Left side -->
             <div class="d-flex gap-2">
               <% if action_name != "edit" %>
-                <%= link_to "Discard", invoices_path,
+                <%= link_to "Discard", invoices_path(tab: params[:tab]),
                     class: "btn btn-back btn-md discard-btn",
                     data: { confirm: "Are you sure you want to discard this invoice?" } %>
 
                 <%= f.submit @invoice.quote? ? "Save Quote As Draft" : "Save As Draft", class: "btn btn-back btn-md" %>
               <% else %>
-                <%= link_to "Back", invoices_path, class: "btn btn-back btn-md" %>
+                <%= link_to "Back", invoices_path(tab: params[:tab]), class: "btn btn-back btn-md" %>
               <% end %>
             </div>
 

@@ -40,7 +40,8 @@ const initInvoiceForm = () => {
 
     window.TAX_RATES.forEach(tax => {
       const isSelected = selectedRate !== undefined && selectedRate !== null && parseFloat(selectedRate) === parseFloat(tax.rate);
-      options += `<option value="${tax.rate}" data-name="${tax.name}" ${isSelected ? 'selected' : ''}>${tax.name}</option>`;
+      const displayRate = parseFloat(tax.rate).toString() + '%';
+      options += `<option value="${tax.rate}" data-name="${tax.name}" ${isSelected ? 'selected' : ''}>${displayRate}</option>`;
     });
     options += `<option value="custom" class="fw-bold text-primary">+ Manage/Add Custom Tax</option>`;
     return options;
@@ -1165,7 +1166,8 @@ const initInvoiceForm = () => {
       const pricePerQty = parseCurrency($row.find('.price-per-quantity').val()) || 0; // Use parseCurrency for safety
       const $taxSelect = $row.find('.tax');
       const taxRate = parseFloat($taxSelect.val()) || 0;
-      const taxName = $taxSelect.find('option:selected').attr('data-name') || "Taxes";
+      const taxRateVal = $taxSelect.val();
+      const taxName = (taxRateVal !== null && taxRateVal !== "" && taxRateVal !== undefined) ? parseFloat(taxRateVal).toString() + "%" : "Taxes";
 
       const lineIndex = $row.data('line-index');
 
@@ -1247,7 +1249,7 @@ const initInvoiceForm = () => {
       subtotal += lineTotal;
       totalTax += lineTax;
 
-      if (lineTax !== 0) {
+      if (taxRateVal !== null && taxRateVal !== "" && taxRateVal !== undefined) {
         if (!taxBreakdown[taxName]) taxBreakdown[taxName] = { tax: 0, basis: 0 };
         taxBreakdown[taxName].tax += lineTax;
         taxBreakdown[taxName].basis += lineTotal;
@@ -1308,13 +1310,11 @@ const initInvoiceForm = () => {
       if (taxKeys.length > 0) {
         taxKeys.forEach(name => {
           const data = taxBreakdown[name];
-          if (data.tax !== 0) {
-            $breakdownContainer.append(`<p class="mb-1">${name} <i>of ${formatCurrency(data.basis)} ${currency}</i> <span class="ms-4 fw-bold">${formatCurrency(data.tax)}</span></p>`);
-          }
+          $breakdownContainer.append(`<p class="mb-1">${name} <i>of ${formatCurrency(data.basis)} ${currency}</i> <span class="ms-4 fw-bold">${formatCurrency(data.tax)}</span></p>`);
         });
       }
 
-      if (totalTax + fixedTax !== 0) {
+      if (taxKeys.length > 0 || totalTax + fixedTax !== 0) {
         $('#total-taxes-row').show();
       } else {
         $('#total-taxes-row').hide();
@@ -2274,7 +2274,13 @@ const initInvoiceForm = () => {
 
         lineItems += `
             <tr class="line-item">
-              ${$inputs.slice(0, 6).map((_, inp) => `<td>${$(inp).val() || ''}</td>`).get().join('')}
+              ${$inputs.slice(0, 6).map((_, inp) => {
+          let val = $(inp).val() || '';
+          if ($(inp).hasClass('tax') && val !== '') {
+            return `<td>${parseFloat(val)}%</td>`;
+          }
+          return `<td>${val}</td>`;
+        }).get().join('')}
               <td class="text-end fw-semibold">${total}</td>
               <input type="hidden" name="invoice[line_items_attributes][${index}][total]" class="line-total-input" value="${total}">
             </tr>`;
