@@ -90,11 +90,11 @@ class TaxSubmissionsController < ApplicationController
       return
     end
     
-    # Only fetch Sale invoices created by the current user where the selected company is the recipient.
-    # We exclude quotes as they are not subject to tax submissions.
+    my_company_id = current_user.company_id
     invoices = current_user.invoices
-                           .where(invoice_type: 'sale')
-                           .where(recipient_company_id: company_id)
+                           .where(invoice_type: 'purchase')
+                           .where(sale_from_id: company_id)
+                           .where(recipient_company_id: my_company_id)
                            .where(archived: [false, nil])
                            .where.not(invoice_category: 'quote')
                            .order(created_at: :desc)
@@ -103,7 +103,7 @@ class TaxSubmissionsController < ApplicationController
       { 
         id: inv.id, 
         invoice_number: inv.invoice_number,
-        display_name: inv.invoice_number # Reverted to just the number since type is now filtered
+        display_name: inv.invoice_number
       } 
     }
   end
