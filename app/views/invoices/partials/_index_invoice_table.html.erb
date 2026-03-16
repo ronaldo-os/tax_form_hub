@@ -145,7 +145,7 @@
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 
-              <% if table_id == "purchases-table" %>
+              <% if table_id == "purchases-table" && invoice.status == "approved" %>
                  <li>
                    <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#submitTaxModal-<%= invoice.id %>">
                      Submit Tax Documents
@@ -174,7 +174,7 @@
 
             </ul>
           </div>
-          <% if table_id == "purchases-table" %>
+          <% if table_id == "purchases-table" && invoice.status == "approved" %>
             <%= render partial: 'invoices/partials/submit_tax_documents_modal', locals: { invoice: invoice } %>
           <% end %>
         </td>
