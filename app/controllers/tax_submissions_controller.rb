@@ -92,9 +92,9 @@ class TaxSubmissionsController < ApplicationController
     
     my_company_id = current_user.company_id
     invoices = current_user.invoices
-                           .where(invoice_type: 'purchase')
-                           .where(sale_from_id: company_id)
-                           .where(recipient_company_id: my_company_id)
+                           .where(invoice_type: 'sale')
+                           .where(recipient_company_id: company_id)
+                           .where(status: 'approved')
                            .where(archived: [false, nil])
                            .where.not(invoice_category: 'quote')
                            .order(created_at: :desc)

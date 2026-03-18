@@ -3,11 +3,6 @@ function initInvoicePage() {
 
     // Render mini charts for invoice trends
     function renderMiniCharts(prefix, trends, color) {
-        // Remove existing chart instance if any to avoid canvas reuse issues
-        const $canvas = $(`#${prefix}-${status}`);
-        // Logic handled by Chart.js generally, but good to be aware. 
-        // In this specific existing code, it creates new Chart every time.
-        // Ideally we should destroy old charts, but let's stick to the structure refactor first.
 
         $.each(trends, function (status, data) {
             const $canvas = $(`#${prefix}-${status}`);
@@ -17,6 +12,9 @@ function initInvoicePage() {
             // This is a safety measure for Turbo re-renders if the canvas is preserved
             const existingChart = Chart.getChart($canvas[0]);
             if (existingChart) existingChart.destroy();
+
+            // Refrain from adding a graph if all data points are zero
+            if (!data.some(d => d.count > 0)) return;
 
             const ctx = $canvas[0].getContext("2d");
 

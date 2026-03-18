@@ -104,7 +104,7 @@
 
               <% if invoice.status != "draft" && !["purchases-table", "purchases-archived-table", "received-quotes-table", "received-quotes-archived-table"].include?(table_id) %>
                 <li>
-                  <%= link_to "Use as draft",
+                  <%= link_to "Use as Draft",
                       new_invoice_path(template_id: invoice.id, tab: local_assigns[:active_tab]),
                       class: "dropdown-item" %>
                 </li>

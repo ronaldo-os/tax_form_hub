@@ -31,7 +31,15 @@ class InvoicesController < ApplicationController
     @active_tab = params[:tab] || 'sales-invoices'
 
     # HTTP Caching
-    fresh_when etag: [@invoices_sale, @invoices_purchase, @active_tab], last_modified: [@invoices_sale, @invoices_purchase].map { |s| s.maximum(:updated_at) }.compact.max
+    # Include all relevant collections in the ETag and last_modified calculation
+    all_collections = [
+      @invoices_sale, @invoices_sale_archived,
+      @invoices_purchase, @invoices_purchase_archived,
+      @quotes_sale, @quotes_sale_archived,
+      @quotes_purchase, @quotes_purchase_archived
+    ]
+    fresh_when etag: [all_collections, @active_tab], 
+               last_modified: all_collections.map { |s| s.maximum(:updated_at) }.compact.max
   end
 
 
@@ -373,15 +381,26 @@ class InvoicesController < ApplicationController
   end
 
   def mark_as_paid
-    sale_invoice = current_user.invoices.find(params[:id])
-    if sale_invoice.update(status: "paid")
-      purchase_invoice = Invoice.find_by(sale_from_id: sale_invoice.id, invoice_type: "purchase")
-      purchase_invoice&.update(status: "paid")
-      tab = params[:tab] || (sale_invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
-      category_name = sale_invoice.standard? ? "Invoice" : sale_invoice.invoice_category.humanize
+    invoice = current_user.invoices.find(params[:id])
+    if invoice.update(status: "paid")
+      if invoice.invoice_type == "sale"
+        sale_company_id = invoice.user.company&.id || invoice.user.companies.first&.id
+        purchase_invoice = Invoice.find_by(
+          invoice_number: invoice.invoice_number,
+          invoice_type: "purchase",
+          invoice_category: invoice.invoice_category,
+          sale_from_id: sale_company_id,
+          recipient_company_id: invoice.recipient_company_id
+        )
+        purchase_invoice&.update(status: "paid")
+      else
+        update_original_sale_status(invoice, "paid")
+      end
+      tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+      category_name = invoice.standard? ? "Invoice" : invoice.invoice_category.humanize
       redirect_to invoices_path(tab: tab), notice: "#{category_name} marked as paid."
     else
-      tab = params[:tab] || (sale_invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+      tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
       redirect_to invoices_path(tab: tab), alert: "Failed to update invoice."
     end
   end
@@ -488,8 +507,30 @@ class InvoicesController < ApplicationController
   end
 
   def update_original_sale_status(purchase_invoice, status)
-    return unless purchase_invoice.sale_from_id.present?
-    original_sale_invoice = Invoice.find_by(id: purchase_invoice.sale_from_id, invoice_type: "sale")
+    return unless purchase_invoice.sale_from_id.present? && purchase_invoice.recipient_company_id.present?
+    
+    sender_company = Company.find_by(id: purchase_invoice.sale_from_id)
+    return unless sender_company
+
+    possible_user_ids = [sender_company.user_id, *User.where(company_id: sender_company.id).pluck(:id)].compact.uniq
+
+    original_sale_invoice = Invoice.find_by(
+      invoice_number: purchase_invoice.invoice_number,
+      invoice_type: "sale",
+      invoice_category: purchase_invoice.invoice_category,
+      user_id: possible_user_ids,
+      recipient_company_id: purchase_invoice.recipient_company_id
+    )
+
+    original_sale_invoice ||= Invoice.where(
+      invoice_number: purchase_invoice.invoice_number,
+      invoice_type: "sale",
+      invoice_category: purchase_invoice.invoice_category,
+      recipient_company_id: purchase_invoice.recipient_company_id
+    ).find do |inv|
+      inv.user&.company_id == purchase_invoice.sale_from_id || inv.user&.companies&.exists?(id: purchase_invoice.sale_from_id)
+    end
+
     original_sale_invoice&.update(status: status)
   end
 
