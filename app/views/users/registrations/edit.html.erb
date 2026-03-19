@@ -21,7 +21,7 @@
                  class="position-relative d-inline-block"
                  style="cursor: pointer;">
               <%= image_tag(
-                (resource.profile_image.attached? && resource.profile_image.attachment.persisted?) ? url_for(resource.profile_image) : asset_path("user_avatar_default.png"),
+                (resource.profile_image.attached? && resource.profile_image.attachment&.persisted?) ? url_for(resource.profile_image) : asset_path("user_avatar_default.png"),
                 id: "image-preview",
                 class: "rounded-circle border",
                 style: "width: 160px; height: 160px; object-fit: cover;"

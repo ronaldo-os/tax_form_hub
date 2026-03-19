@@ -42,7 +42,13 @@ class Users::RegistrationsController < Devise::RegistrationsController
     yield resource if block_given?
 
     if resource_updated
-      set_flash_message_for_update(resource, prev_unconfirmed_email)
+      # Only show success message if some change was actually saved (attribute changes or a new profile image)
+      if resource.saved_changes.any? || (account_update_params[:profile_image].present?)
+        set_flash_message_for_update(resource, prev_unconfirmed_email)
+      else
+        flash[:notice] = "No changes were made."
+      end
+      
       bypass_sign_in resource, scope: resource_name if sign_in_after_change_password?
       respond_with resource, location: after_update_path_for(resource)
     else
@@ -54,9 +60,15 @@ class Users::RegistrationsController < Devise::RegistrationsController
   end
 
   protected
-
+  
   def update_resource(resource, params)
-    resource.update_with_password(params)
+    if params[:password].blank? && params[:password_confirmation].blank? && params[:current_password].blank?
+      # If all password fields are blank, update other fields like profile_image or email without current password
+      resource.update_without_password(params.except(:current_password))
+    else
+      # If any password field is present, use standard Devise update which requires current_password
+      resource.update_with_password(params)
+    end
   end
 
   protected
