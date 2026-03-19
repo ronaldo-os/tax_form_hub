@@ -132,11 +132,15 @@ function initApplication() {
     $('[data-bs-toggle="tooltip"]').tooltip();
 
     // Alert auto-dismiss
-    setTimeout(function () {
-        $('.custom_tfh_alert').fadeOut(500, function () {
-            $(this).remove();
-        });
-    }, 5000);
+    function setupAlertDismissal() {
+        setTimeout(function () {
+            $('.custom_tfh_alert').fadeOut(500, function () {
+                $(this).remove();
+            });
+        }, 5000);
+    }
+
+    setupAlertDismissal();
 
     // Zoom link
     $('.zoom-link').off('click.zoom').on('click.zoom', function (e) {
@@ -240,6 +244,8 @@ function initApplication() {
 
 // Bind to Turbo Load
 document.addEventListener("turbo:load", initApplication);
+// Specifically handle the 422 error re-render
+document.addEventListener("turbo:render", initApplication);
 // Also bind to DOMContentLoaded for initial non-Turbo load if any
 document.addEventListener("DOMContentLoaded", initApplication);
 
