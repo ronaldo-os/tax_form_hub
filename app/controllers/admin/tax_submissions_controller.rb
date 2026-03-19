@@ -62,7 +62,7 @@ class Admin::TaxSubmissionsController < ApplicationController
 
   def authorize_superadmin!
     unless current_user&.role == 'superadmin'
-      redirect_to root_path, alert: "Access denied. Superadmin privileges required."
+      redirect_to root_path, alert: "Access rejected. Superadmin privileges required."
     end
   end
 

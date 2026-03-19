@@ -16,7 +16,7 @@
       <button id="download_button" class="btn btn-outline-primary btn-md">
         <i class="fas fa-download me-1"></i> PDF
       </button>
-    <% if @invoice.invoice_type == "sale" && !["sent", "approved", "denied", "paid"].include?(@invoice.status) %>
+    <% if @invoice.invoice_type == "sale" && !["sent", "approved", "rejected", "paid"].include?(@invoice.status) %>
         <%= link_to "Modify", edit_invoice_path(@invoice, tab: params[:tab]), class: "btn btn-secondary btn-md" %>
 
         <%= button_to "Send",

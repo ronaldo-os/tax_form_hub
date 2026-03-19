@@ -16,7 +16,7 @@
           <%= case @invoice.status
               when "sent"     then "bg-primary-subtle text-primary"
               when "approved" then "bg-success-subtle text-success"
-              when "denied"   then "bg-danger-subtle text-danger"
+              when "rejected" then "bg-danger-subtle text-danger"
               when "paid"     then "bg-info-subtle text-info"
               when "draft"    then "bg-secondary-subtle text-muted"
               else "bg-light text-muted"

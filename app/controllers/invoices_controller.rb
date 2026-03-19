@@ -356,13 +356,13 @@ class InvoicesController < ApplicationController
     end
   end
 
-  def deny
+  def reject
     invoice = current_user.invoices.find(params[:id])
-    if invoice.update(status: "denied")
-      update_original_sale_status(invoice, "denied")
-      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice denied."
+    if invoice.update(status: "rejected")
+      update_original_sale_status(invoice, "rejected")
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice rejected."
     else
-      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Failed to deny invoice."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Failed to reject invoice."
     end
   end
 
@@ -615,7 +615,7 @@ class InvoicesController < ApplicationController
     @units = units_for_company
     
     if @invoice&.credit_note?
-      @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'denied']).order(issue_date: :desc)
+      @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'rejected']).order(issue_date: :desc)
     end
   end
 

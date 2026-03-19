@@ -36,7 +36,7 @@ Rails.application.routes.draw do
   resources :invoices do
     member do
       patch :approve
-      patch :deny
+      patch :reject
       patch :archive
       patch :unarchive
       patch :mark_as_paid

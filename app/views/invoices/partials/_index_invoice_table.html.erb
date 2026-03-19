@@ -137,9 +137,9 @@
                       class: "dropdown-item" %>
                 </li>
                 <li>
-                  <%= link_to "Deny", deny_invoice_path(invoice, tab: local_assigns[:active_tab]),
+                  <%= link_to "Reject", reject_invoice_path(invoice, tab: local_assigns[:active_tab]),
                       method: :patch,
-                      data: { confirm: "Deny this purchase invoice?" },
+                      data: { confirm: "Reject this purchase invoice?" },
                       class: "dropdown-item" %>
                 </li>
                 <li><hr class="dropdown-divider"></li>
