@@ -1,11 +1,24 @@
 <h2>Edit <%= resource_name.to_s.humanize %></h2>
 
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put }) do |f| %>
+<%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { method: :put, multipart: true }) do |f| %>
   <%= render "devise/shared/error_messages", resource: resource %>
 
   <div class="field">
     <%= f.label :email %><br />
     <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
+  </div>
+
+  <div class="field">
+    <%= f.label :company_name, "Company Name" %><br />
+    <%= f.text_field :company_name, autocomplete: "organization" %>
+  </div>
+
+  <div class="field">
+    <%= f.label :profile_image %><br />
+    <%= f.file_field :profile_image, accept: "image/*" %>
+    <% if resource.profile_image.attached? %>
+      <p>Current image: <%= image_tag resource.profile_image, width: 100, height: 100, style: "object-fit: cover;" %></p>
+    <% end %>
   </div>
 
   <% if devise_mapping.confirmable? && resource.pending_reconfirmation? %>
@@ -28,7 +41,7 @@
 
   <div class="field">
     <%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i><br />
-    <%= f.password_field :current_password, autocomplete: "current-password" %>
+    <%= f.password_field :current_password, autocomplete: "current-password", required: true %>
   </div>
 
   <div class="actions">

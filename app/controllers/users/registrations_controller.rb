@@ -62,13 +62,8 @@ class Users::RegistrationsController < Devise::RegistrationsController
   protected
   
   def update_resource(resource, params)
-    if params[:password].blank? && params[:password_confirmation].blank? && params[:current_password].blank?
-      # If all password fields are blank, update other fields like profile_image or email without current password
-      resource.update_without_password(params.except(:current_password))
-    else
-      # If any password field is present, use standard Devise update which requires current_password
-      resource.update_with_password(params)
-    end
+    # Always require current password for any profile updates
+    resource.update_with_password(params)
   end
 
   protected
