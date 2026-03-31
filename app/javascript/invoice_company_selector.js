@@ -147,6 +147,48 @@ export function initCompanySelector() {
         selectorInterface.classList.add('d-none');
         preview.classList.remove('d-none');
         dropdown.classList.add('d-none');
+
+        // Trigger eligible invoices fetch for Credit Note
+        const originalInvoiceSelect = document.getElementById('credit_note_original_invoice_id');
+        if (originalInvoiceSelect) {
+            fetchEligibleInvoices(company.id);
+        }
+    }
+
+    function fetchEligibleInvoices(companyId) {
+        const select = document.getElementById('credit_note_original_invoice_id');
+        if (!select) return;
+
+        const typeField = document.querySelector('input[name="invoice[invoice_type]"]');
+        const invoiceType = typeField ? typeField.value : 'sale';
+
+        select.innerHTML = '<option value="">Loading...</option>';
+
+        fetch(`/invoices/fetch_eligible.json?recipient_company_id=${companyId}&invoice_type=${invoiceType}`)
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                select.innerHTML = '<option value="">Select Invoice...</option>';
+                if (data.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "No eligible invoices found for this company";
+                    select.appendChild(option);
+                } else {
+                    data.forEach(inv => {
+                        const option = document.createElement('option');
+                        option.value = inv.id;
+                        option.textContent = inv.invoice_number;
+                        select.appendChild(option);
+                    });
+                }
+            })
+            .catch(err => {
+                console.error("Error fetching eligible invoices:", err);
+                select.innerHTML = '<option value="">Error loading invoices</option>';
+            });
     }
 
     function updatePreview(company) {
@@ -171,6 +213,13 @@ export function initCompanySelector() {
             selectorInterface.classList.remove('d-none');
             hiddenInput.value = '';
             input.value = '';
+            
+            // Clear eligible invoices dropdown
+            const originalInvoiceSelect = document.getElementById('credit_note_original_invoice_id');
+            if (originalInvoiceSelect) {
+                originalInvoiceSelect.innerHTML = '<option value="">Select Invoice...</option>';
+            }
+
             setTimeout(() => input.focus(), 50);
         });
         changeBtn.dataset.listenerAttached = "true";

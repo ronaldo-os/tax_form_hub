@@ -13,8 +13,14 @@ function initInvoicePage() {
             const existingChart = Chart.getChart($canvas[0]);
             if (existingChart) existingChart.destroy();
 
-            // Refrain from adding a graph if all data points are zero
-            if (!data.some(d => d.count > 0)) return;
+            // Refrain from adding a graph if all data points are zero.
+            // Hide chart wrapper in this case to remove any residual line rendering.
+            const $wrapper = $canvas.closest('.chart-wrapper');
+            if (!data.some(d => d.count > 0)) {
+                $wrapper.hide();
+                return;
+            }
+            $wrapper.show();
 
             const ctx = $canvas[0].getContext("2d");
 
@@ -27,17 +33,24 @@ function initInvoicePage() {
                         backgroundColor: color,
                         borderRadius: 5,
                         barThickness: 4,
+                        borderWidth: 0,
                     }]
                 },
                 options: {
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: {
-                        x: { display: false },
-                        y: { display: false }
+                        x: { display: false, grid: { display: false }, border: { display: false }},
+                        y: { display: false, grid: { display: false }, border: { display: false }}
+                    },
+                    elements: {
+                        bar: {
+                            borderSkipped: false,
+                        }
                     },
                     layout: {
                         padding: 0
                     },
+                    border: { display: false },
                     animation: false,
                     responsive: true,
                     maintainAspectRatio: false,

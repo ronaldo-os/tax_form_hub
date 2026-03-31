@@ -98,7 +98,10 @@ class InvoicesController < ApplicationController
         invoice_category: "credit_note",
         credit_note_original_invoice_id: original.id,
         status: "draft",
-        invoice_type: original.invoice_type
+        invoice_type: original.invoice_type,
+        recipient_company_id: original.recipient_company_id,
+        sale_from_id: original.sale_from_id,
+        currency: original.currency
       )
       @suggested_invoice_number = next_invoice_number_suggestion(@invoice.invoice_type, @invoice.invoice_category)
     else
@@ -120,10 +123,12 @@ class InvoicesController < ApplicationController
         @save_footer_notes_for_future  = false
       end
     end
+    set_form_resources
   end
 
   def edit
     @invoice = current_user.invoices.find(params[:id])
+    set_form_resources
   end
 
   def create
@@ -405,6 +410,21 @@ class InvoicesController < ApplicationController
     end
   end
 
+  def eligible_invoices
+    recipient_id = params[:recipient_company_id]
+    invoice_type = params[:invoice_type] || 'sale'
+
+    # Filter by user's invoices, category standard, and specified type/recipient
+    invoices = current_user.invoices.standard
+      .where(invoice_type: invoice_type)
+      .where(recipient_company_id: recipient_id)
+      .where.not(status: ['draft', 'rejected'])
+      .order(issue_date: :desc)
+      .limit(50)
+
+    render json: invoices.map { |inv| { id: inv.id, invoice_number: inv.invoice_number } }
+  end
+
   private
 
   def build_invoice_trends(relation)
@@ -615,7 +635,19 @@ class InvoicesController < ApplicationController
     @units = units_for_company
     
     if @invoice&.credit_note?
-      @eligible_invoices = current_user.invoices.standard.where(invoice_type: 'sale').where.not(status: ['draft', 'rejected']).order(issue_date: :desc)
+      @eligible_invoices = current_user.invoices.standard
+        .where(invoice_type: @invoice.invoice_type || 'sale')
+        .where.not(status: ['draft', 'rejected'])
+        .order(issue_date: :desc)
+      @eligible_invoices = @eligible_invoices.where(recipient_company_id: @invoice.recipient_company_id) if @invoice.recipient_company_id.present?
+
+      # Ensure the currently associated original invoice is in the list
+      if @invoice.credit_note_original_invoice_id.present?
+        original = Invoice.find_by(id: @invoice.credit_note_original_invoice_id)
+        if original && !@eligible_invoices.map(&:id).include?(original.id)
+          @eligible_invoices = [original] + @eligible_invoices.to_a
+        end
+      end
     end
   end
 

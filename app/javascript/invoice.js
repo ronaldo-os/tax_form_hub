@@ -1850,7 +1850,10 @@ const initInvoiceForm = () => {
   function renderPaymentTerms(data) {
     const $container = $('#payment_terms_parent_div');
     if ($container.length === 0) {
-      console.warn('#payment_terms_parent_div not found');
+      const isCreditNote = document.getElementById('invoice_invoice_category')?.value === 'credit_note';
+      if (!isCreditNote) {
+        console.warn('#payment_terms_parent_div not found');
+      }
       return;
     }
 

@@ -70,7 +70,7 @@
                 <%= f.select :credit_note_original_invoice_id, 
                     options_from_collection_for_select(@eligible_invoices || [], :id, :invoice_number, @invoice.credit_note_original_invoice_id),
                     { prompt: "Select Invoice..." },
-                    { id: "credit_note_original_invoice_id", class: "form-select" } 
+                    { id: "credit_note_original_invoice_id", class: "form-select", required: true } 
                 %>
                 <div id="original_invoice_status_badge" class="mt-2 text-end">
                   <% if @invoice.original_invoice.present? %>
@@ -523,6 +523,7 @@
 
 
         <div id="hidden_fields_container" class="d-none">
+            <%= f.hidden_field :invoice_type %>
             <%= f.hidden_field :invoice_category %>
             <%= f.hidden_field :total, id: 'total_amount_json', data: { field_type: 'invoice_form_fields' } %>
 

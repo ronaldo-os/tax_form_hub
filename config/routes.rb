@@ -20,6 +20,8 @@ Rails.application.routes.draw do
 
   root "tax_submissions#home"
   get "tax_submissions/home"
+  
+  get "invoices/fetch_eligible", to: "invoices#eligible_invoices"
 
   resources :tax_submissions, only: [:index, :new, :create, :show, :destroy, :update] do
     collection do
@@ -31,9 +33,10 @@ Rails.application.routes.draw do
     resources :tax_submissions, only: [:index, :show, :update]
   end
 
-  resources :invoices, only: [:index, :show, :new, :create, :destroy]
-
   resources :invoices do
+    collection do
+      post :create_and_send
+    end
     member do
       patch :approve
       patch :reject
@@ -42,12 +45,6 @@ Rails.application.routes.draw do
       patch :mark_as_paid
       post  :duplicate_as_purchase
       get   :pdf_partial
-    end
-  end
-
-  resources :invoices do
-    collection do
-      post :create_and_send
     end
   end
 
