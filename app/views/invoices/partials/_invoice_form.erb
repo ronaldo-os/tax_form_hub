@@ -3,6 +3,17 @@
     <div class="card-body">
       <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
 
+        <% if @invoice.errors.any? %>
+          <div class="alert alert-danger" role="alert">
+            <h6 class="alert-heading">Please fix the following errors:</h6>
+            <ul class="mb-0">
+              <% @invoice.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
         <h5 class="text-secondary">
           <%= if @invoice.quote?
                 'Quote Details'
@@ -14,8 +25,6 @@
         </h5>
         
         <div class="row">
-<%# MOVED Associate with Invoice section %>
-
           <div class="col-md-6 mb-3">
             <%= f.label :To, class: "form-label" %>
             

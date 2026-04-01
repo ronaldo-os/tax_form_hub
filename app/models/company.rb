@@ -3,6 +3,8 @@ class Company < ApplicationRecord
   has_many :recommendations, dependent: :destroy
   has_many :networks, dependent: :destroy
   has_many :units, dependent: :destroy
+  has_many :recipient_invoices, class_name: "Invoice", foreign_key: :recipient_company_id, dependent: :destroy
+  has_many :sale_from_invoices, class_name: "Invoice", foreign_key: :sale_from_id, dependent: :destroy
   belongs_to :user, optional: true
 
   INDUSTRIES = [

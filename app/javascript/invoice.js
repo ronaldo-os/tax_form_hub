@@ -2160,6 +2160,21 @@ const initInvoiceForm = () => {
   });
 
   $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function (e) {
+    // Check for unselected tax in line items
+    let hasUnselectedTax = false;
+    $('.tax').each(function() {
+      if ($(this).val() === "" || $(this).val() === null) {
+        hasUnselectedTax = true;
+        return false; // break out of each loop
+      }
+    });
+    
+    if (hasUnselectedTax) {
+      e.preventDefault();
+      showFlashMessage("Please select a tax rate for all line items before proceeding.", "danger");
+      return;
+    }
+
     // Skip payment terms validation for Credit Notes and Quotes
     const category = $('input[name="invoice[invoice_category]"]').val();
     if (category === 'credit_note' || category === 'quote') return;
@@ -2168,6 +2183,29 @@ const initInvoiceForm = () => {
     if (!$(inputId).val() || $(inputId).val() === "[]" || $(inputId).val() === "{}") {
       e.preventDefault();
       showFlashMessage("Please add payment terms before sending it to recipient.", "danger");
+    }
+  });
+
+  // Validate tax selection on form submission
+  $(document).on("submit", "form", function (e) {
+    let hasUnselectedTax = false;
+    $('.tax').each(function() {
+      if ($(this).val() === "" || $(this).val() === null) {
+        hasUnselectedTax = true;
+        return false; // break out of each loop
+      }
+    });
+    
+    if (hasUnselectedTax) {
+      e.preventDefault();
+      showFlashMessage("Please select a tax rate for all line items before saving.", "danger");
+      // Scroll to the first unselected tax dropdown
+      const firstUnselected = $('.tax').filter(function() { return $(this).val() === "" || $(this).val() === null; }).first();
+      if (firstUnselected.length) {
+        firstUnselected[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstUnselected.focus();
+      }
+      return false;
     }
   });
 

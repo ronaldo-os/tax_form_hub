@@ -69,7 +69,14 @@
 
             <div class="col-12">
               <%= f.label :company_id, "Company Name", class: "form-label fw-semibold small text-muted" %>
-              <%= f.collection_select :company_id, @companies || [], :id, :name, { prompt: "Select Company" }, { class: "form-select rounded-3", id: "company_select", required: true } %>
+              <% if @companies.any? %>
+                <%= f.collection_select :company_id, @companies, :id, :name, { prompt: "Select Company" }, { class: "form-select rounded-3", id: "company_select", required: true } %>
+              <% else %>
+                <div class="alert alert-warning">
+                  <p class="mb-0 small">You don't have any approved invoices yet. Reach out to your company to <b>get an invoice approved</b> before you can submit your tax documents.</p>
+                </div>
+                <%= f.select :company_id, [], { disabled: true, prompt: "No companies available" }, { class: "form-select rounded-3", id: "company_select" } %>
+              <% end %>
             </div>
 
             <div class="col-12">
