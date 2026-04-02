@@ -150,4 +150,23 @@ class Company < ApplicationRecord
     "United States of America", "Uruguay", "Uzbekistan", "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
     "Yemen", "Zambia", "Zimbabwe"
   ]
+
+  before_save :generate_slug
+
+  def generate_slug
+    if name.present?
+      base_slug = name.parameterize
+      slug_candidate = base_slug
+      counter = 1
+      while Company.where(slug: slug_candidate).where.not(id: id).exists?
+        slug_candidate = "#{base_slug}-#{counter}"
+        counter += 1
+      end
+      self.slug = slug_candidate
+    end
+  end
+
+  def to_param
+    slug
+  end
 end

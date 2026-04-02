@@ -59,6 +59,9 @@ class TaxSubmissionsController < ApplicationController
     @tax_submission = TaxSubmission.new(submission_params)
 
     if @tax_submission.save
+      TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later
+      TaxSubmissionMailer.notify_superadmins(@tax_submission).deliver_later
+      TaxSubmissionMailer.notify_company(@tax_submission).deliver_later
       redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
     else
       error_message = @tax_submission.errors.full_messages.join(", ")

@@ -25,4 +25,14 @@ class TaxSubmissionMailer < ApplicationMailer
     )
   end
 
+  def notify_company(tax_submission)
+    @tax_submission = tax_submission
+    company_user = @tax_submission.company&.user
+    if company_user
+      mail(
+        to: company_user.email,
+        subject: "New tax documents submitted for your company"
+      )
+    end
+  end
 end

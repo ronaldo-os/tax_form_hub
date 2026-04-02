@@ -1,11 +1,16 @@
 class CompaniesController < ApplicationController
-  before_action :set_company, only: [:update, :show]
+  before_action :set_company, only: [ :update, :show ]
+  before_action :authorize_show, only: [ :show ]
 
   def index
     @companies = current_user.companies
+    if @companies.empty?
+      redirect_to new_company_path, notice: "Please create your first company."
+      return
+    end
     # Prioritize company matching the id param, or fallback to user's first company
     @company = if params[:id]
-                 @companies.find_by(id: params[:id]) || @companies.first
+                 @companies.find_by(slug: params[:id]) || @companies.first
                else
                  @companies.first
                end
@@ -28,7 +33,7 @@ class CompaniesController < ApplicationController
     @company = current_user.companies.build(company_params)
 
     if @company.save
-      redirect_to companies_path(id: @company.id), notice: 'Company was successfully created.', status: :see_other
+      redirect_to companies_path(@company), notice: "Company was successfully created.", status: :see_other
     else
       @companies = current_user.companies
       render :index, status: :unprocessable_entity
@@ -41,7 +46,7 @@ class CompaniesController < ApplicationController
     end
 
     if @company.update(company_params)
-      redirect_to companies_path(id: @company.id), notice: "Company profile updated.", status: :see_other
+      redirect_to companies_path(@company), notice: "Company profile updated.", status: :see_other
     else
       @companies = current_user.companies
       render :index, status: :unprocessable_entity
@@ -56,8 +61,19 @@ class CompaniesController < ApplicationController
 
   private
 
+  def authorize_show
+    unless current_user.companies.include?(@company) || current_user.connected_companies.include?(@company)
+      redirect_to networks_path, alert: "Access denied. You can only view companies in your network."
+      nil
+    end
+  end
+
   def set_company
-    @company = Company.find(params[:id])
+    @company = Company.find_by(slug: params[:id])
+    unless @company
+      redirect_to networks_path, alert: "Company not found."
+      nil
+    end
   end
 
   def company_params

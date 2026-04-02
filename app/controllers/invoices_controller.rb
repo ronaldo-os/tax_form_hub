@@ -205,8 +205,19 @@ class InvoicesController < ApplicationController
       if params[:commit_action] == "send"
         @invoice.update(status: "sent")
 
-        recipient_user = Company.find_by(id: @invoice.recipient_company_id)&.user
-        InvoiceMailer.invoice_sent(@invoice, recipient_user).deliver_later if recipient_user
+        if @invoice.credit_note?
+          original_invoice = @invoice.original_invoice
+          InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
+        else
+          recipient_user = Company.find_by(id: @invoice.recipient_company_id)&.user
+          if recipient_user
+            if @invoice.quote?
+              InvoiceMailer.quote_sent(@invoice, recipient_user).deliver_later
+            else
+              InvoiceMailer.invoice_sent(@invoice, recipient_user).deliver_later
+            end
+          end
+        end
 
         category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
         redirect_to invoice_path(@invoice), notice: "#{category_name} sent successfully."
@@ -263,7 +274,14 @@ class InvoicesController < ApplicationController
             content_type: attachment.content_type
           )
         end
-        InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
+
+        if @invoice.credit_note?
+          original_invoice = @invoice.original_invoice
+          InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
+        else
+          InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
+        end
+
         category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
         redirect_to invoices_path, notice: "#{category_name} sent successfully"
       else
@@ -355,6 +373,12 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.update(status: "approved")
       update_original_sale_status(invoice, "approved")
+      sender_user = invoice.user
+      if invoice.quote?
+        InvoiceMailer.quote_approved(invoice, sender_user).deliver_later
+      else
+        InvoiceMailer.invoice_approved(invoice, sender_user).deliver_later
+      end
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice approved."
     else
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Failed to approve invoice."
@@ -365,6 +389,12 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.update(status: "rejected")
       update_original_sale_status(invoice, "rejected")
+      sender_user = invoice.user
+      if invoice.quote?
+        InvoiceMailer.quote_rejected(invoice, sender_user).deliver_later
+      else
+        InvoiceMailer.invoice_rejected(invoice, sender_user).deliver_later
+      end
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice rejected."
     else
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Failed to reject invoice."

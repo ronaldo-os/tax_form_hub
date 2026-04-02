@@ -1,0 +1,60 @@
+<% currency_symbols = { "PHP" => "₱", "USD" => "$", "EUR" => "€", "JPY" => "¥" } %>
+<% symbol = currency_symbols[@invoice.currency] || @invoice.currency %>
+<% action_labels = {
+  invoice_sent: "New Invoice",
+  quote_sent: "New Quotation",
+  invoice_approved: "Invoice Approved",
+  invoice_rejected: "Invoice Rejected",
+  quote_approved: "Quotation Approved",
+  quote_rejected: "Quotation Rejected"
+} %>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9fafb;padding:40px 0;font-family:Arial,Helvetica,sans-serif;">
+  <tr>
+    <td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:40px;text-align:left;">
+
+        <tr>
+          <td style="text-align:center;padding-bottom:30px;">
+            <h2 style="margin:0;font-size:24px;color:#111827;"><%= action_labels[@action] || "Invoice Update" %></h2>
+            <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">Action by <%= @sender_user&.email %></p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="padding:20px;background:#f3f4f6;border-radius:8px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong><%= @invoice.quote? ? "Quotation" : "Invoice" %> Number:</strong> <%= @invoice.invoice_number %></td>
+              </tr>
+              <tr>
+                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>From:</strong> <%= @invoice.user.company&.name || @invoice.user.email %></td>
+              </tr>
+              <tr>
+                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>To:</strong> <%= @invoice.recipient_company&.name %></td>
+              </tr>
+              <tr>
+                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>Total:</strong> <%= symbol %><%= number_with_precision(@invoice.grand_total, precision: 2) %></td>
+              </tr>
+              <tr>
+                <td style="font-size:14px;color:#374151;"><strong>Date:</strong> <%= @invoice.created_at.strftime("%B %d, %Y") %></td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="text-align:center;padding-top:30px;">
+            <a href="<%= invoices_url %>" style="display:inline-block;background:#3b82f6;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">View <%= @invoice.quote? ? "Quotation" : "Invoice" %></a>
+          </td>
+        </tr>
+
+        <tr>
+          <td style="text-align:center;padding-top:30px;font-size:12px;color:#9ca3af;">
+            <p>This is an automated notification. Please do not reply to this email.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
