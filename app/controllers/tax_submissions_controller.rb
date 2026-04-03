@@ -29,7 +29,7 @@ class TaxSubmissionsController < ApplicationController
       @tax_submission = TaxSubmission.new(tax_submission_params)
       @tax_submission.errors.add(:invoice_id, "must be selected")
       @companies = companies_with_approved_invoices
-      load_submissions
+      load_sent_submissions
 
       respond_to do |format|
         format.html { render :home }
@@ -46,9 +46,15 @@ class TaxSubmissionsController < ApplicationController
     end
 
     # Identify the target company (Vendor for Purchase, Customer for Sale)
-    # For purchase: documents go to the seller (sale_from). If nil (manual), we try recipient_company.
+    # For purchase: documents go to the seller (sale_from).
     # For sale: documents go to the customer (recipient_company).
-    target_company = invoice.invoice_type == "purchase" ? (invoice.sale_from || invoice.recipient_company) : invoice.recipient_company
+    my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
+    
+    if invoice.invoice_type == "purchase"
+      target_company = invoice.sale_from || (invoice.user.company if invoice.user && !my_company_ids.include?(invoice.user.company_id)) || invoice.recipient_company
+    else
+      target_company = invoice.recipient_company
+    end
 
     # Merge the correct company_id and sender email into params
     submission_params = tax_submission_params.merge(
@@ -66,7 +72,7 @@ class TaxSubmissionsController < ApplicationController
     else
       error_message = @tax_submission.errors.full_messages.join(", ")
       @companies = companies_with_approved_invoices
-      load_submissions
+      load_sent_submissions
 
       respond_to do |format|
         format.html { render :home }
@@ -93,13 +99,15 @@ class TaxSubmissionsController < ApplicationController
       return
     end
 
-    my_company_id = current_user.company_id
-    invoices = current_user.invoices
-                           .where(invoice_type: "sale")
-                           .where(recipient_company_id: company_id)
+    my_company_ids = current_user.companies.pluck(:id) << current_user.company_id
+    my_company_ids = my_company_ids.compact.uniq
+
+    # Find invoices related to the user or their company
+    invoices = Invoice.where("user_id = ? OR recipient_company_id IN (?) OR sale_from_id IN (?)", current_user.id, my_company_ids, my_company_ids)
                            .where(status: "approved")
                            .where(archived: [ false, nil ])
                            .where.not(invoice_category: "quote")
+                           .where("(invoice_type = 'sale' AND recipient_company_id = :company_id) OR (invoice_type = 'purchase' AND sale_from_id = :company_id)", company_id: company_id)
                            .order(created_at: :desc)
 
     render json: invoices.map { |inv|
@@ -114,7 +122,7 @@ class TaxSubmissionsController < ApplicationController
   private
 
   def load_incoming_submissions
-    my_company_ids = current_user.companies.pluck(:id)
+    my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
     scope = submission_scope
 
     @unarchived_submissions = scope.where(company_id: my_company_ids)
@@ -127,11 +135,11 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def load_sent_submissions
-    my_company_ids = current_user.companies.pluck(:id)
+    my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
     scope = submission_scope
 
     # Invoices where I am the creator or my company is the recipient (i.e., I'm the buyer)
-    related_invoice_ids = Invoice.where("user_id = ? OR recipient_company_id IN (?)", current_user.id, my_company_ids).pluck(:id)
+    related_invoice_ids = Invoice.where("user_id = ? OR recipient_company_id IN (?) OR sale_from_id IN (?)", current_user.id, my_company_ids, my_company_ids).pluck(:id)
 
     @unarchived_submissions = scope.where(invoice_id: related_invoice_ids)
                                    .where.not(company_id: my_company_ids) # Focus on what I sent to others
@@ -175,20 +183,36 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def companies_with_approved_invoices
-    # Get all connected companies and filter to only those with at least one approved invoice.
-    # This ensures users can only submit tax documents for companies they have created
-    # approved invoices for, maintaining consistency with the invoice number selection logic.
-    current_user.connected_companies.joins(:recipient_invoices)
-                                    .where(
-                                      invoices: {
-                                        user_id: current_user.id,
-                                        invoice_type: "sale",
-                                        status: "approved",
-                                        invoice_category: [ "standard", "credit_note" ]
-                                      }
-                                    )
-                                    .where("invoices.archived IS NULL OR invoices.archived = ?", false)
-                                    .distinct
+    my_company_ids = current_user.companies.pluck(:id) << current_user.company_id
+    my_company_ids = my_company_ids.compact.uniq
+
+    # Find all approved invoices where the user or their company is either the sender or receiver
+    invoice_data = Invoice.where("user_id = ? OR recipient_company_id IN (?) OR sale_from_id IN (?)", current_user.id, my_company_ids, my_company_ids)
+                                .where(status: "approved")
+                                .where(invoice_category: [ "standard", "credit_note" ])
+                                .where("archived IS NULL OR archived = ?", false)
+                                .pluck(:invoice_type, :recipient_company_id, :sale_from_id)
+
+    target_company_ids = invoice_data.map do |type, recipient_id, sale_from_id|
+      # If the user's company is involved, identify the *other* party
+      if my_company_ids.include?(recipient_id) && my_company_ids.include?(sale_from_id)
+        # Both sides are ours? (Internal transaction). This is rare.
+        # Just pick the other party from the POV of the invoice owner or type.
+        type == "sale" ? recipient_id : sale_from_id
+      elsif my_company_ids.include?(recipient_id)
+        # We are the buyer/recipient, target is the sender
+        sale_from_id
+      elsif my_company_ids.include?(sale_from_id)
+        # We are the sender/sale_from, target is the recipient
+        recipient_id
+      else
+        # Fallback to previous logic if not explicitly in our company list
+        type == "sale" ? recipient_id : sale_from_id
+      end
+    end.compact.uniq
+
+    # Return the identified companies directly, avoiding restrictive connected_companies filter
+    Company.where(id: target_company_ids)
   end
 
   def tax_submission_params

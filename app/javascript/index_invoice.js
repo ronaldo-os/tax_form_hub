@@ -13,10 +13,11 @@ function initInvoicePage() {
             const existingChart = Chart.getChart($canvas[0]);
             if (existingChart) existingChart.destroy();
 
-            // Refrain from adding a graph if all data points are zero.
-            // Hide chart wrapper in this case to remove any residual line rendering.
             const $wrapper = $canvas.closest('.chart-wrapper');
-            if (!data.some(d => d.count > 0)) {
+            // Filter out months with zero data to satisfy "not for empty months"
+            const filteredData = data.filter(d => d.count > 0);
+            
+            if (filteredData.length === 0) {
                 $wrapper.hide();
                 return;
             }
@@ -27,20 +28,28 @@ function initInvoicePage() {
             new Chart(ctx, {
                 type: "bar",
                 data: {
-                    labels: data.map(d => d.month),
+                    labels: filteredData.map(d => d.month),
                     datasets: [{
-                        data: data.map(d => d.count),
+                        data: filteredData.map(d => d.count),
                         backgroundColor: color,
                         borderRadius: 5,
-                        barThickness: 4,
+                        barThickness: filteredData.length > 3 ? 4 : 8, // Thicker bars if fewer months to avoid looking like a 'dash'
                         borderWidth: 0,
                     }]
                 },
                 options: {
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: {
-                        x: { display: false, grid: { display: false }, border: { display: false }},
-                        y: { display: false, grid: { display: false }, border: { display: false }}
+                        x: { 
+                            display: false, 
+                            grid: { display: false }, 
+                            border: { display: false }
+                        },
+                        y: { 
+                            display: false, 
+                            grid: { display: false }, 
+                            border: { display: false }
+                        }
                     },
                     elements: {
                         bar: {
@@ -50,7 +59,6 @@ function initInvoicePage() {
                     layout: {
                         padding: 0
                     },
-                    border: { display: false },
                     animation: false,
                     responsive: true,
                     maintainAspectRatio: false,
