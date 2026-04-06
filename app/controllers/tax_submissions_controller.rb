@@ -49,7 +49,7 @@ class TaxSubmissionsController < ApplicationController
     # For purchase: documents go to the seller (sale_from).
     # For sale: documents go to the customer (recipient_company).
     my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
-    
+
     if invoice.invoice_type == "purchase"
       target_company = invoice.sale_from || (invoice.user.company if invoice.user && !my_company_ids.include?(invoice.user.company_id)) || invoice.recipient_company
     else
@@ -66,8 +66,7 @@ class TaxSubmissionsController < ApplicationController
 
     if @tax_submission.save
       TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later
-      TaxSubmissionMailer.notify_superadmins(@tax_submission).deliver_later
-      TaxSubmissionMailer.notify_company(@tax_submission).deliver_later
+      TaxSubmissionMailer.notify_invoice_sender(@tax_submission).deliver_later
       redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
     else
       error_message = @tax_submission.errors.full_messages.join(", ")

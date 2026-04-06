@@ -373,11 +373,13 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.update(status: "approved")
       update_original_sale_status(invoice, "approved")
-      sender_user = invoice.user
+      # For purchase invoices, the actual sender is associated with sale_from company
+      # For sale invoices, the sender is the invoice owner (but approval shouldn't happen on sale)
+      sender_user = invoice.invoice_type == "purchase" && invoice.sale_from ? invoice.sale_from.user : invoice.user
       if invoice.quote?
-        InvoiceMailer.quote_approved(invoice, sender_user).deliver_later
+        InvoiceMailer.quote_approved(invoice, sender_user, current_user).deliver_later
       else
-        InvoiceMailer.invoice_approved(invoice, sender_user).deliver_later
+        InvoiceMailer.invoice_approved(invoice, sender_user, current_user).deliver_later
       end
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice approved."
     else
@@ -389,11 +391,13 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.update(status: "rejected")
       update_original_sale_status(invoice, "rejected")
-      sender_user = invoice.user
+      # For purchase invoices, the actual sender is associated with sale_from company
+      # For sale invoices, the sender is the invoice owner (but rejection shouldn't happen on sale)
+      sender_user = invoice.invoice_type == "purchase" && invoice.sale_from ? invoice.sale_from.user : invoice.user
       if invoice.quote?
-        InvoiceMailer.quote_rejected(invoice, sender_user).deliver_later
+        InvoiceMailer.quote_rejected(invoice, sender_user, current_user).deliver_later
       else
-        InvoiceMailer.invoice_rejected(invoice, sender_user).deliver_later
+        InvoiceMailer.invoice_rejected(invoice, sender_user, current_user).deliver_later
       end
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice rejected."
     else

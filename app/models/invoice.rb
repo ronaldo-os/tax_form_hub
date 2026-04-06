@@ -32,6 +32,14 @@ class Invoice < ApplicationRecord
     total["grand_total"].to_f
   end
 
+  def sender_company
+    sale_from || user&.company
+  end
+
+  def sender_user
+    sender_company&.user || user
+  end
+
   private
 
   def line_items_tax_selected
