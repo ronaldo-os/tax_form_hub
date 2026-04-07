@@ -278,6 +278,8 @@ class InvoicesController < ApplicationController
         if @invoice.credit_note?
           original_invoice = @invoice.original_invoice
           InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
+        elsif @invoice.quote?
+          InvoiceMailer.quote_sent(duplicated_invoice, recipient_user).deliver_later
         else
           InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
         end

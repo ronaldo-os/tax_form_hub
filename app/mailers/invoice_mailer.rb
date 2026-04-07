@@ -10,11 +10,14 @@ class InvoiceMailer < ApplicationMailer
     quote_rejected: "Your quotation has been rejected"
   }.freeze
 
-  def transaction_notification(invoice, recipient_user, action)
+  def transaction_notification(invoice, recipient_user, action, action_performer = nil)
     @invoice = invoice
     @recipient_user = recipient_user
     @action = action
-    @sender_user = invoice.user
+    @sender_user = action_performer || invoice.user
+    # For purchase invoices, the original sender is associated with sale_from company
+    # For sale invoices, the original sender is invoice.user
+    @original_sender_user = invoice.invoice_type == "purchase" && invoice.sale_from ? invoice.sale_from.user : invoice.user
 
     mail(
       to: recipient_user.email,
@@ -31,20 +34,21 @@ class InvoiceMailer < ApplicationMailer
     transaction_notification(invoice, recipient_user, :quote_sent)
   end
 
-  def invoice_approved(invoice, sender_user)
-    transaction_notification(invoice, sender_user, :invoice_approved)
+  # For approval/rejection, the action_performer is the recipient approving/rejecting
+  def invoice_approved(invoice, sender_user, action_performer_user = nil)
+    transaction_notification(invoice, sender_user, :invoice_approved, action_performer_user || invoice.user)
   end
 
-  def invoice_rejected(invoice, sender_user)
-    transaction_notification(invoice, sender_user, :invoice_rejected)
+  def invoice_rejected(invoice, sender_user, action_performer_user = nil)
+    transaction_notification(invoice, sender_user, :invoice_rejected, action_performer_user || invoice.user)
   end
 
-  def quote_approved(invoice, sender_user)
-    transaction_notification(invoice, sender_user, :quote_approved)
+  def quote_approved(invoice, sender_user, action_performer_user = nil)
+    transaction_notification(invoice, sender_user, :quote_approved, action_performer_user || invoice.user)
   end
 
-  def quote_rejected(invoice, sender_user)
-    transaction_notification(invoice, sender_user, :quote_rejected)
+  def quote_rejected(invoice, sender_user, action_performer_user = nil)
+    transaction_notification(invoice, sender_user, :quote_rejected, action_performer_user || invoice.user)
   end
 
   def credit_note_created(credit_note, original_invoice)
