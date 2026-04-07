@@ -55,14 +55,14 @@ class InvoiceMailer < ApplicationMailer
     @credit_note = credit_note
     @original_invoice = original_invoice
 
-    recipients = []
-    recipients << credit_note.user.email if credit_note.user
-    recipients << credit_note.recipient_company.user.email if credit_note.recipient_company&.user
-    recipients.uniq!
-
-    mail(
-      to: recipients,
-      subject: "A credit note has been created"
-    )
+    # Send credit note notification to the invoice receiver (recipient of the original invoice)
+    recipient_user = original_invoice.recipient_company&.user
+    
+    if recipient_user
+      mail(
+        to: recipient_user.email,
+        subject: "A credit note has been created"
+      )
+    end
   end
 end
