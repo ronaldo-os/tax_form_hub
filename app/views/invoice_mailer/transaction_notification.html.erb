@@ -28,7 +28,7 @@
                 <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong><%= @invoice.quote? ? "Quotation" : "Invoice" %> Number:</strong> <%= @invoice.invoice_number %></td>
               </tr>
               <tr>
-                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>From:</strong> <%= @invoice.user.company&.name || @invoice.user.email %></td>
+                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>From:</strong> <%= (@original_sender_user&.company&.name || @original_sender_user&.email || @invoice.user.company&.name || @invoice.user.email) %></td>
               </tr>
               <tr>
                 <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>To:</strong> <%= @invoice.recipient_company&.name %></td>

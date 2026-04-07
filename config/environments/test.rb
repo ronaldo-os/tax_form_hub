@@ -28,6 +28,9 @@ Rails.application.configure do
   # Render exception templates for rescuable exceptions and raise for other exceptions.
   config.action_dispatch.show_exceptions = :rescuable
 
+  # Configure Action Mailer for testing
+  config.action_mailer.default_url_options = { host: "example.com" }
+
   # Disable request forgery protection in test environment.
   config.action_controller.allow_forgery_protection = false
 
