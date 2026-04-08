@@ -266,9 +266,9 @@ function initInvoicePage() {
         displayFiles.forEach(file => {
             const size = Math.round(file.size / 1024);
             $list.append(`
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${file.name}
-                    <span class="badge bg-secondary rounded-pill">${size} KB</span>
+                <li class="list-group-item d-flex justify-content-between align-items-center file-list-item">
+                    <span class="file-name-wrapper" title="${file.name}">${file.name}</span>
+                    <span class="badge bg-secondary rounded-pill ms-2 flex-shrink-0">${size} KB</span>
                 </li>
             `);
         });

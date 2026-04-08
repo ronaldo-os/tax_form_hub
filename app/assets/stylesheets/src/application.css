@@ -170,6 +170,9 @@ textarea {
 input[type="checkbox"],
 input[type="radio"] {
   border-radius: 0;
+  background-color: #ffffff;
+  border: 2px solid #212529;
+  accent-color: #212529;
 }
 
 .input-group-text {
@@ -178,6 +181,25 @@ input[type="radio"] {
   border-color: var(--border-color);
 }
 
+/* File list item styling to prevent text overflow */
+.file-list-item {
+  overflow: hidden;
+  gap: 10px;
+}
+
+.file-name-wrapper {
+  min-width: 0;
+  flex: 1;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  cursor: help;
+}
+
+.file-name-wrapper:hover {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
 
 .input-group .field_with_errors {
   display: contents;

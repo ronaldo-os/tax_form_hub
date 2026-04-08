@@ -7,7 +7,7 @@
 .visitor-note {
   background: #fffd9e;
   padding: 10px 15px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #d4c65e;
   font-size: 14px;
   text-align: center;
 }
@@ -20,6 +20,17 @@
   color: #0073b1;
   cursor: pointer;
   text-decoration: underline;
+}
+
+/* Dark theme adjustments for visitor note banner */
+[data-theme="dark"] .visitor-note {
+  background: var(--bg-secondary);
+  border-bottom-color: var(--border-color);
+  color: var(--text-main);
+}
+
+[data-theme="dark"] .visitor-note .view-as-me {
+  color: var(--main-color);
 }
 
 .profile-preview {

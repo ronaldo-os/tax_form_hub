@@ -66,7 +66,7 @@
               </li>
               <li class="d-flex">
                 <i class="fa-solid fa-location-dot text-secondary icon-fixed"></i>
-                <span id="company_location_text"><%= @company.address.presence || "None" %></span>
+                <span id="company_location_text"><%= [ @company.address, @company.country ].select(&:present?).join(", ").presence || "N/A" %></span>
               </li>
             </ul>
           </div>

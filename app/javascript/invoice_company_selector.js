@@ -225,8 +225,20 @@ export function initCompanySelector() {
         changeBtn.dataset.listenerAttached = "true";
     }
 
+    // Listen for theme changes and re-render dropdown if visible
+    const themeChangeListener = () => {
+        if (!dropdown.classList.contains('d-none')) {
+            // Dropdown is visible, re-fetch and re-render it
+            const currentQuery = input.value.trim();
+            fetchCompanies(currentQuery);
+        }
+    };
+
+    document.addEventListener('theme:changed', themeChangeListener);
+
     // Return cleanup function
     return function cleanup() {
         document.removeEventListener('click', clickHandler);
+        document.removeEventListener('theme:changed', themeChangeListener);
     };
 }

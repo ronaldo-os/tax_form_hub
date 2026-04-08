@@ -58,3 +58,29 @@
   color: var(--main-color) !important;
   font-weight: 600;
 }
+
+/* Company dropdown styling with theme support */
+#company_search_dropdown {
+  background-color: var(--input-bg);
+  border-color: var(--border-color);
+}
+
+#company_search_dropdown .list-group-item {
+  background-color: var(--input-bg);
+  border-color: var(--border-color);
+  color: var(--input-text);
+}
+
+#company_search_dropdown .list-group-item.bg-light {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-muted);
+}
+
+#company_search_dropdown .list-group-item-action:hover {
+  background-color: var(--bg-tertiary);
+}
+
+#company_search_dropdown .text-muted {
+  color: var(--text-muted) !important;
+}
+}

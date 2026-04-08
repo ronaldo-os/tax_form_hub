@@ -95,7 +95,7 @@ function renderCompanyMap() {
 
     if ($mapFrame.length === 0) return; // Exit if no map frame (e.g. maybe on new page or different view)
 
-    if (!rawAddress || rawAddress === 'N/A') {
+    if (!rawAddress || rawAddress === 'N/A' || rawAddress === 'None') {
         $errorBox.text('No company address provided.').show();
         $mapFrame.hide();
         return;

@@ -54,6 +54,10 @@ function handleThemeToggle(e) {
     document.documentElement.setAttribute('data-theme', newTheme);
     localStorage.setItem('theme', newTheme);
     updateThemeUI(newTheme);
+    
+    // Dispatch custom event to notify components of theme change
+    const event = new CustomEvent('theme:changed', { detail: { theme: newTheme } });
+    document.dispatchEvent(event);
 }
 
 // Event delegation handler for theme toggle clicks
