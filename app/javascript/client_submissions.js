@@ -54,7 +54,7 @@ function initClientSubmissionsPage() {
         }
     }
 
-    // Show the selected file and its size in a list format
+    // Show file previews (thumbnails for images, icons for PDFs)
     function updateFileList(inputSelector, listSelector, multiple = true) {
         $(document).off('change', inputSelector).on('change', inputSelector, function () {
             const $list = $(listSelector).empty();
@@ -63,14 +63,48 @@ function initClientSubmissionsPage() {
             if (!files.length) return;
 
             const displayFiles = multiple ? files : [files[0]];
+            
+            // For single file, use full width; for multiple, use grid layout
+            if (!multiple && displayFiles.length === 1) {
+                $list.addClass('file-preview-single');
+            } else {
+                $list.addClass('file-preview-grid');
+            }
+            
             displayFiles.forEach(file => {
-                const size = Math.round(file.size / 1024);
-                $list.append(`
-                <li class="list-group-item d-flex justify-content-between align-items-center file-list-item">
-                    <span class="file-name-wrapper" title="${file.name}">${file.name}</span>
-                    <span class="badge bg-secondary rounded-pill ms-2 flex-shrink-0">${size} KB</span>
-                </li>
-            `);
+                const isImage = file.type.startsWith('image/');
+                const isPDF = file.type === 'application/pdf';
+                let previewHTML = '';
+
+                if (isImage) {
+                    // Create object URL for image preview
+                    const objectUrl = URL.createObjectURL(file);
+                    previewHTML = `
+                        <li class="list-group-item file-preview-item p-0 border-0">
+                            <div class="file-preview-container">
+                                <img src="${objectUrl}" alt="${file.name}" class="file-preview-image" title="${file.name}">
+                                <div class="file-preview-name">${file.name}</div>
+                            </div>
+                        </li>
+                    `;
+                } else if (isPDF) {
+                    previewHTML = `
+                        <li class="list-group-item file-preview-item p-3 border-0 d-flex flex-column align-items-center justify-content-center bg-light rounded">
+                            <i class="bi bi-file-earmark-pdf fs-2 text-danger mb-2"></i>
+                            <span class="file-preview-name text-center small" title="${file.name}">${file.name}</span>
+                        </li>
+                    `;
+                } else {
+                    // Fallback for other file types
+                    previewHTML = `
+                        <li class="list-group-item file-preview-item p-3 border-0 d-flex flex-column align-items-center justify-content-center bg-light rounded">
+                            <i class="bi bi-file-earmark fs-2 text-secondary mb-2"></i>
+                            <span class="file-preview-name text-center small" title="${file.name}">${file.name}</span>
+                        </li>
+                    `;
+                }
+                
+                $list.append(previewHTML);
             });
         });
     }

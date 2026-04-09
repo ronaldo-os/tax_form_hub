@@ -181,7 +181,54 @@ input[type="radio"] {
   border-color: var(--border-color);
 }
 
-/* File list item styling to prevent text overflow */
+/* File preview styling */
+.file-preview-single {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.file-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.file-preview-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 8px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.file-preview-image {
+  max-width: 100%;
+  max-height: 120px;
+  object-fit: contain;
+  border-radius: 6px;
+}
+
+.file-preview-name {
+  font-size: 0.75rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.2;
+  color: #495057;
+  max-width: 100%;
+}
+
 .file-list-item {
   overflow: hidden;
   gap: 10px;

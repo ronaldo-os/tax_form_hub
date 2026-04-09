@@ -23,6 +23,7 @@ class Invoice < ApplicationRecord
 
   validate :attachments_type_allowed
   validate :line_items_tax_selected
+  validate :credit_note_number_required
 
   def line_items
     line_items_data || []
@@ -49,6 +50,14 @@ class Invoice < ApplicationRecord
       if item["tax"].blank? || item["tax"].to_s.strip.empty?
         errors.add(:base, "Tax must be selected for line item #{index + 1}")
       end
+    end
+  end
+
+  def credit_note_number_required
+    return unless invoice_category == 'credit_note'
+    
+    if invoice_number.blank? || invoice_number.to_s.strip.empty?
+      errors.add(:invoice_number, "Credit note number is required")
     end
   end
 

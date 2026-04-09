@@ -2188,6 +2188,27 @@ const initInvoiceForm = () => {
 
   // Validate tax selection on form submission
   $(document).on("submit", "form", function (e) {
+    const $form = $(this);
+    
+    // Validate credit note number for credit notes
+    const $invoiceCategoryField = $form.find('input[name="invoice[invoice_category]"]');
+    if ($invoiceCategoryField.length > 0) {
+      const category = $invoiceCategoryField.val();
+      if (category === 'credit_note') {
+        const creditNoteNumber = $form.find('input[name="invoice[invoice_number]"]').val();
+        if (!creditNoteNumber || creditNoteNumber.trim() === '') {
+          e.preventDefault();
+          showFlashMessage("Please enter a credit note number before saving.", "danger");
+          const $numberField = $form.find('input[name="invoice[invoice_number]"]');
+          if ($numberField.length) {
+            $numberField[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            $numberField.focus();
+          }
+          return false;
+        }
+      }
+    }
+    
     let hasUnselectedTax = false;
     $('.tax').each(function() {
       if ($(this).val() === "" || $(this).val() === null) {
