@@ -265,6 +265,18 @@ class InvoicesController < ApplicationController
         status: "pending",
         invoice_type: "purchase"
       )
+      
+      # For credit notes, we need to find the recipient's version of the original invoice
+      if @invoice.credit_note?
+        original_purchase_invoice = Invoice.find_by(
+          user_id: recipient_user.id,
+          invoice_number: @invoice.invoice_number,
+          invoice_type: "purchase",
+          sale_from_id: duplicated_invoice.sale_from_id,
+          invoice_category: "standard"
+        )
+        duplicated_invoice.credit_note_original_invoice_id = original_purchase_invoice&.id
+      end
 
       if duplicated_invoice.save
         @invoice.attachments.each do |attachment|
@@ -352,6 +364,18 @@ class InvoicesController < ApplicationController
         status: "pending",
         invoice_type: "purchase"
       )
+      
+      # For credit notes, we need to find the recipient's version of the original invoice
+      if original.credit_note?
+        original_purchase_invoice = Invoice.find_by(
+          user_id: recipient_user.id,
+          invoice_number: original.invoice_number,
+          invoice_type: "purchase",
+          sale_from_id: duplicated_invoice.sale_from_id,
+          invoice_category: "standard"
+        )
+        duplicated_invoice.credit_note_original_invoice_id = original_purchase_invoice&.id
+      end
 
       if duplicated_invoice.save
         # Mark both as sent
@@ -373,6 +397,11 @@ class InvoicesController < ApplicationController
 
   def approve
     invoice = current_user.invoices.find(params[:id])
+    if invoice.has_associated_credit_note?
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Cannot approve an invoice with an associated credit note."
+      return
+    end
+
     if invoice.update(status: "approved")
       update_original_sale_status(invoice, "approved")
       # For purchase invoices, the actual sender is associated with sale_from company
@@ -391,6 +420,11 @@ class InvoicesController < ApplicationController
 
   def reject
     invoice = current_user.invoices.find(params[:id])
+    if invoice.has_associated_credit_note?
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Cannot reject an invoice with an associated credit note."
+      return
+    end
+
     if invoice.update(status: "rejected")
       update_original_sale_status(invoice, "rejected")
       # For purchase invoices, the actual sender is associated with sale_from company
@@ -409,6 +443,11 @@ class InvoicesController < ApplicationController
 
   def archive
     invoice = current_user.invoices.find(params[:id])
+    if invoice.has_associated_credit_note?
+      tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+      redirect_to invoices_path(tab: tab), alert: "Cannot archive an invoice with an associated credit note."
+      return
+    end
     invoice.update(archived: true)
     tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
     redirect_to invoices_path(tab: tab), notice: "Invoice archived."
@@ -416,6 +455,11 @@ class InvoicesController < ApplicationController
 
   def unarchive
     invoice = current_user.invoices.find(params[:id])
+    if invoice.has_associated_credit_note?
+      tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+      redirect_to invoices_path(tab: tab), alert: "Cannot unarchive an invoice with an associated credit note."
+      return
+    end
     invoice.update(archived: false)
     tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
     redirect_to invoices_path(tab: tab), notice: "Invoice unarchived."
@@ -423,6 +467,12 @@ class InvoicesController < ApplicationController
 
   def mark_as_paid
     invoice = current_user.invoices.find(params[:id])
+    if invoice.has_associated_credit_note?
+      tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+      redirect_to invoices_path(tab: tab), alert: "Cannot mark as paid an invoice with an associated credit note."
+      return
+    end
+
     if invoice.update(status: "paid")
       if invoice.invoice_type == "sale"
         sale_company_id = invoice.user.company&.id || invoice.user.companies.first&.id

@@ -21,6 +21,8 @@
           <%= link_to invoice.invoice_number, invoice_path(invoice, tab: local_assigns[:active_tab]) %>
           <% if invoice.credit_note? %>
             <span class="badge bg-info-subtle text-info ms-1">CN</span>
+          <% elsif invoice.has_associated_credit_note? %>
+            <span class="badge bg-warning-subtle text-warning ms-1">Has CN</span>
           <% end %>
         </td>
         <td style="max-width: 200px;">
@@ -110,7 +112,7 @@
                 </li>
               <% end %>
 
-              <% if (invoice.status == "approved" || invoice.status == "sent") && !["received-quotes-table", "received-quotes-archived-table"].include?(table_id) %>
+              <% if (invoice.status == "approved" || invoice.status == "sent") && !["received-quotes-table", "received-quotes-archived-table"].include?(table_id) && !invoice.has_associated_credit_note? %>
                 <li>
                   <%= link_to "Mark as Paid", mark_as_paid_invoice_path(invoice, tab: local_assigns[:active_tab]),
                       method: :patch,
@@ -129,7 +131,7 @@
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 
-              <% if invoice.invoice_type == "purchase" && invoice.status == "pending" %>
+              <% if invoice.invoice_type == "purchase" && invoice.status == "pending" && !invoice.has_associated_credit_note? %>
                 <li>
                   <%= link_to "Approve", approve_invoice_path(invoice, tab: local_assigns[:active_tab]),
                       method: :patch,
@@ -145,7 +147,7 @@
                 <li><hr class="dropdown-divider"></li>
               <% end %>
 
-              <% if table_id == "purchases-table" && invoice.status == "approved" %>
+              <% if table_id == "purchases-table" && invoice.status == "approved" && !invoice.has_associated_credit_note? %>
                  <li>
                    <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#submitTaxModal-<%= invoice.id %>">
                      Submit Tax Documents
@@ -153,14 +155,16 @@
                  </li>
               <% end %>
 
-              <% if invoice.archived? %>
-                <li>
-                  <%= link_to "Unarchive", unarchive_invoice_path(invoice, tab: local_assigns[:active_tab]), method: :patch, class: "dropdown-item" %>
-                </li>
-              <% else %>
-                <li>
-                  <%= link_to "Archive", archive_invoice_path(invoice, tab: local_assigns[:active_tab]), method: :patch, data: { confirm: "Archive this invoice?" }, class: "dropdown-item" %>
-                </li>
+              <% unless invoice.has_associated_credit_note? %>
+                <% if invoice.archived? %>
+                  <li>
+                    <%= link_to "Unarchive", unarchive_invoice_path(invoice, tab: local_assigns[:active_tab]), method: :patch, class: "dropdown-item" %>
+                  </li>
+                <% else %>
+                  <li>
+                    <%= link_to "Archive", archive_invoice_path(invoice, tab: local_assigns[:active_tab]), method: :patch, data: { confirm: "Archive this invoice?" }, class: "dropdown-item" %>
+                  </li>
+                <% end %>
               <% end %>
 
               <% if invoice.status == "draft" %>

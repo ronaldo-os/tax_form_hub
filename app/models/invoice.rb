@@ -41,6 +41,34 @@ class Invoice < ApplicationRecord
     sender_company&.user || user
   end
 
+  def has_associated_credit_note?
+    return false unless standard?
+
+    Invoice.exists?(
+      user_id: user_id,
+      invoice_number: invoice_number,
+      invoice_type: invoice_type,
+      sale_from_id: sale_from_id,
+      invoice_category: "credit_note"
+    )
+  end
+
+  def contextual_original_invoice
+    return nil unless credit_note?
+    
+    # First try the direct association if it belongs to the same user
+    return original_invoice if original_invoice.present? && original_invoice.user_id == user_id
+    
+    # Otherwise find by criteria in the same user's scope
+    Invoice.find_by(
+      user_id: user_id,
+      invoice_number: invoice_number,
+      invoice_type: invoice_type,
+      sale_from_id: sale_from_id,
+      invoice_category: "standard"
+    )
+  end
+
   private
 
   def line_items_tax_selected

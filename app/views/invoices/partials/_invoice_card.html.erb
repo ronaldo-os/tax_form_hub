@@ -62,11 +62,14 @@
               <p class="mb-1"><%= invoice.invoice_number %></p>
             </div>
 
-            <% if invoice.credit_note? && invoice.original_invoice.present? %>
-              <div class="col-md-6 mb-2">
-                <h6 class="form-label">Original Invoice</h6>
-                <p class="mb-1"><%= link_to invoice.original_invoice.invoice_number, invoice_path(invoice.original_invoice) %></p>
-              </div>
+            <% if invoice.credit_note? %>
+              <% original = invoice.contextual_original_invoice %>
+              <% if original.present? %>
+                <div class="col-md-6 mb-2">
+                  <h6 class="form-label">Original Invoice</h6>
+                  <p class="mb-1"><%= link_to original.invoice_number, invoice_path(original) %></p>
+                </div>
+              <% end %>
             <% end %>
 
             <div class="col-md-6 mb-2">
