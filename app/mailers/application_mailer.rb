@@ -1,5 +1,5 @@
 class ApplicationMailer < ActionMailer::Base
-  default from: "from@example.com"
+  default from: "[EMAIL_ADDRESS]"
   layout "mailer"
 
   include Rails.application.routes.url_helpers

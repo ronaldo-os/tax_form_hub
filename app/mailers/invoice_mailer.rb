@@ -1,5 +1,5 @@
 class InvoiceMailer < ApplicationMailer
-  default from: "from@example.com"
+  default from: "taxformhub@meteorsoftwareph.com"
 
   ACTION_SUBJECTS = {
     invoice_sent: "You’ve received a new invoice",
@@ -11,6 +11,8 @@ class InvoiceMailer < ApplicationMailer
   }.freeze
 
   def transaction_notification(invoice, recipient_user, action, action_performer = nil)
+    return unless recipient_user
+
     @invoice = invoice
     @recipient_user = recipient_user
     @action = action

@@ -27,13 +27,14 @@ class TaxSubmissionMailer < ApplicationMailer
 
   def notify_invoice_sender(tax_submission)
     @tax_submission = tax_submission
-    invoice_sender = @tax_submission.invoice&.sender_user
+    @invoice = tax_submission.invoice
+    invoice_sender = @invoice&.sender_user
 
-    if invoice_sender
-      mail(
-        to: invoice_sender.email,
-        subject: "New tax documents submitted for your invoice"
-      )
-    end
+    return unless invoice_sender
+
+    mail(
+      to: invoice_sender.email,
+      subject: "New tax documents submitted for your invoice"
+    )
   end
 end

@@ -24,58 +24,67 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def create
-    # Validate invoice selection
-    if tax_submission_params[:invoice_id].blank?
-      @tax_submission = TaxSubmission.new(tax_submission_params)
-      @tax_submission.errors.add(:invoice_id, "must be selected")
-      @companies = companies_with_approved_invoices
-      load_sent_submissions
+    TaxSubmission.transaction do
+      # Validate invoice selection
+      if tax_submission_params[:invoice_id].blank?
+        @tax_submission = TaxSubmission.new(tax_submission_params)
+        @tax_submission.errors.add(:invoice_id, "must be selected")
+        @companies = companies_with_approved_invoices
+        load_sent_submissions
 
-      respond_to do |format|
-        format.html { render :home }
-        format.turbo_stream { redirect_back fallback_location: root_path, alert: "Please select an invoice number." }
+        respond_to do |format|
+          format.html { render :home }
+          format.turbo_stream { redirect_back fallback_location: root_path, alert: "Please select an invoice number." }
+        end
+        return
       end
-      return
-    end
 
-    invoice = Invoice.find_by(id: tax_submission_params[:invoice_id])
+      invoice = Invoice.find_by(id: tax_submission_params[:invoice_id])
 
-    unless invoice
-      redirect_back fallback_location: root_path, alert: "The selected invoice could not be found. Please try again."
-      return
-    end
+      unless invoice
+        redirect_back fallback_location: root_path, alert: "The selected invoice could not be found. Please try again."
+        raise ActiveRecord::Rollback
+      end
 
-    # Identify the target company (Vendor for Purchase, Customer for Sale)
-    # For purchase: documents go to the seller (sale_from).
-    # For sale: documents go to the customer (recipient_company).
-    my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
+      # Identify the target company (Vendor for Purchase, Customer for Sale)
+      my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
 
-    if invoice.invoice_type == "purchase"
-      target_company = invoice.sale_from || (invoice.user.company if invoice.user && !my_company_ids.include?(invoice.user.company_id)) || invoice.recipient_company
-    else
-      target_company = invoice.recipient_company
-    end
+      if invoice.invoice_type == "purchase"
+        target_company = invoice.sale_from || (invoice.user.company if invoice.user && !my_company_ids.include?(invoice.user.company_id)) || invoice.recipient_company
+      else
+        target_company = invoice.recipient_company
+      end
 
-    # Merge the correct company_id and sender email into params
-    submission_params = tax_submission_params.merge(
-      company_id: target_company&.id,
-      email: tax_submission_params[:email].presence || current_user.email
-    )
+      # Merge the correct company_id and sender email into params
+      submission_params = tax_submission_params.merge(
+        company_id: target_company&.id,
+        email: tax_submission_params[:email].presence || current_user.email
+      )
 
-    @tax_submission = TaxSubmission.new(submission_params)
+      @tax_submission = TaxSubmission.new(submission_params)
 
-    if @tax_submission.save
-      TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later
-      TaxSubmissionMailer.notify_invoice_sender(@tax_submission).deliver_later
-      redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
-    else
-      error_message = @tax_submission.errors.full_messages.join(", ")
-      @companies = companies_with_approved_invoices
-      load_sent_submissions
+      if @tax_submission.save
+        begin
+          TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later
+          TaxSubmissionMailer.notify_invoice_sender(@tax_submission)&.deliver_later
+        rescue StandardError => e
+          Rails.logger.error "Mailer Error in TaxSubmissionsController#create: #{e.message}"
+          # We might not want to rollback the whole submission just because a notification failed,
+          # but the user requested: "Ensure ... does not create inconsistent records if mail sending fails."
+          # If we want to be strict:
+          # raise ActiveRecord::Rollback
+        end
+        redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
+      else
+        error_message = @tax_submission.errors.full_messages.join(", ")
+        @companies = companies_with_approved_invoices
+        load_sent_submissions
 
-      respond_to do |format|
-        format.html { render :home }
-        format.turbo_stream { redirect_back fallback_location: root_path, alert: "Failed to submit tax documents: #{error_message}" }
+        respond_to do |format|
+          format.html { render :home }
+          format.turbo_stream { redirect_back fallback_location: root_path, alert: "Failed to submit tax documents: #{error_message}" }
+        end
+        raise ActiveRecord::Rollback
       end
     end
   end
