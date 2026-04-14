@@ -212,9 +212,9 @@ class InvoicesController < ApplicationController
           recipient_user = Company.find_by(id: @invoice.recipient_company_id)&.user
           if recipient_user
             if @invoice.quote?
-              InvoiceMailer.quote_sent(@invoice, recipient_user)&.deliver_later
+              InvoiceMailer.quote_sent(@invoice, recipient_user).deliver_later
             else
-              InvoiceMailer.invoice_sent(@invoice, recipient_user)&.deliver_later
+              InvoiceMailer.invoice_sent(@invoice, recipient_user).deliver_later
             end
           end
         end
@@ -289,11 +289,11 @@ class InvoicesController < ApplicationController
 
         if @invoice.credit_note?
           original_invoice = @invoice.original_invoice
-          InvoiceMailer.credit_note_created(@invoice, original_invoice)&.deliver_later
+          InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
         elsif @invoice.quote?
-          InvoiceMailer.quote_sent(duplicated_invoice, recipient_user)&.deliver_later
+          InvoiceMailer.quote_sent(duplicated_invoice, recipient_user).deliver_later
         else
-          InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user)&.deliver_later
+          InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
         end
 
         category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
@@ -382,7 +382,7 @@ class InvoicesController < ApplicationController
         duplicated_invoice.update(status: "sent")
         original.update(status: "sent")
 
-        InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user)&.deliver_later
+        InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
         category_name = original.standard? ? "Invoice" : original.invoice_category.humanize
         redirect_to invoice_path(original), notice: "#{category_name} sent successfully."
       else
@@ -408,9 +408,9 @@ class InvoicesController < ApplicationController
       # For sale invoices, the sender is the invoice owner (but approval shouldn't happen on sale)
       sender_user = invoice.invoice_type == "purchase" && invoice.sale_from ? invoice.sale_from.user : invoice.user
       if invoice.quote?
-        InvoiceMailer.quote_approved(invoice, sender_user, current_user)&.deliver_later
+        InvoiceMailer.quote_approved(invoice, sender_user, current_user).deliver_later
       else
-        InvoiceMailer.invoice_approved(invoice, sender_user, current_user)&.deliver_later
+        InvoiceMailer.invoice_approved(invoice, sender_user, current_user).deliver_later
       end
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice approved."
     else
@@ -431,9 +431,9 @@ class InvoicesController < ApplicationController
       # For sale invoices, the sender is the invoice owner (but rejection shouldn't happen on sale)
       sender_user = invoice.invoice_type == "purchase" && invoice.sale_from ? invoice.sale_from.user : invoice.user
       if invoice.quote?
-        InvoiceMailer.quote_rejected(invoice, sender_user, current_user)&.deliver_later
+        InvoiceMailer.quote_rejected(invoice, sender_user, current_user).deliver_later
       else
-        InvoiceMailer.invoice_rejected(invoice, sender_user, current_user)&.deliver_later
+        InvoiceMailer.invoice_rejected(invoice, sender_user, current_user).deliver_later
       end
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice rejected."
     else

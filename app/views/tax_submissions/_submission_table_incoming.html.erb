@@ -20,7 +20,7 @@
           <tr>
             <!-- ID -->
             <td>
-              <%= link_to submission.user_transaction_id,
+              <%= link_to submission.company_submission_id,
     tax_submission_path(submission, format: :js),
     remote: true,
     data: { turbo: false, bs_toggle: "modal", bs_target: "#submissionModal" },

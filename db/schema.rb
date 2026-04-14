@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_04_02_040354) do
+ActiveRecord::Schema[7.2].define(version: 2026_04_14_062833) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -202,7 +202,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_04_02_040354) do
     t.bigint "company_id", null: false
     t.bigint "invoice_id", null: false
     t.integer "user_transaction_id"
+    t.integer "recipient_submission_id"
+    t.integer "company_submission_id"
     t.index ["company_id", "archived", "created_at"], name: "index_tax_submissions_on_company_archived_created"
+    t.index ["company_id", "company_submission_id"], name: "index_tax_submissions_on_company_id_and_company_submission_id"
+    t.index ["company_id", "recipient_submission_id"], name: "index_tax_submissions_on_company_and_recipient_id"
     t.index ["company_id"], name: "index_tax_submissions_on_company_id"
     t.index ["email", "archived", "created_at"], name: "index_tax_submissions_on_email_archived_created"
     t.index ["email", "user_transaction_id"], name: "index_tax_submissions_on_email_and_user_transaction_id"

@@ -4,8 +4,8 @@
     <div class="row g-4">
       <!-- Submission ID -->
       <div class="col-md-3">
-        <p class="text-muted mb-1">Transaction ID</p>
-        <p class="fw-semibold fs-6"><%= @tax_submission.user_transaction_id %></p>
+        <p class="text-muted mb-1">Submission ID</p>
+        <p class="fw-semibold fs-6"><%= @tax_submission.company_submission_id.presence || @tax_submission.user_transaction_id %></p>
       </div>
 
       <!-- Invoice # -->

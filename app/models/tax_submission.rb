@@ -19,7 +19,14 @@ class TaxSubmission < ApplicationRecord
   end
 
   def set_transaction_id
-    last_id = TaxSubmission.maximum(:user_transaction_id) || 0
-    self.user_transaction_id = last_id + 1
+    # Generate user_transaction_id scoped to email (per-user sequence for Submit Documents)
+    last_user_id = TaxSubmission.where(email: email).maximum(:user_transaction_id) || 0
+    self.user_transaction_id = last_user_id + 1
+
+    # Generate company_submission_id scoped to company_id (per-company sequence for Incoming Submissions)
+    if company_id.present?
+      last_company_id = TaxSubmission.where(company_id: company_id).maximum(:company_submission_id) || 0
+      self.company_submission_id = last_company_id + 1
+    end
   end
 end
