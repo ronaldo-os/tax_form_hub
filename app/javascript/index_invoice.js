@@ -124,7 +124,7 @@ function initInvoicePage() {
     $(document).off('click.pdf-download').on('click.pdf-download', '.download-pdf', function () {
         const invoiceId = $(this).data('id');
 
-        $.get(`/invoices/${invoiceId}`, { partial: true }, function (html) {
+        $.get(`/invoices/${invoiceId}/pdf_partial`, function (html) {
             const temp = document.createElement('div');
             temp.classList.add('force-light-mode');
             temp.setAttribute('data-theme', 'light');
@@ -152,6 +152,38 @@ function initInvoicePage() {
             }
             invoice.parentNode.replaceChild(content, invoice);
             invoice = content;
+
+            // Helper to compute actual styles from all sources
+            function getComputedColor(element, property) {
+                return window.getComputedStyle(element).getPropertyValue(property);
+            }
+
+            // Apply inline styles from computed styles to avoid stylesheet parsing issues
+            invoice.querySelectorAll('*').forEach(el => {
+                const computed = window.getComputedStyle(el);
+                
+                // Apply critical styles inline
+                if (computed.color) el.style.color = el.style.color || computed.color;
+                if (computed.backgroundColor) el.style.backgroundColor = el.style.backgroundColor || computed.backgroundColor;
+                if (computed.fontSize) el.style.fontSize = el.style.fontSize || computed.fontSize;
+                if (computed.fontWeight) el.style.fontWeight = el.style.fontWeight || computed.fontWeight;
+                if (computed.padding) el.style.padding = el.style.padding || computed.padding;
+                if (computed.margin) el.style.margin = el.style.margin || computed.margin;
+                if (computed.width) {
+                    const widthValue = computed.width;
+                    if (widthValue && widthValue !== 'auto') el.style.width = el.style.width || widthValue;
+                }
+                
+                // Handle table-specific styles
+                if (el.tagName === 'TABLE') {
+                    el.style.borderCollapse = 'collapse';
+                    el.style.width = el.style.width || '100%';
+                }
+                if (el.tagName === 'TH' || el.tagName === 'TD') {
+                    el.style.border = el.style.border || '1px solid #ddd';
+                    el.style.padding = el.style.padding || '8px';
+                }
+            });
 
             const tableRows = invoice.querySelectorAll('table tr');
             tableRows.forEach(row => {
@@ -181,7 +213,9 @@ function initInvoicePage() {
                     scale: 2,
                     useCORS: true,
                     letterRendering: true,
-                    logging: false
+                    logging: false,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
                 },
                 jsPDF: {
                     unit: 'pt',
@@ -205,7 +239,52 @@ function initInvoicePage() {
             htmlElement.setAttribute('data-theme', 'light');
             htmlElement.setAttribute('data-bs-theme', 'light');
 
-            html2pdf().set(opt).from(invoice).save().then(() => {
+            try {
+                // Remove problematic stylesheets and scripts before PDF generation
+                const links = invoice.querySelectorAll('link[rel="stylesheet"]');
+                const removedLinks = [];
+                links.forEach(link => {
+                    removedLinks.push(link);
+                    link.remove();
+                });
+                
+                const scripts = invoice.querySelectorAll('script');
+                const removedScripts = [];
+                scripts.forEach(script => {
+                    removedScripts.push(script);
+                    script.remove();
+                });
+
+                const optWithClone = {
+                    ...opt
+                };
+
+                html2pdf().set(optWithClone).from(invoice).save().then(() => {
+                    // Restore themes
+                    if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
+                    else htmlElement.removeAttribute('data-theme');
+
+                    if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
+                    else htmlElement.removeAttribute('data-bs-theme');
+
+                    if (document.body.contains(temp)) document.body.removeChild(temp);
+                }).catch((error) => {
+                    console.error('Error generating PDF:', error);
+                    console.error('Invoice HTML:', invoice.innerHTML);
+
+                    // Restore themes
+                    if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
+                    else htmlElement.removeAttribute('data-theme');
+
+                    if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
+                    else htmlElement.removeAttribute('data-bs-theme');
+
+                    alert('Failed to generate PDF. Please try again. Check console for details.');
+                    if (document.body.contains(temp)) document.body.removeChild(temp);
+                });
+            } catch (error) {
+                console.error('Exception generating PDF:', error);
+
                 // Restore themes
                 if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
                 else htmlElement.removeAttribute('data-theme');
@@ -213,20 +292,9 @@ function initInvoicePage() {
                 if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
                 else htmlElement.removeAttribute('data-bs-theme');
 
+                alert('Failed to generate PDF. Please try again. Check console for details.');
                 if (document.body.contains(temp)) document.body.removeChild(temp);
-            }).catch((error) => {
-                console.error('Error generating PDF:', error);
-
-                // Restore themes
-                if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
-                else htmlElement.removeAttribute('data-theme');
-
-                if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
-                else htmlElement.removeAttribute('data-bs-theme');
-
-                alert('Failed to generate PDF. Please try again.');
-                if (document.body.contains(temp)) document.body.removeChild(temp);
-            });
+            }
         }).fail(function (xhr, status, error) {
             console.error('Error fetching invoice:', error);
             alert('Failed to load invoice data. Please try again.');

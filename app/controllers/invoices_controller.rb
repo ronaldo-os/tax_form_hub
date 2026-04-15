@@ -70,6 +70,16 @@ class InvoicesController < ApplicationController
     end
   end
 
+  def pdf_partial
+    # Load the invoice with necessary associations for PDF rendering
+    @invoice = current_user.invoices
+      .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
+      .find(params[:id])
+
+    # Render only the PDF-specific partial as HTML for PDF generation via JavaScript
+    # Using the _invoice_pdf partial which doesn't include forms
+    render partial: "invoices/partials/invoice_pdf", locals: { invoice: @invoice }, layout: false
+  end
 
   def new
 
