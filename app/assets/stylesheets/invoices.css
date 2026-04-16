@@ -83,4 +83,80 @@
 #company_search_dropdown .text-muted {
   color: var(--text-muted) !important;
 }
+
+/* INVOICE CARD TEXT SIZES */
+#invoice_card,
+.invoice-card {
+  font-size: 0.875rem;
+}
+
+#invoice_card h4,
+#invoice_card .h4,
+.invoice-card h4,
+.invoice-card .h4 {
+  font-size: 1.2rem;
+}
+
+#invoice_card h5,
+#invoice_card .h5,
+.invoice-card h5,
+.invoice-card .h5 {
+  font-size: 1.05rem;
+}
+
+#invoice_card h6,
+#invoice_card .h6,
+.invoice-card h6,
+.invoice-card .h6 {
+  font-size: 0.9rem;
+}
+
+#invoice_card p,
+.invoice-card p {
+  margin-bottom: 0.5rem;
+}
+
+#invoice_card .table,
+.invoice-card .table {
+  font-size: 0.85rem;
+}
+
+#invoice_card .table th,
+.invoice-card .table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.025em;
+}
+
+#invoice_card .badge,
+.invoice-card .badge {
+  font-size: 0.75rem !important;
+}
+
+#invoice_card .from-and-to-text,
+.invoice-card .from-and-to-text {
+  font-size: 11px;
+}
+
+#invoice_card .sender_recipient_text {
+  font-size: 20px;
+}
+
+#invoice_card .small,
+#invoice_card small,
+.invoice-card .small,
+.invoice-card small {
+  font-size: 0.8rem;
+}
+
+#invoice_card .form-label,
+.invoice-card .form-label {
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+#invoice_card .card-footer,
+.invoice-card .card-footer {
+  font-size: 0.8rem;
 }

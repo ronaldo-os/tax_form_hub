@@ -16,7 +16,7 @@ function initInvoicePage() {
             const $wrapper = $canvas.closest('.chart-wrapper');
             // Filter out months with zero data to satisfy "not for empty months"
             const filteredData = data.filter(d => d.count > 0);
-            
+
             if (filteredData.length === 0) {
                 $wrapper.hide();
                 return;
@@ -40,14 +40,14 @@ function initInvoicePage() {
                 options: {
                     plugins: { legend: { display: false }, tooltip: { enabled: false } },
                     scales: {
-                        x: { 
-                            display: false, 
-                            grid: { display: false }, 
+                        x: {
+                            display: false,
+                            grid: { display: false },
                             border: { display: false }
                         },
-                        y: { 
-                            display: false, 
-                            grid: { display: false }, 
+                        y: {
+                            display: false,
+                            grid: { display: false },
                             border: { display: false }
                         }
                     },
@@ -126,7 +126,7 @@ function initInvoicePage() {
 
         $.get(`/invoices/${invoiceId}/pdf_partial`, function (html) {
             const temp = document.createElement('div');
-            temp.classList.add('force-light-mode');
+            temp.classList.add('force-light-mode', 'invoice-card');
             temp.setAttribute('data-theme', 'light');
             temp.setAttribute('data-bs-theme', 'light');
             temp.innerHTML = html;
@@ -135,7 +135,8 @@ function initInvoicePage() {
             temp.style.width = '1000px';
             temp.style.background = 'white';
             temp.style.color = 'black';
-            temp.style.visibility = 'hidden';
+            temp.style.opacity = '0';
+            temp.style.pointerEvents = 'none';
             document.body.appendChild(temp);
 
             let invoice = temp.querySelector("#invoice_card");
@@ -147,6 +148,7 @@ function initInvoicePage() {
             }
 
             const content = document.createElement('div');
+            content.classList.add('invoice-card');
             while (invoice.firstChild) {
                 content.appendChild(invoice.firstChild);
             }
@@ -161,7 +163,7 @@ function initInvoicePage() {
             // Apply inline styles from computed styles to avoid stylesheet parsing issues
             invoice.querySelectorAll('*').forEach(el => {
                 const computed = window.getComputedStyle(el);
-                
+
                 // Apply critical styles inline
                 if (computed.color) el.style.color = el.style.color || computed.color;
                 if (computed.backgroundColor) el.style.backgroundColor = el.style.backgroundColor || computed.backgroundColor;
@@ -173,7 +175,7 @@ function initInvoicePage() {
                     const widthValue = computed.width;
                     if (widthValue && widthValue !== 'auto') el.style.width = el.style.width || widthValue;
                 }
-                
+
                 // Handle table-specific styles
                 if (el.tagName === 'TABLE') {
                     el.style.borderCollapse = 'collapse';
@@ -201,6 +203,10 @@ function initInvoicePage() {
                 card.style.pageBreakInside = 'avoid';
                 card.style.breakInside = 'avoid';
             });
+
+            // Apply slight scaling as requested to prevent cropping
+            invoice.style.transform = 'scale(0.99)';
+            invoice.style.transformOrigin = 'top left';
 
             const today = new Date();
             const dateStr = today.toISOString().split('T')[0];
@@ -247,7 +253,7 @@ function initInvoicePage() {
                     removedLinks.push(link);
                     link.remove();
                 });
-                
+
                 const scripts = invoice.querySelectorAll('script');
                 const removedScripts = [];
                 scripts.forEach(script => {

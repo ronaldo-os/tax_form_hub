@@ -8,7 +8,7 @@ $(document).on('click', '#download_button', function () {
 
     // Create a temp container for the clone
     const temp = document.createElement('div');
-    temp.classList.add('force-light-mode');
+    temp.classList.add('force-light-mode', 'invoice-card');
     temp.setAttribute('data-theme', 'light');
     temp.setAttribute('data-bs-theme', 'light');
 
@@ -19,7 +19,8 @@ $(document).on('click', '#download_button', function () {
     temp.style.width = '1000px'; // Set a fixed width for consistent PDF layout
     temp.style.background = 'white';
     temp.style.color = 'black';
-    temp.style.visibility = 'hidden';
+    temp.style.opacity = '0';
+    temp.style.pointerEvents = 'none';
     temp.appendChild(clone);
     document.body.appendChild(temp);
 
@@ -29,6 +30,7 @@ $(document).on('click', '#download_button', function () {
     const content = document.createElement('div');
 
     // Move all children from invoice card to the clean container
+    content.classList.add('invoice-card');
     while (invoice.firstChild) {
         content.appendChild(invoice.firstChild);
     }
@@ -57,6 +59,10 @@ $(document).on('click', '#download_button', function () {
         card.style.breakInside = 'avoid';
     });
 
+    // Apply slight scaling as requested to prevent cropping
+    invoice.style.transform = 'scale(0.99)';
+    invoice.style.transformOrigin = 'top left';
+
     // Get today's date in YYYY-MM-DD format
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -67,11 +73,11 @@ $(document).on('click', '#download_button', function () {
     const invoiceId = location.pathname.split('/').pop();
 
     const opt = {
-        margin: [10, 10, 10, 10],
+        margin: [9, 9, 9, 9],
         filename: `${dateStr}-invoice-${invoiceId}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: {
-            scale: 2,
+            scale: 1.5,
             useCORS: true,
             letterRendering: true,
             logging: false

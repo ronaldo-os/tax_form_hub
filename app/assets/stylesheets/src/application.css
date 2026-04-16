@@ -421,19 +421,9 @@ input[type="radio"] {
   margin-bottom: 5rem !important;
 }
 
-/* Container */
-.container,
-.container-fluid,
-.container-lg,
-.container-md,
-.container-sm,
-.container-xl,
-.container-xxl {
-  padding-left: calc(var(--bs-gutter-x) * 2);
-}
-
 #main_content_div {
   padding-bottom: 1px;
+  margin-left: calc(var(--bs-gutter-x, 1.5rem) * 2);
 }
 
 #action_buttons_container {

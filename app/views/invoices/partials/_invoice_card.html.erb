@@ -1,4 +1,4 @@
-<div class="card shadow-sm border-0 mb-5"  id="invoice_card">
+<div class="card shadow-sm border-0 mb-5 invoice-card"  id="invoice_card">
     
     <div class="card-body">
       <!-- Header -->
@@ -30,33 +30,33 @@
           <% sender = invoice.sale_from || invoice.user.company %>
           <% recipient = invoice.recipient_company %>
 
-          <div class="col-md-6">
-            <% if sender.present? %>
-              <div class="p-3 rounded border bg-body-tertiary mb-3">
-                <h6 class="fw-bold mb-2">From</h6>
-                <p class="mb-1"><%= sender.name %></p>
-                <p class="mb-1 text-muted"><%= sender.address %></p>
-                <p class="mb-1 text-muted"><%= sender.country.presence || 'Philippines' %></p>
-                <hr>
-                <p class="mb-1 small">Company <%= sender.company_id_type.presence || '-' %> number: <strong><%= sender.company_id_number.presence || '-' %></strong></p>
-                <p class="mb-0 small">Tax <%= sender.tax_id_type.presence || '-' %> number: <strong><%= sender.tax_id_number.presence || '-' %></strong></p>
-              </div>
-            <% end %>
-
+          <div class="col-md-4">
             <% if recipient.present? %>
-              <div class="p-3 rounded border bg-body-tertiary">
-                <h6 class="fw-bold mb-2">To</h6>
-                <p class="mb-1"><%= recipient.name %></p>
+              <div class="">
+                <p class="fw-bold mb-1 from-and-to-text">To</p>
+                <p class="mb-1 fw-bold sender_recipient_text"><%= recipient.name %></p>
                 <p class="mb-1 text-muted"><%= recipient.address %></p>
                 <p class="mb-1 text-muted"><%= recipient.country.presence || 'Philippines' %></p>
-                <hr>
                 <p class="mb-1 small">Company <%= recipient.company_id_type.presence || '-' %> number: <strong><%= recipient.company_id_number.presence || '-' %></strong></p>
                 <p class="mb-0 small">Tax <%= recipient.tax_id_type.presence || '-' %> number: <strong><%= recipient.tax_id_number.presence || '-' %></strong></p>
               </div>
             <% end %>
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-4">
+            <% if sender.present? %>
+                <div class="mb-3">
+                  <p class="fw-bold mb-1 from-and-to-text">From</p>
+                  <p class="mb-1 fw-bold sender_recipient_text"><%= sender.name %></p>
+                  <p class="mb-1 text-muted"><%= sender.address %></p>
+                  <p class="mb-1 text-muted"><%= sender.country.presence || 'Philippines' %></p>
+                  <p class="mb-1 small">Company <%= sender.company_id_type.presence || '-' %> number: <strong><%= sender.company_id_number.presence || '-' %></strong></p>
+                  <p class="mb-0 small">Tax <%= sender.tax_id_type.presence || '-' %> number: <strong><%= sender.tax_id_number.presence || '-' %></strong></p>
+                </div>
+            <% end %>
+          </div>
+
+          <div class="col-md-4">
             <div class="row mt-3 mb-3">
               <%= f.label :invoice_number, invoice.quote? ? "Quote Number" : (invoice.credit_note? ? "Credit Note Number" : "Invoice Number"), class: "h6 form-label" %>
               <p class="mb-1"><%= invoice.invoice_number %></p>
@@ -276,7 +276,7 @@
 
 
         <!-- Totals -->
-        <div class="card border-0 shadow-sm p-4 text-end mb-3">
+        <div class="text-end mb-3">
           <p class="mb-1">
             Subtotal excl. taxes
             <span class="ms-4 fw-bold">
@@ -317,7 +317,7 @@
               </span>
             </h4>
             <% if @invoice.total.dig("tax").to_f != 0 || @invoice.total["tax_breakdown"].present? %>
-              <p class="text-muted mb-0 mt-1" style="font-size: 0.9rem;">
+              <p class="text-muted mb-0 mt-1" style="font-size: 0.8rem;">
                 Total taxes <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %> <%= @invoice.currency %>
               </p>
             <% end %>
@@ -491,7 +491,7 @@
         </div>
 
       <% unless @invoice.quote? %>
-      <div class="card-footer">
+      <div class="card-footer bg-transparent">
         <p><%= simple_format(@invoice.footer_notes) %></p>
       </div>
       <% end %>
