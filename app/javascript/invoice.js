@@ -2162,13 +2162,13 @@ const initInvoiceForm = () => {
   $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function (e) {
     // Check for unselected tax in line items
     let hasUnselectedTax = false;
-    $('.tax').each(function() {
+    $('.tax').each(function () {
       if ($(this).val() === "" || $(this).val() === null) {
         hasUnselectedTax = true;
         return false; // break out of each loop
       }
     });
-    
+
     if (hasUnselectedTax) {
       e.preventDefault();
       showFlashMessage("Please select a tax rate for all line items before proceeding.", "danger");
@@ -2189,7 +2189,7 @@ const initInvoiceForm = () => {
   // Validate tax selection on form submission
   $(document).on("submit", "form", function (e) {
     const $form = $(this);
-    
+
     // Validate credit note number for credit notes
     const $invoiceCategoryField = $form.find('input[name="invoice[invoice_category]"]');
     if ($invoiceCategoryField.length > 0) {
@@ -2208,20 +2208,20 @@ const initInvoiceForm = () => {
         }
       }
     }
-    
+
     let hasUnselectedTax = false;
-    $('.tax').each(function() {
+    $('.tax').each(function () {
       if ($(this).val() === "" || $(this).val() === null) {
         hasUnselectedTax = true;
         return false; // break out of each loop
       }
     });
-    
+
     if (hasUnselectedTax) {
       e.preventDefault();
       showFlashMessage("Please select a tax rate for all line items before saving.", "danger");
       // Scroll to the first unselected tax dropdown
-      const firstUnselected = $('.tax').filter(function() { return $(this).val() === "" || $(this).val() === null; }).first();
+      const firstUnselected = $('.tax').filter(function () { return $(this).val() === "" || $(this).val() === null; }).first();
       if (firstUnselected.length) {
         firstUnselected[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
         firstUnselected.focus();

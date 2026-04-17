@@ -76,9 +76,15 @@ class InvoicesController < ApplicationController
       .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
       .find(params[:id])
 
-    # Render only the PDF-specific partial as HTML for PDF generation via JavaScript
-    # Using the _invoice_pdf partial which doesn't include forms
-    render partial: "invoices/partials/invoice_pdf", locals: { invoice: @invoice }, layout: false
+    # Required variables for _invoice_card partial
+    @recipient_company = @invoice.recipient_company
+    @sender_company = @invoice.sale_from || @invoice.user.company
+    @ship_from_location = @invoice.ship_from_location
+    @remit_to_location_id = @invoice.remit_to_location
+    @tax_representative_location_id = @invoice.tax_representative_location
+
+    # Render the same partial used in the "view invoice" page for visual parity
+    render partial: "invoices/partials/invoice_card", locals: { invoice: @invoice }, layout: false
   end
 
   def new

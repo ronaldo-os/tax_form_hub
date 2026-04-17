@@ -147,46 +147,18 @@ function initInvoicePage() {
                 return;
             }
 
+            // Create a clean container for the invoice content
             const content = document.createElement('div');
             content.classList.add('invoice-card');
             while (invoice.firstChild) {
                 content.appendChild(invoice.firstChild);
             }
+
+            // Replace the original card-wrapped content with our clean container
             invoice.parentNode.replaceChild(content, invoice);
             invoice = content;
 
-            // Helper to compute actual styles from all sources
-            function getComputedColor(element, property) {
-                return window.getComputedStyle(element).getPropertyValue(property);
-            }
-
-            // Apply inline styles from computed styles to avoid stylesheet parsing issues
-            invoice.querySelectorAll('*').forEach(el => {
-                const computed = window.getComputedStyle(el);
-
-                // Apply critical styles inline
-                if (computed.color) el.style.color = el.style.color || computed.color;
-                if (computed.backgroundColor) el.style.backgroundColor = el.style.backgroundColor || computed.backgroundColor;
-                if (computed.fontSize) el.style.fontSize = el.style.fontSize || computed.fontSize;
-                if (computed.fontWeight) el.style.fontWeight = el.style.fontWeight || computed.fontWeight;
-                if (computed.padding) el.style.padding = el.style.padding || computed.padding;
-                if (computed.margin) el.style.margin = el.style.margin || computed.margin;
-                if (computed.width) {
-                    const widthValue = computed.width;
-                    if (widthValue && widthValue !== 'auto') el.style.width = el.style.width || widthValue;
-                }
-
-                // Handle table-specific styles
-                if (el.tagName === 'TABLE') {
-                    el.style.borderCollapse = 'collapse';
-                    el.style.width = el.style.width || '100%';
-                }
-                if (el.tagName === 'TH' || el.tagName === 'TD') {
-                    el.style.border = el.style.border || '1px solid #ddd';
-                    el.style.padding = el.style.padding || '8px';
-                }
-            });
-
+            // Apply page break rules
             const tableRows = invoice.querySelectorAll('table tr');
             tableRows.forEach(row => {
                 row.style.pageBreakInside = 'avoid';
@@ -204,24 +176,33 @@ function initInvoicePage() {
                 card.style.breakInside = 'avoid';
             });
 
-            // Apply slight scaling as requested to prevent cropping
+            // Remove Download buttons from attachments
+            invoice.querySelectorAll('a.btn.btn-outline-primary, a.btn.btn-sm.btn-outline-primary').forEach(btn => {
+                if (btn.textContent.trim() === 'Download') {
+                    btn.remove();
+                }
+            });
+
+            // Prevent cropping with slight scaling
             invoice.style.transform = 'scale(0.99)';
             invoice.style.transformOrigin = 'top left';
 
+            // Today's date for filename
             const today = new Date();
-            const dateStr = today.toISOString().split('T')[0];
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
 
             const opt = {
-                margin: [10, 10, 10, 10],
+                margin: [9, 9, 9, 9],
                 filename: `${dateStr}-invoice-${invoiceId}.pdf`,
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: {
-                    scale: 2,
+                    scale: 1.5,
                     useCORS: true,
                     letterRendering: true,
-                    logging: false,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff'
+                    logging: false
                 },
                 jsPDF: {
                     unit: 'pt',
@@ -241,55 +222,22 @@ function initInvoicePage() {
             const currentDataTheme = htmlElement.getAttribute('data-theme');
             const currentBSTheme = htmlElement.getAttribute('data-bs-theme');
 
-            // Force light mode on root temporarily for high-fidelity capture
+            // Force light mode temporarily for high-fidelity capture
             htmlElement.setAttribute('data-theme', 'light');
             htmlElement.setAttribute('data-bs-theme', 'light');
 
-            try {
-                // Remove problematic stylesheets and scripts before PDF generation
-                const links = invoice.querySelectorAll('link[rel="stylesheet"]');
-                const removedLinks = [];
-                links.forEach(link => {
-                    removedLinks.push(link);
-                    link.remove();
-                });
+            html2pdf().set(opt).from(invoice).save().then(() => {
+                // Restore themes
+                if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
+                else htmlElement.removeAttribute('data-theme');
 
-                const scripts = invoice.querySelectorAll('script');
-                const removedScripts = [];
-                scripts.forEach(script => {
-                    removedScripts.push(script);
-                    script.remove();
-                });
+                if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
+                else htmlElement.removeAttribute('data-bs-theme');
 
-                const optWithClone = {
-                    ...opt
-                };
-
-                html2pdf().set(optWithClone).from(invoice).save().then(() => {
-                    // Restore themes
-                    if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
-                    else htmlElement.removeAttribute('data-theme');
-
-                    if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
-                    else htmlElement.removeAttribute('data-bs-theme');
-
-                    if (document.body.contains(temp)) document.body.removeChild(temp);
-                }).catch((error) => {
-                    console.error('Error generating PDF:', error);
-                    console.error('Invoice HTML:', invoice.innerHTML);
-
-                    // Restore themes
-                    if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
-                    else htmlElement.removeAttribute('data-theme');
-
-                    if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
-                    else htmlElement.removeAttribute('data-bs-theme');
-
-                    alert('Failed to generate PDF. Please try again. Check console for details.');
-                    if (document.body.contains(temp)) document.body.removeChild(temp);
-                });
-            } catch (error) {
-                console.error('Exception generating PDF:', error);
+                // Clean up
+                if (document.body.contains(temp)) document.body.removeChild(temp);
+            }).catch((error) => {
+                console.error('Error generating PDF:', error);
 
                 // Restore themes
                 if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
@@ -298,9 +246,9 @@ function initInvoicePage() {
                 if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
                 else htmlElement.removeAttribute('data-bs-theme');
 
-                alert('Failed to generate PDF. Please try again. Check console for details.');
+                alert('Failed to generate PDF. Please try again.');
                 if (document.body.contains(temp)) document.body.removeChild(temp);
-            }
+            });
         }).fail(function (xhr, status, error) {
             console.error('Error fetching invoice:', error);
             alert('Failed to load invoice data. Please try again.');

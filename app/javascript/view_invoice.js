@@ -59,6 +59,13 @@ $(document).on('click', '#download_button', function () {
         card.style.breakInside = 'avoid';
     });
 
+    // Always remove the Download button from attachment cards in the PDF
+    invoice.querySelectorAll('a.btn.btn-outline-primary, a.btn.btn-sm.btn-outline-primary').forEach(btn => {
+        if (btn.textContent.trim() === 'Download') {
+            btn.remove();
+        }
+    });
+
     // Apply slight scaling as requested to prevent cropping
     invoice.style.transform = 'scale(0.99)';
     invoice.style.transformOrigin = 'top left';

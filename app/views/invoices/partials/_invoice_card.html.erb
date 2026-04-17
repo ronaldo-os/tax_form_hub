@@ -13,7 +13,7 @@
               end %>
         </h4>
         <span class="badge px-3 py-2 fs-6 
-          <%= case @invoice.status
+          <%= case invoice.status
               when "sent"     then "bg-primary-subtle text-primary"
               when "approved" then "bg-success-subtle text-success"
               when "rejected" then "bg-danger-subtle text-danger"
@@ -21,10 +21,10 @@
               when "draft"    then "bg-secondary-subtle text-muted"
               else "bg-light text-muted"
           end %>">
-          <%= @invoice.status.to_s.upcase %>
+          <%= invoice.status.to_s.upcase %>
         </span>
       </div>
-      <%= form_with model: @invoice, local: true, html: { multipart: true, class: "" } do |f| %>
+      <%= form_with model: invoice, local: true, html: { multipart: true, class: "" } do |f| %>
         <div class="row mb-4">
           <!-- Sender and recipient details (professional invoice style) -->
           <% sender = invoice.sale_from || invoice.user.company %>
@@ -83,7 +83,7 @@
             <% if invoice.invoice_info.is_a?(Hash) %>
                 <% 
                   input_types = %w[text date select number checkbox radio textarea]
-                  grouped = @invoice.invoice_info.group_by { |k, _| k.split('.').first }
+                  grouped = invoice.invoice_info.group_by { |k, _| k.split('.').first }
                 %>
 
                 <% grouped.each do |group_name, fields| %>
@@ -141,9 +141,9 @@
           </div>
         </div>
 
-
+        <hr class="mb-2">
         <div class="table-responsive">
-          <table class="table align-middle table-hover text-nowrap mt-4">
+          <table class="table align-middle text-nowrap table-borderless">
             <thead class="table-light">
               <tr>
                 <th style="width: 100px;">Item ID</th>
@@ -156,7 +156,7 @@
               </tr>
             </thead>
             <tbody id="line-items">
-              <% @invoice.line_items_data.each_with_index do |item, index| %>
+              <% invoice.line_items_data.each_with_index do |item, index| %>
                 <!-- Regular line item -->
                 <tr class="line-item">
                   <td><%= item["item_id"] %></td>
@@ -235,12 +235,12 @@
               <% end %>
 
               <!-- Price Adjustments -->
-              <% if @invoice.price_adjustments.present? %>
+              <% if invoice.price_adjustments.present? %>
                 <tr>
                   <td colspan="9" class="text-muted fw-bold table-light py-3">Price Adjustments</td>
                 </tr>
 
-                <% @invoice.price_adjustments.each do |adjustment| %>
+                <% invoice.price_adjustments.each do |adjustment| %>
                   <tr class="bg-light">
                     <% ["type", "description", "description_edit", "amount", "unit"].each do |field| %>
                       <% value = adjustment[field] %>
@@ -280,15 +280,15 @@
           <p class="mb-1">
             Subtotal excl. taxes
             <span class="ms-4 fw-bold">
-              <%= number_with_precision(@invoice.total.dig("subtotal").to_f, precision: 2, delimiter: ',') %>
+              <%= number_with_precision(invoice.total.dig("subtotal").to_f, precision: 2, delimiter: ',') %>
             </span>
           </p>
 
-          <% if @invoice.total["tax_breakdown"].present? && @invoice.total["tax_breakdown"].is_a?(Hash) %>
-            <% @invoice.total["tax_breakdown"].each do |name, data| %>
+          <% if invoice.total["tax_breakdown"].present? && invoice.total["tax_breakdown"].is_a?(Hash) %>
+            <% invoice.total["tax_breakdown"].each do |name, data| %>
               <p class="mb-1">
                 <% if data.is_a?(Hash) %>
-                  <%= name %> <i>of <%= number_with_precision(data["basis"].to_f, precision: 2, delimiter: ',') %> <%= @invoice.currency %></i>
+                  <%= name %> <i>of <%= number_with_precision(data["basis"].to_f, precision: 2, delimiter: ',') %> <%= invoice.currency %></i>
                   <span class="ms-4 fw-bold">
                     <%= number_with_precision(data["tax"].to_f, precision: 2, delimiter: ',') %>
                   </span>
@@ -304,31 +304,31 @@
             <p class="mb-1">
               Total taxes
               <span class="ms-4 fw-bold">
-                <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
+                <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
               </span>
             </p>
           <% end %>
 
           <div class="mt-3">
             <h4 class="fw-bold mb-0">
-              Total <%= @invoice.currency %>
+              Total <%= invoice.currency %>
               <span class="ms-5">
-                <%= number_with_precision(@invoice.total.dig("grand_total").to_f, precision: 2, delimiter: ',') %>
+                <%= number_with_precision(invoice.total.dig("grand_total").to_f, precision: 2, delimiter: ',') %>
               </span>
             </h4>
-            <% if @invoice.total.dig("tax").to_f != 0 || @invoice.total["tax_breakdown"].present? %>
+            <% if invoice.total.dig("tax").to_f != 0 || invoice.total["tax_breakdown"].present? %>
               <p class="text-muted mb-0 mt-1" style="font-size: 0.8rem;">
-                Total taxes <%= number_with_precision(@invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %> <%= @invoice.currency %>
+                Total taxes <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %> <%= invoice.currency %>
               </p>
             <% end %>
           </div>
         </div>
-        <% unless @invoice.quote? %>
         <hr class="mt-2">
+        <div class="row">
+        <% unless invoice.quote? %>
 
-      <div class="row">
         <div class="col-md-6">
-          <% if @invoice.payment_terms.present? %>
+          <% if invoice.payment_terms.present? %>
           <h5 class="mb-3 fw-semibold">Payment Terms</h5>
 
           <% payment_labels = {
@@ -338,7 +338,7 @@
           } %>
 
           <ol class="ps-3 mb-0">
-            <% @invoice.payment_terms.each do |group_key, fields| %>
+            <% invoice.payment_terms.each do |group_key, fields| %>
               <% if fields.present? || payment_labels.key?(group_key) %>
                 <li class="mb-3">
                   <h6 class="fw-bold d-inline"><%= payment_labels[group_key] || group_key.titleize %></h6>
@@ -369,17 +369,17 @@
 
           <div id="delivery_details_parent_div">
             <% if [
-                  @invoice.delivery_details_postbox,
-                  @invoice.delivery_details_street,
-                  @invoice.delivery_details_number,
-                  @invoice.delivery_details_locality_name,
-                  @invoice.delivery_details_zip_code,
-                  @invoice.delivery_details_city,
-                  @invoice.delivery_details_country,
-                  @invoice.delivery_details_gln,
-                  @invoice.delivery_details_company_name,
-                  @invoice.delivery_details_tax_id,
-                  @invoice.delivery_details_tax_number
+                  invoice.delivery_details_postbox,
+                  invoice.delivery_details_street,
+                  invoice.delivery_details_number,
+                  invoice.delivery_details_locality_name,
+                  invoice.delivery_details_zip_code,
+                  invoice.delivery_details_city,
+                  invoice.delivery_details_country,
+                  invoice.delivery_details_gln,
+                  invoice.delivery_details_company_name,
+                  invoice.delivery_details_tax_id,
+                  invoice.delivery_details_tax_number
                 ].any?(&:present?) %>
               <hr>
               <h5 class="mb-3 fw-semibold">Delivery details</h5>
@@ -390,13 +390,13 @@
                   <label class="form-label h6">Address</label>
                   <p class="form-control-plaintext">
                     <%= [
-                          @invoice.delivery_details_postbox,
-                          @invoice.delivery_details_street,
-                          @invoice.delivery_details_number,
-                          @invoice.delivery_details_locality_name,
-                          @invoice.delivery_details_zip_code,
-                          @invoice.delivery_details_city,
-                          @invoice.delivery_details_country
+                          invoice.delivery_details_postbox,
+                          invoice.delivery_details_street,
+                          invoice.delivery_details_number,
+                          invoice.delivery_details_locality_name,
+                          invoice.delivery_details_zip_code,
+                          invoice.delivery_details_city,
+                          invoice.delivery_details_country
                         ].compact.reject(&:blank?).join(', ') %>
                   </p>
                 </div>
@@ -404,24 +404,24 @@
                 <!-- GLN -->
                 <div class="col-md-12 mb-3">
                   <label class="form-label h6">GLN</label>
-                  <p class="form-control-plaintext"><%= @invoice.delivery_details_gln %></p>
+                  <p class="form-control-plaintext"><%= invoice.delivery_details_gln %></p>
                 </div>
 
                 <!-- Company Name -->
                 <div class="col-md-12 mb-3">
                   <label class="form-label h6">Company Name</label>
-                  <p class="form-control-plaintext"><%= @invoice.delivery_details_company_name %></p>
+                  <p class="form-control-plaintext"><%= invoice.delivery_details_company_name %></p>
                 </div>
 
                 <!-- Tax Info -->
                 <div class="col-md-4 mb-3">
                   <label class="form-label h6">Tax ID</label>
-                  <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_id %></p>
+                  <p class="form-control-plaintext"><%= invoice.delivery_details_tax_id %></p>
                 </div>
 
                 <div class="col-md-8 mb-3">
                   <label class="form-label h6">Tax Number</label>
-                  <p class="form-control-plaintext"><%= @invoice.delivery_details_tax_number %></p>
+                  <p class="form-control-plaintext"><%= invoice.delivery_details_tax_number %></p>
                 </div>
               </div>
 
@@ -436,17 +436,18 @@
         </div>
         <% end %>
 
-          <div class="<%= @invoice.quote? ? 'col-md-12 mt-4' : 'col-md-6' %>">
+
+          <div class="<%= invoice.quote? ? 'col-md-12 mt-4' : 'col-md-6' %>">
             <div class="mb-3">
-              <h5 class="mb-3 fw-semibold form-label">Message:</h5>
-              <p class="mb-1"><%= simple_format(@invoice.recipient_note) %></p>
+              <h5 class="mb-3 fw-semibold">Message</h5>
+              <p class="mb-1"><%= simple_format(invoice.recipient_note) %></p>
             </div>
 
-            <% if @invoice.attachments.attached? %>
+            <% if invoice.attachments.attached? %>
               <hr>
               <h4 class="mb-3">Attachments</h4>
               <div class="row">
-                <% @invoice.attachments.each do |attachment| %>
+                <% invoice.attachments.each do |attachment| %>
                   <div class="col-md-6 mb-4 d-flex">
                     <div class="card h-100 w-100 d-flex flex-column">
                       <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
@@ -490,9 +491,9 @@
           </div>
         </div>
 
-      <% unless @invoice.quote? %>
+      <% unless invoice.quote? %>
       <div class="card-footer bg-transparent">
-        <p><%= simple_format(@invoice.footer_notes) %></p>
+        <p><%= simple_format(invoice.footer_notes) %></p>
       </div>
       <% end %>
     <% end %>
