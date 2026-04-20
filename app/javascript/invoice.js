@@ -2245,494 +2245,69 @@ const initInvoiceForm = () => {
     const $previewCard = $('#invoicePreviewCard');
 
     $previewBtn.off('click.invoice_preview').on('click.invoice_preview', function () {
-      const formData = Object.fromEntries($('form').serializeArray().map(f => [f.name, f.value]));
-
-      // Helper functions
-      const getText = (selector, fallback = '—') => $(selector).text().trim() || fallback;
-      const getVal = (selector, fallback = '') => $(selector).val()?.trim() || fallback;
-      const stripLabel = (text, label) => text.replace(label, '').trim() || '-';
-
-      // Recipient company details ("To" section)
-      const company = {
-        name: getText('#company_name'),
-        address: getText('#company_address', ''),
-        country: getText('#company_country', ''),
-        number: stripLabel(getText('#company_number'), 'Company number :'),
-        taxNumber: stripLabel(getText('#company_tax_number'), 'Tax number :')
-      };
-
-      // Sender details ("From" section) pulled from hidden inputs added in form
-      const sender = {
-        name: $('#sender_name').val() || '—',
-        address: $('#sender_address').val() || '',
-        country: $('#sender_country').val() || '',
-        number: $('#sender_company_number').val() || '',
-        taxNumber: $('#sender_tax_number').val() || ''
-      };
-
-      // Basic invoice fields
-      const category = $('input[name="invoice[invoice_category]"]').val();
-      const isQuote = category === 'quote';
-      const isCreditNote = category === 'credit_note';
-
-      const invoice = {
-        issueDate: formData['invoice[issue_date]'] || '—',
-        number: formData['invoice[invoice_number]'] || '—',
-        currency: formData['invoice[currency]'] || '—',
-        note: getVal('#invoice_recipient_note'),
-        footer: getVal('#invoice_footer_notes'),
-        isQuote: isQuote,
-        isCreditNote: isCreditNote
-      };
-
-      // Optional fields
-      let optionalFieldsHtml = '';
-      $('#optional_fields_container .optional-group').each(function () {
-        const $group = $(this);
-        const groupKey = $group.attr('data-optional-group') || '';
-        let rowContent = '';
-
-        $group.find('.row > [class^="col-"]').each(function () {
-          const $col = $(this);
-          let label = $col.find('label').text().trim().replace(/[:]+$/, '') || 'Date';
-          const $input = $col.find('input, select');
-          const value = $input.is('select')
-            ? $input.find('option:selected').text().trim()
-            : $input.val()?.trim() || '';
-
-          if (!value) return;
-
-          const colClasses = $col.attr('class').split(' ').filter(c => c.startsWith('col-')).join(' ');
-          rowContent += `<div class="${colClasses} mb-2"><p class="mb-1 small">${label}: ${value}</p></div>`;
-        });
-
-        if (!rowContent) return;
-
-        const formattedTitle = groupKey
-          .replace(/_/g, ' ')
-          .replace(/([A-Z])/g, ' $1')
-          .trim()
-          .replace(/\b\w/g, c => c.toUpperCase());
-
-        if (/delivery\s*date|payment\s*due\s*date/i.test(formattedTitle)) {
-          const value = $group.find('input, select').val();
-          if (value) optionalFieldsHtml += `<p class="mb-1"><strong>${formattedTitle}:</strong> ${value}</p>`;
-        } else {
-          optionalFieldsHtml += `
-              <div class="mt-3">
-                ${formattedTitle ? `<h6 class="fw-bold mb-2">${formattedTitle}</h6>` : ''}
-                <div class="row">${rowContent}</div>
-              </div>`;
-        }
-      });
-
-      // Line items
-      let lineItems = '';
-      $('#line-items tr.line-item').each(function (i) {
-        const $tr = $(this);
-        const $inputs = $tr.find('input, select');
-        const index = $tr.data('line-index') ?? i;
-        const total = $tr.find('.total').text() || '0.00';
-
-        lineItems += `
-            <tr class="line-item">
-              ${$inputs.slice(0, 6).map((_, inp) => {
-          let val = $(inp).val() || '';
-          if ($(inp).hasClass('tax') && val !== '') {
-            return `<td>${parseFloat(val)}%</td>`;
-          }
-          return `<td>${val}</td>`;
-        }).get().join('')}
-              <td class="text-end fw-semibold">${total}</td>
-              <input type="hidden" name="invoice[line_items_attributes][${index}][total]" class="line-total-input" value="${total}">
-            </tr>`;
-
-        // Optional fields for line items
-        $(`#line-items tr.optional-field-row[data-line-index="${index}"]`).each(function () {
-          const $opt = $(this).clone();
-          const group = $opt.data('optional-group');
-          const fieldDefs = discount_fieldTypeMap[group] || [];
-          const vals = {};
-
-          $opt.find('input, select, span.optional-total').each(function () {
-            const $el = $(this);
-            const name = $el.attr('name') || '';
-            const val = $el.is('select')
-              ? $el.find('option:selected').text().trim()
-              : $el.is('span') ? $el.text().trim() : $el.val();
-            if (val) vals[name] = val;
-          });
-
-          let rowHtml = '<tr class="bg-light">';
-          fieldDefs.forEach(field => {
-            const fieldKey = Object.keys(vals).find(k => k.includes(field.name.split('.')[1])) || '';
-            const value = vals[fieldKey] || '';
-            if (value || field.type === 'text_only') {
-              rowHtml += `
-                  <td>
-                    <label class="fw-bold small d-block">${field.label}</label>
-                    <span class="text-muted small">${value}</span>
-                  </td>`;
-            }
-          });
-
-          const tdCount = (rowHtml.match(/<td>/g) || []).length;
-          rowHtml += '<td></td>'.repeat(Math.max(0, 7 - tdCount)) + '</tr>';
-          lineItems += rowHtml;
-        });
-      });
-
-      // Price adjustments
-      const adjustments = $('.discount-item');
-      if (adjustments.length) {
-        lineItems += '<tr><td colspan="8" class="fw-bold text-muted table-light py-3">Price Adjustments</td></tr>';
-
-        adjustments.each(function () {
-          const $row = $(this);
-          const fields = {
-            type: getVal($row.find('.price-adjustment-unit')),
-            desc: $row.find('.reason-code option:selected').text(),
-            descEdit: getVal($row.find('.description-edit')),
-            amount: getVal($row.find('.amount')),
-            unit: $row.find('.unit-type option:selected').text(),
-            total: $row.find('.total').text().replace('+', '') || '0.00'
-          };
-
-          lineItems += `
-              <tr class="bg-light">
-                ${['type', 'desc', 'descEdit', 'amount', 'unit'].map(key => `
-                  <td>
-                    <label class="fw-bold small d-block">${key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ' $1')}</label>
-                    <span class="text-muted small">${fields[key]}</span>
-                  </td>`).join('')}
-                <td></td>
-                <td class="text-end fw-semibold">
-                  <label class="fw-bold small d-block">Total</label>
-                  <span class="text-muted small">${fields.total}</span>
-                </td>
-              </tr>`;
-        });
+      const $form = $('form');
+      const formData = new FormData($form[0]);
+      
+      // If it's an edit, add the ID to the form data
+      const invoiceId = window.location.pathname.split('/')[2];
+      if (window.location.pathname.includes('/edit') && invoiceId) {
+          formData.append('id', invoiceId);
       }
 
-      // Totals
-      const totals = {
-        subtotal: getText('.subtotal-amount', '0.00'),
-        tax: getText('.total-tax-amount', '0.00'),
-        total: getText('.grand-total-amount', '0.00'),
-        breakdownHtml: $('#tax-breakdown-container').html() || ''
-      };
+      $previewCard.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading preview...</p></div>');
+      modal.show();
 
-      // Payment terms
-      let paymentTermsHtml = '';
-      if (!invoice.isCreditNote && !invoice.isQuote) {
-        const $paymentGroups = $('#payment_terms_parent_div .payment-term-group');
-        if ($paymentGroups.length) {
-          paymentTermsHtml = '<h5 class="mb-3 fw-semibold">Payment Terms</h5><ol class="ps-3 mb-0">';
+      $.ajax({
+          url: '/invoices/preview',
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') },
+          success: function (data) {
+              $previewCard.html(data);
+              
+              const $modalNewAttachments = $('#modal_new_attachments_preview');
+              if ($modalNewAttachments.length && attachmentDataTransfer.files.length > 0) {
+                  $('#attachments-section').removeClass('d-none');
+                  $('#no-attachments-msg').addClass('d-none');
+                  
+                  Array.from(attachmentDataTransfer.files).forEach((file) => {
+                      let contentHtml = '';
+                      if (file.type.startsWith('image/')) {
+                          const objectUrl = URL.createObjectURL(file);
+                          contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 300px; object-fit: contain;">`;
+                      } else if (file.type === "application/pdf") {
+                          const objectUrl = URL.createObjectURL(file);
+                          contentHtml = `<embed src="${objectUrl}" type="application/pdf" class="w-100 mb-2" style="height: 200px;" />`;
+                      } else {
+                          contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
+                      }
 
-          $paymentGroups.each(function () {
-            const $group = $(this);
-            const title = $group.find('h5').text().trim() || 'Payment';
-            let rows = '';
-
-            $group.find('.payment-term-input').each(function () {
-              const $input = $(this);
-              const label = $input.closest('.mb-3').find('label').text().trim().replace('(optional)', '').trim();
-              const value = $input.val()?.trim();
-              if (value) rows += `<tr><td class="text-start" style="width: 40%;">${label}</td><td class="text-start">${value}</td></tr>`;
-            });
-
-            paymentTermsHtml += `
-                <li class="mb-3">
-                  <h6 class="fw-bold d-inline">${title}</h6>
-                  ${rows ? `<table class="table table-sm table-borderless mt-2"><tbody>${rows}</tbody></table>` : ''}
-                </li>`;
-          });
-
-          paymentTermsHtml += '</ol>';
-        } else {
-          paymentTermsHtml = '<h5 class="mb-3 fw-semibold">Payment Terms</h5><p class="text-muted fst-italic">No payment terms provided.</p>';
-        }
-      }
-
-      // Delivery details
-      const buildFieldSection = (selector, fields) => {
-        const $el = $(selector);
-        if (!$el.length) return '';
-
-        const values = fields.map(f => getVal(`${selector} ${f.selector}`)).filter(Boolean);
-        if (!values.length) return '';
-
-        return fields.map(f => {
-          const val = getVal(`${selector} ${f.selector}`);
-          return val ? `
-              <div class="col-md-${f.width || 12} mb-3">
-                <label class="form-label h6">${f.label}</label>
-                <p class="form-control-plaintext">${val}</p>
-              </div>` : '';
-        }).join('');
-      };
-
-      const deliveryFields = [
-        { selector: '[name="invoice[delivery_details_country]"]', label: 'Country', width: 12 },
-        { selector: '[name="invoice[delivery_details_gln]"]', label: 'GLN', width: 12 },
-        { selector: '[name="invoice[delivery_details_company_name]"]', label: 'Company Name', width: 12 },
-        { selector: '[name="invoice[delivery_details_tax_id]"]', label: 'Tax ID', width: 4 },
-        { selector: '[name="invoice[delivery_details_tax_number]"]', label: 'Tax Number', width: 8 }
-      ];
-
-      const deliveryHtml = (!invoice.isCreditNote && buildFieldSection('#delivery_details_parent_div', deliveryFields))
-        ? `<h5 class="mb-3 fw-semibold">Delivery details</h5><div class="row">${buildFieldSection('#delivery_details_parent_div', deliveryFields)}</div>`
-        : ((!invoice.isCreditNote) ? '<h5 class="mb-3 fw-semibold">Delivery details</h5><p class="text-muted fst-italic">No delivery details provided.</p>' : '');
-
-      // Location details renderer
-      const renderLocationDetails = (selector, title, outputId) => {
-        const $el = $(selector);
-        if (!$el.length) return '';
-
-        const details = {
-          locationName: getText(`${selector} .location_name`, ''),
-          companyName: getText(`${selector} .company_name`, ''),
-          taxNumber: getText(`${selector} .tax_number`, '').replace(/Tax number\s*:\s*/i, ''),
-          street: getText(`${selector} .street`, ''),
-          city: getText(`${selector} .city`, ''),
-          country: getText(`${selector} .country`, '')
-        };
-
-        if (!Object.values(details).some(Boolean)) return '';
-
-        const streetLine = [details.street, details.city].filter(Boolean).join(', ');
-
-        return `
-            <div class="location-details mb-2" id="${outputId}">
-              <hr><h6>${title}</h6><hr>
-              ${details.locationName ? `<p class="fw-bold mb-1 location_name">${details.locationName}</p>` : ''}
-              ${details.companyName ? `<p class="company_name mb-1">${details.companyName}</p>` : ''}
-              ${details.taxNumber ? `<p class="tax_number mb-1 text-muted">${details.taxNumber}</p>` : ''}
-              ${streetLine ? `<p class="street mb-0">${streetLine}</p>` : ''}
-              ${details.country ? `<p class="country mb-0">${details.country}</p>` : ''}
-            </div>`;
-      };
-
-      const shipFromHtml = (!invoice.isCreditNote) ?
-        (renderLocationDetails('#ship_from_details', 'Ship From details', 'ship_from_location_details') || '<h5 class="mb-3 fw-semibold">Ship from details</h5><p class="text-muted fst-italic">No Ship From details provided.</p>') : '';
-      const remitToHtml = renderLocationDetails('#remit_to_details', 'Remit To details', 'remit_to_location_details') || '<h5 class="mb-3 fw-semibold">Remit to details</h5><p class="text-muted fst-italic">No Remit To details provided.</p>';
-      const taxRepHtml = renderLocationDetails('#tax_representative_details', 'Tax Representative details', 'tax_representative_location_details') || '<h5 class="mb-3 fw-semibold">Tax Representative details</h5><p class="text-muted fst-italic">No Tax Representative details provided.</p>';
-
-      // Build final HTML
-      const html = `
-          <div class="card shadow-sm border-0" id="invoice_card">
-            <div class="card-body">
-              <div class="d-flex justify-content-between align-items-center mb-4">
-                <h4 class="fw-bold mb-0">
-                  ${invoice.isQuote ? 'Quote Details' : (invoice.isCreditNote ? 'Credit Note Details' : 'Invoice Details')}
-                </h4>
-                <span class="badge px-3 py-2 fs-6 bg-secondary-subtle text-muted">DRAFT</span>
-              </div>
-
-              <div class="row g-4">
-                <div class="col-md-6">
-                  <div class="p-3 rounded border bg-light-subtle mb-3">
-                    <h6 class="fw-bold mb-2">From</h6>
-                    <p class="mb-1">${sender.name}</p>
-                    <p class="mb-1 text-muted">${sender.address}</p>
-                    <p class="mb-1 text-muted">${sender.country}</p>
-                    <hr>
-                    <p class="mb-1 small">Company ${$('#sender_company_id_type').val() || ''} number: <strong>${sender.number}</strong></p>
-                    <p class="mb-0 small">Tax ${$('#sender_tax_id_type').val() || ''} number: <strong>${sender.taxNumber}</strong></p>
-                  </div>
-
-                  <div class="p-3 rounded border bg-light-subtle">
-                    <h6 class="fw-bold mb-2">To</h6>
-                    <p class="mb-1">${company.name}</p>
-                    <p class="mb-1 text-muted">${company.address}</p>
-                    <p class="mb-1 text-muted">${company.country}</p>
-                    <hr>
-                    <p class="mb-1 small">${company.number}</p>
-                    <p class="mb-0 small">${company.taxNumber}</p>
-                  </div>
-                </div>
-
-                <div class="col-md-6">
-                  <div class="mob-p-0 p-3">
-                    <div class="row mb-1">
-                      <div class="col-md-6"><p class="mb-0"><strong>${invoice.isQuote ? 'Quote No.:' : 'Invoice No.:'}</strong> ${invoice.number}</p></div>
-                      <div class="col-md-6"><p class="mb-0"><strong>Issue Date:</strong> ${invoice.issueDate}</p></div>
-                    </div>
-                    <p class="mb-1"><strong>Currency:</strong> ${invoice.currency}</p>
-                    ${optionalFieldsHtml}
-                  </div>
-                </div>
-              </div>
-
-              <div class="table-responsive mt-4">
-                <table class="table align-middle table-hover">
-                  <thead class="table-light">
-                    <tr><th>Item ID</th><th>Description</th><th>Qty</th><th>Unit</th><th>Price</th><th>Tax (%)</th><th>Total</th></tr>
-                  </thead>
-                  <tbody>${lineItems}</tbody>
-                </table>
-              </div>
-
-              <div class="card border-0 shadow-sm p-4 text-end mt-4">
-                <p class="mb-1">
-                  Subtotal excl. taxes
-                  <span class="ms-4 fw-bold">${totals.subtotal}</span>
-                </p>
-                ${totals.breakdownHtml}
-                <div class="mt-3">
-                  <h4 class="fw-bold mb-0">
-                    Total ${invoice.currency}
-                    <span class="ms-5">${totals.total}</span>
-                  </h4>
-                  ${parseFloat(totals.tax) !== 0 ? `
-                    <p class="text-muted mb-0 mt-1" style="font-size: 0.9rem;">
-                      Total taxes ${totals.tax} ${invoice.currency}
-                    </p>
-                  ` : ''}
-                </div>
-              </div>
-
-              <hr>
-
-              <div class="row">
-                ${!invoice.isQuote ? `
-                  <div class="col-md-6">
-                    ${remitToHtml}
-                    ${taxRepHtml}
-
-                    ${!invoice.isCreditNote ? `
-                      <hr class="my-4">
-                      ${shipFromHtml}
-                      <hr class="my-4">
-                      ${paymentTermsHtml}
-                      <hr class="my-4">
-                      ${deliveryHtml}
-                    ` : ''}
-                  </div>
-                ` : ''}
-
-                <div class="${invoice.isQuote ? 'col-md-12' : 'col-md-6'}">
-                  <div class="mb-3">
-                    <h5 class="mb-3 fw-bold">Message:</h5>
-                    <p>${invoice.note.replace(/\n/g, '<br>')}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <hr>
-
-            <!-- Attachments Section -->
-            <div class="row ps-3 pe-3">
-              <div class="col-12">
-                <div class="row" id="preview_attachments_container">
-                  ${(function () {
-          let attachmentsHtml = '';
-          let hasAttachments = false;
-
-          // 1. Existing Attachments
-          $('input[name="invoice[remove_attachment_ids][]"]').each(function () {
-            const $checkbox = $(this);
-            if (!$checkbox.is(':checked')) {
-              const $wrapper = $checkbox.closest('.border');
-              let filename = '';
-              let imgSrc = null;
-
-              const $img = $wrapper.find('img');
-              const $link = $wrapper.find('a');
-
-              if ($img.length) {
-                filename = $img.attr('alt') || 'Image';
-                imgSrc = $img.attr('src');
-              } else if ($link.length) {
-                filename = $link.text().trim() || 'Document';
-              }
-
-              if (filename) {
-                hasAttachments = true;
-                let contentHtml = '';
-
-                if (imgSrc) {
-                  contentHtml = `<img src="${imgSrc}" class="img-fluid rounded mb-2" style="max-height: 200px; object-fit: contain;">`;
-                } else {
-                  contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
-                }
-
-                attachmentsHtml += `
-                                    <div class="col-md-4 mb-4 d-flex">
-                                      <div class="card h-100 w-100 d-flex flex-column">
-                                        <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
-                                          ${contentHtml}
-                                        </div>
-                                        <div class="text-center mt-auto bg-light py-2">
-                                           <div class="d-flex flex-column align-items-center">
-                                             <span class="mb-2 text-truncate" style="max-width: 100%;" title="${filename}">
-                                               ${filename}
-                                             </span>
-                                             <span class="badge bg-secondary">Existing</span>
-                                           </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                 `;
-              }
-            }
-          });
-
-          // 2. New Attachments
-          const fileInput = $('#attachments')[0];
-          if (fileInput && fileInput.files && fileInput.files.length > 0) {
-            hasAttachments = true;
-            Array.from(fileInput.files).forEach(file => {
-              let contentHtml = '';
-
-              // Check if it's an image
-              if (file.type.startsWith('image/')) {
-                const objectUrl = URL.createObjectURL(file);
-                contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 200px; object-fit: contain;">`;
-              } else {
-                contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
-              }
-
-              attachmentsHtml += `
-                                <div class="col-md-4 mb-4 d-flex">
-                                  <div class="card h-100 w-100 d-flex flex-column">
-                                    <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
+                      const html = `
+                          <div class="col-md-6 mb-4 d-flex">
+                              <div class="card h-100 w-100 d-flex flex-column">
+                                  <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
                                       ${contentHtml}
-                                    </div>
-                                    <div class="text-center mt-auto bg-light py-2">
-                                       <div class="d-flex flex-column align-items-center">
-                                         <span class="mb-2 text-truncate" style="max-width: 100%;" title="${file.name}">
-                                           ${file.name}
-                                         </span>
-                                         <span class="badge bg-success">New</span>
-                                       </div>
-                                    </div>
                                   </div>
-                                </div>
-                            `;
-            });
+                                  <div class="text-center mt-auto bg-light py-2">
+                                      <div class="d-flex flex-column align-items-center px-2">
+                                          <span class="mb-2 text-truncate small fw-bold" style="max-width: 100%;" title="${file.name}">
+                                              ${file.name}
+                                          </span>
+                                          <span class="badge bg-primary-subtle text-primary small">New Attachment</span>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      `;
+                      $modalNewAttachments.append(html);
+                  });
+              }
+          },
+          error: function () {
+              $previewCard.html('<div class="alert alert-danger">Failed to load preview. Please ensure all required fields are filled.</div>');
           }
-
-          if (!hasAttachments) {
-            return '<p class="text-muted">No attachments uploaded.</p>';
-          }
-          return attachmentsHtml;
-        })()}
-                </div>
-              </div>
-            </div>
-
-            ${!invoice.isQuote && !invoice.isCreditNote ? `
-              <div class="card-footer">
-                <p class="mb-0">${invoice.footer.replace(/\n/g, '<br>')}</p>
-              </div>
-            ` : ''}
-          </div>`;
-
-      $previewCard.stop(true, true).fadeOut(150, function () {
-        $previewCard.html(html).fadeIn(150);
-        modal.show();
       });
     });
   })();

@@ -120,9 +120,59 @@ function initInvoicePage() {
             .responsive.recalc();
     });
 
-    // PDF Download
-    $(document).off('click.pdf-download').on('click.pdf-download', '.download-pdf', function () {
+    // Preview handling
+    $(document).off('click.invoicePreview', '.preview-invoice').on('click.invoicePreview', '.preview-invoice', function (e) {
+        e.preventDefault();
         const invoiceId = $(this).data('id');
+        const $modal = $('#invoicePreviewModal');
+        const $previewCard = $('#invoicePreviewCard');
+        const modalEl = $modal[0];
+
+        // Bind cleanup once: Bootstrap occasionally leaves a stale backdrop, blocking page clicks.
+        if (!$modal.data('cleanup-bound')) {
+            $modal.on('hidden.bs.modal', function () {
+                $previewCard.empty();
+                const hasOpenModal = $('.modal.show').length > 0;
+                if (!hasOpenModal) {
+                    $('body').removeClass('modal-open').css('padding-right', '');
+                    $('.modal-backdrop').remove();
+                }
+            });
+            $modal.data('cleanup-bound', true);
+        }
+
+        $previewCard.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading preview...</p></div>');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+
+        $.ajax({
+            url: `/invoices/${invoiceId}/pdf_partial`,
+            method: 'GET',
+            success: function (data) {
+                // Render the partial into the modal
+                $previewCard.html(data);
+
+                // Set the modal title based on the invoice type from the returned HTML if possible
+                const category = $previewCard.find('#invoice_card').data('category');
+                if (category) {
+                    const title = category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ');
+                    $modal.find('.modal-title').text(title + ' Preview');
+                }
+            },
+            error: function () {
+                $previewCard.html('<div class="alert alert-danger">Failed to load preview.</div>');
+            }
+        });
+    });
+
+    // PDF Download
+    $(document).off('click.invoiceDownload', '.download-pdf').on('click.invoiceDownload', '.download-pdf', function (e) {
+        e.preventDefault();
+        const invoiceId = $(this).data('id');
+        const $trigger = $(this);
+
+        if ($trigger.data('downloading')) return;
+        $trigger.data('downloading', true);
 
         $.get(`/invoices/${invoiceId}/pdf_partial`, function (html) {
             const temp = document.createElement('div');
@@ -183,75 +233,101 @@ function initInvoicePage() {
                 }
             });
 
+            // Remove non-renderable elements (embed, object, iframe) that cause html2canvas to fail
+            invoice.querySelectorAll('embed, object, iframe').forEach(el => el.remove());
+
             // Prevent cropping with slight scaling
             invoice.style.transform = 'scale(0.99)';
             invoice.style.transformOrigin = 'top left';
 
-            // Today's date for filename
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            const mm = String(today.getMonth() + 1).padStart(2, '0');
-            const dd = String(today.getDate()).padStart(2, '0');
-            const dateStr = `${yyyy}-${mm}-${dd}`;
+            // Wait for all images to load before generating PDF
+            const images = Array.from(invoice.querySelectorAll('img'));
+            const imagePromises = images.map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise(resolve => {
+                    img.onload = img.onerror = resolve;
+                });
+            });
 
-            const opt = {
-                margin: [9, 9, 9, 9],
-                filename: `${dateStr}-invoice-${invoiceId}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: {
-                    scale: 1.5,
-                    useCORS: true,
-                    letterRendering: true,
-                    logging: false
-                },
-                jsPDF: {
-                    unit: 'pt',
-                    format: 'a4',
-                    orientation: 'portrait',
-                    compress: true
-                },
-                pagebreak: {
-                    mode: ['avoid-all', 'css', 'legacy'],
-                    before: '.page-break-before',
-                    after: '.page-break-after',
-                    avoid: ['tr', '.card', 'table']
+            Promise.all(imagePromises).then(() => {
+                // Today's date for filename
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const dateStr = `${yyyy}-${mm}-${dd}`;
+
+                const opt = {
+                    margin: [9, 9, 9, 9],
+                    filename: `${dateStr}-invoice-${invoiceId}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 1.5,
+                        useCORS: true,
+                        letterRendering: true,
+                        logging: false
+                    },
+                    jsPDF: {
+                        unit: 'pt',
+                        format: 'a4',
+                        orientation: 'portrait',
+                        compress: true
+                    },
+                    pagebreak: {
+                        mode: ['avoid-all', 'css', 'legacy'],
+                        before: '.page-break-before',
+                        after: '.page-break-after',
+                        avoid: ['tr', '.card', 'table']
+                    }
+                };
+
+                if (typeof html2pdf === 'undefined') {
+                    throw new Error('html2pdf is not available on the page');
                 }
-            };
 
-            const htmlElement = document.documentElement;
-            const currentDataTheme = htmlElement.getAttribute('data-theme');
-            const currentBSTheme = htmlElement.getAttribute('data-bs-theme');
+                const htmlElement = document.documentElement;
+                const currentDataTheme = htmlElement.getAttribute('data-theme');
+                const currentBSTheme = htmlElement.getAttribute('data-bs-theme');
 
-            // Force light mode temporarily for high-fidelity capture
-            htmlElement.setAttribute('data-theme', 'light');
-            htmlElement.setAttribute('data-bs-theme', 'light');
+                // Force light mode temporarily for high-fidelity capture
+                htmlElement.setAttribute('data-theme', 'light');
+                htmlElement.setAttribute('data-bs-theme', 'light');
 
-            html2pdf().set(opt).from(invoice).save().then(() => {
-                // Restore themes
-                if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
-                else htmlElement.removeAttribute('data-theme');
+                html2pdf().set(opt).from(invoice).save().then(() => {
+                    // Restore themes
+                    if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
+                    else htmlElement.removeAttribute('data-theme');
 
-                if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
-                else htmlElement.removeAttribute('data-bs-theme');
+                    if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
+                    else htmlElement.removeAttribute('data-bs-theme');
 
-                // Clean up
-                if (document.body.contains(temp)) document.body.removeChild(temp);
+                    // Clean up
+                    if (document.body.contains(temp)) document.body.removeChild(temp);
+                }).catch((error) => {
+                    console.error('Error generating PDF:', error);
+
+                    // Restore themes
+                    if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
+                    else htmlElement.removeAttribute('data-theme');
+
+                    if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
+                    else htmlElement.removeAttribute('data-bs-theme');
+
+                    alert('Failed to generate PDF. Please check the console for details and try again.');
+                    if (document.body.contains(temp)) document.body.removeChild(temp);
+                }).finally(() => {
+                    $trigger.data('downloading', false);
+                });
             }).catch((error) => {
-                console.error('Error generating PDF:', error);
-
-                // Restore themes
-                if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
-                else htmlElement.removeAttribute('data-theme');
-
-                if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
-                else htmlElement.removeAttribute('data-bs-theme');
-
-                alert('Failed to generate PDF. Please try again.');
+                console.error('Error preparing PDF:', error);
+                alert('Failed to prepare PDF. Please try again.');
                 if (document.body.contains(temp)) document.body.removeChild(temp);
+                $trigger.data('downloading', false);
             });
         }).fail(function (xhr, status, error) {
             console.error('Error fetching invoice:', error);
             alert('Failed to load invoice data. Please try again.');
+            $trigger.data('downloading', false);
         });
     });
 

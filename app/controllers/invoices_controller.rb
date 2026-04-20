@@ -87,6 +87,42 @@ class InvoicesController < ApplicationController
     render partial: "invoices/partials/invoice_card", locals: { invoice: @invoice }, layout: false
   end
 
+  def preview
+    # Initialize a new invoice from params without saving
+    clean_params = invoice_params.deep_dup
+    clean_params.delete(:line_items_attributes)
+    clean_params.delete(:attachments)
+    normalize_json_fields!(clean_params)
+
+    # If we have an ID, it's an edit; but we want to show the NEW data from params
+    @invoice = if params[:id].present?
+                 current_user.invoices.find(params[:id]).tap { |inv| inv.assign_attributes(clean_params) }
+               else
+                 current_user.invoices.build(clean_params)
+               end
+
+    @invoice.invoice_type ||= "sale"
+    @invoice.status ||= "draft"
+    
+    # Process line items from params
+    if params[:invoice][:line_items_attributes].present?
+      processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
+        line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
+        line_item
+      end
+      @invoice.line_items_data = processed_items
+    end
+
+    # Set up required variables for _invoice_card partial
+    @recipient_company = Company.find_by(id: @invoice.recipient_company_id)
+    @sender_company = @invoice.sale_from || current_user.company
+    @ship_from_location = Location.find_by(id: @invoice.ship_from_location_id)
+    @remit_to_location_id = Location.find_by(id: @invoice.remit_to_location_id)
+    @tax_representative_location_id = Location.find_by(id: @invoice.tax_representative_location_id)
+
+    render partial: "invoices/partials/invoice_card", locals: { invoice: @invoice }, layout: false
+  end
+
   def new
 
     if params[:template_id].present?

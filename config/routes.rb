@@ -36,6 +36,7 @@ Rails.application.routes.draw do
   resources :invoices do
     collection do
       post :create_and_send
+      post :preview
     end
     member do
       patch :approve

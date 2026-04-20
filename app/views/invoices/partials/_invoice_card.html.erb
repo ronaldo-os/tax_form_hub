@@ -443,11 +443,12 @@
               <p class="mb-1"><%= simple_format(invoice.recipient_note) %></p>
             </div>
 
-            <% if invoice.attachments.attached? %>
+            <% persisted_attachments = invoice.attachments.select(&:persisted?) %>
+            <div id="attachments-section" class="<%= 'd-none' if persisted_attachments.empty? %>">
               <hr>
               <h4 class="mb-3">Attachments</h4>
-              <div class="row">
-                <% invoice.attachments.each do |attachment| %>
+              <div class="row" id="persisted-attachments-row">
+                <% persisted_attachments.each do |attachment| %>
                   <div class="col-md-6 mb-4 d-flex">
                     <div class="card h-100 w-100 d-flex flex-column">
                       <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
@@ -485,9 +486,9 @@
                   </div>
                 <% end %>
               </div>
-            <% else %>
-              <p class="text-muted mt-5">No attachments uploaded.</p>
-            <% end %>
+            </div>
+            <div id="modal_new_attachments_preview" class="row"></div>
+            <p id="no-attachments-msg" class="text-muted mt-5 <%= 'd-none' if persisted_attachments.any? %>">No attachments uploaded.</p>
           </div>
         </div>
 
