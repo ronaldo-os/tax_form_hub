@@ -169,3 +169,8 @@
 .table-borderless > thead > tr > th {
     border: none;
 }
+/* Page break utilities for PDF generation */
+.no-break {
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+}

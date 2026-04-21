@@ -2062,33 +2062,39 @@ const initInvoiceForm = () => {
   function updateNewAttachmentPreviews() {
     const $container = $('#new_attachments_preview');
     $container.empty();
+    const files = Array.from(attachmentDataTransfer.files);
 
-    Array.from(attachmentDataTransfer.files).forEach((file, index) => {
-      let contentHtml = '';
-      if (file.type.startsWith('image/')) {
-        const objectUrl = URL.createObjectURL(file);
-        contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 150px; object-fit: contain;">`;
-      } else {
-        contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
-      }
+    for (let i = 0; i < files.length; i += 2) {
+      let rowHtml = '<div class="row no-break">';
+      for (let j = i; j < i + 2 && j < files.length; j++) {
+        const file = files[j];
+        let contentHtml = '';
+        if (file.type.startsWith('image/')) {
+          const objectUrl = URL.createObjectURL(file);
+          contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 150px; object-fit: contain;">`;
+        } else {
+          contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
+        }
 
-      const html = `
-           <div class="col-md-3 mb-3">
-             <div class="card h-100 d-flex flex-column">
-               <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
-                 ${contentHtml}
-               </div>
-               <div class="p-2 text-center mt-auto border-top">
-                 <small class="d-block text-truncate w-100 mb-2 fw-bold" title="${file.name}">${file.name}</small>
-                 <button type="button" class="btn btn-sm btn-outline-danger remove-new-attachment w-100" data-index="${index}">
-                   <i class="bi bi-trash"></i> Remove
-                 </button>
+        rowHtml += `
+             <div class="col-6 mb-3">
+               <div class="card h-100 d-flex flex-column">
+                 <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
+                   ${contentHtml}
+                 </div>
+                 <div class="p-2 text-center mt-auto border-top">
+                   <small class="d-block text-truncate w-100 mb-2 fw-bold" title="${file.name}">${file.name}</small>
+                   <button type="button" class="btn btn-sm btn-outline-danger remove-new-attachment w-100" data-index="${j}">
+                     <i class="bi bi-trash"></i> Remove
+                   </button>
+                 </div>
                </div>
              </div>
-           </div>
-         `;
-      $container.append(html);
-    });
+           `;
+      }
+      rowHtml += '</div>';
+      $container.append(rowHtml);
+    }
   }
 
 
@@ -2247,46 +2253,50 @@ const initInvoiceForm = () => {
     $previewBtn.off('click.invoice_preview').on('click.invoice_preview', function () {
       const $form = $('form');
       const formData = new FormData($form[0]);
-      
+
       // If it's an edit, add the ID to the form data
       const invoiceId = window.location.pathname.split('/')[2];
       if (window.location.pathname.includes('/edit') && invoiceId) {
-          formData.append('id', invoiceId);
+        formData.append('id', invoiceId);
       }
 
       $previewCard.html('<div class="text-center p-5"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Loading preview...</p></div>');
       modal.show();
 
       $.ajax({
-          url: '/invoices/preview',
-          method: 'POST',
-          data: formData,
-          processData: false,
-          contentType: false,
-          headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') },
-          success: function (data) {
-              $previewCard.html(data);
-              
-              const $modalNewAttachments = $('#modal_new_attachments_preview');
-              if ($modalNewAttachments.length && attachmentDataTransfer.files.length > 0) {
-                  $('#attachments-section').removeClass('d-none');
-                  $('#no-attachments-msg').addClass('d-none');
-                  
-                  Array.from(attachmentDataTransfer.files).forEach((file) => {
-                      let contentHtml = '';
-                      if (file.type.startsWith('image/')) {
-                          const objectUrl = URL.createObjectURL(file);
-                          contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 300px; object-fit: contain;">`;
-                      } else if (file.type === "application/pdf") {
-                          const objectUrl = URL.createObjectURL(file);
-                          contentHtml = `<embed src="${objectUrl}" type="application/pdf" class="w-100 mb-2" style="height: 200px;" />`;
-                      } else {
-                          contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
-                      }
+        url: '/invoices/preview',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') },
+        success: function (data) {
+          $previewCard.html(data);
 
-                      const html = `
-                          <div class="col-md-6 mb-4 d-flex">
-                              <div class="card h-100 w-100 d-flex flex-column">
+          const $modalNewAttachments = $('#modal_new_attachments_preview');
+          if ($modalNewAttachments.length && attachmentDataTransfer.files.length > 0) {
+            $('#attachments-section').removeClass('d-none');
+            $('#no-attachments-msg').addClass('d-none');
+
+            const files = Array.from(attachmentDataTransfer.files);
+            for (let i = 0; i < files.length; i += 2) {
+              let rowHtml = '<div class="row no-break">';
+              for (let j = i; j < i + 2 && j < files.length; j++) {
+                const file = files[j];
+                let contentHtml = '';
+                if (file.type.startsWith('image/')) {
+                  const objectUrl = URL.createObjectURL(file);
+                  contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 300px; object-fit: contain;">`;
+                } else if (file.type === "application/pdf") {
+                  const objectUrl = URL.createObjectURL(file);
+                  contentHtml = `<embed src="${objectUrl}" type="application/pdf" class="w-100 mb-2" style="height: 200px;" />`;
+                } else {
+                  contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
+                }
+
+                rowHtml += `
+                          <div class="col-6 mb-4 d-flex">
+                              <div class="card h-100 w-100 d-flex flex-column mt-2">
                                   <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
                                       ${contentHtml}
                                   </div>
@@ -2301,13 +2311,15 @@ const initInvoiceForm = () => {
                               </div>
                           </div>
                       `;
-                      $modalNewAttachments.append(html);
-                  });
               }
-          },
-          error: function () {
-              $previewCard.html('<div class="alert alert-danger">Failed to load preview. Please ensure all required fields are filled.</div>');
+              rowHtml += '</div>';
+              $modalNewAttachments.append(rowHtml);
+            }
           }
+        },
+        error: function () {
+          $previewCard.html('<div class="alert alert-danger">Failed to load preview. Please ensure all required fields are filled.</div>');
+        }
       });
     });
   })();

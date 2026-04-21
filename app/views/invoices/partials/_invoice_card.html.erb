@@ -447,47 +447,51 @@
             <div id="attachments-section" class="<%= 'd-none' if persisted_attachments.empty? %>">
               <hr>
               <h4 class="mb-3">Attachments</h4>
-              <div class="row" id="persisted-attachments-row">
-                <% persisted_attachments.each do |attachment| %>
-                  <div class="col-md-6 mb-4 d-flex">
-                    <div class="card h-100 w-100 d-flex flex-column">
-                      <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
-                        <% if attachment.image? %>
-                          <%= link_to url_for(attachment), target: "_blank" do %>
-                            <%= image_tag attachment,
-                                          class: "img-fluid rounded mb-2",
-                                          style: "max-height: 300px; object-fit: contain;" %>
-                          <% end %>
-                        <% elsif attachment.content_type == "application/pdf" %>
-                          <%= link_to url_for(attachment), target: "_blank" do %>
-                            <embed src="<%= url_for(attachment) %>"
-                                  type="application/pdf"
-                                  class="w-100 mb-2"
-                                  style="height: 200px;" />
-                          <% end %>
-                        <% else %>
-                          <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
-                        <% end %>
-                      </div>
-                      <div class="text-center mt-auto bg-light py-2">
-                        <div class="d-flex flex-column align-items-center">
-                          <span class="mb-2 text-truncate"
-                                style="max-width: 100%;"
-                                data-bs-toggle="tooltip"
-                                title="<%= attachment.filename.to_s %>">
-                            <%= attachment.filename.to_s %>
-                          </span>
-                          <%= link_to "Download",
-                                      rails_blob_path(attachment, disposition: "attachment"),
-                                      class: "btn btn-sm btn-outline-primary" %>
+              <div id="persisted-attachments-container">
+                <% persisted_attachments.each_slice(2) do |slice| %>
+                  <div class="row no-break">
+                    <% slice.each do |attachment| %>
+                      <div class="col-6 mb-4 d-flex">
+                        <div class="card h-100 w-100 d-flex flex-column mt-2">
+                          <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
+                            <% if attachment.image? %>
+                              <%= link_to url_for(attachment), target: "_blank" do %>
+                                <%= image_tag attachment,
+                                              class: "img-fluid rounded mb-2",
+                                              style: "max-height: 300px; object-fit: contain;" %>
+                              <% end %>
+                            <% elsif attachment.content_type == "application/pdf" %>
+                              <%= link_to url_for(attachment), target: "_blank" do %>
+                                <embed src="<%= url_for(attachment) %>"
+                                      type="application/pdf"
+                                      class="w-100 mb-2"
+                                      style="height: 200px;" />
+                              <% end %>
+                            <% else %>
+                              <i class="bi bi-file-earmark-text fs-1 text-muted"></i>
+                            <% end %>
+                          </div>
+                          <div class="text-center mt-auto bg-light py-2">
+                            <div class="d-flex flex-column align-items-center">
+                              <span class="mb-2 text-truncate p-2"
+                                    style="max-width: 100%;"
+                                    data-bs-toggle="tooltip"
+                                    title="<%= attachment.filename.to_s %>">
+                                <%= attachment.filename.to_s %>
+                              </span>
+                              <%= link_to "Download",
+                                          rails_blob_path(attachment, disposition: "attachment"),
+                                          class: "btn btn-sm btn-outline-primary" %>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    <% end %>
                   </div>
                 <% end %>
               </div>
             </div>
-            <div id="modal_new_attachments_preview" class="row"></div>
+            <div id="modal_new_attachments_preview"></div>
             <p id="no-attachments-msg" class="text-muted mt-5 <%= 'd-none' if persisted_attachments.any? %>">No attachments uploaded.</p>
           </div>
         </div>

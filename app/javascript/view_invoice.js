@@ -59,6 +59,19 @@ $(document).on('click', '#download_button', function () {
         card.style.breakInside = 'avoid';
     });
 
+    // Specific styling for PDF: remove card borders and bg-light from attachment sections
+    const attachmentContainers = invoice.querySelectorAll('#attachments-section, #modal_new_attachments_preview, #persisted-attachments-container');
+    attachmentContainers.forEach(container => {
+        container.querySelectorAll('.card').forEach(card => {
+            card.style.border = '1px solid white';
+            card.style.boxShadow = 'none';
+        });
+        container.querySelectorAll('.bg-light').forEach(el => {
+            el.classList.remove('bg-light');
+            el.style.backgroundColor = 'transparent';
+        });
+    });
+
     // Always remove the Download button from attachment cards in the PDF
     invoice.querySelectorAll('a.btn.btn-outline-primary, a.btn.btn-sm.btn-outline-primary').forEach(btn => {
         if (btn.textContent.trim() === 'Download') {
@@ -109,10 +122,9 @@ $(document).on('click', '#download_button', function () {
                 compress: true
             },
             pagebreak: {
-                mode: ['avoid-all', 'css', 'legacy'],
-                before: '.page-break-before',
+                mode: ['css', 'legacy'],
                 after: '.page-break-after',
-                avoid: ['tr', '.card', 'table']
+                avoid: ['tr', '.card', 'table', '.no-break']
             }
         };
 
