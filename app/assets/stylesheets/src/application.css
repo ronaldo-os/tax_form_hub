@@ -57,7 +57,7 @@ body {
 }
 
 .bg-body-tertiary {
-  background-color: var(--bg-tertiary) !important;
+  background-color: white!important;
 }
 
 .bg-light {
@@ -96,8 +96,8 @@ body {
   color: var(--text-muted) !important;
 }
 
-.force-light-mode .bg-body-tertiary {
-  background-color: var(--bg-tertiary) !important;
+[data-theme="dark"] .bg-body-tertiary {
+  background-color: var(--bg-sidebar) !important;
 }
 
 .text-primary {
@@ -173,6 +173,22 @@ input[type="radio"] {
   background-color: #ffffff;
   border: 2px solid #212529;
   accent-color: #212529;
+}
+
+[data-theme="light"] input[type="checkbox"],
+[data-theme="light"] input[type="radio"] {
+  border-radius: 0;
+  background-color: #ffffff;
+  border: 2px solid #d1d1d1;
+  accent-color: #00aeff;
+}
+
+.border {
+  border: 1px solid #495057 !important;
+}
+
+[data-theme="light"] .border {
+  border: 1px solid #d1d1d1 !important;
 }
 
 .input-group-text {
@@ -781,43 +797,6 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
   color: var(--text-main);
 }
 
-.dataTables_wrapper {
-  color: var(--text-main);
-}
-
-.dataTables_filter input {
-  background-color: var(--input-bg) !important;
-  color: var(--input-text) !important;
-  border-color: var(--border-color) !important;
-}
-
-.dataTables_filter input::placeholder {
-  color: var(--text-muted) !important;
-}
-
-.dataTables_paginate .paginate_button {
-  color: var(--text-main) !important;
-  background-color: var(--table-bg) !important;
-  border-color: var(--border-color) !important;
-}
-
-.dataTables_paginate .paginate_button:hover {
-  background-color: var(--input-bg) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-main) !important;
-}
-
-.dataTables_paginate .paginate_button.active {
-  background-color: var(--main-color) !important;
-  border-color: var(--main-color) !important;
-  color: #ffffff !important;
-}
-
-.dataTables_length select.form-select {
-  background-color: var(--input-bg) !important;
-  color: var(--input-text) !important;
-  border-color: var(--border-color) !important;
-}
 
 .dataTables_length label {
   color: var(--text-main) !important;
@@ -830,4 +809,29 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 
 .company-link-hover:hover {
   color: #00aeff !important;
+}
+
+/* Badge */
+.badge.badge_cn{
+    background-color: #032830 !important;
+    color: rgba(13, 202, 240, 1) !important;
+    --bs-text-opacity: 1;
+}
+
+[data-theme="light"] .badge.badge_cn{
+    background-color: var(--bg-tertiary) !important;
+    color: var(--main-color) !important;
+    --bs-text-opacity: 1;
+}
+
+.badge.badge_has_cn{
+  background-color: rgb(84, 64, 6) !important;
+  opacity: 1;
+  color: rgb(255, 193, 7) !important;
+}
+
+[data-theme="light"] .badge.badge_has_cn{
+  background-color: rgba(255, 193, 7, 0.2) !important;
+  opacity: 1;
+  color: rgb(255, 193, 7) !important;
 }

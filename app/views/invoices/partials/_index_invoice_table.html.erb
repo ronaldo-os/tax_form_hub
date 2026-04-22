@@ -20,9 +20,9 @@
         <td>
           <%= link_to invoice.invoice_number, invoice_path(invoice, tab: local_assigns[:active_tab]) %>
           <% if invoice.credit_note? %>
-            <span class="badge bg-info-subtle text-info ms-1">CN</span>
+            <span class="badge badge_cn ms-1">CN</span>
           <% elsif invoice.has_associated_credit_note? %>
-            <span class="badge bg-warning-subtle text-warning ms-1">Has CN</span>
+            <span class="badge badge_has_cn ms-1">Has CN</span>
           <% end %>
         </td>
         <td style="max-width: 200px;">
@@ -32,7 +32,7 @@
           </div>
         </td>
         <td>
-          <%= invoice.currency + ' ' + number_with_delimiter(invoice.total["grand_total"].to_f, delimiter: ",") %>
+          <%= invoice.currency + ' ' + number_with_precision(invoice.total["grand_total"].to_f, precision: 2, delimiter: ",") %>
         </td>
         <td><%= invoice.issue_date&.strftime('%b %d %Y') || '—' %></td>
         <td>

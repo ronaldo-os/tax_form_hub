@@ -1,7 +1,7 @@
 #form_actions_fixed_navbar {
   float: right;
-  width: calc(100% - 68px);
-  margin-left: 68px;
+  width: calc(100% - 0px);
+  margin-left: 59px;
   transition: all 0.3s ease-in-out;
 }
 
