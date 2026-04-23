@@ -47,3 +47,8 @@
 
 /config/database.yml
 /config/environments/development.rb
+
+# ignore bundler/build artifacts
+/vendor/bundle
+*.so
+gem_make.out
