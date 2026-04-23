@@ -257,17 +257,46 @@ class InvoicesController < ApplicationController
       if params[:commit_action] == "send"
         @invoice.update(status: "sent")
 
-        if @invoice.credit_note?
-          original_invoice = @invoice.original_invoice
-          InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
-        else
-          recipient_user = Company.find_by(id: @invoice.recipient_company_id)&.user
-          if recipient_user
-            if @invoice.quote?
-              InvoiceMailer.quote_sent(@invoice, recipient_user).deliver_later
-            else
-              InvoiceMailer.invoice_sent(@invoice, recipient_user).deliver_later
+        recipient_user = Company.find_by(id: @invoice.recipient_company_id)&.user
+
+        if recipient_user
+          duplicated_invoice = @invoice.dup
+          duplicated_invoice.assign_attributes(
+            user_id: recipient_user.id,
+            sale_from_id: @invoice.user.company&.id || @invoice.user.companies.first&.id,
+            status: "pending",
+            invoice_type: "purchase"
+          )
+
+          # For credit notes, we need to find the recipient's version of the original invoice
+          if @invoice.credit_note?
+            original_purchase_invoice = Invoice.find_by(
+              user_id: recipient_user.id,
+              invoice_number: @invoice.invoice_number,
+              invoice_type: "purchase",
+              sale_from_id: duplicated_invoice.sale_from_id,
+              invoice_category: "standard"
+            )
+            duplicated_invoice.credit_note_original_invoice_id = original_purchase_invoice&.id
+          end
+
+          if duplicated_invoice.save
+            @invoice.attachments.each do |attachment|
+              duplicated_invoice.attachments.attach(
+                io: StringIO.new(attachment.download),
+                filename: attachment.filename.to_s,
+                content_type: attachment.content_type
+              )
             end
+          end
+
+          if @invoice.credit_note?
+            original_invoice = @invoice.original_invoice
+            InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
+          elsif @invoice.quote?
+            InvoiceMailer.quote_sent(duplicated_invoice, recipient_user).deliver_later
+          else
+            InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
           end
         end
 

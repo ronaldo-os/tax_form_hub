@@ -70,7 +70,7 @@ const initInvoiceForm = () => {
   }
 
   // Function to generate line item HTML (Unified)
-  function getLineItemHTML(index) {
+  function getLineItemHTML(index, selectedTax = null) {
     return `
         <tr class="line-item" data-line-index="${index}">
           <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
@@ -79,7 +79,7 @@ const initInvoiceForm = () => {
           <td><input type="text" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
           <td><select name="invoice[line_items_attributes][${index}][unit]" class="form-select unit" required>${buildUnitOptions('pcs')}</select></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][price]" class="form-control price" required></td>
-          <td><select name="invoice[line_items_attributes][${index}][tax]" class="form-select tax" required>${buildTaxOptions()}</select></td>
+          <td><select name="invoice[line_items_attributes][${index}][tax]" class="form-select tax" required>${buildTaxOptions(selectedTax)}</select></td>
           <td class="text-end total">0.00</td>
           <td>
             <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
@@ -1577,7 +1577,7 @@ const initInvoiceForm = () => {
     lineIndex = data.length;
 
     data.forEach((item, i) => {
-      const $html = $(getLineItemHTML(i));
+      const $html = $(getLineItemHTML(i, item.tax));
       $lineItems.append($html);
 
       $html.find('.item-id').val(item.item_id);
@@ -1587,11 +1587,6 @@ const initInvoiceForm = () => {
       $unitSelect.html(buildUnitOptions(item.unit));
       $unitSelect.val(item.unit);
       $html.find('.price').val(formatCurrency(item.price));
-
-      const $taxSelect = $html.find('.tax');
-      if (item.tax !== undefined && item.tax !== null) {
-        $taxSelect.val(item.tax);
-      }
 
       if (item.optional_fields) { $html.find('.toggle-dropdown').text('–'); }
 
