@@ -5,3 +5,7 @@
 
 //= link application.css
 //= link_tree ../builds
+
+// Optimized loading for better performance
+//= link_tree ../builds .js defer
+//= link_directory ../stylesheets .css async

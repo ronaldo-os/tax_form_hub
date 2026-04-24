@@ -1,22 +1,23 @@
-<% 
-  is_purchase = table_id.to_s.include?('purchase') || table_id.to_s.include?('received')
-  counterparty_label = is_purchase ? 'Supplier Name' : 'Customer Name'
-%>
-<table class="table table-hover" id="<%= table_id %>">
-  <thead class="table-light">
-    <tr>
-      <th><%= local_assigns[:title] || 'Invoice' %> #</th>
-      <th><%= counterparty_label %></th>
-      <th>Total</th>
-      <th>Issue Date</th>
-      <th>Attachment</th>
-      <th>Status</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% invoices.each do |invoice| %>
+<% cache [table_id, invoices.map(&:id), invoices.map(&:updated_at).max, current_user.id] do %>
+  <% 
+    is_purchase = table_id.to_s.include?('purchase') || table_id.to_s.include?('received')
+    counterparty_label = is_purchase ? 'Supplier Name' : 'Customer Name'
+  %>
+  <table class="table table-hover" id="<%= table_id %>">
+    <thead class="table-light">
       <tr>
+        <th><%= local_assigns[:title] || 'Invoice' %> #</th>
+        <th><%= counterparty_label %></th>
+        <th>Total</th>
+        <th>Issue Date</th>
+        <th>Attachment</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% invoices.each do |invoice| %>
+        <tr>
         <td>
           <%= link_to invoice.invoice_number, invoice_path(invoice, tab: local_assigns[:active_tab]) %>
           <% if invoice.credit_note? %>
@@ -193,3 +194,4 @@
     <% end %>
   </tbody>
 </table>
+<% end %>

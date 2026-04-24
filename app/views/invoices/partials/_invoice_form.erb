@@ -166,7 +166,7 @@
               <th></th>
             </tr>
           </thead>
-          <tbody id="line-items" data-line-items='<%= raw(@invoice.line_items_data.to_json) %>'>
+          <tbody id="line-items" data-line-items='<%= @invoice.line_items_data.to_json %>'>
             <% unless action_name == "edit" %>
               <% unless params[:template_id].present? %>
                 <tr class="line-item" data-line-index="0">

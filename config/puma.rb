@@ -20,7 +20,20 @@
 # Any libraries that use a connection pool or another resource pool should
 # be configured to provide at least as many connections as the number of
 # threads. This includes Active Record's `pool` parameter in `database.yml`.
-threads_count = ENV.fetch("RAILS_MAX_THREADS", 3)
+# Optimize threads based on environment and available CPU cores
+# For production: use 5 threads per worker for better concurrency
+# For development: use 3 threads to reduce resource usage
+threads_count = ENV.fetch("RAILS_MAX_THREADS") do
+  case Rails.env
+  when "production"
+    5
+  when "staging"
+    4
+  else
+    3
+  end
+end
+
 threads threads_count, threads_count
 
 # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
@@ -28,7 +41,21 @@ port ENV.fetch("PORT", 3000)
 
 # Specifies the number of `workers` to boot in clustered mode.
 # Workers are forked internal processes to handle concurrent requests.
-workers ENV.fetch("WEB_CONCURRENCY") { 2 }
+# For production: use CPU count for optimal performance
+# For development: use 1 worker to avoid complexity
+workers_count = ENV.fetch("WEB_CONCURRENCY") do
+  case Rails.env
+  when "production"
+    # Use number of CPU cores, minimum 2, maximum 8
+    [Concurrent.processor_count, 2].max.clamp(0, 8)
+  when "staging"
+    2
+  else
+    1
+  end
+end
+
+workers workers_count
 
 # Use the `preload_app!` method when specifying a `workers` number.
 # This directive tells Puma to first boot the application and load code

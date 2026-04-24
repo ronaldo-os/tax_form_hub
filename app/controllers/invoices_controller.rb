@@ -1,32 +1,67 @@
 class InvoicesController < ApplicationController
   before_action :set_form_resources, only: [:new, :edit, :create, :update]
   def index
-    # Eager load associations to prevent N+1 queries
-    base_scope = current_user.invoices
-      .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
+    # Cache key includes user id and current time for proper invalidation
+    cache_key = "invoices_index_#{current_user.id}_#{Time.current.to_i}"
     
-    # Limit results to most recent 100 per category to prevent loading thousands of records
-    @invoices_sale = base_scope.where(invoice_type: "sale", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
-    @invoices_sale_archived = base_scope.where(invoice_type: "sale", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
-    @invoices_purchase = base_scope.where(invoice_type: "purchase", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
-    @invoices_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
+    # Cache expensive queries and computations
+    @invoices_data = Rails.cache.fetch(cache_key, expires_in: 15.minutes) do
+      # Eager load associations to prevent N+1 queries
+      base_scope = current_user.invoices
+        .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
+      
+      # Limit results to most recent 100 per category to prevent loading thousands of records
+      invoices_sale = base_scope.where(invoice_type: "sale", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
+      invoices_sale_archived = base_scope.where(invoice_type: "sale", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
+      invoices_purchase = base_scope.where(invoice_type: "purchase", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
+      invoices_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
 
-    @quotes_sale = base_scope.where(invoice_type: "sale", archived: false, invoice_category: "quote").order(issue_date: :desc).limit(100)
-    @quotes_sale_archived = base_scope.where(invoice_type: "sale", archived: true, invoice_category: "quote").order(issue_date: :desc).limit(100)
-    @quotes_purchase = base_scope.where(invoice_type: "purchase", archived: false, invoice_category: "quote").order(issue_date: :desc).limit(100)
-    @quotes_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true, invoice_category: "quote").order(issue_date: :desc).limit(100)
+      quotes_sale = base_scope.where(invoice_type: "sale", archived: false, invoice_category: "quote").order(issue_date: :desc).limit(100)
+      quotes_sale_archived = base_scope.where(invoice_type: "sale", archived: true, invoice_category: "quote").order(issue_date: :desc).limit(100)
+      quotes_purchase = base_scope.where(invoice_type: "purchase", archived: false, invoice_category: "quote").order(issue_date: :desc).limit(100)
+      quotes_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true, invoice_category: "quote").order(issue_date: :desc).limit(100)
 
-    # month ranges (use Time.current so it respects time zone)
-    current_month_range = Time.current.beginning_of_month..Time.current.end_of_month
-    last_month_range    = 1.month.ago.beginning_of_month..1.month.ago.end_of_month
+      # month ranges (use Time.current so it respects time zone)
+      current_month_range = Time.current.beginning_of_month..Time.current.end_of_month
+      last_month_range    = 1.month.ago.beginning_of_month..1.month.ago.end_of_month
 
-    # Summary stats
-    @invoice_totals_sale     = build_invoice_stats(@invoices_sale, current_month_range, last_month_range)
-    @invoice_totals_purchase = build_invoice_stats(@invoices_purchase, current_month_range, last_month_range)
+      # Summary stats
+      invoice_totals_sale     = build_invoice_stats(invoices_sale, current_month_range, last_month_range)
+      invoice_totals_purchase = build_invoice_stats(invoices_purchase, current_month_range, last_month_range)
 
-    # Trend graph data (last 6 months)
-    @invoice_trends_sale     = build_invoice_trends(@invoices_sale)
-    @invoice_trends_purchase = build_invoice_trends(@invoices_purchase)
+      # Trend graph data (last 6 months)
+      invoice_trends_sale     = build_invoice_trends(invoices_sale)
+      invoice_trends_purchase = build_invoice_trends(invoices_purchase)
+
+      {
+        invoices_sale: invoices_sale,
+        invoices_sale_archived: invoices_sale_archived,
+        invoices_purchase: invoices_purchase,
+        invoices_purchase_archived: invoices_purchase_archived,
+        quotes_sale: quotes_sale,
+        quotes_sale_archived: quotes_sale_archived,
+        quotes_purchase: quotes_purchase,
+        quotes_purchase_archived: quotes_purchase_archived,
+        invoice_totals_sale: invoice_totals_sale,
+        invoice_totals_purchase: invoice_totals_purchase,
+        invoice_trends_sale: invoice_trends_sale,
+        invoice_trends_purchase: invoice_trends_purchase
+      }
+    end
+
+    # Assign cached data to instance variables
+    @invoices_sale = @invoices_data[:invoices_sale]
+    @invoices_sale_archived = @invoices_data[:invoices_sale_archived]
+    @invoices_purchase = @invoices_data[:invoices_purchase]
+    @invoices_purchase_archived = @invoices_data[:invoices_purchase_archived]
+    @quotes_sale = @invoices_data[:quotes_sale]
+    @quotes_sale_archived = @invoices_data[:quotes_sale_archived]
+    @quotes_purchase = @invoices_data[:quotes_purchase]
+    @quotes_purchase_archived = @invoices_data[:quotes_purchase_archived]
+    @invoice_totals_sale = @invoices_data[:invoice_totals_sale]
+    @invoice_totals_purchase = @invoices_data[:invoice_totals_purchase]
+    @invoice_trends_sale = @invoices_data[:invoice_trends_sale]
+    @invoice_trends_purchase = @invoices_data[:invoice_trends_purchase]
 
     @active_tab = params[:tab] || 'sales-invoices'
 
