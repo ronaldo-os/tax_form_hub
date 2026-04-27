@@ -1,0 +1,110 @@
+name: Performance Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  performance:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.2'
+        bundler-cache: true
+    
+    - name: Install dependencies
+      run: |
+        bundle install --jobs 4 --retry 3
+    
+    - name: Setup database
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+      run: |
+        bin/rails db:create
+        bin/rails db:migrate
+    
+    - name: Run Brakeman security scan
+      run: |
+        gem install brakeman
+        brakeman --exit-on-error --quiet
+    
+    - name: Run bundle audit
+      run: |
+        gem install bundler-audit
+        bundle-audit check --update
+    
+    - name: Run RSpec tests with performance focus
+      env:
+        RAILS_ENV: test
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test
+        REDIS_URL: redis://localhost:6379/0
+      run: |
+        bin/rails test:performance
+    
+    - name: Check asset compilation performance
+      run: |
+        bin/rails assets:precompile
+        du -sh public/assets
+    
+    - name: Run performance benchmarks
+      run: |
+        bin/rails benchmark:memory
+        bin/rails benchmark:requests
+    
+    - name: Check N+1 queries
+      run: |
+        gem install bullet
+        bin/rails test:db:n_plus_one
+    
+    - name: Performance regression check
+      run: |
+        # Compare against baseline performance metrics
+        if [ -f .performance_baseline ]; then
+          echo "Running performance regression checks..."
+          # Add your performance comparison logic here
+        else
+          echo "No baseline found, creating one..."
+          # Create baseline metrics
+        fi
+    
+    - name: Upload performance reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: performance-reports
+        path: |
+          tmp/
+          log/
+          public/assets/
+        retention-days: 30

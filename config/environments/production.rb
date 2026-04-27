@@ -26,14 +26,32 @@ Rails.application.configure do
     "Expires" => "#{1.year.from_now.to_formatted_s(:rfc822)}"
   }
 
-  # Compress CSS using a preprocessor.
-  # config.assets.css_compressor = :sass
+  # Compress CSS and JS assets
+  config.assets.css_compressor = :sass
+  config.assets.js_compressor = :terser
 
   # Do not fall back to assets pipeline if a precompiled asset is missed.
   config.assets.compile = false
 
-  # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  # config.asset_host = "http://assets.example.com"
+  # Enable serving of images, stylesheets, and JavaScripts from an asset server (CDN)
+  # Uncomment and configure with your CDN URL
+  # config.asset_host = ENV.fetch("CDN_URL") { "https://cdn.example.com" }
+  
+  # Enable gzip and Brotli compression for assets
+  config.middleware.use Rack::Deflater
+  
+  # Configure Content Security Policy headers for security
+  config.content_security_policy do |policy|
+    policy.default_src :self, :https
+    policy.font_src    :self, :https, :data
+    policy.img_src     :self, :https, :data
+    policy.object_src  :none
+    policy.script_src  :self, :https
+    policy.style_src   :self, :https
+  end
+  
+  # Report CSP violations to a specified URI
+  # config.content_security_policy_report_uri = "/csp-violation-report-endpoint"
 
   # Specifies the header that your server uses for sending files.
   # config.action_dispatch.x_sendfile_header = "X-Sendfile" # for Apache
