@@ -35,7 +35,7 @@
         <td>
           <%= invoice.currency + ' ' + number_with_precision(invoice.total["grand_total"].to_f, precision: 2, delimiter: ",") %>
         </td>
-        <td><%= invoice.issue_date&.strftime('%b %d %Y') || '—' %></td>
+        <td><%= invoice.issue_date&.strftime('%b %d, %Y') || '—' %></td>
         <td>
         <% if invoice.attachments.attached? %>
         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#attachmentModal-<%= invoice.id %>">View Files</button>

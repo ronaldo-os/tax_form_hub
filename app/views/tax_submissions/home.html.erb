@@ -88,10 +88,11 @@
             <div class="col-12">
               <%= f.label :form_2307, "Form 2307", class: "form-label fw-semibold small text-muted" %>
               <%= f.file_field :form_2307,
-                    class: "form-control rounded-3",
+                    class: "form-control rounded-3 file-upload-input",
                     required: true,
                     accept: "image/*,application/pdf",
-                    id: "form_2307_input" %>
+                    id: "form_2307_input",
+                    data: { list_target: "#form_2307_list", multiple: false } %>
               <small class="form-text text-muted">Only images (JPG, PNG) and PDFs are allowed.</small>
               <ul id="form_2307_list" class="list-group mt-2"></ul>
             </div>
@@ -100,10 +101,11 @@
               <%= f.label :deposit_slip, "Deposit Slip or Bank Transfer Details", class: "form-label fw-semibold small text-muted" %>
               <%= f.file_field :deposit_slip,
                     multiple: true,
-                    class: "form-control rounded-3",
+                    class: "form-control rounded-3 file-upload-input",
                     required: true,
                     accept: "image/*,application/pdf",
-                    id: "deposit_slip_input" %>
+                    id: "deposit_slip_input",
+                    data: { list_target: "#deposit_slip_list", multiple: true } %>
               <small class="form-text text-muted">You can upload multiple images or PDFs.</small>
               <ul id="deposit_slip_list" class="list-group mt-2"></ul>
             </div>

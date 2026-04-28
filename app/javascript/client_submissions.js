@@ -57,10 +57,28 @@ function initClientSubmissionsPage() {
     // Show file previews (thumbnails for images, icons for PDFs)
     function updateFileList(inputSelector, listSelector, multiple = true) {
         $(document).off('change', inputSelector).on('change', inputSelector, function () {
+            const $input = $(this);
             const $list = $(listSelector).empty();
             const files = Array.from(this.files);
 
             if (!files.length) return;
+
+            // Check for HEIC files
+            const heicExtensions = ['.heic', '.heif'];
+            const heicMimeTypes = ['image/heic', 'image/heif'];
+            const invalidFiles = files.filter(file => {
+                const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                return heicExtensions.includes(ext) || heicMimeTypes.includes(file.type.toLowerCase());
+            });
+
+            if (invalidFiles.length > 0) {
+                const fileNames = invalidFiles.map(f => f.name).join(', ');
+                if (window.showFlashMessage) {
+                    window.showFlashMessage(`HEIC files are not supported: ${fileNames}<br>Please convert to JPG, PNG, or PDF.`, 'danger');
+                }
+                $input.val('');
+                return;
+            }
 
             const displayFiles = multiple ? files : [files[0]];
             

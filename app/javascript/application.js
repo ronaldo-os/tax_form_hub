@@ -192,7 +192,7 @@ function initApplication() {
         let messageHtml;
 
         if (messages.length > 1) {
-            messageHtml = `<ol class="mb-0 ps-3">${messages.map(m => `<li>${m}</li>`).join("")}</ol>`;
+            messageHtml = `<div class="mb-0">${messages.map(m => `<div>${m}</div>`).join("")}</div>`;
         } else {
             messageHtml = `<span>${messages[0]}</span>`;
         }
@@ -200,9 +200,9 @@ function initApplication() {
         const flashHtml = `
             <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start"
                 role="alert"
-                style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+                style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; word-wrap: break-word; overflow-wrap: break-word;">
                 <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_${type}"></i>
-                <div>
+                <div style="min-width: 0; word-wrap: break-word; overflow-wrap: break-word;">
                     ${messageHtml}
                 </div>
             </div>
