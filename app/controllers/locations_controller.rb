@@ -2,7 +2,7 @@ class LocationsController < ApplicationController
   before_action :set_location, only: %i[update destroy]
 
   def index
-    @locations = current_user.locations
+    @locations = current_user.locations.includes(:company)
   end
 
   def new

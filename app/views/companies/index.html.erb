@@ -25,7 +25,8 @@
                   @company.profile_image.attached? ? url_for(@company.profile_image) : asset_path("user_avatar_default.png"),
                   id: "image-preview",
                   class: "rounded-circle border shadow-sm",
-                  style: "width: 160px; height: 160px; object-fit: cover;"
+                  style: "width: 160px; height: 160px; object-fit: cover;",
+                  loading: "lazy"
                 ) %>
 
                 <!-- Overlay Camera Icon -->

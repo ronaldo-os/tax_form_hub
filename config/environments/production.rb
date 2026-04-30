@@ -36,9 +36,19 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server (CDN)
   # Uncomment and configure with your CDN URL
   # config.asset_host = ENV.fetch("CDN_URL") { "https://cdn.example.com" }
-  
+
   # Enable gzip and Brotli compression for assets
   config.middleware.use Rack::Deflater
+
+  # Aggressive browser caching for fingerprinted assets
+  config.assets.version = '1.0'
+  config.assets.digest = true
+
+  # Cache static assets for 1 year (they have fingerprints in the filename)
+  config.public_file_server.headers = {
+    'Cache-Control' => 'public, max-age=31536000, immutable',
+    'Expires' => 1.year.from_now.to_formatted_s(:rfc822)
+  }
   
   # Configure Content Security Policy headers for security
   config.content_security_policy do |policy|

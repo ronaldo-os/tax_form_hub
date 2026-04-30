@@ -2,14 +2,16 @@ class NetworksController < ApplicationController
   before_action :authenticate_user!
 
   def index
-    @networks = current_user.networks.includes(:company).order("companies.name ASC")
-    
+    @networks = current_user.networks.includes(company: { profile_image_attachment: :blob })
+                              .order("companies.name ASC")
+
     if params[:query].present?
       msg = "%#{params[:query]}%"
       existing_ids = current_user.connected_company_ids
       existing_ids += current_user.company_ids
 
-      @search_results = Company.where("name ILIKE ?", msg)
+      @search_results = Company.with_attached_profile_image
+                               .where("name ILIKE ?", msg)
                                .where.not(id: existing_ids)
                                .limit(20)
     end

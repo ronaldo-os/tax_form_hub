@@ -1,9 +1,12 @@
 class CompaniesController < ApplicationController
+  include HttpCaching
+
   before_action :set_company, only: [ :update, :show ]
   before_action :authorize_show, only: [ :show ]
+  before_action :set_cache_headers, only: [:index, :show]
 
   def index
-    @companies = current_user.companies
+    @companies = current_user.companies.with_attached_profile_image
     if @companies.empty?
       redirect_to new_company_path, notice: "Please create your first company."
       return
