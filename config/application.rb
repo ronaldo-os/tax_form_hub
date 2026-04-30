@@ -38,5 +38,9 @@ module TaxFormHub
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # Add datatables directory to autoload paths for DataTables server-side processing
+    config.autoload_paths << Rails.root.join('app/datatables')
+    config.eager_load_paths << Rails.root.join('app/datatables')
   end
 end

@@ -1,0 +1,22 @@
+<%# Server-side rendered DataTable for better performance %>
+<%# Loads data via AJAX instead of rendering all rows server-side %>
+
+<table class="table table-hover" id="<%= table_id %>"
+       data-server-side="true"
+       data-ajax-url="<%= datatable_data_invoices_path %>"
+       data-ajax-data='<%= { invoice_type: local_assigns[:invoice_type], archived: local_assigns[:archived], quote: local_assigns[:quote], tab: local_assigns[:active_tab] }.to_json %>'>
+  <thead class="table-light">
+    <tr>
+      <th data-data="invoice_number"><%= local_assigns[:title] || 'Invoice' %> #</th>
+      <th data-data="counterparty"><%= local_assigns[:invoice_type] == 'purchase' ? 'Supplier Name' : 'Customer Name' %></th>
+      <th data-data="total">Total</th>
+      <th data-data="issue_date">Issue Date</th>
+      <th data-data="attachments">Attachment</th>
+      <th data-data="status">Status</th>
+      <th data-data="actions">Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%# Data loaded via AJAX %>
+  </tbody>
+</table>

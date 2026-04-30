@@ -2,7 +2,6 @@
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "invoices", media: "all" %>
 <% end %>
-<%= javascript_include_tag "index_invoice", "data-turbo-track": "reload", type: "module" %>
 
 <div class="container py-2 py-md-5">
   <div class="d-flex align-items-center mb-3">
@@ -81,10 +80,9 @@
       <div class="card mb-4">
         <div class="card-body p-3">
           <h5>Active Sales Invoices</h5>
-          <% cache [current_user, @invoices_sale, 'sales_active'] do %>
-            <%= render partial: 'invoices/partials/index_invoice_table',
-                       locals: { invoices: @invoices_sale, table_id: 'sales-table', active_tab: 'sales-invoices' } %>
-          <% end %>
+          <%# Server-side DataTable for large datasets - loads data via AJAX %>
+          <%= render partial: 'invoices/partials/server_side_table',
+                     locals: { table_id: 'sales-table', invoice_type: 'sale', archived: false, quote: false, active_tab: 'sales-invoices' } %>
         </div>
       </div>
 

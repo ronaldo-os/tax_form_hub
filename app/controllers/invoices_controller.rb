@@ -1,5 +1,15 @@
 class InvoicesController < ApplicationController
+  include DatatablesServerSide
+
   before_action :set_form_resources, only: [:new, :edit, :create, :update]
+
+  # Server-side DataTables processing endpoint
+  # Returns JSON data for DataTables to reduce initial page load
+  def datatable_data
+    datatable = InvoiceDatatable.new(view_context, current_user, datatable_options)
+    render_datatable_json(datatable)
+  end
+
   def index
     # Cache key includes user id and current time for proper invalidation
     cache_key = "invoices_index_#{current_user.id}_#{Time.current.to_i}"
@@ -754,6 +764,15 @@ class InvoicesController < ApplicationController
     end
 
     original_sale_invoice&.update(status: status)
+  end
+
+  # Options for InvoiceDatatable based on request parameters
+  def datatable_options
+    {
+      invoice_type: params[:invoice_type],
+      archived: params[:archived] == 'true',
+      quote: params[:quote] == 'true'
+    }
   end
 
   def invoice_params

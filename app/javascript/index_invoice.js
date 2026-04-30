@@ -77,24 +77,68 @@ function initInvoicePage() {
         renderMiniCharts("chart-purchase", purchaseTrendsData, "#00aeff");
     }
 
-    // Initialize all DataTables
-    $('#sales-table, #purchases-table, #sales-archived-table, #purchases-archived-table, #sent-quotes-table, #sent-quotes-archived-table, #received-quotes-table, #received-quotes-archived-table').DataTable({
-        responsive: true,
-        autoWidth: false,
-        destroy: true, // Important for Turbo
-        initComplete: function () {
-            const api = this.api();
-            const $container = $(api.table().container());
+    // Initialize DataTables - Support both client-side and server-side processing
+    const tableSelectors = '#sales-table, #purchases-table, #sales-archived-table, #purchases-archived-table, #sent-quotes-table, #sent-quotes-archived-table, #received-quotes-table, #received-quotes-archived-table';
 
-            // Remove "Show _ entries" and "Search:" labels
-            $container.find('div.dataTables_length label').contents().filter(function () {
-                return this.nodeType === 3;
-            }).remove();
-
-            $container.find('div.dataTables_filter label').contents().filter(function () {
-                return this.nodeType === 3;
-            }).remove();
+    $(tableSelectors).each(function() {
+        const $table = $(this);
+        // Data attributes are strings, not booleans - check for "true" string
+        const isServerSide = $table.attr('data-server-side') === 'true';
+        const ajaxUrl = $table.data('ajax-url');
+        // Parse the JSON data attribute
+        let ajaxData = {};
+        try {
+            const ajaxDataAttr = $table.attr('data-ajax-data');
+            if (ajaxDataAttr) {
+                ajaxData = JSON.parse(ajaxDataAttr);
+            }
+        } catch (e) {
+            console.warn('Failed to parse data-ajax-data:', e);
         }
+
+        const tableConfig = {
+            responsive: true,
+            autoWidth: false,
+            destroy: true, // Important for Turbo
+            pageLength: 25,
+            deferRender: true, // Improves performance with large datasets
+            initComplete: function () {
+                const api = this.api();
+                const $container = $(api.table().container());
+
+                // Remove "Show _ entries" and "Search:" labels
+                $container.find('div.dataTables_length label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+
+                $container.find('div.dataTables_filter label').contents().filter(function () {
+                    return this.nodeType === 3;
+                }).remove();
+            }
+        };
+
+        // Configure server-side processing if enabled
+        if (isServerSide && ajaxUrl) {
+            tableConfig.serverSide = true;
+            tableConfig.processing = true;
+            tableConfig.ajax = {
+                url: ajaxUrl,
+                data: function(d) {
+                    // Merge DataTables params with custom params
+                    return $.extend({}, d, ajaxData);
+                },
+                error: function(xhr, error, thrown) {
+                    console.error('DataTables server-side error:', xhr.status, error, thrown);
+                    // Show user-friendly error message
+                    if (xhr.status === 500) {
+                        console.error('Server error - check Rails logs for details');
+                    }
+                }
+            };
+            tableConfig.searchDelay = 400; // Delay search to reduce server requests
+        }
+
+        $table.DataTable(tableConfig);
     });
 
     // Handle tab switch - Unbind first to prevent duplicates

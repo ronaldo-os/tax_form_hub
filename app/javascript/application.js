@@ -1,15 +1,46 @@
-import "./network_search";
-// Page specific JS are now loaded in their respective views
-// import "./client_submissions";
-// import "./admin_client_submissions";
-// import "./edit_profile";
-// import "./index_invoice.js";
-// import "./network_search";
-// import "./invoice";
-// import "./view_invoice.js";
-// import "./locations";
-// import "./companies.js";
-// import "./recurring_line_items.js";
+// Lazy load page-specific modules to reduce initial bundle size
+// Each module is dynamically imported only when needed based on the current path
+function loadPageSpecificModules() {
+  const path = window.location.pathname;
+
+  // Use dynamic imports with webpack/esbuild magic comments for chunk naming
+  if (path.includes('/invoices')) {
+    if (path.match(/\/invoices\/?$/)) {
+      import(/* webpackChunkName: "index_invoice" */ './index_invoice');
+    } else if (path.match(/\/invoices\/new/) || path.match(/\/invoices\/\d+\/edit/)) {
+      import(/* webpackChunkName: "invoice" */ './invoice');
+    } else if (path.match(/\/invoices\/\d+$/)) {
+      import(/* webpackChunkName: "view_invoice" */ './view_invoice');
+    }
+  }
+
+  if (path.includes('/tax_submissions') || path === '/') {
+    import(/* webpackChunkName: "client_submissions" */ './client_submissions');
+  }
+
+  if (path.includes('/admin')) {
+    import(/* webpackChunkName: "admin_client_submissions" */ './admin_client_submissions');
+  }
+
+  if (path.includes('/locations')) {
+    import(/* webpackChunkName: "locations" */ './locations');
+  }
+
+  if (path.includes('/companies')) {
+    import(/* webpackChunkName: "companies" */ './companies');
+  }
+
+  if (path.includes('/recurring_invoices')) {
+    import(/* webpackChunkName: "recurring_line_items" */ './recurring_line_items');
+  }
+
+  if (path.includes('/edit_profile') || path.includes('/users/edit')) {
+    import(/* webpackChunkName: "edit_profile" */ './edit_profile');
+  }
+}
+
+// Always load network search (small utility)
+import './network_search';
 
 
 import Rails from "@rails/ujs";
@@ -247,11 +278,17 @@ function initApplication() {
 }
 
 // Bind to Turbo Load
-document.addEventListener("turbo:load", initApplication);
+document.addEventListener("turbo:load", () => {
+  initApplication();
+  loadPageSpecificModules();
+});
 // Specifically handle the 422 error re-render
 document.addEventListener("turbo:render", initApplication);
 // Also bind to DOMContentLoaded for initial non-Turbo load if any
-document.addEventListener("DOMContentLoaded", initApplication);
+document.addEventListener("DOMContentLoaded", () => {
+  initApplication();
+  loadPageSpecificModules();
+});
 
 // Global Teardown for DataTables to fix Turbo Caching issues
 document.addEventListener("turbo:before-cache", function () {
@@ -263,6 +300,29 @@ document.addEventListener("turbo:before-cache", function () {
         });
     }
 });
+
+// Prefetch page modules on link hover for faster navigation
+let prefetchTimeout;
+document.addEventListener('mouseover', function(e) {
+    const link = e.target.closest('a[href^="/"]');
+    if (!link || link.href.includes('#') || link.dataset.prefetched) return;
+
+    clearTimeout(prefetchTimeout);
+    prefetchTimeout = setTimeout(() => {
+        // Don't prefetch external links or data: urls
+        if (link.origin !== window.location.origin) return;
+
+        // Mark as prefetched to avoid duplicate work
+        link.dataset.prefetched = 'true';
+
+        // Prefetch the page module based on path
+        const path = new URL(link.href).pathname;
+        if (path.includes('/invoices/new') || path.includes('/invoices/') && path.includes('/edit')) {
+            // Prefetch invoice form module
+            import(/* webpackPrefetch: true */ './invoice');
+        }
+    }, 100);
+}, { passive: true });
 
 
 

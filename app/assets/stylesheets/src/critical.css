@@ -1,0 +1,207 @@
+/* Critical CSS - Above the fold styles */
+/* Theme variables - MUST be first for proper rendering */
+:root,
+[data-theme="light"] {
+  --main-color: #00aeff;
+  --active-color: #20b9ff;
+  --app-clr: rgb(240 240 240);
+  --side-app-bg: #00aeff;
+  --bg-body: rgb(240, 240, 240);
+  --bg-sidebar: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #f1f3f5;
+  --text-main: #212529;
+  --text-sidebar: #333333;
+  --border-color: #d1d1d1;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --input-text: #212529;
+  --table-bg: #ffffff;
+  --table-border-color: #ffffff;
+  --modal-content-bg: #ffffff;
+  --modal-content-color: #212529;
+  --text-muted: #6c757d;
+}
+
+[data-theme="dark"] {
+  --app-clr: #1a1d21;
+  --side-app-bg: #00aeff;
+  --bg-body: #1a1d21;
+  --bg-sidebar: #212529;
+  --bg-secondary: #2c3034;
+  --bg-tertiary: #25292d;
+  --text-main: #f8f9fa;
+  --text-sidebar: #f8f9fa;
+  --border-color: #495057;
+  --card-bg: #212529;
+  --input-bg: #2b3035;
+  --input-text: #f8f9fa;
+  --table-bg: #212529;
+  --table-border-color: #343a40;
+  --modal-content-bg: #212529;
+  --modal-content-color: #f8f9fa;
+  --text-muted: #adb5bd;
+}
+
+/* Base layout - critical for initial render */
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  font-family: "Roboto", sans-serif;
+  background-color: var(--bg-body) !important;
+  color: var(--text-main);
+  margin: 0;
+}
+
+/* Critical layout containers */
+.bg-light {
+  background-color: var(--bg-body) !important;
+}
+
+/* Sidebar - always visible on desktop */
+.app-sidebar {
+  top: 0px;
+  position: fixed;
+  width: 80px;
+  height: 100%;
+  background: var(--bg-sidebar);
+  z-index: 100000;
+  transition: 0.5s;
+  padding-left: 10px;
+  overflow: hidden;
+}
+
+.app-sidebar ul {
+  position: relative;
+  padding-left: 0px;
+  margin: 0;
+}
+
+.app-sidebar ul li {
+  position: relative;
+  list-style: none;
+}
+
+.app-sidebar ul li a {
+  position: relative;
+  display: flex;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.app-sidebar ul li a .app-icon {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 60px;
+  padding-left: 10px;
+  height: 70px;
+  font-size: 1.5em;
+  color: var(--text-sidebar);
+  transition: 0.5s;
+}
+
+.app-sidebar ul li a .app-text {
+  position: relative;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  font-size: 1em;
+  color: var(--text-sidebar);
+  padding-left: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: 0.5s;
+}
+
+/* Main content area */
+#main_content_div {
+  padding-bottom: 1px;
+  margin-left: calc(var(--bs-gutter-x, 1.5rem) * 2);
+}
+
+/* App header */
+.app-header {
+  display: none !important;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  padding-left: 25px;
+}
+
+.app-header .app-icon {
+  font-size: 2em;
+  margin-right: 15px;
+  color: var(--app-clr, #00aeff);
+}
+
+.app-header .app-text {
+  font-size: 1.2em;
+  font-weight: 500;
+  color: var(--app-clr, #00aeff);
+}
+
+/* Menu toggle */
+.app-menu-toggle {
+  position: fixed;
+  top: 75px;
+  left: 60px;
+  width: 30px;
+  height: 30px;
+  border-radius: 100px;
+  background: var(--bg-sidebar);
+  z-index: 100001;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: left 0.5s;
+  border: 1px solid var(--border-color);
+}
+
+/* Basic utility classes */
+.text-primary {
+  --bs-text-opacity: 1;
+  color: var(--main-color) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+a {
+  color: var(--main-color);
+  text-decoration: none;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Mobile menu toggle - hidden by default */
+#mobile_menu_toggle {
+  width: 40px;
+  height: 40px;
+  background: #00aeff;
+  border-radius: 6px;
+  cursor: pointer;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 100002;
+}
+
+/* Loading state - prevent FOUC */
+.loading {
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+
+.loaded {
+  opacity: 1;
+}

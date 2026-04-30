@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@hotwired/stimulus": "^3.2.2",
     "@hotwired/turbo-rails": "^8.0.13",
     "@popperjs/core": "^2.11.8",
     "@rails/ujs": "^7.1.3-4",
@@ -13,12 +14,13 @@
     "process": "^0.11.10"
   },
   "devDependencies": {
-    "esbuild": "^0.25.5"
+    "esbuild": "^0.25.12"
   },
   "scripts": {
-    "build": "esbuild app/javascript/*.* --bundle --minify --sourcemap --outdir=app/assets/builds",
+    "build": "esbuild app/javascript/*.* --bundle --minify --sourcemap --outdir=app/assets/builds --splitting --format=esm",
     "build:css": "esbuild app/assets/stylesheets/src/application.css --bundle --minify --sourcemap --outfile=app/assets/builds/application.css",
-    "build:watch": "esbuild app/javascript/*.* --bundle --sourcemap --outdir=app/assets/builds --watch",
+    "build:critical-css": "esbuild app/assets/stylesheets/src/critical.css --bundle --minify --outfile=app/assets/builds/critical.css --watch",
+    "build:watch": "esbuild app/javascript/*.* --bundle --sourcemap --outdir=app/assets/builds --splitting --format=esm --watch",
     "build:css:watch": "esbuild app/assets/stylesheets/src/application.css --bundle --sourcemap --outfile=app/assets/builds/application.css --watch"
   }
 }

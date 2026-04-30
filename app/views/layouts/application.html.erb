@@ -14,8 +14,14 @@
 
     <%= render "layouts/cdns" %>
 
-    <!-- Your CSS files -->
-    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <!-- Critical CSS inlined for fast first paint -->
+    <style>
+      <%= raw File.read(Rails.root.join('app/assets/builds/critical.css')) if File.exist?(Rails.root.join('app/assets/builds/critical.css')) %>
+    </style>
+
+    <!-- Non-critical CSS loaded asynchronously -->
+    <link rel="preload" href="<%= asset_path('application.css') %>" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="<%= asset_path('application.css') %>"></noscript>
 
     <%= yield :stylesheets %>
 

@@ -37,6 +37,7 @@ Rails.application.routes.draw do
     collection do
       post :create_and_send
       post :preview
+      get :datatable_data  # Server-side processing endpoint
     end
     member do
       patch :approve
