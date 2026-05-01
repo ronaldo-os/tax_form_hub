@@ -42,12 +42,52 @@ function loadPageSpecificModules() {
 // Always load network search (small utility)
 import './network_search';
 
+// Register Service Worker for PWA functionality
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then((registration) => {
+        console.log('[PWA] Service Worker registered:', registration.scope);
+
+        // Check for updates periodically
+        setInterval(() => {
+          registration.update();
+        }, 60 * 60 * 1000); // Check every hour
+      })
+      .catch((error) => {
+        console.log('[PWA] Service Worker registration failed:', error);
+      });
+
+    // Listen for service worker updates
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('[PWA] New service worker activated, reloading...');
+      window.location.reload();
+    });
+  });
+}
 
 import Rails from "@rails/ujs";
 import "@hotwired/turbo-rails";
+import { Application } from "@hotwired/stimulus";
 Rails.start();
 
+// Initialize Stimulus application
+const stimulusApplication = Application.start();
 
+// Configure Stimulus
+stimulusApplication.debug = false;
+
+// Import Stimulus controllers explicitly (import.meta.glob not supported by esbuild)
+import EmailValidationController from './controllers/email_validation_controller';
+import LazyLoaderController from './controllers/lazy_loader_controller';
+import PasswordToggleController from './controllers/password_toggle_controller';
+import SidebarController from './controllers/sidebar_controller';
+
+// Register all controllers
+stimulusApplication.register('email-validation', EmailValidationController);
+stimulusApplication.register('lazy-loader', LazyLoaderController);
+stimulusApplication.register('password-toggle', PasswordToggleController);
+stimulusApplication.register('sidebar', SidebarController);
 
 function updateThemeUI(theme) {
     const btn = document.getElementById('theme_toggle_btn');
