@@ -219,6 +219,23 @@ function initClientSubmissionsPage() {
     });
 }
 
+// Listen for theme changes and update modal file inputs
+document.addEventListener('theme:changed', function(e) {
+    // Update file inputs in submitDocsModal
+    const modalFileInputs = document.querySelectorAll('#submitDocsModal .file-upload-input, #submitDocsModal input[type="file"]');
+    modalFileInputs.forEach(input => {
+        // Force style recalculation
+        const className = input.className;
+        input.className = '';
+        input.className = className;
+        
+        // Force CSS variable updates
+        input.style.setProperty('background-color', '');
+        input.style.setProperty('color', '');
+        input.style.setProperty('border-color', '');
+    });
+});
+
 document.addEventListener("turbo:load", initClientSubmissionsPage);
 document.addEventListener("DOMContentLoaded", initClientSubmissionsPage);
 

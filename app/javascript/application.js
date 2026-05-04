@@ -123,12 +123,99 @@ function handleThemeToggle(e) {
     console.log('Theme toggle clicked. Current:', currentTheme, 'New:', newTheme);
     
     document.documentElement.setAttribute('data-theme', newTheme);
+    document.documentElement.setAttribute('data-bs-theme', newTheme);
     localStorage.setItem('theme', newTheme);
     updateThemeUI(newTheme);
+    
+    // Update dynamic elements that don't automatically respond to theme changes
+    updateDynamicElementsForTheme(newTheme);
     
     // Dispatch custom event to notify components of theme change
     const event = new CustomEvent('theme:changed', { detail: { theme: newTheme } });
     document.dispatchEvent(event);
+}
+
+function updateDynamicElementsForTheme(theme) {
+    // Update all badges that use theme-dependent classes (both subtle and solid)
+    const allBadges = document.querySelectorAll('.badge.bg-primary-subtle, .badge.bg-primary, .badge.bg-success-subtle, .badge.bg-success, .badge.bg-danger-subtle, .badge.bg-danger, .badge.bg-info-subtle, .badge.bg-info');
+    allBadges.forEach(badge => {
+        if (theme === 'dark') {
+            // Convert to solid colors in dark mode
+            if (badge.classList.contains('bg-primary-subtle')) {
+                badge.classList.remove('bg-primary-subtle', 'text-primary');
+                badge.classList.add('bg-primary', 'text-white');
+            }
+            if (badge.classList.contains('bg-success-subtle')) {
+                badge.classList.remove('bg-success-subtle', 'text-success-emphasis', 'text-success');
+                badge.classList.add('bg-success', 'text-white');
+            }
+            if (badge.classList.contains('bg-danger-subtle')) {
+                badge.classList.remove('bg-danger-subtle', 'text-danger');
+                badge.classList.add('bg-danger', 'text-white');
+            }
+            if (badge.classList.contains('bg-info-subtle')) {
+                badge.classList.remove('bg-info-subtle', 'text-info');
+                badge.classList.add('bg-info', 'text-white');
+            }
+        } else {
+            // Convert back to subtle colors in light mode
+            if (badge.classList.contains('bg-primary')) {
+                badge.classList.remove('bg-primary', 'text-white');
+                badge.classList.add('bg-primary-subtle', 'text-primary');
+            }
+            if (badge.classList.contains('bg-success')) {
+                badge.classList.remove('bg-success', 'text-white');
+                badge.classList.add('bg-success-subtle', 'text-success-emphasis');
+            }
+            if (badge.classList.contains('bg-danger')) {
+                badge.classList.remove('bg-danger', 'text-white');
+                badge.classList.add('bg-danger-subtle', 'text-danger');
+            }
+            if (badge.classList.contains('bg-info')) {
+                badge.classList.remove('bg-info', 'text-white');
+                badge.classList.add('bg-info-subtle', 'text-info');
+            }
+        }
+    });
+    
+    // Update DataTables if they exist
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        $('.dataTable').each(function() {
+            const dt = $(this).DataTable();
+            // Redraw without resetting paging to apply new theme styles
+            dt.draw(false);
+        });
+        
+        // Update DataTable pagination and info elements
+        $('.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate').each(function() {
+            this.style.color = 'var(--text-main)';
+        });
+    }
+    
+    // Force form controls to recalculate their styles
+    const formControls = document.querySelectorAll('.form-control, .form-select');
+    formControls.forEach(control => {
+        // Temporarily remove and re-add the class to force style recalculation
+        const className = control.className;
+        control.className = '';
+        control.className = className;
+    });
+    
+    // Specifically handle file inputs in modals
+    const modalFileInputs = document.querySelectorAll('.modal .file-upload-input, .modal input[type="file"]');
+    modalFileInputs.forEach(input => {
+        // Force style recalculation for file inputs
+        const className = input.className;
+        input.className = '';
+        input.className = className;
+        
+        // Also update the file selector button style if it exists
+        if (input.style) {
+            input.style.backgroundColor = '';
+            input.style.color = '';
+            input.style.borderColor = '';
+        }
+    });
 }
 
 // Event delegation handler for theme toggle clicks
@@ -143,9 +230,13 @@ function initApplication() {
     // Theme Toggle Logic - Ensure theme is synced from localStorage (especially after Turbo navigation)
     const savedTheme = localStorage.getItem('theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
+    document.documentElement.setAttribute('data-bs-theme', savedTheme);
     
     // Initial UI update
     updateThemeUI(savedTheme);
+    
+    // Initialize dynamic elements for current theme
+    updateDynamicElementsForTheme(savedTheme);
 
     // Setup theme toggle button listener using vanilla JS event delegation
     document.removeEventListener('click', handleThemeToggleEvent);

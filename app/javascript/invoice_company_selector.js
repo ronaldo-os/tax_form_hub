@@ -124,10 +124,17 @@ export function initCompanySelector() {
         const a = document.createElement('a');
         a.href = "#";
         a.className = "list-group-item list-group-item-action p-2";
+        
+        // Get current theme for badge styling
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const badgeClass = currentTheme === 'dark' ? 
+            'bg-success text-white' : 
+            'bg-success-subtle text-success-emphasis';
+        
         a.innerHTML = `
         <div class="d-flex w-100 justify-content-between align-items-center">
             <h6 class="mb-0 fw-bold">${company.name || 'Unnamed'}</h6>
-            ${type === 'network' ? '<span class="badge bg-success-subtle text-success-emphasis rounded-pill" style="font-size: 0.7em;">Connected</span>' : ''}
+            ${type === 'network' ? `<span class="badge ${badgeClass} rounded-pill" style="font-size: 0.7em;">Connected</span>` : ''}
         </div>
         <small class="text-muted d-block text-truncate" style="max-width: 100%;">${company.address || 'No address'}</small>
       `;

@@ -34,6 +34,14 @@ const initInvoiceForm = () => {
     return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
+  function getThemeAwareBadgeClass(text, color) {
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    const badgeClass = currentTheme === 'dark' ? 
+      `bg-${color} text-white` : 
+      `bg-${color}-subtle text-${color}`;
+    return `<span class="badge ${badgeClass} small">${text}</span>`;
+  }
+
   function buildTaxOptions(selectedRate) {
     if (!window.TAX_RATES) return '<option value="0">0%</option>';
     let options = `<option value="" disabled ${selectedRate === undefined || selectedRate === null ? 'selected' : ''}>Select Tax</option>`;
@@ -2300,7 +2308,7 @@ const initInvoiceForm = () => {
                                           <span class="mb-2 text-truncate small fw-bold" style="max-width: 100%;" title="${file.name}">
                                               ${file.name}
                                           </span>
-                                          <span class="badge bg-primary-subtle text-primary small">New Attachment</span>
+                                          ${getThemeAwareBadgeClass('New Attachment', 'primary')}
                                       </div>
                                   </div>
                               </div>
@@ -2527,6 +2535,27 @@ const initInvoiceForm = () => {
     recalculateTotals();
   }
 };
+
+// Listen for theme changes and update dynamically generated badges
+document.addEventListener('theme:changed', function(e) {
+    // Update "New Attachment" badges (both subtle and solid)
+    const newAttachmentBadges = document.querySelectorAll('.badge.bg-primary-subtle, .badge.bg-primary');
+    newAttachmentBadges.forEach(badge => {
+        if (e.detail.theme === 'dark') {
+            // Convert to solid colors in dark mode
+            if (badge.classList.contains('bg-primary-subtle')) {
+                badge.classList.remove('bg-primary-subtle', 'text-primary');
+                badge.classList.add('bg-primary', 'text-white');
+            }
+        } else {
+            // Convert back to subtle colors in light mode
+            if (badge.classList.contains('bg-primary')) {
+                badge.classList.remove('bg-primary', 'text-white');
+                badge.classList.add('bg-primary-subtle', 'text-primary');
+            }
+        }
+    });
+});
 
 document.addEventListener("turbo:load", initInvoiceForm);
 initInvoiceForm();
