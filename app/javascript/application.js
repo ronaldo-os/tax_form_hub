@@ -30,9 +30,6 @@ function loadPageSpecificModules() {
     import(/* webpackChunkName: "companies" */ './companies');
   }
 
-  if (path.includes('/recurring_invoices')) {
-    import(/* webpackChunkName: "recurring_line_items" */ './recurring_line_items');
-  }
 
   if (path.includes('/edit_profile') || path.includes('/users/edit')) {
     import(/* webpackChunkName: "edit_profile" */ './edit_profile');

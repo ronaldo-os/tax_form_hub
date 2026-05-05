@@ -714,13 +714,6 @@ const initInvoiceForm = () => {
     updateRemoveButtons();
 
     window.discount_fieldTypeMap = {
-      recurring: [
-        { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"], cols: 2 },
-        { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"], cols: 2 },
-        { name: "recurring.every.number.2", label: "Every (day)", type: "number", cols: 2 },
-        { name: "recurring.start_date.date.2", label: "Start Date", type: "date", cols: 2 },
-        { name: "recurring.end_date.date.2", label: "End Date", type: "date", cols: 2 }
-      ],
       discount: [
         { name: "discount.discount_type.select(DISCOUNT_OPTIONS).2", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
         { name: "discount.edit_type_(if needed).text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
@@ -1606,23 +1599,7 @@ const initInvoiceForm = () => {
               </tr>
             `);
 
-          const RECURRING_FIELDS_ORDER = [
-            { name: "recurring.recurring.select(yes,no).2", label: "Recurring", type: "select", options: ["yes", "no"] },
-            { name: "recurring.interval.select(daily,weekly,monthly,yearly).2", label: "Interval", type: "select", options: ["daily", "weekly", "monthly", "yearly"] },
-            { name: "recurring.every.number.2", label: "Every (day)", type: "number" },
-            { name: "recurring.start_date.date.2", label: "Start Date", type: "date" },
-            { name: "recurring.end_date.date.2", label: "End Date", type: "date" },
-          ];
-
-          const fieldsToRender = groupKey === "recurring"
-            ? RECURRING_FIELDS_ORDER.map(def => ({
-              name: def.name,
-              label: def.label,
-              type: def.type,
-              options: def.options || [],
-              value: fields[def.name] || ""
-            }))
-            : Object.entries(fields).map(([rawKey, val]) => {
+          const fieldsToRender = Object.entries(fields).map(([rawKey, val]) => {
               let type = "text", value = "", options = [];
 
               if (typeof val === "object") {
@@ -2017,25 +1994,6 @@ const initInvoiceForm = () => {
       $(this).val(JSON.stringify(obj));
     }
   });
-
-
-  $(document).on("change", ".optional-field-row select[name*='recurring.interval']", function () {
-    const $interval = $(this);
-    const $row = $interval.closest(".optional-field-row");
-    const $everyInput = $row.find("input[name*='recurring.every']");
-
-    if ($interval.val() === "daily") {
-      $everyInput.val(0).prop("disabled", true);
-    } else {
-      $everyInput.prop("disabled", false);
-      if ($everyInput.val() == 0) {
-        $everyInput.val(1);
-      }
-    }
-  });
-
-  // Run once on page load for already-filled rows
-  $(".optional-field-row select[name*='recurring.interval']").trigger("change");
 
   function updateCurrencyFields() {
     let selectedCurrency = $("#invoice_currency").val();

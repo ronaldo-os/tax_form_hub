@@ -1,7 +1,7 @@
 // Tax Form Hub - Service Worker
 // Provides PWA functionality: asset caching, offline fallback, background sync
 
-const CACHE_NAME = 'tfh-cache-v1'
+const CACHE_NAME = 'tfh-cache-v2'
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

@@ -1,6 +1,4 @@
 Rails.application.routes.draw do
-  get "recurring_invoices/index"
-  get "recurring_invoices/disable"
   resources :locations
   resources :networks, only: [:index, :create, :destroy]
   get "invoices/index"
@@ -55,13 +53,6 @@ Rails.application.routes.draw do
     resources :recommendations, only: [:create]
   end
 
-
-  resources :recurring_invoices, only: [:index, :update, :destroy] do
-    collection do
-      patch :enable
-      patch :disable
-    end
-  end
 
 
   get "up" => "rails/health#show", as: :rails_health_check

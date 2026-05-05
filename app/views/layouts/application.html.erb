@@ -90,12 +90,6 @@
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?(recurring_invoices_path) %>">
-            <%= link_to recurring_invoices_path do %>
-              <div class="app-icon"><i class="fa-solid fa-arrows-rotate z-1"></i></div>
-              <div class="app-text">Recurring Items</div>
-            <% end %>
-          </li>
 
           <li class="<%= 'app-active' if request.path.starts_with?(networks_path) %>">
             <%= link_to networks_path do %>

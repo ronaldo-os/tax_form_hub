@@ -48,7 +48,6 @@ export const DISCOUNT_OPTIONS =  [
 
 export const OPTIONAL_FIELDS = {
         "": "Add optional field",
-        "recurring": "Recurring",
         "discount": "Discount",
         "charge": "Charge (e.g. freight)",
         "bolid": "Transport Reference",
