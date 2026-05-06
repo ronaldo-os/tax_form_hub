@@ -39,8 +39,13 @@ function loadPageSpecificModules() {
 // Always load network search (small utility)
 import './network_search';
 
-// Register Service Worker for PWA functionality
-if ('serviceWorker' in navigator) {
+// Register Service Worker for PWA functionality (skip in development)
+const isDevelopment = window.location.hostname === 'localhost' ||
+                      window.location.hostname === '127.0.0.1' ||
+                      window.location.port === '3000' || 
+                      window.location.port === '9007';
+
+if ('serviceWorker' in navigator && !isDevelopment) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then((registration) => {
@@ -61,6 +66,8 @@ if ('serviceWorker' in navigator) {
       window.location.reload();
     });
   });
+} else if (isDevelopment) {
+  console.log('[PWA] Service Worker disabled in development mode');
 }
 
 import Rails from "@rails/ujs";

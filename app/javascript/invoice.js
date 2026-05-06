@@ -805,6 +805,18 @@ const initInvoiceForm = () => {
       receiptlineiddocumentreference: [
         { name: "receiptlineiddocumentreference.goods_receipt_line_reference.text.4", label: "Goods Receipt Line Reference", type: "text", cols: 4 }
       ],
+      subscription: [
+        { name: "subscription.billing_cycle.select(monthly,quarterly,annual).4", label: "Billing Cycle", type: "select", options: ["monthly", "quarterly", "annual"], cols: 4 },
+        { name: "subscription.start_date.date.4", label: "Start Date", type: "date", cols: 4 },
+        { name: "subscription.renewal_date.date.4", label: "Renewal Date", type: "date", cols: 4 },
+        { name: "subscription.quantity.number.4", label: "Quantity (Accounts)", type: "number", cols: 4 }
+      ],
+      subscription_addition: [
+        { name: "subscription_addition.accounts_added.number.3", label: "Accounts Added", type: "number", cols: 3 },
+        { name: "subscription_addition.activation_date.date.3", label: "Activation Date", type: "date", cols: 3 },
+        { name: "subscription_addition.pro_rated_discount.text.3", label: "Pro-rated Discount", type: "text", cols: 3 },
+        { name: "subscription_addition.pro_rated_amount.text.3", label: "Pro-rated Amount", type: "text_only", cols: 3 }
+      ],
     };
 
 
@@ -828,6 +840,124 @@ const initInvoiceForm = () => {
           $editInput.val(selectedValue).trigger('input');
         }
       }
+    });
+
+    // Auto-calculate renewal date based on start date and billing cycle
+    function calculateRenewalDate(startDateStr, billingCycle) {
+      if (!startDateStr || !billingCycle) return '';
+      const startDate = new Date(startDateStr);
+      if (isNaN(startDate.getTime())) return '';
+
+      let months = 0;
+      switch (billingCycle) {
+        case 'monthly':
+          months = 1;
+          break;
+        case 'quarterly':
+          months = 3;
+          break;
+        case 'annual':
+          months = 12;
+          break;
+        default:
+          return '';
+      }
+
+      const renewalDate = new Date(startDate);
+      renewalDate.setMonth(renewalDate.getMonth() + months);
+      return renewalDate.toISOString().split('T')[0];
+    }
+
+    function updateRenewalDate($row) {
+      const billingCycle = $row.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val();
+      const $startDateInput = $row.find('input[name*="[optional_fields][subscription.start_date]"]');
+      const startDate = $startDateInput.val();
+      const $renewalDateInput = $row.find('input[name*="[optional_fields][subscription.renewal_date]"]');
+
+      if (billingCycle && startDate) {
+        const renewalDate = calculateRenewalDate(startDate, billingCycle);
+        $renewalDateInput.val(renewalDate);
+      }
+    }
+
+    $(document).on('change.invoice_form', 'select[name*="[optional_fields][subscription.billing_cycle]"]', function () {
+      const $row = $(this).closest('tr.optional-field-row');
+      updateRenewalDate($row);
+    });
+
+    $(document).on('change.invoice_form', 'input[name*="[optional_fields][subscription.start_date]"]', function () {
+      const $row = $(this).closest('tr.optional-field-row');
+      updateRenewalDate($row);
+    });
+
+    // Mid-cycle addition pro-rated calculation
+    function getCycleDays(billingCycle) {
+      switch (billingCycle) {
+        case 'monthly': return 30;
+        case 'quarterly': return 90;
+        case 'annual': return 365;
+        default: return 30;
+      }
+    }
+
+    function calculateProRatedAmount(accountsAdded, activationDateStr, billingCycle, unitPrice, renewalDateStr) {
+      if (!accountsAdded || !activationDateStr || !billingCycle || !unitPrice || !renewalDateStr) return null;
+
+      const activationDate = new Date(activationDateStr);
+      const renewalDate = new Date(renewalDateStr);
+      const cycleDays = getCycleDays(billingCycle);
+
+      const remainingDays = Math.max(0, Math.ceil((renewalDate - activationDate) / (1000 * 60 * 60 * 24)));
+
+      if (remainingDays <= 0) return { proRatedPrice: "0.00", discount: "0.00", remainingDays: 0 };
+
+      const proRatedPrice = unitPrice * (remainingDays / cycleDays) * accountsAdded;
+      const fullPrice = unitPrice * accountsAdded;
+      const discount = fullPrice - proRatedPrice;
+
+      return { proRatedPrice: proRatedPrice.toFixed(2), discount: discount.toFixed(2), remainingDays };
+    }
+
+    function updateProRatedAmount($row) {
+      // Find parent line item by looking at data-line-index
+      const rowIndex = $row.data('line-index');
+      const $lineItem = $(`tr.line-item[data-line-index="${rowIndex}"]`);
+
+      if (!$lineItem.length) return;
+
+      const accountsAdded = parseInt($row.find('input[name*="[optional_fields][subscription_addition.accounts_added]"]').val()) || 0;
+      const activationDate = $row.find('input[name*="[optional_fields][subscription_addition.activation_date]"]').val();
+
+      // Get subscription data from the subscription optional row
+      const $subscriptionRow = $lineItem.nextUntil('.line-item', '.optional-field-row[data-optional-group="subscription"]');
+      const billingCycle = $subscriptionRow.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val();
+      const renewalDateStr = $subscriptionRow.find('input[name*="[optional_fields][subscription.renewal_date]"]').val();
+      const unitPrice = parseCurrency($lineItem.find('.price').val()) || 0;
+
+      if (accountsAdded && activationDate && billingCycle && renewalDateStr) {
+        const result = calculateProRatedAmount(accountsAdded, activationDate, billingCycle, unitPrice, renewalDateStr);
+        if (result) {
+          $row.find('input[name*="[optional_fields][subscription_addition.pro_rated_discount]"]').val(result.discount);
+          $row.find('.optional-total[data-total-type="subscription_addition"]').text(formatCurrency(result.proRatedPrice));
+          $row.find('.optional-total-input').val(result.proRatedPrice);
+        }
+      }
+    }
+
+    $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription_addition"] input, .optional-field-row[data-optional-group="subscription_addition"] select', function () {
+      const $row = $(this).closest('tr.optional-field-row');
+      updateProRatedAmount($row);
+    });
+
+    // Also recalculate when subscription fields change (to update existing additions)
+    $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription"] input, .optional-field-row[data-optional-group="subscription"] select', function () {
+      const $row = $(this).closest('tr.optional-field-row');
+      const rowIndex = $row.data('line-index');
+
+      // Update all associated subscription additions
+      $row.siblings('.optional-field-row[data-optional-group="subscription_addition"]').filter(`[data-line-index="${rowIndex}"]`).each(function () {
+        updateProRatedAmount($(this));
+      });
     });
 
     $(document).on('change.invoice_form', 'select[id^="additional_field_"]', function () {

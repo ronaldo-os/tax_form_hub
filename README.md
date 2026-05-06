@@ -39,3 +39,12 @@ rails assets:precompile
 6. **Run the Server**
 rails s
 
+### Service Worker Cache Updates
+
+When modifying JavaScript or CSS files, the service worker cache version must be updated to ensure users receive the latest assets.
+
+1. Open `public/service-worker.js`
+2. Increment the `CACHE_NAME` version (e.g., `tfh-cache-v2` → `tfh-cache-v3`)
+3. Deploy the changes
+4. Users will automatically receive the updated assets on their next visit
+
