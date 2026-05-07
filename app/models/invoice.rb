@@ -67,6 +67,59 @@ class Invoice < ApplicationRecord
     )
   end
 
+  # Calculate prorated discounts for all subscription additions in this invoice
+  # @return [Array<Hash>] Array of proration calculations with line item references
+  def calculate_prorated_discounts
+    ProrationService.calculate_invoice_prorations(line_items_data)
+  end
+
+  # Build discount breakdown for display under line items
+  # @return [Hash] Hash mapping line item indices to their discount breakdowns
+  def discount_breakdown
+    @discount_breakdown ||= ProrationService.build_discount_breakdown(line_items_data)
+  end
+
+  # Check if invoice has any prorated subscription additions
+  # @return [Boolean]
+  def has_prorated_additions?
+    discount_breakdown.present?
+  end
+
+  # Calculate total discount amount from prorations
+  # @return [Float] Total discount amount
+  def total_prorated_discount
+    calculate_prorated_discounts.sum { |p| p[:discount_amount].to_f }
+  end
+
+  # Regenerate prorated calculations - call when line items change
+  # This updates the pro_rated_discount field in subscription_addition optional fields
+  def regenerate_proration_calculations
+    return unless line_items_data.present?
+
+    prorations = calculate_prorated_discounts
+
+    # Update line_items_data with calculated discounts
+    prorations.each do |proration|
+      index = proration[:line_item_index]
+      item = line_items_data[index]
+      next unless item && item['optional_fields']
+
+      # Find the specific subscription_addition group
+      item['optional_fields'].each do |group_key, fields|
+        next unless group_key.to_s.start_with?('subscription_addition')
+
+        # Update the pro_rated_discount field if it exists in this group
+        discount_key = fields.keys.find { |k| k.include?('pro_rated_discount') }
+        if discount_key.present?
+          fields[discount_key] = proration[:discount_amount].to_s
+        end
+      end
+    end
+
+    # Mark for update if needed
+    self.line_items_data_will_change! if has_changes_to_save?
+  end
+
   private
 
   def line_items_tax_selected

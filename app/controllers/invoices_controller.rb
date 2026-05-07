@@ -247,6 +247,9 @@ class InvoicesController < ApplicationController
         line_item
       end
       @invoice.line_items_data = processed_items
+
+      # Calculate and apply prorated discounts for mid-cycle account additions
+      @invoice.regenerate_proration_calculations
     end
 
     if @invoice.save
@@ -284,6 +287,10 @@ class InvoicesController < ApplicationController
         line_item
       end
       @invoice.line_items_data = processed_items
+
+      # Calculate and apply prorated discounts for mid-cycle account additions
+      @invoice.regenerate_proration_calculations
+
       clean_params.delete(:line_items_attributes)
     end
 

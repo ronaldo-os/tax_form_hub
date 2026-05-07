@@ -168,6 +168,24 @@
                   <td class="text-end fw-semibold"><%= number_with_precision(item["total"].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></td>
                 </tr>
 
+                <!-- Discount Breakdown for Subscription Additions -->
+                <% if invoice.discount_breakdown[index].present? %>
+                  <% invoice.discount_breakdown[index].each do |discount| %>
+                    <tr class="discount-breakdown-row bg-light">
+                      <td></td>
+                      <td colspan="5" class="small ps-3">
+                        <span class="text-success">
+                          <i class="bi bi-dash-circle"></i> Discount:
+                        </span>
+                        <span class="text-muted"><%= discount[:description] %></span>
+                      </td>
+                      <td class="text-end fw-semibold text-success">
+                        -<%= number_with_precision(discount[:discount_amount].to_f, precision: 2, delimiter: ',') %>
+                      </td>
+                    </tr>
+                  <% end %>
+                <% end %>
+
                 <!-- Optional fields -->
                 <% if item["optional_fields"].present? %>
                   <% item["optional_fields"].each do |group_name, fields| %>
