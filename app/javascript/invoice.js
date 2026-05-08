@@ -57,7 +57,7 @@ const initInvoiceForm = () => {
 
   function buildUnitOptions(selectedUnit) {
     if (!window.UNIT_OPTIONS || window.UNIT_OPTIONS.length === 0) {
-      let opts = `<option value="pcs" ${selectedUnit === 'pcs' ? 'selected' : ''}>pcs</option>`;
+      let opts = `<option value="License" ${selectedUnit === 'License' ? 'selected' : ''}>License</option>`;
       opts += `<option value="custom" class="fw-bold text-primary">+ Manage/Add Unit</option>`;
       return opts;
     }
@@ -85,7 +85,7 @@ const initInvoiceForm = () => {
           <td><input type="text" name="invoice[line_items_attributes][${index}][item_id]" class="form-control item-id" required></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description" required></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
-          <td><select name="invoice[line_items_attributes][${index}][unit]" class="form-select unit" required>${buildUnitOptions('pcs')}</select></td>
+          <td><select name="invoice[line_items_attributes][${index}][unit]" class="form-select unit" required>${buildUnitOptions('License')}</select></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][price]" class="form-control price" required></td>
           <td><select name="invoice[line_items_attributes][${index}][tax]" class="form-select tax" required>${buildTaxOptions(selectedTax)}</select></td>
           <td class="text-end total">0.00</td>
@@ -157,9 +157,9 @@ const initInvoiceForm = () => {
         modal.show();
       }
       // Revert selection to avoid staying on 'custom'
-      // If it's a new line, default to pcs. If editing, ideally we'd revert to previous, 
-      // but for now pcs is a safe fallback for the UI state.
-      $(this).val('pcs');
+      // If it's a new line, default to License. If editing, ideally we'd revert to previous,
+      // but for now License is a safe SaaS fallback for the UI state.
+      $(this).val('License');
     }
   });
 
@@ -918,6 +918,18 @@ const initInvoiceForm = () => {
       return { proRatedPrice: proRatedPrice.toFixed(2), discount: discount.toFixed(2), remainingDays };
     }
 
+    function syncSubscriptionQuantityToLineItem($subscriptionRow) {
+      const rowIndex = $subscriptionRow.data('line-index');
+      const $lineItem = $(`tr.line-item[data-line-index="${rowIndex}"]`);
+      if (!$lineItem.length) return;
+
+      const quantityInput = $subscriptionRow.find('input[name*="[optional_fields][subscription.quantity]"]');
+      const quantityValue = parseInt(quantityInput.val(), 10);
+      if (quantityValue > 0) {
+        $lineItem.find('.quantity').val(quantityValue);
+      }
+    }
+
     function updateProRatedAmount($row) {
       // Find parent line item by looking at data-line-index
       const rowIndex = $row.data('line-index');
@@ -953,6 +965,8 @@ const initInvoiceForm = () => {
     $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription"] input, .optional-field-row[data-optional-group="subscription"] select', function () {
       const $row = $(this).closest('tr.optional-field-row');
       const rowIndex = $row.data('line-index');
+
+      syncSubscriptionQuantityToLineItem($row);
 
       // Update all associated subscription additions
       $row.siblings('.optional-field-row[data-optional-group="subscription_addition"]').filter(`[data-line-index="${rowIndex}"]`).each(function () {
@@ -1357,6 +1371,16 @@ const initInvoiceForm = () => {
         $cRow.find('.optional-total-input').val(cAmount.toFixed(2));
       });
 
+      // --- Subscription addition discounts ---
+      const $subscriptionAdditionRows = $optionalRows.filter('[data-optional-group="subscription_addition"]');
+      $subscriptionAdditionRows.each(function () {
+        const $saRow = $(this);
+        const proratedDiscount = parseCurrency($saRow.find('input[name*="subscription_addition.pro_rated_discount"]').val()) || 0;
+
+        discount += proratedDiscount;
+        $saRow.find('.optional-total[data-total-type="subscription_addition"]').text(formatCurrency(proratedDiscount));
+        $saRow.find('.optional-total-input').val(proratedDiscount.toFixed(2));
+      });
 
       // Final line total
       let lineTotal = base + charge - discount;

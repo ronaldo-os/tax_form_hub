@@ -37,8 +37,8 @@
                 <p class="mb-1 fw-bold sender_recipient_text"><%= recipient.name %></p>
                 <p class="mb-1 text-muted"><%= recipient.address %></p>
                 <p class="mb-1 text-muted"><%= recipient.country.presence || 'Philippines' %></p>
-                <p class="mb-1 small">Company <%= recipient.company_id_type.presence || '-' %> number: <strong><%= recipient.company_id_number.presence || '-' %></strong></p>
-                <p class="mb-0 small">Tax <%= recipient.tax_id_type.presence || '-' %> number: <strong><%= recipient.tax_id_number.presence || '-' %></strong></p>
+                <p class="mb-1 small">Company <%= recipient.company_id_type.presence || '-' %> number: <strong><%= invoice_company_number(recipient) %></strong></p>
+                <p class="mb-0 small">Tax <%= recipient.tax_id_type.presence || '-' %> number: <strong><%= invoice_tax_number(recipient) %></strong></p>
               </div>
             <% end %>
           </div>
@@ -50,8 +50,8 @@
                   <p class="mb-1 fw-bold sender_recipient_text"><%= sender.name %></p>
                   <p class="mb-1 text-muted"><%= sender.address %></p>
                   <p class="mb-1 text-muted"><%= sender.country.presence || 'Philippines' %></p>
-                  <p class="mb-1 small">Company <%= sender.company_id_type.presence || '-' %> number: <strong><%= sender.company_id_number.presence || '-' %></strong></p>
-                  <p class="mb-0 small">Tax <%= sender.tax_id_type.presence || '-' %> number: <strong><%= sender.tax_id_number.presence || '-' %></strong></p>
+                  <p class="mb-1 small">Company <%= sender.company_id_type.presence || '-' %> number: <strong><%= invoice_company_number(sender) %></strong></p>
+                  <p class="mb-0 small">Tax <%= sender.tax_id_type.presence || '-' %> number: <strong><%= invoice_tax_number(sender) %></strong></p>
                 </div>
             <% end %>
           </div>
@@ -161,7 +161,7 @@
                 <tr class="line-item">
                   <td><%= item["item_id"] %></td>
                   <td><%= item["description"] %></td>
-                  <td><%= item["quantity"] %></td>
+                  <td><%= invoice_display_quantity(item) %></td>
                   <td><%= item["unit"] %></td>
                   <td><%= number_with_precision(item["price"].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></td>
                    <td><%= item["tax"].present? ? "#{item['tax']}%" : "-" %></td>

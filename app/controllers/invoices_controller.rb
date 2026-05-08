@@ -155,9 +155,11 @@ class InvoicesController < ApplicationController
     if params[:invoice][:line_items_attributes].present?
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
         line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
+        normalize_subscription_line_item_quantity!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
+      @invoice.regenerate_proration_calculations
     end
 
     # Set up required variables for _invoice_card partial
@@ -206,8 +208,7 @@ class InvoicesController < ApplicationController
     else
       @invoice = Invoice.new(invoice_type: params[:invoice_type] || 'sale', invoice_category: params[:category] || 'standard')
       last_invoice = current_user.invoices.where(invoice_type: @invoice.invoice_type, invoice_category: @invoice.invoice_category).order(created_at: :desc).first
-      @suggested_invoice_number = next_invoice_number_suggestion(@invoice.invoice_type, @invoice.invoice_category)
-
+    @suggested_invoice_number = Invoice.next_invoice_number_for_user(current_user, @invoice.invoice_type, @invoice.invoice_category)
       if last_invoice
         @recipient_note = last_invoice.recipient_note if last_invoice.save_notes_for_future
         @footer_notes   = last_invoice.footer_notes   if last_invoice.save_footer_notes_for_future
@@ -244,6 +245,7 @@ class InvoicesController < ApplicationController
     if params[:invoice][:line_items_attributes].present?
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
         line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
+        normalize_subscription_line_item_quantity!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -284,6 +286,7 @@ class InvoicesController < ApplicationController
         if line_item[:optional_fields].present?
           line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
         end
+        normalize_subscription_line_item_quantity!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -724,6 +727,26 @@ class InvoicesController < ApplicationController
     grouped
   end
 
+  def normalize_subscription_line_item_quantity!(line_item)
+    return line_item unless line_item.is_a?(Hash)
+
+    optional_fields = line_item[:optional_fields] || line_item['optional_fields']
+    return line_item unless optional_fields.is_a?(Hash)
+
+    subscription = optional_fields['subscription']
+    return line_item unless subscription.is_a?(Hash)
+
+    quantity_key = subscription.keys.find { |k| k.to_s.include?('quantity') }
+    return line_item unless quantity_key.present?
+
+    quantity = subscription[quantity_key]
+    return line_item if quantity.blank?
+
+    line_item[:quantity] = quantity
+    line_item['quantity'] = quantity
+    line_item
+  end
+
   def normalize_json_fields!(clean_params)
     %w[payment_terms price_adjustments invoice_info total].each do |field|
       next unless clean_params.key?(field)
@@ -845,16 +868,7 @@ class InvoicesController < ApplicationController
   end
 
   def next_invoice_number_suggestion(type = 'sale', category = 'standard')
-    last_number = current_user.invoices.where(invoice_type: type, invoice_category: category).order(:created_at).pluck(:invoice_number).compact.last
-    return (category == 'quote' ? "Q-000-001" : "000-001") unless last_number  # Default for first invoice
-
-    if last_number =~ /\d+$/
-      prefix = last_number.gsub(/\d+$/, "")
-      num = last_number.match(/(\d+)$/)[1].to_i + 1
-      "#{prefix}#{num.to_s.rjust(3, '0')}"
-    else
-      "#{last_number}-001"
-    end
+    Invoice.next_invoice_number_for_user(current_user, type, category)
   end
 
   def set_form_resources

@@ -31,6 +31,19 @@ class Invoice < ApplicationRecord
     total["grand_total"].to_f
   end
 
+  def self.next_invoice_number_for_user(user, type = "sale", category = "standard")
+    last_number = user.invoices.where(invoice_type: type, invoice_category: category).where.not(invoice_number: [nil, ""]).order(:created_at).pluck(:invoice_number).last
+    return (category == 'quote' ? "Q-000-001" : "000-001") unless last_number
+
+    if last_number =~ /\d+$/
+      prefix = last_number.gsub(/\d+$/, "")
+      num = last_number.match(/(\d+)$/)[1].to_i + 1
+      "#{prefix}#{num.to_s.rjust(3, '0')}"
+    else
+      "#{last_number}-001"
+    end
+  end
+
   def sender_company
     sale_from || user&.company
   end
