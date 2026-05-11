@@ -14,21 +14,29 @@ class ProrationService
   # @param activation_date [Date] Date when accounts were activated
   # @param billing_cycle [String] Billing cycle type (monthly, quarterly, annual)
   # @param unit_price [Float] Full price per account for the cycle
+  # @param cycle_start [Date] Start date of the current billing cycle
   # @param renewal_date [Date] End date of the current billing cycle
   # @return [Hash] Contains pro_rated_price, discount_amount, remaining_days, cycle_days
-  def self.calculate_proration(accounts_added:, activation_date:, billing_cycle:, unit_price:, renewal_date:)
+  def self.calculate_proration(accounts_added:, activation_date:, billing_cycle:, unit_price:, cycle_start:, renewal_date:)
     return nil if accounts_added.nil? || accounts_added.to_s.empty? ||
                   activation_date.nil? || billing_cycle.nil? || billing_cycle.to_s.empty? ||
                   unit_price.nil? || unit_price.to_s.empty? ||
-                  renewal_date.nil?
+                  cycle_start.nil? || renewal_date.nil?
 
     accounts = accounts_added.to_i
     return nil if accounts <= 0
 
-    cycle_days = CYCLE_DAYS[billing_cycle.to_s.downcase] || 30
+    cycle_start_date = cycle_start.to_date
+    renewal_date = renewal_date.to_date
+    activation_date = activation_date.to_date
 
-    # Calculate remaining days from activation to renewal
-    remaining_days = (renewal_date.to_date - activation_date.to_date).to_i
+    # Ensure we use the actual billing cycle length between start and renewal
+    cycle_days = (renewal_date - cycle_start_date).to_i
+    return zero_result if cycle_days <= 0
+
+    # Proration should only apply for the time from activation until the renewal within the same cycle
+    effective_start = [activation_date, cycle_start_date].max
+    remaining_days = (renewal_date - effective_start).to_i
     remaining_days = 0 if remaining_days < 0
 
     return zero_result if remaining_days <= 0
@@ -60,6 +68,7 @@ class ProrationService
     accounts_added = extract_field_value(subscription_addition, 'accounts_added')
     activation_date = extract_field_value(subscription_addition, 'activation_date')
     billing_cycle = extract_field_value(subscription, 'billing_cycle')
+    cycle_start = extract_field_value(subscription, 'start_date')
     renewal_date = extract_field_value(subscription, 'renewal_date')
 
     calculate_proration(
@@ -67,6 +76,7 @@ class ProrationService
       activation_date: parse_date(activation_date),
       billing_cycle: billing_cycle,
       unit_price: unit_price.to_f,
+      cycle_start: parse_date(cycle_start),
       renewal_date: parse_date(renewal_date)
     )
   end
