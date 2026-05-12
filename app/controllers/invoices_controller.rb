@@ -156,6 +156,7 @@ class InvoicesController < ApplicationController
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
         line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
         normalize_subscription_line_item_quantity!(line_item)
+        normalize_subscription_renewal_dates!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -246,6 +247,7 @@ class InvoicesController < ApplicationController
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
         line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
         normalize_subscription_line_item_quantity!(line_item)
+        normalize_subscription_renewal_dates!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -287,6 +289,7 @@ class InvoicesController < ApplicationController
           line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
         end
         normalize_subscription_line_item_quantity!(line_item)
+        normalize_subscription_renewal_dates!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -383,6 +386,7 @@ class InvoicesController < ApplicationController
     if params[:invoice][:line_items_attributes].present?
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
         line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
+        normalize_subscription_renewal_dates!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -468,6 +472,7 @@ class InvoicesController < ApplicationController
         if line_item[:optional_fields].present?
           line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
         end
+        normalize_subscription_renewal_dates!(line_item)
         line_item
       end
       original.line_items_data = processed_items
@@ -745,6 +750,53 @@ class InvoicesController < ApplicationController
     line_item[:quantity] = quantity
     line_item['quantity'] = quantity
     line_item
+  end
+
+  def normalize_subscription_renewal_dates!(line_item)
+    return line_item unless line_item.is_a?(Hash)
+
+    optional_fields = line_item[:optional_fields] || line_item['optional_fields']
+    return line_item unless optional_fields.is_a?(Hash)
+
+    subscription = optional_fields['subscription']
+    return line_item unless subscription.is_a?(Hash)
+
+    billing_cycle = subscription['billing_cycle']
+    start_date = subscription['start_date']
+    return line_item if billing_cycle.blank? || start_date.blank?
+
+    expected_renewal_date = calculate_expected_renewal_date(start_date, billing_cycle)
+    return line_item unless expected_renewal_date
+
+    renewal_date_key = subscription.keys.find { |k| k.to_s.include?('renewal_date') } || 'renewal_date'
+    current_renewal_date = subscription[renewal_date_key]
+
+    if current_renewal_date.blank? || current_renewal_date.to_s != expected_renewal_date
+      subscription[renewal_date_key] = expected_renewal_date
+    end
+
+    line_item
+  end
+
+  def calculate_expected_renewal_date(start_date_str, billing_cycle)
+    return nil if start_date_str.blank? || billing_cycle.blank?
+
+    start_date = if start_date_str.is_a?(Date)
+                   start_date_str
+                 else
+                   Date.parse(start_date_str) rescue nil
+                 end
+    return nil unless start_date
+
+    months = case billing_cycle.to_s
+             when 'monthly' then 1
+             when 'quarterly' then 3
+             when 'annual' then 12
+             else nil
+             end
+    return nil unless months
+
+    (start_date >> months).strftime('%Y-%m-%d')
   end
 
   def normalize_json_fields!(clean_params)

@@ -900,14 +900,19 @@ const initInvoiceForm = () => {
       }
     }
 
-    function calculateProRatedAmount(accountsAdded, activationDateStr, billingCycle, unitPrice, renewalDateStr) {
-      if (!accountsAdded || !activationDateStr || !billingCycle || !unitPrice || !renewalDateStr) return null;
+    function calculateProRatedAmount(accountsAdded, activationDateStr, billingCycle, cycleStartStr, unitPrice, renewalDateStr) {
+      if (!accountsAdded || !activationDateStr || !billingCycle || !cycleStartStr || !unitPrice || !renewalDateStr) return null;
 
       const activationDate = new Date(activationDateStr);
+      const cycleStartDate = new Date(cycleStartStr);
       const renewalDate = new Date(renewalDateStr);
-      const cycleDays = getCycleDays(billingCycle);
+      if (isNaN(activationDate.getTime()) || isNaN(cycleStartDate.getTime()) || isNaN(renewalDate.getTime())) return null;
 
-      const remainingDays = Math.max(0, Math.ceil((renewalDate - activationDate) / (1000 * 60 * 60 * 24)));
+      const cycleDays = Math.ceil((renewalDate - cycleStartDate) / (1000 * 60 * 60 * 24));
+      if (cycleDays <= 0) return { proRatedPrice: "0.00", discount: "0.00", remainingDays: 0 };
+
+      const effectiveStart = activationDate > cycleStartDate ? activationDate : cycleStartDate;
+      const remainingDays = Math.max(0, Math.ceil((renewalDate - effectiveStart) / (1000 * 60 * 60 * 24)));
 
       if (remainingDays <= 0) return { proRatedPrice: "0.00", discount: "0.00", remainingDays: 0 };
 
@@ -943,11 +948,12 @@ const initInvoiceForm = () => {
       // Get subscription data from the subscription optional row
       const $subscriptionRow = $lineItem.nextUntil('.line-item', '.optional-field-row[data-optional-group="subscription"]');
       const billingCycle = $subscriptionRow.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val();
+      const cycleStart = $subscriptionRow.find('input[name*="[optional_fields][subscription.start_date]"]').val();
       const renewalDateStr = $subscriptionRow.find('input[name*="[optional_fields][subscription.renewal_date]"]').val();
       const unitPrice = parseCurrency($lineItem.find('.price').val()) || 0;
 
-      if (accountsAdded && activationDate && billingCycle && renewalDateStr) {
-        const result = calculateProRatedAmount(accountsAdded, activationDate, billingCycle, unitPrice, renewalDateStr);
+      if (accountsAdded && activationDate && billingCycle && cycleStart && renewalDateStr) {
+        const result = calculateProRatedAmount(accountsAdded, activationDate, billingCycle, cycleStart, unitPrice, renewalDateStr);
         if (result) {
           $row.find('input[name*="[optional_fields][subscription_addition.pro_rated_discount]"]').val(result.discount);
           $row.find('.optional-total[data-total-type="subscription_addition"]').text(formatCurrency(result.proRatedPrice));

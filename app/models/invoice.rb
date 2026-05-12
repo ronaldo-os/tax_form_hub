@@ -19,6 +19,8 @@ class Invoice < ApplicationRecord
   attribute :invoice_category, :string, default: "standard"
   enum invoice_category: { standard: "standard", credit_note: "credit_note", quote: "quote" }
 
+  before_validation :normalize_subscription_renewal_dates
+
   validate :attachments_type_allowed
   validate :line_items_tax_selected
   validate :credit_note_number_required
@@ -109,6 +111,7 @@ class Invoice < ApplicationRecord
   def regenerate_proration_calculations
     return unless line_items_data.present?
 
+    normalize_subscription_renewal_dates
     prorations = calculate_prorated_discounts
 
     # Update line_items_data with calculated discounts
@@ -131,6 +134,52 @@ class Invoice < ApplicationRecord
 
     # Mark for update if needed
     self.line_items_data_will_change! if has_changes_to_save?
+  end
+
+  def normalize_subscription_renewal_dates
+    return if line_items_data.blank?
+
+    line_items_data.each do |item|
+      next unless item.is_a?(Hash)
+      optional_fields = item['optional_fields']
+      next unless optional_fields.is_a?(Hash)
+
+      subscription = optional_fields['subscription']
+      next unless subscription.is_a?(Hash)
+
+      billing_cycle = subscription['billing_cycle']
+      start_date = subscription['start_date']
+      next if billing_cycle.blank? || start_date.blank?
+
+      expected_renewal_date = expected_renewal_date_for(start_date, billing_cycle)
+      next unless expected_renewal_date
+
+      renewal_date_key = subscription.keys.find { |k| k.to_s.include?('renewal_date') } || 'renewal_date'
+      current_renewal_date = subscription[renewal_date_key]
+
+      if current_renewal_date.blank? || current_renewal_date.to_s != expected_renewal_date
+        subscription[renewal_date_key] = expected_renewal_date
+      end
+    end
+  end
+
+  def expected_renewal_date_for(start_date_str, billing_cycle)
+    start_date = if start_date_str.is_a?(Date)
+                   start_date_str
+                 else
+                   Date.parse(start_date_str) rescue nil
+                 end
+    return nil unless start_date
+
+    months = case billing_cycle.to_s
+             when 'monthly' then 1
+             when 'quarterly' then 3
+             when 'annual' then 12
+             else nil
+             end
+    return nil unless months
+
+    (start_date >> months).strftime('%Y-%m-%d')
   end
 
   private
