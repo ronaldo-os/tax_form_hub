@@ -116,12 +116,14 @@ class Invoice < ApplicationRecord
 
     # Update line_items_data with calculated discounts
     prorations.each do |proration|
-      index = proration[:line_item_index]
-      item = line_items_data[index]
-      next unless item && item['optional_fields']
+      # Find the addition line item by index
+      addition_index = proration[:addition_line_item_index]
+      addition_item = line_items_data[addition_index]
+
+      next unless addition_item && addition_item['optional_fields']
 
       # Find the specific subscription_addition group
-      item['optional_fields'].each do |group_key, fields|
+      addition_item['optional_fields'].each do |group_key, fields|
         next unless group_key.to_s.start_with?('subscription_addition')
 
         # Update the pro_rated_discount field if it exists in this group
@@ -129,7 +131,17 @@ class Invoice < ApplicationRecord
         if discount_key.present?
           fields[discount_key] = proration[:discount_amount].to_s
         end
+
+        # Update the pro_rated_amount field if it exists
+        amount_key = fields.keys.find { |k| k.include?('pro_rated_amount') }
+        if amount_key.present?
+          fields[amount_key] = proration[:pro_rated_price].to_s
+        end
       end
+
+      # Update the line item price and quantity for the addition
+      addition_item['price'] = proration[:pro_rated_price].to_s
+      addition_item['quantity'] = proration[:accounts_added].to_s
     end
 
     # Mark for update if needed

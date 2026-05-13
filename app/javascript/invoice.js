@@ -812,10 +812,11 @@ const initInvoiceForm = () => {
         { name: "subscription.quantity.number.4", label: "Quantity (Accounts)", type: "number", cols: 4 }
       ],
       subscription_addition: [
+        { name: "subscription_addition.base_subscription_id.text.4", label: "Base Subscription ID", type: "text", cols: 4 },
         { name: "subscription_addition.accounts_added.number.3", label: "Accounts Added", type: "number", cols: 3 },
         { name: "subscription_addition.activation_date.date.3", label: "Activation Date", type: "date", cols: 3 },
-        { name: "subscription_addition.pro_rated_discount.text.3", label: "Pro-rated Discount", type: "text", cols: 3 },
-        { name: "subscription_addition.pro_rated_amount.text.3", label: "Pro-rated Amount", type: "text_only", cols: 3 }
+        { name: "subscription_addition.pro_rated_discount.text.2", label: "Pro-rated Discount", type: "text", cols: 2 },
+        { name: "subscription_addition.pro_rated_amount.text_only.2", label: "Pro-rated Amount", type: "text_only", cols: 2 }
       ],
     };
 
@@ -935,69 +936,13 @@ const initInvoiceForm = () => {
       }
     }
 
-    function updateProRatedAmount($row) {
-      // Find parent line item by looking at data-line-index
-      const rowIndex = $row.data('line-index');
-      const $lineItem = $(`tr.line-item[data-line-index="${rowIndex}"]`);
-
-      if (!$lineItem.length) return;
-
-      const accountsAdded = parseInt($row.find('input[name*="[optional_fields][subscription_addition.accounts_added]"]').val()) || 0;
-      const activationDate = $row.find('input[name*="[optional_fields][subscription_addition.activation_date]"]').val();
-
-      // Get subscription data from the subscription optional row
-      const $subscriptionRow = $lineItem.nextUntil('.line-item', '.optional-field-row[data-optional-group="subscription"]');
-      const billingCycle = $subscriptionRow.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val();
-      const cycleStart = $subscriptionRow.find('input[name*="[optional_fields][subscription.start_date]"]').val();
-      const renewalDateStr = $subscriptionRow.find('input[name*="[optional_fields][subscription.renewal_date]"]').val();
-      const unitPrice = parseCurrency($lineItem.find('.price').val()) || 0;
-
-      if (accountsAdded && activationDate && billingCycle && cycleStart && renewalDateStr) {
-        const result = calculateProRatedAmount(accountsAdded, activationDate, billingCycle, cycleStart, unitPrice, renewalDateStr);
-        if (result) {
-          $row.find('input[name*="[optional_fields][subscription_addition.pro_rated_discount]"]').val(result.discount);
-          $row.find('.optional-total[data-total-type="subscription_addition"]').text(formatCurrency(result.proRatedPrice));
-          $row.find('.optional-total-input').val(result.proRatedPrice);
-        }
-      }
-    }
-
-    $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription_addition"] input, .optional-field-row[data-optional-group="subscription_addition"] select', function () {
-      const $row = $(this).closest('tr.optional-field-row');
-      updateProRatedAmount($row);
-    });
-
-    // Also recalculate when subscription fields change (to update existing additions)
-    $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription"] input, .optional-field-row[data-optional-group="subscription"] select', function () {
-      const $row = $(this).closest('tr.optional-field-row');
-      const rowIndex = $row.data('line-index');
-
-      syncSubscriptionQuantityToLineItem($row);
-
-      // Update all associated subscription additions
-      $row.siblings('.optional-field-row[data-optional-group="subscription_addition"]').filter(`[data-line-index="${rowIndex}"]`).each(function () {
-        updateProRatedAmount($(this));
-      });
-    });
-
-    $(document).on('change.invoice_form', 'select[id^="additional_field_"]', function () {
-      const $select = $(this);
-      const selectedKey = $select.val();
-      const selectedText = $select.find("option:selected").text();
-      if (!selectedKey) return;
-
-      const $dropdownRow = $select.closest('tr.dropdown_per_line');
-      const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
-        return $(this).data('line-index') === parseInt($select.attr('id').split('_').pop());
-      });
-      const rowIndex = $lineItemRow.data('line-index');
-      if (rowIndex === undefined) {
-        console.warn("Missing data-line-index for optional field");
-        return;
-      }
-
+    function insertOptionalFieldsForLine(rowIndex, selectedKey) {
       const fields = discount_fieldTypeMap[selectedKey];
       if (!Array.isArray(fields)) return;
+
+      const $select = $(`#additional_field_${rowIndex}`);
+      const $dropdownRow = $select.closest('tr.dropdown_per_line');
+      if (!$dropdownRow.length) return;
 
       const existing = $(`#line-items .optional-field-row[data-line-index="${rowIndex}"][data-optional-group="${selectedKey}"]`);
       if (existing.length > 0) return;
@@ -1005,7 +950,7 @@ const initInvoiceForm = () => {
       let newRowHtml = `
       <tr class="optional-field-row bg-light" data-optional-group="${selectedKey}" data-line-index="${rowIndex}">
         <td></td><td></td>
-    `;
+      `;
 
       fields.forEach(field => {
         let inputHtml = '';
@@ -1078,11 +1023,9 @@ const initInvoiceForm = () => {
     </tr>`;
 
       $dropdownRow.before(newRowHtml);
-      $select.val('');
       updateCurrencyFields();
       recalculateTotals();
 
-      // ✅ Initialize Flatpickr for date fields (only show on click)
       $dropdownRow.prev().find('.flatpickr-date').each(function () {
         const fp = flatpickr(this, {
           dateFormat: "Y-m-d",
@@ -1094,6 +1037,160 @@ const initInvoiceForm = () => {
           fp.open();
         });
       });
+    }
+
+    function updateProRatedAmount($row) {
+      // For subscription additions in separate line items
+      const rowIndex = $row.data('line-index');
+      const $additionLineItem = $(`tr.line-item[data-line-index="${rowIndex}"]`);
+
+      if (!$additionLineItem.length) return;
+
+      const accountsAdded = parseInt($row.find('input[name*="[optional_fields][subscription_addition.accounts_added]"]').val()) || 0;
+      const activationDate = $row.find('input[name*="[optional_fields][subscription_addition.activation_date]"]').val();
+
+      // Find the base subscription by looking for the subscription line item that this addition references
+      const baseSubscriptionId = $additionLineItem.data('base-subscription-id');
+      const $baseSubscriptionLineItem = $(`tr.line-item:not(.subscription-addition)`).filter(function() {
+        return $(this).find('.item-id').val() === baseSubscriptionId;
+      });
+
+      if (!$baseSubscriptionLineItem.length) return;
+
+      // Get subscription data from the base subscription line item
+      const $subscriptionRow = $baseSubscriptionLineItem.nextUntil('.line-item', '.optional-field-row[data-optional-group="subscription"]');
+      const billingCycle = $subscriptionRow.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val();
+      const cycleStart = $subscriptionRow.find('input[name*="[optional_fields][subscription.start_date]"]').val();
+      const renewalDateStr = $subscriptionRow.find('input[name*="[optional_fields][subscription.renewal_date]"]').val();
+      const unitPrice = parseCurrency($baseSubscriptionLineItem.find('.price').val()) || 0;
+
+      if (accountsAdded && activationDate && billingCycle && cycleStart && renewalDateStr) {
+        const result = calculateProRatedAmount(accountsAdded, activationDate, billingCycle, cycleStart, unitPrice, renewalDateStr);
+        if (result) {
+          $row.find('input[name*="[optional_fields][subscription_addition.pro_rated_discount]"]').val(result.discount);
+          $row.find('.optional-total[data-total-type="subscription_addition"]').text(formatCurrency(result.proRatedPrice));
+          $row.find('.optional-total-input').val(result.proRatedPrice);
+
+          // Update the addition line item price and quantity
+          $additionLineItem.find('.price').val(result.proRatedPrice);
+          $additionLineItem.find('.quantity').val(accountsAdded);
+          recalculateLineTotal($additionLineItem);
+        }
+      }
+    }
+
+    $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription_addition"] input, .optional-field-row[data-optional-group="subscription_addition"] select', function () {
+      const $row = $(this).closest('tr.optional-field-row');
+      updateProRatedAmount($row);
+    });
+
+    // Also recalculate when subscription fields change (to update existing additions)
+    $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription"] input, .optional-field-row[data-optional-group="subscription"] select', function () {
+      const $row = $(this).closest('tr.optional-field-row');
+      const rowIndex = $row.data('line-index');
+
+      syncSubscriptionQuantityToLineItem($row);
+
+      // Find the base subscription line item
+      const $baseLineItem = $(`tr.line-item[data-line-index="${rowIndex}"]`);
+      const baseSubscriptionId = $baseLineItem.find('.item-id').val();
+
+      // Update all subscription addition line items that reference this base subscription
+      $(`tr.line-item.subscription-addition[data-base-subscription-id="${baseSubscriptionId}"]`).each(function() {
+        const additionIndex = $(this).data('line-index');
+        const $additionOptionalRow = $(`.optional-field-row[data-optional-group="subscription_addition"][data-line-index="${additionIndex}"]`);
+        if ($additionOptionalRow.length) {
+          updateProRatedAmount($additionOptionalRow);
+        }
+      });
+    });
+
+    $(document).on('change.invoice_form', 'select[id^="additional_field_"]', function () {
+      const $select = $(this);
+      const selectedKey = $select.val();
+      const selectedText = $select.find("option:selected").text();
+      if (!selectedKey) return;
+
+      // Special handling for subscription_addition - create a new line item instead of optional fields
+      if (selectedKey === 'subscription_addition') {
+        const $dropdownRow = $select.closest('tr.dropdown_per_line');
+        const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
+          return $(this).data('line-index') === parseInt($select.attr('id').split('_').pop());
+        });
+        const baseRowIndex = $lineItemRow.data('line-index');
+
+        // Find the base subscription line item to link to
+        const $baseSubscription = $lineItemRow;
+        const baseSubscriptionId = $baseSubscription.find('.item-id').val();
+
+        if ($baseSubscription.hasClass('subscription-addition')) {
+          showFlashMessage("Subscription additions cannot be added to another subscription addition.", "warning");
+          $select.val('');
+          return;
+        }
+
+        if (!baseSubscriptionId) {
+          showFlashMessage("Please set an Item ID for the base subscription first.", "warning");
+          $select.val('');
+          return;
+        }
+
+        // Create a new line item for the subscription addition
+        const newLineIndex = lineIndex++;
+        const additionLineItemHtml = `
+          <tr class="line-item subscription-addition" data-line-index="${newLineIndex}" data-base-subscription-id="${baseSubscriptionId}">
+            <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+            <td><input type="text" name="invoice[line_items_attributes][${newLineIndex}][item_id]" class="form-control item-id" value="${baseSubscriptionId}-addition" required></td>
+            <td><input type="text" name="invoice[line_items_attributes][${newLineIndex}][description]" class="form-control description" value="Subscription Addition - ${baseSubscriptionId}" required></td>
+            <td><input type="text" name="invoice[line_items_attributes][${newLineIndex}][quantity]" class="form-control quantity" value="1" required></td>
+            <td><select name="invoice[line_items_attributes][${newLineIndex}][unit]" class="form-select unit" required>${buildUnitOptions('License')}</select></td>
+            <td><input type="text" name="invoice[line_items_attributes][${newLineIndex}][price]" class="form-control price" value="0.00" required></td>
+            <td><select name="invoice[line_items_attributes][${newLineIndex}][tax]" class="form-select tax" required>${buildTaxOptions(null)}</select></td>
+            <td class="text-end total">0.00</td>
+            <td>
+              <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
+            </td>
+          </tr>
+          <tr class="dropdown_per_line hidden" data-line-index="${newLineIndex}">
+            <td colspan="3">
+              <select name="additional_field_${newLineIndex}" id="additional_field_${newLineIndex}" class="no-label form-select optional-type">
+                <option value="">Add optional field</option>
+                ${buildOptions(OPTIONAL_FIELDS)}
+              </select>
+            </td>
+            <td colspan="6" class="optional-fields-container"></td>
+          </tr>
+        `;
+
+        const $baseOptionRows = $lineItemRow.nextUntil('.line-item');
+        const $insertAfter = $baseOptionRows.length ? $baseOptionRows.last() : $lineItemRow;
+        $insertAfter.after(additionLineItemHtml);
+
+        // Add subscription_addition optional fields to the new line item and populate the base_subscription_id
+        insertOptionalFieldsForLine(newLineIndex, 'subscription_addition');
+        const $baseIdField = $(`tr.line-item[data-line-index="${newLineIndex}"]`).next().find('input[name*="[optional_fields][subscription_addition.base_subscription_id]"]');
+        if ($baseIdField.length) {
+          $baseIdField.val(baseSubscriptionId);
+        }
+
+        $select.val('');
+        updateRemoveButtons();
+        recalculateTotals();
+        return;
+      }
+
+      const $dropdownRow = $select.closest('tr.dropdown_per_line');
+      const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
+        return $(this).data('line-index') === parseInt($select.attr('id').split('_').pop());
+      });
+      const rowIndex = $lineItemRow.data('line-index');
+      if (rowIndex === undefined) {
+        console.warn("Missing data-line-index for optional field");
+        return;
+      }
+
+      insertOptionalFieldsForLine(rowIndex, selectedKey);
+      $select.val('');
     });
 
 

@@ -90,17 +90,27 @@ class ProrationService
 
     results = []
 
-    line_items.each_with_index do |item, index|
-      next unless item['optional_fields'] && !item['optional_fields'].empty?
+    # Find all base subscriptions and their additions
+    subscriptions = find_base_subscriptions(line_items)
+    subscription_additions = find_subscription_additions_across_line_items(line_items)
 
-      subscription = item['optional_fields']['subscription']
-      subscription_additions = find_subscription_additions(item['optional_fields'])
+    # Group additions by their base subscription reference
+    additions_by_subscription = group_additions_by_subscription(subscription_additions)
 
-      next unless subscription && !subscription.empty? && subscription_additions.any?
+    subscriptions.each do |subscription_data|
+      subscription = subscription_data[:subscription]
+      line_item_index = subscription_data[:line_item_index]
+      item = line_items[line_item_index]
+
+      # Find additions for this subscription
+      subscription_id = item['item_id']
+      additions = additions_by_subscription[subscription_id] || []
+
+      next if additions.empty?
 
       unit_price = item['price'].to_f
 
-      subscription_additions.each do |addition|
+      additions.each do |addition|
         proration = calculate_from_optional_fields(
           subscription_addition: addition[:fields],
           subscription: subscription,
@@ -113,9 +123,11 @@ class ProrationService
           activation_date = parse_date(activation_date_value)
 
           results << proration.merge(
-            line_item_index: index,
+            line_item_index: line_item_index,
             line_item_id: item['item_id'],
             line_item_description: item['description'],
+            addition_line_item_index: addition[:line_item_index],
+            addition_line_item_id: addition[:line_item_id],
             addition_group_key: addition[:group_key],
             activation_date: activation_date
           )
@@ -215,6 +227,66 @@ class ProrationService
       end
 
       additions
+    end
+
+    def find_base_subscriptions(line_items)
+      subscriptions = []
+
+      line_items.each_with_index do |item, index|
+        next unless item['optional_fields'] && item['optional_fields']['subscription']
+
+        subscription = item['optional_fields']['subscription']
+        next if subscription.empty?
+
+        subscriptions << {
+          subscription: subscription,
+          line_item_index: index,
+          line_item_id: item['item_id']
+        }
+      end
+
+      subscriptions
+    end
+
+    def find_subscription_additions_across_line_items(line_items)
+      additions = []
+
+      line_items.each_with_index do |item, index|
+        next unless item['optional_fields']
+
+        item['optional_fields'].each do |group_key, fields|
+          if group_key.to_s.start_with?('subscription_addition')
+            # Extract base subscription reference from the addition fields
+            base_subscription_id = extract_field_value(fields, 'base_subscription_id')
+            if base_subscription_id.blank?
+              # Fallback: try to extract from item description or use the item_id as fallback
+              base_subscription_id = item['item_id'].to_s.gsub(/-addition$/, '') if item['item_id']
+            end
+
+            additions << {
+              group_key: group_key,
+              fields: fields,
+              line_item_index: index,
+              line_item_id: item['item_id'],
+              base_subscription_id: base_subscription_id
+            }
+          end
+        end
+      end
+
+      additions
+    end
+
+    def group_additions_by_subscription(subscription_additions)
+      grouped = {}
+
+      subscription_additions.each do |addition|
+        base_id = addition[:base_subscription_id]
+        grouped[base_id] ||= []
+        grouped[base_id] << addition
+      end
+
+      grouped
     end
   end
 end
