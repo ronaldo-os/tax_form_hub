@@ -20,6 +20,7 @@ class User < ApplicationRecord
   has_many :recommendations, dependent: :destroy
   has_many :tax_submissions
   has_many :invoices
+  has_many :subscriptions, dependent: :destroy
   has_many :locations, dependent: :destroy
   has_one_attached :profile_image
 

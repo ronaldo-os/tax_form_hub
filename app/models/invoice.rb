@@ -3,6 +3,7 @@ class Invoice < ApplicationRecord
   belongs_to :recipient_company, class_name: "Company", optional: true
   belongs_to :sale_from, class_name: "Company", optional: true
   belongs_to :original_invoice, class_name: "Invoice", foreign_key: :credit_note_original_invoice_id, optional: true
+  belongs_to :subscription, optional: true
 
   belongs_to :ship_from_location, class_name: "Location", optional: true
   belongs_to :remit_to_location, class_name: "Location", optional: true
