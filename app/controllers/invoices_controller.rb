@@ -3,7 +3,8 @@ class InvoicesController < ApplicationController
   include HttpCaching
 
   before_action :set_form_resources, only: [:new, :edit, :create, :update]
-  before_action :set_cache_headers, only: [:index, :show]
+  before_action :disable_cache_headers, only: [:index]
+  before_action :set_cache_headers, only: [:show]
 
   # Server-side DataTables processing endpoint
   # Returns JSON data for DataTables to reduce initial page load
@@ -13,10 +14,15 @@ class InvoicesController < ApplicationController
   end
 
   def index
-    # Cache key includes user id and current time for proper invalidation
-    cache_key = "invoices_index_#{current_user.id}_#{Time.current.to_i}"
-    
-    # Cache expensive queries and computations
+    # Cache expensive queries and computations, invalidating when invoice data changes
+    last_updated_at = current_user.invoices.maximum(:updated_at)
+    cache_key = [
+      "invoices_index",
+      current_user.id,
+      current_user.invoices.count,
+      last_updated_at&.utc&.to_fs(:usec)
+    ]
+
     @invoices_data = Rails.cache.fetch(cache_key, expires_in: 15.minutes) do
       # Eager load associations to prevent N+1 queries
       base_scope = current_user.invoices

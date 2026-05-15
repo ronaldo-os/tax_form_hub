@@ -123,13 +123,13 @@ function initInvoicePage() {
             tableConfig.processing = true;
             tableConfig.ajax = {
                 url: ajaxUrl,
+                cache: false,
                 data: function(d) {
                     // Merge DataTables params with custom params
                     return $.extend({}, d, ajaxData);
                 },
                 error: function(xhr, error, thrown) {
                     console.error('DataTables server-side error:', xhr.status, error, thrown);
-                    // Show user-friendly error message
                     if (xhr.status === 500) {
                         console.error('Server error - check Rails logs for details');
                     }

@@ -31,7 +31,7 @@ function loadPageSpecificModules() {
   }
 
 
-  if (path.includes('/edit_profile') || path.includes('/users/edit')) {
+  if (path.includes('/profile/edit') || path.includes('/edit_profile') || path.includes('/users/edit')) {
     import(/* webpackChunkName: "edit_profile" */ './edit_profile');
   }
 }
@@ -423,6 +423,18 @@ document.addEventListener("turbo:render", initApplication);
 document.addEventListener("DOMContentLoaded", () => {
   initApplication();
   loadPageSpecificModules();
+});
+
+// Reload visible server-side DataTables when a page is restored from bfcache
+window.addEventListener('pageshow', function (event) {
+  if (!event.persisted) return;
+  if (typeof $ === 'undefined' || !$.fn.dataTable) return;
+
+  $.fn.dataTable.tables({ api: true }).every(function () {
+    if (this.ajax) {
+      this.ajax.reload(null, false);
+    }
+  });
 });
 
 // Global Teardown for DataTables to fix Turbo Caching issues
