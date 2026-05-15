@@ -36,9 +36,9 @@ class CompaniesController < ApplicationController
     @company = current_user.companies.build(company_params)
 
     if @company.save
-      redirect_to companies_path(@company), notice: "Company was successfully created.", status: :see_other
+      redirect_to companies_path(id: @company.slug), notice: "Company was successfully created.", status: :see_other
     else
-      @companies = current_user.companies
+      @companies = current_user.companies.with_attached_profile_image
       render :index, status: :unprocessable_entity
     end
   end
@@ -49,9 +49,9 @@ class CompaniesController < ApplicationController
     end
 
     if @company.update(company_params)
-      redirect_to companies_path(@company), notice: "Company profile updated.", status: :see_other
+      redirect_to companies_path(id: @company.slug), notice: "Company profile updated.", status: :see_other
     else
-      @companies = current_user.companies
+      @companies = current_user.companies.with_attached_profile_image
       render :index, status: :unprocessable_entity
     end
   end

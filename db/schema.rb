@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_05_071656) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_14_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -131,9 +131,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_05_071656) do
     t.boolean "archived", default: false
     t.string "invoice_category", default: "standard"
     t.bigint "credit_note_original_invoice_id"
+    t.bigint "subscription_id"
     t.index ["recipient_company_id", "status"], name: "index_invoices_on_recipient_and_status"
     t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
     t.index ["ship_from_location_id"], name: "index_invoices_on_ship_from_location_id"
+    t.index ["subscription_id", "issue_date"], name: "index_invoices_on_subscription_id_and_issue_date"
+    t.index ["subscription_id"], name: "index_invoices_on_subscription_id"
     t.index ["tax_representative_location_id"], name: "index_invoices_on_tax_representative_location_id"
     t.index ["user_id", "invoice_category", "invoice_type", "status"], name: "index_invoices_on_user_category_type_status"
     t.index ["user_id", "invoice_type", "invoice_category", "archived", "issue_date"], name: "index_invoices_on_user_type_category_archived_date"
@@ -177,6 +180,37 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_05_071656) do
     t.datetime "updated_at", null: false
     t.index ["company_id"], name: "index_recommendations_on_company_id"
     t.index ["user_id"], name: "index_recommendations_on_user_id"
+  end
+
+  create_table "subscriptions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "recipient_company_id"
+    t.bigint "sale_from_company_id"
+    t.date "start_date", null: false
+    t.date "end_date"
+    t.string "status", default: "active", null: false
+    t.string "billing_cycle", null: false
+    t.date "current_period_start", null: false
+    t.date "current_period_end", null: false
+    t.date "next_invoice_date", null: false
+    t.decimal "quantity", precision: 10, scale: 2, default: "1.0", null: false
+    t.decimal "unit_price", precision: 12, scale: 2, null: false
+    t.string "currency", default: "USD", null: false
+    t.string "description"
+    t.jsonb "line_item_data", default: {}, null: false
+    t.datetime "last_invoice_generated_at"
+    t.integer "renewal_count", default: 0, null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["next_invoice_date"], name: "index_subscriptions_on_next_invoice_date"
+    t.index ["recipient_company_id", "status"], name: "index_subscriptions_on_recipient_company_id_and_status"
+    t.index ["recipient_company_id"], name: "index_subscriptions_on_recipient_company_id"
+    t.index ["sale_from_company_id"], name: "index_subscriptions_on_sale_from_company_id"
+    t.index ["user_id", "created_at"], name: "index_subscriptions_on_user_id_and_created_at"
+    t.index ["user_id", "next_invoice_date"], name: "index_subscriptions_on_user_id_and_next_invoice_date"
+    t.index ["user_id", "status"], name: "index_subscriptions_on_user_id_and_status"
+    t.index ["user_id"], name: "index_subscriptions_on_user_id"
   end
 
   create_table "tax_rates", force: :cascade do |t|
@@ -243,12 +277,16 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_05_071656) do
   add_foreign_key "invoices", "locations", column: "remit_to_location_id"
   add_foreign_key "invoices", "locations", column: "ship_from_location_id"
   add_foreign_key "invoices", "locations", column: "tax_representative_location_id"
+  add_foreign_key "invoices", "subscriptions"
   add_foreign_key "invoices", "users"
   add_foreign_key "locations", "users"
   add_foreign_key "networks", "companies"
   add_foreign_key "networks", "users"
   add_foreign_key "recommendations", "companies"
   add_foreign_key "recommendations", "users"
+  add_foreign_key "subscriptions", "companies", column: "recipient_company_id"
+  add_foreign_key "subscriptions", "companies", column: "sale_from_company_id"
+  add_foreign_key "subscriptions", "users"
   add_foreign_key "tax_rates", "companies"
   add_foreign_key "tax_submissions", "companies"
   add_foreign_key "tax_submissions", "invoices"

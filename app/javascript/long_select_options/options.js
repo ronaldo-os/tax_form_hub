@@ -69,6 +69,8 @@ export const OPTIONAL_FIELDS = {
         "trackingid": "Freight order number",
         "serialID": "Serial number",
         "note": "Notes",
+        "subscription": "Subscription",
+        "subscription_addition": "Subscription - Mid-cycle Addition",
         "despatchlinedocumentreference": "Shipping Notice Reference",
         "despatchlineiddocumentreference": "Shipping Notice Line Reference",
         "receiptlinedocumentreference": "Goods Receipt Reference",

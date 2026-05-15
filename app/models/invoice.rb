@@ -3,6 +3,7 @@ class Invoice < ApplicationRecord
   belongs_to :recipient_company, class_name: "Company", optional: true
   belongs_to :sale_from, class_name: "Company", optional: true
   belongs_to :original_invoice, class_name: "Invoice", foreign_key: :credit_note_original_invoice_id, optional: true
+  belongs_to :subscription, optional: true
 
   belongs_to :ship_from_location, class_name: "Location", optional: true
   belongs_to :remit_to_location, class_name: "Location", optional: true
@@ -19,6 +20,8 @@ class Invoice < ApplicationRecord
   attribute :invoice_category, :string, default: "standard"
   enum invoice_category: { standard: "standard", credit_note: "credit_note", quote: "quote" }
 
+  before_validation :normalize_subscription_renewal_dates
+
   validate :attachments_type_allowed
   validate :line_items_tax_selected
   validate :credit_note_number_required
@@ -29,6 +32,19 @@ class Invoice < ApplicationRecord
 
   def grand_total
     total["grand_total"].to_f
+  end
+
+  def self.next_invoice_number_for_user(user, type = "sale", category = "standard")
+    last_number = user.invoices.where(invoice_type: type, invoice_category: category).where.not(invoice_number: [nil, ""]).order(:created_at).pluck(:invoice_number).last
+    return (category == 'quote' ? "Q-000-001" : "000-001") unless last_number
+
+    if last_number =~ /\d+$/
+      prefix = last_number.gsub(/\d+$/, "")
+      num = last_number.match(/(\d+)$/)[1].to_i + 1
+      "#{prefix}#{num.to_s.rjust(3, '0')}"
+    else
+      "#{last_number}-001"
+    end
   end
 
   def sender_company
@@ -65,6 +81,118 @@ class Invoice < ApplicationRecord
       sale_from_id: sale_from_id,
       invoice_category: "standard"
     )
+  end
+
+  # Calculate prorated discounts for all subscription additions in this invoice
+  # @return [Array<Hash>] Array of proration calculations with line item references
+  def calculate_prorated_discounts
+    ProrationService.calculate_invoice_prorations(line_items_data)
+  end
+
+  # Build discount breakdown for display under line items
+  # @return [Hash] Hash mapping line item indices to their discount breakdowns
+  def discount_breakdown
+    @discount_breakdown ||= ProrationService.build_discount_breakdown(line_items_data)
+  end
+
+  # Check if invoice has any prorated subscription additions
+  # @return [Boolean]
+  def has_prorated_additions?
+    discount_breakdown.present?
+  end
+
+  # Calculate total discount amount from prorations
+  # @return [Float] Total discount amount
+  def total_prorated_discount
+    calculate_prorated_discounts.sum { |p| p[:discount_amount].to_f }
+  end
+
+  # Regenerate prorated calculations - call when line items change
+  # This updates the pro_rated_discount field in subscription_addition optional fields
+  def regenerate_proration_calculations
+    return unless line_items_data.present?
+
+    normalize_subscription_renewal_dates
+    prorations = calculate_prorated_discounts
+
+    # Update line_items_data with calculated discounts
+    prorations.each do |proration|
+      # Find the addition line item by index
+      addition_index = proration[:addition_line_item_index]
+      addition_item = line_items_data[addition_index]
+
+      next unless addition_item && addition_item['optional_fields']
+
+      # Find the specific subscription_addition group
+      addition_item['optional_fields'].each do |group_key, fields|
+        next unless group_key.to_s.start_with?('subscription_addition')
+
+        # Update the pro_rated_discount field if it exists in this group
+        discount_key = fields.keys.find { |k| k.include?('pro_rated_discount') }
+        if discount_key.present?
+          fields[discount_key] = proration[:discount_amount].to_s
+        end
+
+        # Update the pro_rated_amount field if it exists
+        amount_key = fields.keys.find { |k| k.include?('pro_rated_amount') }
+        if amount_key.present?
+          fields[amount_key] = proration[:pro_rated_price].to_s
+        end
+      end
+
+      # Update the line item price and quantity for the addition
+      addition_item['price'] = proration[:pro_rated_price].to_s
+      addition_item['quantity'] = proration[:accounts_added].to_s
+    end
+
+    # Mark for update if needed
+    self.line_items_data_will_change! if has_changes_to_save?
+  end
+
+  def normalize_subscription_renewal_dates
+    return if line_items_data.blank?
+
+    line_items_data.each do |item|
+      next unless item.is_a?(Hash)
+      optional_fields = item['optional_fields']
+      next unless optional_fields.is_a?(Hash)
+
+      subscription = optional_fields['subscription']
+      next unless subscription.is_a?(Hash)
+
+      billing_cycle = subscription['billing_cycle']
+      start_date = subscription['start_date']
+      next if billing_cycle.blank? || start_date.blank?
+
+      expected_renewal_date = expected_renewal_date_for(start_date, billing_cycle)
+      next unless expected_renewal_date
+
+      renewal_date_key = subscription.keys.find { |k| k.to_s.include?('renewal_date') } || 'renewal_date'
+      current_renewal_date = subscription[renewal_date_key]
+
+      if current_renewal_date.blank? || current_renewal_date.to_s != expected_renewal_date
+        subscription[renewal_date_key] = expected_renewal_date
+      end
+    end
+  end
+
+  def expected_renewal_date_for(start_date_str, billing_cycle)
+    start_date = if start_date_str.is_a?(Date)
+                   start_date_str
+                 else
+                   Date.parse(start_date_str) rescue nil
+                 end
+    return nil unless start_date
+
+    months = case billing_cycle.to_s
+             when 'monthly' then 1
+             when 'quarterly' then 3
+             when 'annual' then 12
+             else nil
+             end
+    return nil unless months
+
+    (start_date >> months).strftime('%Y-%m-%d')
   end
 
   private
