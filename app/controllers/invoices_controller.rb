@@ -83,16 +83,7 @@ class InvoicesController < ApplicationController
 
     @active_tab = params[:tab] || 'sales-invoices'
 
-    # HTTP Caching
-    # Include all relevant collections in the ETag and last_modified calculation
-    all_collections = [
-      @invoices_sale, @invoices_sale_archived,
-      @invoices_purchase, @invoices_purchase_archived,
-      @quotes_sale, @quotes_sale_archived,
-      @quotes_purchase, @quotes_purchase_archived
-    ]
-    fresh_when etag: [all_collections, @active_tab], 
-               last_modified: all_collections.map { |s| s.maximum(:updated_at) }.compact.max
+
   end
 
 
@@ -114,7 +105,7 @@ class InvoicesController < ApplicationController
     @tax_representative_location_id = @invoice.tax_representative_location
 
     respond_to do |format|
-      format.html { fresh_when @invoice }
+      format.html
       format.json { render json: @invoice.as_json(include: :recipient_company) }
       format.js
       format.any(:pdf, :html) do
@@ -460,7 +451,7 @@ class InvoicesController < ApplicationController
   def destroy
     @invoice = Invoice.find(params[:id])
     @invoice.destroy
-    redirect_to invoices_path(tab: params[:tab]), notice: "Invoice deleted successfully."
+    redirect_to invoices_path(tab: params[:tab]), status: :see_other, notice: "Invoice deleted successfully."
   end
 
   def duplicate_as_purchase
@@ -561,16 +552,16 @@ class InvoicesController < ApplicationController
       else
         InvoiceMailer.invoice_approved(invoice, sender_user, current_user).deliver_later
       end
-      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice approved."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), status: :see_other, notice: "Invoice approved."
     else
-      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Failed to approve invoice."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), status: :see_other, alert: "Failed to approve invoice."
     end
   end
 
   def reject
     invoice = current_user.invoices.find(params[:id])
     if invoice.has_associated_credit_note?
-      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Cannot reject an invoice with an associated credit note."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), status: :see_other, alert: "Cannot reject an invoice with an associated credit note."
       return
     end
 
@@ -584,9 +575,9 @@ class InvoicesController < ApplicationController
       else
         InvoiceMailer.invoice_rejected(invoice, sender_user, current_user).deliver_later
       end
-      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), notice: "Invoice rejected."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), status: :see_other, notice: "Invoice rejected."
     else
-      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), alert: "Failed to reject invoice."
+      redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), status: :see_other, alert: "Failed to reject invoice."
     end
   end
 
@@ -594,31 +585,31 @@ class InvoicesController < ApplicationController
     invoice = current_user.invoices.find(params[:id])
     if invoice.has_associated_credit_note?
       tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
-      redirect_to invoices_path(tab: tab), alert: "Cannot archive an invoice with an associated credit note."
+      redirect_to invoices_path(tab: tab), status: :see_other, alert: "Cannot archive an invoice with an associated credit note."
       return
     end
     invoice.update(archived: true)
     tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
-    redirect_to invoices_path(tab: tab), notice: "Invoice archived."
+    redirect_to invoices_path(tab: tab), status: :see_other, notice: "Invoice archived."
   end
 
   def unarchive
     invoice = current_user.invoices.find(params[:id])
     if invoice.has_associated_credit_note?
       tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
-      redirect_to invoices_path(tab: tab), alert: "Cannot unarchive an invoice with an associated credit note."
+      redirect_to invoices_path(tab: tab), status: :see_other, alert: "Cannot unarchive an invoice with an associated credit note."
       return
     end
     invoice.update(archived: false)
     tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
-    redirect_to invoices_path(tab: tab), notice: "Invoice unarchived."
+    redirect_to invoices_path(tab: tab), status: :see_other, notice: "Invoice unarchived."
   end
 
   def mark_as_paid
     invoice = current_user.invoices.find(params[:id])
     if invoice.has_associated_credit_note?
       tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
-      redirect_to invoices_path(tab: tab), alert: "Cannot mark as paid an invoice with an associated credit note."
+      redirect_to invoices_path(tab: tab), status: :see_other, alert: "Cannot mark as paid an invoice with an associated credit note."
       return
     end
 
@@ -638,10 +629,10 @@ class InvoicesController < ApplicationController
       end
       tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
       category_name = invoice.standard? ? "Invoice" : invoice.invoice_category.humanize
-      redirect_to invoices_path(tab: tab), notice: "#{category_name} marked as paid."
+      redirect_to invoices_path(tab: tab), status: :see_other, notice: "#{category_name} marked as paid."
     else
       tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
-      redirect_to invoices_path(tab: tab), alert: "Failed to update invoice."
+      redirect_to invoices_path(tab: tab), status: :see_other, alert: "Failed to update invoice."
     end
   end
 

@@ -241,8 +241,7 @@ class InvoiceDatatable < BaseDatatable
       items << content_tag(:li) do
         link_to('Mark as Paid',
           url_helpers.mark_as_paid_invoice_path(invoice, tab: active_tab),
-          method: :patch,
-          data: { confirm: 'Mark this invoice as paid?' },
+          data: { turbo_method: :patch, turbo_confirm: 'Mark this invoice as paid?' },
           class: 'dropdown-item')
       end
     end
@@ -267,8 +266,7 @@ class InvoiceDatatable < BaseDatatable
 
       items << content_tag(:li) do
         link_to(action, path,
-          method: :patch,
-          data: { confirm: "#{action} this invoice?" },
+          data: { turbo_method: :patch, turbo_confirm: "#{action} this invoice?" },
           class: invoice.archived? ? 'dropdown-item' : 'dropdown-item')
       end
     end
@@ -278,8 +276,7 @@ class InvoiceDatatable < BaseDatatable
       items << content_tag(:li) do
         link_to('Delete',
           url_helpers.invoice_path(invoice, tab: active_tab),
-          method: :delete,
-          data: { confirm: 'Are you sure you want to delete this invoice?' },
+          data: { turbo_method: :delete, turbo_confirm: 'Are you sure you want to delete this invoice?' },
           class: 'dropdown-item text-danger')
       end
     end

@@ -77,7 +77,6 @@
                 </div>
             </div>
         <% end %>
-        </td>
         <td>
           <% if invoice.quote? && invoice.invoice_type == "purchase" && invoice.status == "sent" %>
             Received
@@ -87,10 +86,10 @@
         </td>
         <td>
           <div class="dropdown text-center">
-            <button class="btn btn-link text-muted p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_" data-bs-toggle="dropdown" aria-expanded="false">
+            <button class="btn btn-link text-muted p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_<%= invoice.id %>" data-bs-toggle="dropdown" aria-expanded="false">
               &#8942;
             </button>
-            <ul class="dropdown-menu" aria-labelledby="actionsDropdown_">
+            <ul class="dropdown-menu" aria-labelledby="actionsDropdown_<%= invoice.id %>">
               <li>
                 <a href="#" class="dropdown-item preview-invoice" data-id="<%= invoice.id %>">
                   Preview
@@ -122,8 +121,7 @@
               <% if (invoice.status == "approved" || invoice.status == "sent") && !["received-quotes-table", "received-quotes-archived-table"].include?(table_id) && !invoice.has_associated_credit_note? %>
                 <li>
                   <%= link_to "Mark as Paid", mark_as_paid_invoice_path(invoice, tab: local_assigns[:active_tab]),
-                      method: :patch,
-                      data: { confirm: "Mark this invoice as paid?" },
+                      data: { turbo_method: :patch, turbo_confirm: "Mark this invoice as paid?" },
                       class: "dropdown-item" %>
                 </li>
 
@@ -141,14 +139,12 @@
               <% if invoice.invoice_type == "purchase" && invoice.status == "pending" && !invoice.has_associated_credit_note? %>
                 <li>
                   <%= link_to "Approve", approve_invoice_path(invoice, tab: local_assigns[:active_tab]),
-                      method: :patch,
-                      data: { confirm: "Approve this purchase invoice?" },
+                      data: { turbo_method: :patch, turbo_confirm: "Approve this purchase invoice?" },
                       class: "dropdown-item" %>
                 </li>
                 <li>
                   <%= link_to "Reject", reject_invoice_path(invoice, tab: local_assigns[:active_tab]),
-                      method: :patch,
-                      data: { confirm: "Reject this purchase invoice?" },
+                      data: { turbo_method: :patch, turbo_confirm: "Reject this purchase invoice?" },
                       class: "dropdown-item" %>
                 </li>
                 <li><hr class="dropdown-divider"></li>
@@ -165,11 +161,11 @@
               <% unless invoice.has_associated_credit_note? %>
                 <% if invoice.archived? %>
                   <li>
-                    <%= link_to "Unarchive", unarchive_invoice_path(invoice, tab: local_assigns[:active_tab]), method: :patch, class: "dropdown-item" %>
+                    <%= link_to "Unarchive", unarchive_invoice_path(invoice, tab: local_assigns[:active_tab]), data: { turbo_method: :patch }, class: "dropdown-item" %>
                   </li>
                 <% else %>
                   <li>
-                    <%= link_to "Archive", archive_invoice_path(invoice, tab: local_assigns[:active_tab]), method: :patch, data: { confirm: "Archive this invoice?" }, class: "dropdown-item" %>
+                    <%= link_to "Archive", archive_invoice_path(invoice, tab: local_assigns[:active_tab]), data: { turbo_method: :patch, turbo_confirm: "Archive this invoice?" }, class: "dropdown-item" %>
                   </li>
                 <% end %>
               <% end %>
@@ -177,8 +173,7 @@
               <% if invoice.status == "draft" %>
                 <li>
                   <%= link_to "Delete", invoice_path(invoice, tab: local_assigns[:active_tab]),
-                      method: :delete,
-                      data: { confirm: "Are you sure you want to delete this invoice?" },
+                      data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this invoice?" },
                       class: "dropdown-item text-danger" %>
                 </li>
               <% end %>

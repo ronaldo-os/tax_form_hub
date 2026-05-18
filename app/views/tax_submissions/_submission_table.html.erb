@@ -134,13 +134,13 @@
                     <%= f.hidden_field :archived, value: archived_table ? false : true %>
                     <%= f.submit(archived_table ? "Unarchive" : "Archive",
                                 class: "dropdown-item border-none",
-                                data: { confirm: "Are you sure?" }) %>
+                                data: { turbo_confirm: "Are you sure?" }) %>
                   <% end %>
 
                 </li>
                 <% unless submission.processed? || submission.reviewed? %>
-                  <li><%= link_to "Delete", tax_submission_path(submission), method: :delete,
-                                    data: { confirm: "Are you sure?" },
+                  <li><%= link_to "Delete", tax_submission_path(submission),
+                                    data: { turbo_method: :delete, turbo_confirm: "Are you sure?" },
                                     class: "dropdown-item text-danger" %></li>
                 <% end %>
               </ul>

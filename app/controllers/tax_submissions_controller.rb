@@ -1,11 +1,10 @@
 class TaxSubmissionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_tax_submission, only: [ :show, :update ]
+  before_action :set_tax_submission, only: [ :show, :update, :destroy ]
 
   def index
     Rails.logger.info "DEBUG: TaxSubmissionsController#index executing"
     load_incoming_submissions
-    fresh_when etag: @unarchived_submissions, last_modified: @unarchived_submissions.maximum(:updated_at)
   end
 
   def home
@@ -13,7 +12,6 @@ class TaxSubmissionsController < ApplicationController
     load_sent_submissions
     @companies = companies_with_approved_invoices
     @tax_submission = TaxSubmission.new # For the modal form
-    fresh_when etag: @unarchived_submissions, last_modified: @unarchived_submissions.maximum(:updated_at)
   end
 
   def show
@@ -74,7 +72,7 @@ class TaxSubmissionsController < ApplicationController
           # If we want to be strict:
           # raise ActiveRecord::Rollback
         end
-        redirect_to params[:redirect_url].presence || root_path, notice: "Tax documents submitted successfully."
+        redirect_to params[:redirect_url].presence || root_path, status: :see_other, notice: "Tax documents submitted successfully."
       else
         error_message = @tax_submission.errors.full_messages.join(", ")
         @companies = companies_with_approved_invoices
@@ -82,7 +80,7 @@ class TaxSubmissionsController < ApplicationController
 
         respond_to do |format|
           format.html { render :home }
-          format.turbo_stream { redirect_back fallback_location: root_path, alert: "Failed to submit tax documents: #{error_message}" }
+          format.turbo_stream { redirect_back fallback_location: root_path, status: :see_other, alert: "Failed to submit tax documents: #{error_message}" }
         end
         raise ActiveRecord::Rollback
       end
@@ -92,10 +90,18 @@ class TaxSubmissionsController < ApplicationController
   def update
     if @tax_submission.update(tax_submission_params)
       notice = "Submission updated."
-      redirect_back fallback_location: root_path, notice: notice
+      redirect_back fallback_location: root_path, status: :see_other, notice: notice
     else
       alert = "Failed to update."
-      redirect_back fallback_location: root_path, alert: alert
+      redirect_back fallback_location: root_path, status: :see_other, alert: alert
+    end
+  end
+
+  def destroy
+    if @tax_submission.destroy
+      redirect_back fallback_location: root_path, status: :see_other, notice: "Submission deleted successfully."
+    else
+      redirect_back fallback_location: root_path, status: :see_other, alert: "Failed to delete submission."
     end
   end
 

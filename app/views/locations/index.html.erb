@@ -65,8 +65,7 @@
                     </li>
                     <li>
                       <%= link_to 'Delete', location_path(location),
-                        method: :delete,
-                        data: { confirm: 'Are you sure?' },
+                        data: { turbo_method: :delete, turbo_confirm: 'Are you sure?' },
                         class: 'dropdown-item text-danger' %>
                     </li>
                   </ul>

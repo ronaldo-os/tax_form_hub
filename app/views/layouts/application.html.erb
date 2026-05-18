@@ -124,8 +124,7 @@
 
           <li>
             <%= link_to destroy_user_session_path,
-                        method: :delete,
-                        data: { confirm: "Are you sure you want to log out?" } do %>
+                        data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to log out?" } do %>
               <div class="app-icon"><i class="fa-solid fa-right-from-bracket z-1"></i></div>
               <div class="app-text">Log out</div>
             <% end %>

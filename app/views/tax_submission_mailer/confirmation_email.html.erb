@@ -7,6 +7,11 @@
           <td style="text-align:center;padding-bottom:30px;">
             <h2 style="margin:0;font-size:24px;color:#111827;">Thank you for your submission!</h2>
             <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">We’ve received your tax documents and our team will review them shortly.</p>
+            <% if @tax_submission.form_2307.attached? && @tax_submission.deposit_slip.attached? %>
+              <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">
+                Submitted from: <strong>[<%= @sender_source %>]</strong>
+              </p>
+            <% end %>
           </td>
         </tr>
 
