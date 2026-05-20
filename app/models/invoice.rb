@@ -5,6 +5,12 @@ class Invoice < ApplicationRecord
   belongs_to :original_invoice, class_name: "Invoice", foreign_key: :credit_note_original_invoice_id, optional: true
   belongs_to :subscription, optional: true
 
+  # Recurring invoice relationships
+  # Parent invoice is the original invoice created for a recurring subscription
+  belongs_to :recurring_parent_invoice, class_name: "Invoice", optional: true
+  # Sub-invoices are monthly invoices linked to the parent
+  has_many :recurring_sub_invoices, class_name: "Invoice", foreign_key: :recurring_parent_invoice_id, dependent: :restrict_with_error
+
   belongs_to :ship_from_location, class_name: "Location", optional: true
   belongs_to :remit_to_location, class_name: "Location", optional: true
   belongs_to :tax_representative_location, class_name: "Location", optional: true
@@ -25,6 +31,8 @@ class Invoice < ApplicationRecord
   validate :attachments_type_allowed
   validate :line_items_tax_selected
   validate :credit_note_number_required
+  validate :invoice_number_unique_per_user
+  validate :invoice_numbering_structure_valid
 
   def line_items
     line_items_data || []
@@ -34,8 +42,20 @@ class Invoice < ApplicationRecord
     total["grand_total"].to_f
   end
 
-  def self.next_invoice_number_for_user(user, type = "sale", category = "standard")
-    last_number = user.invoices.where(invoice_type: type, invoice_category: category).where.not(invoice_number: [nil, ""]).order(:created_at).pluck(:invoice_number).last
+  # Generate next invoice number for user
+  # Format: YYYY-00001-XXX for parent invoices (e.g., 2026-00001-009)
+  # Recurring sub-invoices use parent number with sequence (e.g., 2026-00001-009-01, 2026-00001-009-02)
+  def self.next_invoice_number_for_user(user, type = "sale", category = "standard", parent_invoice: nil)
+    # For sub-invoices of recurring billing, use parent invoice number with sequence
+    if parent_invoice.present? && parent_invoice.recurring_parent_invoice_id.nil?
+      return next_recurring_sub_invoice_number(parent_invoice)
+    end
+
+    # For regular invoices, use standard numbering
+    last_number = user.invoices.where(invoice_type: type, invoice_category: category)
+                       .where(recurring_parent_invoice_id: nil)
+                       .where.not(invoice_number: [nil, ""])
+                       .order(:created_at).pluck(:invoice_number).last
     return (category == 'quote' ? "Q-000-001" : "000-001") unless last_number
 
     if last_number =~ /\d+$/
@@ -45,6 +65,28 @@ class Invoice < ApplicationRecord
     else
       "#{last_number}-001"
     end
+  end
+
+  # Generate the next sub-invoice number for a parent invoice
+  # e.g., if parent is "2026-00001-009", returns "2026-00001-009-01", "2026-00001-009-02", etc.
+  def self.next_recurring_sub_invoice_number(parent_invoice)
+    raise "Cannot generate sub-invoice number for non-parent invoice" unless parent_invoice.recurring_parent_invoice_id.nil?
+
+    # Count existing sub-invoices to determine sequence number
+    sub_invoice_count = parent_invoice.recurring_sub_invoices.count + 1
+    parent_number = parent_invoice.invoice_number
+    
+    "#{parent_number}-#{sub_invoice_count.to_s.rjust(2, '0')}"
+  end
+
+  # Check if this invoice is a parent recurring invoice
+  def recurring_parent_invoice?
+    subscription_id.present? && recurring_parent_invoice_id.nil?
+  end
+
+  # Check if this invoice is a sub-invoice of a recurring billing
+  def recurring_sub_invoice?
+    recurring_parent_invoice_id.present?
   end
 
   def sender_company
@@ -193,6 +235,40 @@ class Invoice < ApplicationRecord
     return nil unless months
 
     (start_date >> months).strftime('%Y-%m-%d')
+  end
+
+  # Validate that invoice numbers are unique per user
+  # Prevents duplicate invoice numbers within same user's invoices
+  def invoice_number_unique_per_user
+    return if invoice_number.blank?
+    
+    existing = Invoice.where(user_id: user_id, invoice_number: invoice_number)
+    existing = existing.where.not(id: id) if persisted?
+    
+    if existing.exists?
+      errors.add(:invoice_number, "has already been used for this user")
+    end
+  end
+
+  # Validate that recurring sub-invoice numbering follows the correct format
+  # Parent: YYYY-00001-009, Sub-invoices: YYYY-00001-009-01, YYYY-00001-009-02, etc.
+  def invoice_numbering_structure_valid
+    return if invoice_number.blank? || invoice_category != 'standard'
+    
+    if recurring_sub_invoice? && recurring_parent_invoice.present?
+      parent_number = recurring_parent_invoice.invoice_number
+      expected_prefix = "#{parent_number}-"
+      
+      unless invoice_number.start_with?(expected_prefix)
+        errors.add(:invoice_number, "sub-invoice must follow parent number format (#{expected_prefix}XX)")
+      end
+      
+      # Validate sequence number format (should be 01, 02, 03, etc.)
+      sequence_part = invoice_number.sub(expected_prefix, "")
+      unless sequence_part =~ /^\d{2}$/
+        errors.add(:invoice_number, "sub-invoice sequence must be two digits (01, 02, 03, etc.)")
+      end
+    end
   end
 
   private

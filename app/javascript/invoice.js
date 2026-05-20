@@ -413,15 +413,6 @@ const initInvoiceForm = () => {
   //----------------------------------------------------- PAYMENT TERMS FIELD 
 
   const payment_terms_fieldTypeMap = {
-    payment_terms: [
-      { name: "payment_terms.discount_percent.text.6", label: "Discount Percent", type: "text", cols: 6 },
-      { name: "payment_terms.surcharge_percent.text.6", label: "Surcharge Percent", type: "text", cols: 6 },
-      { name: "payment_terms.settelement_start_date.date.6", label: "Settlement Start Date", type: "date", cols: 6 },
-      { name: "payment_terms.penalty_start_date.date.6", label: "Penalty Start Date", type: "date", cols: 6 },
-      { name: "payment_terms.settlement_end_date.date.6", label: "Settlement End Date", type: "date", cols: 6 },
-      { name: "payment_terms.penalty_end_date.date.6", label: "Penalty End Date", type: "date", cols: 6 },
-      { name: "payment_terms.note.textarea.12", label: "Note", type: "textarea", cols: 12 },
-    ],
     cash: [
       { name: "cash.cash.text_only.12", label: "Cash Payment", type: "text_only", cols: 12 }
     ],

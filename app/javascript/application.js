@@ -39,35 +39,15 @@ function loadPageSpecificModules() {
 // Always load network search (small utility)
 import './network_search';
 
-// Register Service Worker for PWA functionality (skip in development)
-const isDevelopment = window.location.hostname === 'localhost' ||
-                      window.location.hostname === '127.0.0.1' ||
-                      window.location.port === '3000' || 
-                      window.location.port === '9007';
-
-if ('serviceWorker' in navigator && !isDevelopment) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then((registration) => {
-        console.log('[PWA] Service Worker registered:', registration.scope);
-
-        // Check for updates periodically
-        setInterval(() => {
-          registration.update();
-        }, 60 * 60 * 1000); // Check every hour
-      })
-      .catch((error) => {
-        console.log('[PWA] Service Worker registration failed:', error);
-      });
-
-    // Listen for service worker updates
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('[PWA] New service worker activated, reloading...');
-      window.location.reload();
-    });
+// Ensure any legacy service workers are unregistered on load.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    for (const registration of registrations) {
+      console.log('[PWA] Unregistering service worker:', registration.scope);
+      await registration.unregister();
+    }
   });
-} else if (isDevelopment) {
-  console.log('[PWA] Service Worker disabled in development mode');
 }
 
 import Rails from "@rails/ujs";

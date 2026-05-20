@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_14_000001) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_19_000001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -132,13 +132,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_14_000001) do
     t.string "invoice_category", default: "standard"
     t.bigint "credit_note_original_invoice_id"
     t.bigint "subscription_id"
+    t.bigint "recurring_parent_invoice_id"
+    t.integer "recurring_sequence_number"
     t.index ["recipient_company_id", "status"], name: "index_invoices_on_recipient_and_status"
+    t.index ["recurring_parent_invoice_id"], name: "index_invoices_on_recurring_parent_id"
     t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
     t.index ["ship_from_location_id"], name: "index_invoices_on_ship_from_location_id"
     t.index ["subscription_id", "issue_date"], name: "index_invoices_on_subscription_id_and_issue_date"
     t.index ["subscription_id"], name: "index_invoices_on_subscription_id"
     t.index ["tax_representative_location_id"], name: "index_invoices_on_tax_representative_location_id"
     t.index ["user_id", "invoice_category", "invoice_type", "status"], name: "index_invoices_on_user_category_type_status"
+    t.index ["user_id", "invoice_number"], name: "index_invoices_on_user_and_number_unique", unique: true
     t.index ["user_id", "invoice_type", "invoice_category", "archived", "issue_date"], name: "index_invoices_on_user_type_category_archived_date"
     t.index ["user_id"], name: "index_invoices_on_user_id"
   end

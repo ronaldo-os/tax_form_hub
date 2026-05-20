@@ -83,9 +83,14 @@ class Subscription < ApplicationRecord
   end
 
   # Generate the next invoice for this subscription
+  # For recurring invoices:
+  # - First invoice is the parent/primary invoice (e.g., 2026-00001-009)
+  # - Subsequent invoices are sub-invoices linked to parent (e.g., 2026-00001-009-01, 2026-00001-009-02)
+  #
   # @param invoice_number [String, nil] Optional invoice number to use
+  # @param parent_invoice [Invoice, nil] Parent invoice for recurring billing (used for sub-invoices)
   # @return [Invoice] The newly created invoice
-  def generate_next_invoice(invoice_number: nil)
+  def generate_next_invoice(invoice_number: nil, parent_invoice: nil)
     raise "Cannot generate invoice: subscription not active" unless active_on?
     raise "Cannot generate invoice: subscription not due yet" unless due_for_invoicing?
 
@@ -96,6 +101,30 @@ class Subscription < ApplicationRecord
     # Build line items from subscription data
     line_items = build_line_items_for_invoice
 
+    # Determine if this is first invoice (parent) or subsequent (sub-invoice)
+    # Get the most recent invoice for this subscription to check if parent exists
+    existing_parent = user.invoices.where(subscription_id: id, recurring_parent_invoice_id: nil).first
+
+    # Use provided parent or get/create the parent invoice
+    if parent_invoice.present?
+      parent = parent_invoice
+    elsif existing_parent.present?
+      parent = existing_parent
+    else
+      parent = nil
+    end
+
+    # Generate invoice number
+    if invoice_number.blank?
+      if parent.present?
+        # This is a sub-invoice - use parent number with sequence
+        invoice_number = Invoice.next_recurring_sub_invoice_number(parent)
+      else
+        # This is a parent invoice - use standard numbering
+        invoice_number = Invoice.next_invoice_number_for_user(user, 'sale', 'standard')
+      end
+    end
+
     # Create the invoice
     invoice = user.invoices.build(
       recipient_company: recipient_company,
@@ -103,14 +132,18 @@ class Subscription < ApplicationRecord
       invoice_type: 'sale',
       invoice_category: 'standard',
       issue_date: Date.current,
-      invoice_number: invoice_number || Invoice.next_invoice_number_for_user(user, 'sale', 'standard'),
+      invoice_number: invoice_number,
       currency: currency,
       line_items_data: line_items,
       recipient_note: description,
+      subscription_id: id,
+      recurring_parent_invoice_id: parent&.id,
+      recurring_sequence_number: parent.present? ? (parent.recurring_sub_invoices.count + 1) : nil,
       invoice_info: {
         subscription_id: id,
         billing_period_start: new_period_start,
-        billing_period_end: new_period_end
+        billing_period_end: new_period_end,
+        parent_invoice_id: parent&.id
       }
     )
 
