@@ -2,6 +2,9 @@
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "company", media: "all" %>
 <% end %>
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
+<% end %>
 
 <div class="container py-2 py-md-5">
   <div class="d-flex justify-content-end align-items-end mb-3">
@@ -14,7 +17,7 @@
       <div class="card shadow-sm rounded-3 border-0 mob-mb-4">
         <div class="card-body p-4">
 
-          <%= form_with(model: @company, local: true, html: { multipart: true, data: { turbo: false } }) do |f| %>            
+          <%= form_with(model: @company, local: true, html: { multipart: true, id: "company-form", autocomplete: "off", data: { turbo: false } }) do |f| %>            
             <!-- Profile Image -->
             <div class="mb-5 text-center">
               <div id="image-preview-wrapper" 
@@ -24,6 +27,7 @@
                 <%= image_tag(
                   @company.profile_image.attached? ? url_for(@company.profile_image) : asset_path("user_avatar_default.png"),
                   id: "image-preview",
+                  data: { default_src: (@company.profile_image.attached? ? url_for(@company.profile_image) : asset_path("user_avatar_default.png")) },
                   class: "rounded-circle border shadow-sm",
                   style: "width: 160px; height: 160px; object-fit: cover;",
                   loading: "lazy"

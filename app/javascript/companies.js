@@ -5,6 +5,31 @@ function initCompanyPage() {
 
     const $companyForm = $('form[action*="/companies"]');
     if ($companyForm.length === 0 && !window.location.pathname.endsWith("/new")) {
+        return;
+    }
+
+    // Ensure form action URL is correct (fix for Turbo cache issue)
+    if ($companyForm.length > 0) {
+        const currentPath = window.location.pathname;
+        const formAction = $companyForm.attr('action');
+        // If form action doesn't match current path, update it
+        if (formAction && !formAction.includes(currentPath)) {
+            $companyForm.attr('action', currentPath);
+        }
+        
+        // Ensure form can be submitted (fix for cache issue)
+        $companyForm.off('submit.companySubmit').on('submit.companySubmit', function(e) {
+            console.log('Form submit triggered');
+            // Allow the form to submit normally
+            return true;
+        });
+        
+        // Debug: Check form state
+        console.log('Company form found:', $companyForm.length > 0);
+        console.log('Form action:', $companyForm.attr('action'));
+        console.log('Form method:', $companyForm.attr('method'));
+        console.log('Submit button:', $('#update-company-btn').length > 0);
+        console.log('Submit button disabled:', $('#update-company-btn').prop('disabled'));
     }
 
     function updateLabel(selectId, labelId, defaultText) {
@@ -34,49 +59,36 @@ function initCompanyPage() {
     const $imagePreviewWrapper = $('#image-preview-wrapper');
 
     $imagePreviewWrapper.off('click.companyImg').on('click.companyImg', function (e) {
-        // Ignore clicks on the input itself or the label (which handles it natively)
         if ($(e.target).is($fileInput) || $(e.target).closest('label').length > 0) {
             return;
         }
-        $fileInput.click();
-    });
-
-    // Prevent infinite loop by stopping propagation from the input itself
-    $fileInput.off('click.companyInput').on('click.companyInput', function (e) {
-        e.stopPropagation();
+        $fileInput.trigger('click');
     });
 
     $fileInput.off('change.companyInput').on('change.companyInput', function (e) {
-        const file = e.target.files[0];
-
-        // Reset state
-        $submitBtn.prop('disabled', false);
-        $imagePreview.css('border', '');
-
-        if (file) {
-            if (!file.type.startsWith('image/')) {
-                alert("Please select a valid image file.");
-                $submitBtn.prop('disabled', true);
-                $imagePreview.css('border', '2px solid red');
-                e.target.value = ""; // Clear the input
-                return;
-            }
-
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                $imagePreview.attr('src', e.target.result);
-            };
-
-            reader.onerror = function () {
-                alert("Failed to read the file. Please try another one.");
-                $submitBtn.prop('disabled', true);
-                $imagePreview.attr('src', defaultImageSrc); // Revert to original
-                e.target.value = ""; // Clear input
-            };
-
-            reader.readAsDataURL(file);
+        const file = e.target.files && e.target.files[0];
+        if (!file) {
+            return;
         }
+
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file.');
+            $submitBtn.prop('disabled', true);
+            $imagePreview.css('border', '2px solid red');
+            e.target.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (loadEvent) {
+            $imagePreview.attr('src', loadEvent.target.result);
+        };
+        reader.onerror = function () {
+            alert('Failed to read the file. Please try another one.');
+            $imagePreview.attr('src', defaultImageSrc);
+            e.target.value = '';
+        };
+        reader.readAsDataURL(file);
     });
 
     $("#recommend-btn").off("click.companyRec").on("click.companyRec", function (e) {
@@ -176,3 +188,20 @@ function renderCompanyMap() {
 
 // Bind to Turbo Load
 document.addEventListener("turbo:load", initCompanyPage);
+document.addEventListener("DOMContentLoaded", initCompanyPage);
+if (document.readyState !== "loading") {
+  initCompanyPage();
+}
+
+// Ensure form is properly functional after being restored from cache
+document.addEventListener("turbo:render", function() {
+  if (window.location.pathname.includes("/companies")) {
+    const $submitBtn = $('#update-company-btn');
+    if ($submitBtn) {
+      $submitBtn.prop('disabled', false);
+    }
+    
+    // Re-initialize the company page to ensure all event listeners are attached
+    initCompanyPage();
+  }
+});

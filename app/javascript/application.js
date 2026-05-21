@@ -394,8 +394,28 @@ function initApplication() {
 
 // Bind to Turbo Load
 document.addEventListener("turbo:load", () => {
+  // Clear any cached company selector state on page load to ensure fresh data
+  const input = document.getElementById('company_search_input');
+  if (input) {
+    input.dataset.loadedDefault = "false";
+  }
+  
   initApplication();
   loadPageSpecificModules();
+  
+  // Force full reload for companies page to prevent cache issues
+  if (window.location.pathname.includes("/companies")) {
+    const companyForm = document.getElementById('company-form');
+    if (companyForm) {
+      // Remove any cached form data
+      companyForm.reset();
+      // Re-enable submit button
+      const submitBtn = document.getElementById('update-company-btn');
+      if (submitBtn) {
+        submitBtn.disabled = false;
+      }
+    }
+  }
 });
 // Specifically handle the 422 error re-render
 document.addEventListener("turbo:render", initApplication);
@@ -405,10 +425,48 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPageSpecificModules();
 });
 
+// Clear cached data on logout
+document.addEventListener("turbo:before-fetch-request", (event) => {
+  const url = event.detail.url?.toString();
+  if (url && url.includes("/users/sign_out")) {
+    // Clear company selector cached state
+    const input = document.getElementById('company_search_input');
+    if (input) {
+      input.dataset.loadedDefault = "false";
+    }
+    // Clear dropdown
+    const dropdown = document.getElementById('company_search_dropdown');
+    if (dropdown) {
+      dropdown.innerHTML = '';
+    }
+    // Clear hidden input
+    const hiddenInput = document.getElementById('recipient_company_id');
+    if (hiddenInput) {
+      hiddenInput.value = '';
+    }
+    // Clear sessionStorage data that might persist
+    sessionStorage.clear();
+  }
+});
+
 // Reload visible server-side DataTables when a page is restored from bfcache
 window.addEventListener('pageshow', function (event) {
+  if (event.persisted) {
+    const companyForm = document.getElementById('company-form');
+    if (companyForm) {
+      companyForm.reset();
+      const imagePreview = companyForm.querySelector('#image-preview');
+      if (imagePreview && imagePreview.dataset.defaultSrc) {
+        imagePreview.src = imagePreview.dataset.defaultSrc;
+      }
+      const fileInput = companyForm.querySelector('#profile_image_input');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    }
+  }
   if (!event.persisted) return;
-  if (typeof $ === 'undefined' || !$.fn.dataTable) return;
+  if (typeof $ === 'undefined' || !$.fn.DataTable) return;
 
   $.fn.dataTable.tables({ api: true }).every(function () {
     if (this.ajax) {
@@ -425,6 +483,34 @@ document.addEventListener("turbo:before-cache", function () {
             const dt = $(this).DataTable();
             if (dt) dt.destroy();
         });
+    }
+
+    const companyForm = document.getElementById('company-form');
+    if (companyForm) {
+        companyForm.reset();
+        const imagePreview = companyForm.querySelector('#image-preview');
+        if (imagePreview && imagePreview.dataset.defaultSrc) {
+            imagePreview.src = imagePreview.dataset.defaultSrc;
+        }
+        const fileInput = companyForm.querySelector('#profile_image_input');
+        if (fileInput) {
+            fileInput.value = '';
+        }
+    }
+});
+
+// Refresh form authenticity token when page is restored from cache
+document.addEventListener("turbo:load", function () {
+    const companyForm = document.getElementById('company-form');
+    if (companyForm) {
+        // Get a fresh CSRF token from meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (csrfToken) {
+            const tokenInput = companyForm.querySelector('input[name="authenticity_token"]');
+            if (tokenInput) {
+                tokenInput.value = csrfToken;
+            }
+        }
     }
 });
 

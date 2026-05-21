@@ -2380,4 +2380,35 @@
       myModal.show();
     });
   });
+
+  document.addEventListener('turbo:before-cache', function () {
+    const companyForm = document.getElementById('company-form');
+    if (companyForm) {
+      companyForm.reset();
+      const imagePreview = companyForm.querySelector('#image-preview');
+      if (imagePreview && imagePreview.dataset.defaultSrc) {
+        imagePreview.src = imagePreview.dataset.defaultSrc;
+      }
+      const fileInput = companyForm.querySelector('#profile_image_input');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    }
+  });
+
+  window.addEventListener('pageshow', function (event) {
+    if (!event.persisted) return;
+    const companyForm = document.getElementById('company-form');
+    if (companyForm) {
+      companyForm.reset();
+      const imagePreview = companyForm.querySelector('#image-preview');
+      if (imagePreview && imagePreview.dataset.defaultSrc) {
+        imagePreview.src = imagePreview.dataset.defaultSrc;
+      }
+      const fileInput = companyForm.querySelector('#profile_image_input');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    }
+  });
 })();

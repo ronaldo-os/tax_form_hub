@@ -1,5 +1,8 @@
 class NetworksController < ApplicationController
   before_action :authenticate_user!
+  include HttpCaching
+
+  before_action :disable_cache_headers, only: [:index]
 
   def index
     @networks = current_user.networks.includes(company: { profile_image_attachment: :blob })

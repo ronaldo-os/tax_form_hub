@@ -109,7 +109,7 @@
           </li>
 
           <li class="<%= 'app-active' if request.path.starts_with?(companies_path) %>">
-            <%= link_to companies_path do %>
+            <%= link_to companies_path, data: { turbo: false } do %>
               <div class="app-icon"><i class="fa-solid fa-building z-1"></i></div>
               <div class="app-text">Company Profile</div>
             <% end %>

@@ -3,7 +3,7 @@ class CompaniesController < ApplicationController
 
   before_action :set_company, only: [ :update, :show ]
   before_action :authorize_show, only: [ :show ]
-  before_action :set_cache_headers, only: [:index, :show]
+  before_action :disable_cache_headers, only: [:index, :show]
 
   def index
     @companies = current_user.companies.with_attached_profile_image

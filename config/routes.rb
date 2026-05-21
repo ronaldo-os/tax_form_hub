@@ -6,7 +6,8 @@ Rails.application.routes.draw do
   resources :units, only: [:create, :destroy]
   devise_for :users, controllers: {
     registrations: 'users/registrations',
-    passwords: "users/passwords"
+    passwords: "users/passwords",
+    sessions: "users/sessions"
   }
 
   # Alias to create a clean /profile/edit route
