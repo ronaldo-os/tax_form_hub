@@ -143,6 +143,10 @@
                                     data: { turbo_method: :delete, turbo_confirm: "Are you sure?" },
                                     class: "dropdown-item text-danger" %></li>
                 <% end %>
+                <% if submission.invoice&.status == "paid" %>
+                  <li><%= link_to "Resubmit Documents", "/tax_submissions/home?invoice_id=#{submission.invoice_id}&company_id=#{submission.company_id}",
+                                    class: "dropdown-item" %></li>
+                <% end %>
               </ul>
             </div>
           </td>

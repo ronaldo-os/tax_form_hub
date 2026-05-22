@@ -84,6 +84,11 @@
               <small class="form-text text-muted">Please select a company first to load available invoices.</small>
             </div>
 
+            <% if @tax_submission.invoice_id.present? && @tax_submission.company_id.present? %>
+              <input type="hidden" id="prefill_invoice_id" value="<%= @tax_submission.invoice_id %>">
+              <input type="hidden" id="prefill_company_id" value="<%= @tax_submission.company_id %>">
+            <% end %>
+
             <div class="col-12">
               <%= f.label :form_2307, "Form 2307", class: "form-label fw-semibold small text-muted" %>
               <%= f.file_field :form_2307,

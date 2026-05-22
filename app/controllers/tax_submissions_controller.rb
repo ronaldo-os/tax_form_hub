@@ -11,7 +11,13 @@ class TaxSubmissionsController < ApplicationController
     Rails.logger.info "DEBUG: TaxSubmissionsController#home executing"
     load_sent_submissions
     @companies = companies_with_approved_invoices
-    @tax_submission = TaxSubmission.new # For the modal form
+    
+    # For resubmission: pre-fill company and invoice if provided
+    if params[:invoice_id].present? && params[:company_id].present?
+      @tax_submission = TaxSubmission.new(invoice_id: params[:invoice_id], company_id: params[:company_id])
+    else
+      @tax_submission = TaxSubmission.new # For the modal form
+    end
   end
 
   def show
@@ -116,9 +122,9 @@ class TaxSubmissionsController < ApplicationController
     my_company_ids = current_user.companies.pluck(:id) << current_user.company_id
     my_company_ids = my_company_ids.compact.uniq
 
-    # Find invoices related to the user or their company
+    # Find invoices related to the user or their company (include approved and paid invoices)
     invoices = Invoice.where("user_id = ? OR recipient_company_id IN (?) OR sale_from_id IN (?)", current_user.id, my_company_ids, my_company_ids)
-                           .where(status: "approved")
+                           .where(status: [ "approved", "paid" ])
                            .where(archived: [ false, nil ])
                            .where.not(invoice_category: "quote")
                            .where("(invoice_type = 'sale' AND recipient_company_id = :company_id) OR (invoice_type = 'purchase' AND sale_from_id = :company_id)", company_id: company_id)
@@ -200,9 +206,9 @@ class TaxSubmissionsController < ApplicationController
     my_company_ids = current_user.companies.pluck(:id) << current_user.company_id
     my_company_ids = my_company_ids.compact.uniq
 
-    # Find all approved invoices where the user or their company is either the sender or receiver
+    # Find all approved or paid invoices where the user or their company is either the sender or receiver
     invoice_data = Invoice.where("user_id = ? OR recipient_company_id IN (?) OR sale_from_id IN (?)", current_user.id, my_company_ids, my_company_ids)
-                                .where(status: "approved")
+                                .where(status: [ "approved", "paid" ])
                                 .where(invoice_category: [ "standard", "credit_note" ])
                                 .where("archived IS NULL OR archived = ?", false)
                                 .pluck(:invoice_type, :recipient_company_id, :sale_from_id)

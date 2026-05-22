@@ -198,6 +198,27 @@ function initClientSubmissionsPage() {
         }
     }
 
+    // Handle resubmission flow: pre-fill company and invoice, then open modal
+    const prefillCompanyId = $("#prefill_company_id").val();
+    const prefillInvoiceId = $("#prefill_invoice_id").val();
+    
+    if (prefillCompanyId && prefillInvoiceId) {
+        // Set the company select value
+        $("#company_select").val(prefillCompanyId).trigger("change");
+        
+        // Wait for invoices to load, then set the invoice value
+        setTimeout(function() {
+            $("#invoice_select").val(prefillInvoiceId);
+            
+            // Open the modal
+            const modalEl = document.getElementById("submitDocsModal");
+            if (modalEl) {
+                const submitModal = new bootstrap.Modal(modalEl);
+                submitModal.show();
+            }
+        }, 500);
+    }
+
     // Form validation before submission
     $(document).off("submit", "#submitDocsModal form").on("submit", "#submitDocsModal form", function (e) {
         const companyId = $("#company_select").val();
