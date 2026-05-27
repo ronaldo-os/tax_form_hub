@@ -33,6 +33,7 @@ class Invoice < ApplicationRecord
   validate :credit_note_number_required
   validate :invoice_number_unique_per_user
   validate :invoice_numbering_structure_valid
+  validate :monthly_charge_dates_valid
 
   def line_items
     line_items_data || []
@@ -305,6 +306,38 @@ class Invoice < ApplicationRecord
     attachments.each do |file|
       unless allowed_types.include?(file.blob.content_type)
         errors.add(:attachments, "must be PDF or image files (JPEG, PNG).")
+      end
+    end
+  end
+
+  def monthly_charge_dates_valid
+    return unless price_adjustments.present?
+
+    price_adjustments.each_with_index do |adjustment, index|
+      next unless adjustment['type'] == 'monthly_charge'
+
+      start_date = adjustment['charge_start_date']
+      end_date = adjustment['charge_end_date']
+
+      if start_date.blank?
+        errors.add(:price_adjustments, "at index #{index + 1}: Monthly charge must have a start date")
+      end
+
+      if end_date.blank?
+        errors.add(:price_adjustments, "at index #{index + 1}: Monthly charge must have an end date")
+      end
+
+      if start_date.present? && end_date.present?
+        begin
+          start = Date.parse(start_date)
+          end_d = Date.parse(end_date)
+
+          if start >= end_d
+            errors.add(:price_adjustments, "at index #{index + 1}: Monthly charge end date must be after start date")
+          end
+        rescue Date::Error
+          errors.add(:price_adjustments, "at index #{index + 1}: Invalid date format for monthly charge")
+        end
       end
     end
   end

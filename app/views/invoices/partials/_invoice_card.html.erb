@@ -286,6 +286,17 @@
                       <% end %>
                     </td>
                   </tr>
+
+                  <!-- Show charge dates for monthly charges -->
+                  <% if adjustment["type"] == "monthly_charge" && (adjustment["charge_start_date"].present? || adjustment["charge_end_date"].present?) %>
+                    <tr class="bg-light">
+                      <td colspan="9" class="text-muted small">
+                        <% if adjustment["charge_start_date"].present? %>
+                          <span class="me-3"><strong>Charge Period:</strong> <%= adjustment["charge_start_date"] %> to <%= adjustment["charge_end_date"] || "ongoing" %></span>
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
                 <% end %>
               <% end %>
             </tbody>

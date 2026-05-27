@@ -36,8 +36,8 @@ const initInvoiceForm = () => {
 
   function getThemeAwareBadgeClass(text, color) {
     const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const badgeClass = currentTheme === 'dark' ? 
-      `bg-${color} text-white` : 
+    const badgeClass = currentTheme === 'dark' ?
+      `bg-${color} text-white` :
       `bg-${color}-subtle text-${color}`;
     return `<span class="badge ${badgeClass} small">${text}</span>`;
   }
@@ -1042,7 +1042,7 @@ const initInvoiceForm = () => {
 
       // Find the base subscription by looking for the subscription line item that this addition references
       const baseSubscriptionId = $additionLineItem.data('base-subscription-id');
-      const $baseSubscriptionLineItem = $(`tr.line-item:not(.subscription-addition)`).filter(function() {
+      const $baseSubscriptionLineItem = $(`tr.line-item:not(.subscription-addition)`).filter(function () {
         return $(this).find('.item-id').val() === baseSubscriptionId;
       });
 
@@ -1087,7 +1087,7 @@ const initInvoiceForm = () => {
       const baseSubscriptionId = $baseLineItem.find('.item-id').val();
 
       // Update all subscription addition line items that reference this base subscription
-      $(`tr.line-item.subscription-addition[data-base-subscription-id="${baseSubscriptionId}"]`).each(function() {
+      $(`tr.line-item.subscription-addition[data-base-subscription-id="${baseSubscriptionId}"]`).each(function () {
         const additionIndex = $(this).data('line-index');
         const $additionOptionalRow = $(`.optional-field-row[data-optional-group="subscription_addition"][data-line-index="${additionIndex}"]`);
         if ($additionOptionalRow.length) {
@@ -1204,6 +1204,7 @@ const initInvoiceForm = () => {
           <select class="form-select price-adjustment-unit" data-field="unit">
             <option value="discount">Discount</option>
             <option value="charge">Charge</option>
+            <option value="monthly_charge">Monthly Charge</option>
             <option value="fixedtax">Fixed Tax</option>
           </select>
         </td>
@@ -1228,6 +1229,10 @@ const initInvoiceForm = () => {
             <option value="Expediting fee">Expediting fee</option>
             <option value="Currency exchange differences">Currency exchange differences</option>
           </select>
+          <div class="monthly-charge-dates mt-2" style="display: none;">
+            <input type="date" class="form-control charge-start-date mb-1" placeholder="Start Date" data-field="charge_start_date">
+            <input type="date" class="form-control charge-end-date" placeholder="End Date" data-field="charge_end_date">
+          </div>
         </td>
         <td class="align-top">
           <input type="text" class="form-control amount" value="1" data-field="amount">
@@ -1249,6 +1254,24 @@ const initInvoiceForm = () => {
       $('#line-items').append(newRow);
       updateRemoveButtons();
       updateDiscountsJSON();
+      
+      // Show/hide monthly charge date fields based on selection
+      const $newRow = $('#line-items').find('.discount-item').last();
+      $newRow.find('.price-adjustment-unit').on('change', function() {
+        const isMonthlyCharge = $(this).val() === 'monthly_charge';
+        $(this).closest('tr').find('.monthly-charge-dates').toggle(isMonthlyCharge);
+      });
+      
+      // Auto-compute end date when start date changes for monthly charges
+      $newRow.find('.charge-start-date').on('change', function() {
+        const startDate = $(this).val();
+        if (startDate) {
+          const date = new Date(startDate);
+          date.setMonth(date.getMonth() + 1);
+          const endDate = date.toISOString().split('T')[0];
+          $(this).closest('tr').find('.charge-end-date').val(endDate);
+        }
+      });
     });
 
     $('#line-items').on('click', '.remove-line', function () {
@@ -1282,9 +1305,9 @@ const initInvoiceForm = () => {
 
   })();
 
-  // Update hidden field for price_adjustments
   function updateDiscountsJSON() {
     const discounts = [];
+    const validationErrors = [];
 
     $('.discount-item').each(function () {
       const $row = $(this);
@@ -1299,15 +1322,47 @@ const initInvoiceForm = () => {
 
       const total = ($row.find('.total').text().trim() || "0.00").replace(/[^\d.-]/g, "");
 
+      const charge_start_date = ($row.find('.charge-start-date').val() || "").trim();
+      const charge_end_date = ($row.find('.charge-end-date').val() || "").trim();
+
+      // Validate monthly charge dates
+      if (type === 'monthly_charge') {
+        if (!charge_start_date) {
+          validationErrors.push('Monthly charge must have a start date');
+        }
+        if (!charge_end_date) {
+          validationErrors.push('Monthly charge must have an end date');
+        }
+        if (charge_start_date && charge_end_date && new Date(charge_start_date) >= new Date(charge_end_date)) {
+          validationErrors.push('Monthly charge end date must be after start date');
+        }
+      }
+
       discounts.push({
         type,
         description: description || null,
         description_edit: description_edit || "",
         amount,
         unit,
-        total
+        total,
+        charge_start_date: charge_start_date || null,
+        charge_end_date: charge_end_date || null
       });
     });
+
+    // Validate charge periods against line item dates
+    if (validationErrors.length > 0) {
+      // Display validation errors
+      const errorContainer = $('#charge-validation-errors');
+      if (errorContainer.length === 0) {
+        $('#line-items').before('<td colspan="12"><div id="charge-validation-errors" class="alert alert-danger"></div></td>');
+      }
+      $('#charge-validation-errors').html('<strong class="bg-transparent">Please fix the following errors:</strong><ul class="mb-0 list-unstyled bg-transparent">' + 
+        validationErrors.map(err => `<li>${err}</li>`).join('') + '</ul>');
+      return;
+    } else {
+      $('#charge-validation-errors').remove();
+    }
 
     $('#price_adjustments_json, #price_adjustments_json_edit').val(JSON.stringify(discounts));
   }
@@ -1397,6 +1452,7 @@ const initInvoiceForm = () => {
     let chargeAmount = 0;
     let fixedTax = 0;
     let taxBreakdown = {};
+    let totalMonthlySubscriptionValue = 0;
 
     $('#line-items .line-item').each(function () {
       const $row = $(this);
@@ -1498,6 +1554,18 @@ const initInvoiceForm = () => {
       subtotal += lineTotal;
       totalTax += lineTax;
 
+      const $subscriptionRow = $optionalRows.filter('[data-optional-group="subscription"]');
+      if ($subscriptionRow.length > 0) {
+        const billingCycle = ($subscriptionRow.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val() || "monthly").trim().toLowerCase();
+        let monthlyVal = lineTotal;
+        if (billingCycle === "quarterly") {
+          monthlyVal = lineTotal / 3;
+        } else if (billingCycle === "annual") {
+          monthlyVal = lineTotal / 12;
+        }
+        totalMonthlySubscriptionValue += monthlyVal;
+      }
+
       if (taxRateVal !== null && taxRateVal !== "" && taxRateVal !== undefined) {
         if (!taxBreakdown[taxName]) taxBreakdown[taxName] = { tax: 0, basis: 0 };
         taxBreakdown[taxName].tax += lineTax;
@@ -1515,13 +1583,18 @@ const initInvoiceForm = () => {
       const isPercent = $row.find('select.unit-type').val() === "true";
       const qty = parseCurrency($row.find('.amount').val());
 
-      let value = isPercent ? subtotal * (qty / 100) : qty;
+      let value = 0;
+      if (type === "monthly_charge") {
+        value = isPercent ? totalMonthlySubscriptionValue * (qty / 100) : qty;
+      } else {
+        value = isPercent ? subtotal * (qty / 100) : qty;
+      }
 
       // Format global adjustment totals
       if (type === "discount") {
         discountAmount += value;
         $row.find('.total').text(`-${formatCurrency(value)}`);
-      } else if (type === "charge") {
+      } else if (type === "charge" || type === "monthly_charge") {
         chargeAmount += value;
         $row.find('.total').text(`+${formatCurrency(value)}`);
       } else if (type === "fixedtax") {
@@ -1540,6 +1613,7 @@ const initInvoiceForm = () => {
 
     const totalsJson = {
       subtotal: adjustedSubtotal.toFixed(2),
+      charge: chargeAmount.toFixed(2),
       tax: (totalTax + fixedTax).toFixed(2),
       grand_total: grandTotal.toFixed(2),
       tax_breakdown: taxBreakdown
@@ -1547,8 +1621,10 @@ const initInvoiceForm = () => {
 
     $('#total_amount_json').val(JSON.stringify(totalsJson));
     $('.subtotal-amount').text(formatCurrency(totalsJson.subtotal));
+    $('.charge-amount').text(formatCurrency(totalsJson.charge));
     $('.total-tax-amount').text(formatCurrency(totalsJson.tax));
     $('.grand-total-amount').text(formatCurrency(totalsJson.grand_total));
+    $('.charge-line').toggle(parseFloat(totalsJson.charge) > 0);
 
     const $breakdownContainer = $('#tax-breakdown-container');
     if ($breakdownContainer.length) {
@@ -1848,34 +1924,34 @@ const initInvoiceForm = () => {
             `);
 
           const fieldsToRender = Object.entries(fields).map(([rawKey, val]) => {
-              let type = "text", value = "", options = [];
+            let type = "text", value = "", options = [];
 
-              if (typeof val === "object") {
-                value = val.value || "";
-                type = val.type || "text";
+            if (typeof val === "object") {
+              value = val.value || "";
+              type = val.type || "text";
+            } else {
+              value = val;
+            }
+
+            const label = rawKey.split('.')[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+            if (rawKey.includes('select(')) {
+              const match = rawKey.match(/select\((.*?)\)/);
+              const optionSource = match?.[1]?.trim() || '';
+              type = "select";
+
+              // ✅ Handle external constants
+              if (optionSource === "DISCOUNT_OPTIONS") {
+                options = DISCOUNT_OPTIONS;
+              } else if (optionSource === "COUNTRY_OPTIONS") {
+                options = COUNTRY_OPTIONS;
               } else {
-                value = val;
+                options = optionSource.split(',').map(opt => opt.trim());
               }
+            }
 
-              const label = rawKey.split('.')[0].replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-
-              if (rawKey.includes('select(')) {
-                const match = rawKey.match(/select\((.*?)\)/);
-                const optionSource = match?.[1]?.trim() || '';
-                type = "select";
-
-                // ✅ Handle external constants
-                if (optionSource === "DISCOUNT_OPTIONS") {
-                  options = DISCOUNT_OPTIONS;
-                } else if (optionSource === "COUNTRY_OPTIONS") {
-                  options = COUNTRY_OPTIONS;
-                } else {
-                  options = optionSource.split(',').map(opt => opt.trim());
-                }
-              }
-
-              return { name: rawKey, label, type, value, options };
-            });
+            return { name: rawKey, label, type, value, options };
+          });
 
           let newRowHtml = "";
 
@@ -2167,6 +2243,9 @@ const initInvoiceForm = () => {
       const description = adjustment.description ?? "";
       const descriptionEdit = adjustment.description_edit ?? "";
       const totalFormatted = `${unitType === "true" ? "+" : "+"}${formatCurrency(amount)}`;
+      const chargeStartDate = adjustment.charge_start_date || "";
+      const chargeEndDate = adjustment.charge_end_date || "";
+      const isMonthlyCharge = unit === "monthly_charge";
 
       return `
           <tr class="discount-item">
@@ -2174,6 +2253,7 @@ const initInvoiceForm = () => {
               <select class="form-select price-adjustment-unit" data-field="unit">
                 <option value="discount"${unit === "discount" ? " selected" : ""}>Discount</option>
                 <option value="charge"${unit === "charge" ? " selected" : ""}>Charge</option>
+                <option value="monthly_charge"${unit === "monthly_charge" ? " selected" : ""}>Monthly Charge</option>
                 <option value="fixedtax"${unit === "fixedtax" ? " selected" : ""}>Fixed Tax</option>
               </select>
             </td>
@@ -2182,6 +2262,10 @@ const initInvoiceForm = () => {
               <select class="form-select reason-code" data-field="description">
                 ${buildReasonOptions(description)}
               </select>
+              <div class="monthly-charge-dates mt-2" style="display: ${isMonthlyCharge ? 'block' : 'none'};">
+                <input type="date" class="form-control charge-start-date mb-1" placeholder="Start Date" data-field="charge_start_date" value="${chargeStartDate}">
+                <input type="date" class="form-control charge-end-date" placeholder="End Date" data-field="charge_end_date" value="${chargeEndDate}">
+              </div>
             </td>
             <td class="align-top">
               <input type="text" class="form-control amount" value="${formatCurrency(amount)}" data-field="amount">
@@ -2220,6 +2304,24 @@ const initInvoiceForm = () => {
       const html = renderAdjustmentRow(adjustment);
       $lastRow.after(html);
       $lastRow = $lastRow.next();
+      
+      // Add event listeners for the newly rendered row
+      const $newRow = $lastRow;
+      $newRow.find('.price-adjustment-unit').on('change', function() {
+        const isMonthlyCharge = $(this).val() === 'monthly_charge';
+        $(this).closest('tr').find('.monthly-charge-dates').toggle(isMonthlyCharge);
+      });
+      
+      // Auto-compute end date when start date changes for monthly charges
+      $newRow.find('.charge-start-date').on('change', function() {
+        const startDate = $(this).val();
+        if (startDate) {
+          const date = new Date(startDate);
+          date.setMonth(date.getMonth() + 1);
+          const endDate = date.toISOString().split('T')[0];
+          $(this).closest('tr').find('.charge-end-date').val(endDate);
+        }
+      });
     });
   });
 
@@ -2743,24 +2845,24 @@ const initInvoiceForm = () => {
 };
 
 // Listen for theme changes and update dynamically generated badges
-document.addEventListener('theme:changed', function(e) {
-    // Update "New Attachment" badges (both subtle and solid)
-    const newAttachmentBadges = document.querySelectorAll('.badge.bg-primary-subtle, .badge.bg-primary');
-    newAttachmentBadges.forEach(badge => {
-        if (e.detail.theme === 'dark') {
-            // Convert to solid colors in dark mode
-            if (badge.classList.contains('bg-primary-subtle')) {
-                badge.classList.remove('bg-primary-subtle', 'text-primary');
-                badge.classList.add('bg-primary', 'text-white');
-            }
-        } else {
-            // Convert back to subtle colors in light mode
-            if (badge.classList.contains('bg-primary')) {
-                badge.classList.remove('bg-primary', 'text-white');
-                badge.classList.add('bg-primary-subtle', 'text-primary');
-            }
-        }
-    });
+document.addEventListener('theme:changed', function (e) {
+  // Update "New Attachment" badges (both subtle and solid)
+  const newAttachmentBadges = document.querySelectorAll('.badge.bg-primary-subtle, .badge.bg-primary');
+  newAttachmentBadges.forEach(badge => {
+    if (e.detail.theme === 'dark') {
+      // Convert to solid colors in dark mode
+      if (badge.classList.contains('bg-primary-subtle')) {
+        badge.classList.remove('bg-primary-subtle', 'text-primary');
+        badge.classList.add('bg-primary', 'text-white');
+      }
+    } else {
+      // Convert back to subtle colors in light mode
+      if (badge.classList.contains('bg-primary')) {
+        badge.classList.remove('bg-primary', 'text-white');
+        badge.classList.add('bg-primary-subtle', 'text-primary');
+      }
+    }
+  });
 });
 
 document.addEventListener("turbo:load", initInvoiceForm);
