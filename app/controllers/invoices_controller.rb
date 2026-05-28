@@ -157,7 +157,6 @@ class InvoicesController < ApplicationController
         line_item
       end
       @invoice.line_items_data = processed_items
-      @invoice.regenerate_proration_calculations
     end
 
     # Set up required variables for _invoice_card partial
@@ -248,9 +247,6 @@ class InvoicesController < ApplicationController
         line_item
       end
       @invoice.line_items_data = processed_items
-
-      # Calculate and apply prorated discounts for mid-cycle account additions
-      @invoice.regenerate_proration_calculations
     end
 
     if @invoice.save
@@ -290,9 +286,6 @@ class InvoicesController < ApplicationController
         line_item
       end
       @invoice.line_items_data = processed_items
-
-      # Calculate and apply prorated discounts for mid-cycle account additions
-      @invoice.regenerate_proration_calculations
 
       clean_params.delete(:line_items_attributes)
     end
@@ -738,14 +731,6 @@ class InvoicesController < ApplicationController
     subscription = optional_fields['subscription']
     return line_item unless subscription.is_a?(Hash)
 
-    quantity_key = subscription.keys.find { |k| k.to_s.include?('quantity') }
-    return line_item unless quantity_key.present?
-
-    quantity = subscription[quantity_key]
-    return line_item if quantity.blank?
-
-    line_item[:quantity] = quantity
-    line_item['quantity'] = quantity
     line_item
   end
 

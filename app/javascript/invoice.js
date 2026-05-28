@@ -799,15 +799,7 @@ const initInvoiceForm = () => {
       subscription: [
         { name: "subscription.billing_cycle.select(monthly,quarterly,annual).4", label: "Billing Cycle", type: "select", options: ["monthly", "quarterly", "annual"], cols: 4 },
         { name: "subscription.start_date.date.4", label: "Start Date", type: "date", cols: 4 },
-        { name: "subscription.renewal_date.date.4", label: "Renewal Date", type: "date", cols: 4 },
-        { name: "subscription.quantity.number.4", label: "Quantity (Accounts)", type: "number", cols: 4 }
-      ],
-      subscription_addition: [
-        { name: "subscription_addition.base_subscription_id.text.4", label: "Base Subscription ID", type: "text", cols: 4 },
-        { name: "subscription_addition.accounts_added.number.3", label: "Accounts Added", type: "number", cols: 3 },
-        { name: "subscription_addition.activation_date.date.3", label: "Activation Date", type: "date", cols: 3 },
-        { name: "subscription_addition.pro_rated_discount.text.2", label: "Pro-rated Discount", type: "text", cols: 2 },
-        { name: "subscription_addition.pro_rated_amount.text_only.2", label: "Pro-rated Amount", type: "text_only", cols: 2 }
+        { name: "subscription.renewal_date.date.4", label: "Renewal Date", type: "date", cols: 4 }
       ],
     };
 
@@ -882,49 +874,10 @@ const initInvoiceForm = () => {
       updateRenewalDate($row);
     });
 
-    // Mid-cycle addition pro-rated calculation
-    function getCycleDays(billingCycle) {
-      switch (billingCycle) {
-        case 'monthly': return 30;
-        case 'quarterly': return 90;
-        case 'annual': return 365;
-        default: return 30;
-      }
-    }
-
-    function calculateProRatedAmount(accountsAdded, activationDateStr, billingCycle, cycleStartStr, unitPrice, renewalDateStr) {
-      if (!accountsAdded || !activationDateStr || !billingCycle || !cycleStartStr || !unitPrice || !renewalDateStr) return null;
-
-      const activationDate = new Date(activationDateStr);
-      const cycleStartDate = new Date(cycleStartStr);
-      const renewalDate = new Date(renewalDateStr);
-      if (isNaN(activationDate.getTime()) || isNaN(cycleStartDate.getTime()) || isNaN(renewalDate.getTime())) return null;
-
-      const cycleDays = Math.ceil((renewalDate - cycleStartDate) / (1000 * 60 * 60 * 24));
-      if (cycleDays <= 0) return { proRatedPrice: "0.00", discount: "0.00", remainingDays: 0 };
-
-      const effectiveStart = activationDate > cycleStartDate ? activationDate : cycleStartDate;
-      const remainingDays = Math.max(0, Math.ceil((renewalDate - effectiveStart) / (1000 * 60 * 60 * 24)));
-
-      if (remainingDays <= 0) return { proRatedPrice: "0.00", discount: "0.00", remainingDays: 0 };
-
-      const proRatedPrice = unitPrice * (remainingDays / cycleDays) * accountsAdded;
-      const fullPrice = unitPrice * accountsAdded;
-      const discount = fullPrice - proRatedPrice;
-
-      return { proRatedPrice: proRatedPrice.toFixed(2), discount: discount.toFixed(2), remainingDays };
-    }
-
     function syncSubscriptionQuantityToLineItem($subscriptionRow) {
       const rowIndex = $subscriptionRow.data('line-index');
       const $lineItem = $(`tr.line-item[data-line-index="${rowIndex}"]`);
       if (!$lineItem.length) return;
-
-      const quantityInput = $subscriptionRow.find('input[name*="[optional_fields][subscription.quantity]"]');
-      const quantityValue = parseInt(quantityInput.val(), 10);
-      if (quantityValue > 0) {
-        $lineItem.find('.quantity').val(quantityValue);
-      }
     }
 
     function insertOptionalFieldsForLine(rowIndex, selectedKey) {
@@ -1030,145 +983,11 @@ const initInvoiceForm = () => {
       });
     }
 
-    function updateProRatedAmount($row) {
-      // For subscription additions in separate line items
-      const rowIndex = $row.data('line-index');
-      const $additionLineItem = $(`tr.line-item[data-line-index="${rowIndex}"]`);
-
-      if (!$additionLineItem.length) return;
-
-      const accountsAdded = parseInt($row.find('input[name*="[optional_fields][subscription_addition.accounts_added]"]').val()) || 0;
-      const activationDate = $row.find('input[name*="[optional_fields][subscription_addition.activation_date]"]').val();
-
-      // Find the base subscription by looking for the subscription line item that this addition references
-      const baseSubscriptionId = $additionLineItem.data('base-subscription-id');
-      const $baseSubscriptionLineItem = $(`tr.line-item:not(.subscription-addition)`).filter(function () {
-        return $(this).find('.item-id').val() === baseSubscriptionId;
-      });
-
-      if (!$baseSubscriptionLineItem.length) return;
-
-      // Get subscription data from the base subscription line item
-      const $subscriptionRow = $baseSubscriptionLineItem.nextUntil('.line-item', '.optional-field-row[data-optional-group="subscription"]');
-      const billingCycle = $subscriptionRow.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val();
-      const cycleStart = $subscriptionRow.find('input[name*="[optional_fields][subscription.start_date]"]').val();
-      const renewalDateStr = $subscriptionRow.find('input[name*="[optional_fields][subscription.renewal_date]"]').val();
-      const unitPrice = parseCurrency($baseSubscriptionLineItem.find('.price').val()) || 0;
-
-      if (accountsAdded && activationDate && billingCycle && cycleStart && renewalDateStr) {
-        const result = calculateProRatedAmount(accountsAdded, activationDate, billingCycle, cycleStart, unitPrice, renewalDateStr);
-        if (result) {
-          $row.find('input[name*="[optional_fields][subscription_addition.pro_rated_discount]"]').val(result.discount);
-          $row.find('.optional-total[data-total-type="subscription_addition"]').text(formatCurrency(result.proRatedPrice));
-          $row.find('.optional-total-input').val(result.proRatedPrice);
-
-          // Update the addition line item price and quantity
-          $additionLineItem.find('.price').val(result.proRatedPrice);
-          $additionLineItem.find('.quantity').val(accountsAdded);
-          recalculateLineTotal($additionLineItem);
-        }
-      }
-    }
-
-    $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription_addition"] input, .optional-field-row[data-optional-group="subscription_addition"] select', function () {
-      const $row = $(this).closest('tr.optional-field-row');
-      updateProRatedAmount($row);
-    });
-
-    // Also recalculate when subscription fields change (to update existing additions)
-    $(document).on('change.invoice_form', '.optional-field-row[data-optional-group="subscription"] input, .optional-field-row[data-optional-group="subscription"] select', function () {
-      const $row = $(this).closest('tr.optional-field-row');
-      const rowIndex = $row.data('line-index');
-
-      syncSubscriptionQuantityToLineItem($row);
-
-      // Find the base subscription line item
-      const $baseLineItem = $(`tr.line-item[data-line-index="${rowIndex}"]`);
-      const baseSubscriptionId = $baseLineItem.find('.item-id').val();
-
-      // Update all subscription addition line items that reference this base subscription
-      $(`tr.line-item.subscription-addition[data-base-subscription-id="${baseSubscriptionId}"]`).each(function () {
-        const additionIndex = $(this).data('line-index');
-        const $additionOptionalRow = $(`.optional-field-row[data-optional-group="subscription_addition"][data-line-index="${additionIndex}"]`);
-        if ($additionOptionalRow.length) {
-          updateProRatedAmount($additionOptionalRow);
-        }
-      });
-    });
-
     $(document).on('change.invoice_form', 'select[id^="additional_field_"]', function () {
       const $select = $(this);
       const selectedKey = $select.val();
       const selectedText = $select.find("option:selected").text();
       if (!selectedKey) return;
-
-      // Special handling for subscription_addition - create a new line item instead of optional fields
-      if (selectedKey === 'subscription_addition') {
-        const $dropdownRow = $select.closest('tr.dropdown_per_line');
-        const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
-          return $(this).data('line-index') === parseInt($select.attr('id').split('_').pop());
-        });
-        const baseRowIndex = $lineItemRow.data('line-index');
-
-        // Find the base subscription line item to link to
-        const $baseSubscription = $lineItemRow;
-        const baseSubscriptionId = $baseSubscription.find('.item-id').val();
-
-        if ($baseSubscription.hasClass('subscription-addition')) {
-          showFlashMessage("Subscription additions cannot be added to another subscription addition.", "warning");
-          $select.val('');
-          return;
-        }
-
-        if (!baseSubscriptionId) {
-          showFlashMessage("Please set an Item ID for the base subscription first.", "warning");
-          $select.val('');
-          return;
-        }
-
-        // Create a new line item for the subscription addition
-        const newLineIndex = lineIndex++;
-        const additionLineItemHtml = `
-          <tr class="line-item subscription-addition" data-line-index="${newLineIndex}" data-base-subscription-id="${baseSubscriptionId}">
-            <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
-            <td><input type="text" name="invoice[line_items_attributes][${newLineIndex}][item_id]" class="form-control item-id" value="${baseSubscriptionId}-addition" required></td>
-            <td><input type="text" name="invoice[line_items_attributes][${newLineIndex}][description]" class="form-control description" value="Subscription Addition - ${baseSubscriptionId}" required></td>
-            <td><input type="text" name="invoice[line_items_attributes][${newLineIndex}][quantity]" class="form-control quantity" value="1" required></td>
-            <td><select name="invoice[line_items_attributes][${newLineIndex}][unit]" class="form-select unit" required>${buildUnitOptions('License')}</select></td>
-            <td><input type="text" name="invoice[line_items_attributes][${newLineIndex}][price]" class="form-control price" value="0.00" required></td>
-            <td><select name="invoice[line_items_attributes][${newLineIndex}][tax]" class="form-select tax" required>${buildTaxOptions(null)}</select></td>
-            <td class="text-end total">0.00</td>
-            <td>
-              <button type="button" class="btn btn-sm btn-outline-danger remove-line">−</button>
-            </td>
-          </tr>
-          <tr class="dropdown_per_line hidden" data-line-index="${newLineIndex}">
-            <td colspan="3">
-              <select name="additional_field_${newLineIndex}" id="additional_field_${newLineIndex}" class="no-label form-select optional-type">
-                <option value="">Add optional field</option>
-                ${buildOptions(OPTIONAL_FIELDS)}
-              </select>
-            </td>
-            <td colspan="6" class="optional-fields-container"></td>
-          </tr>
-        `;
-
-        const $baseOptionRows = $lineItemRow.nextUntil('.line-item');
-        const $insertAfter = $baseOptionRows.length ? $baseOptionRows.last() : $lineItemRow;
-        $insertAfter.after(additionLineItemHtml);
-
-        // Add subscription_addition optional fields to the new line item and populate the base_subscription_id
-        insertOptionalFieldsForLine(newLineIndex, 'subscription_addition');
-        const $baseIdField = $(`tr.line-item[data-line-index="${newLineIndex}"]`).next().find('input[name*="[optional_fields][subscription_addition.base_subscription_id]"]');
-        if ($baseIdField.length) {
-          $baseIdField.val(baseSubscriptionId);
-        }
-
-        $select.val('');
-        updateRemoveButtons();
-        recalculateTotals();
-        return;
-      }
 
       const $dropdownRow = $select.closest('tr.dropdown_per_line');
       const $lineItemRow = $dropdownRow.siblings(`.line-item[data-line-index]`).filter(function () {
@@ -1519,17 +1338,6 @@ const initInvoiceForm = () => {
         // Format charge total
         $cRow.find('.optional-total[data-total-type="charge"]').text(formatCurrency(cAmount));
         $cRow.find('.optional-total-input').val(cAmount.toFixed(2));
-      });
-
-      // --- Subscription addition discounts ---
-      const $subscriptionAdditionRows = $optionalRows.filter('[data-optional-group="subscription_addition"]');
-      $subscriptionAdditionRows.each(function () {
-        const $saRow = $(this);
-        const proratedDiscount = parseCurrency($saRow.find('input[name*="subscription_addition.pro_rated_discount"]').val()) || 0;
-
-        discount += proratedDiscount;
-        $saRow.find('.optional-total[data-total-type="subscription_addition"]').text(formatCurrency(proratedDiscount));
-        $saRow.find('.optional-total-input').val(proratedDiscount.toFixed(2));
       });
 
       // Final line total

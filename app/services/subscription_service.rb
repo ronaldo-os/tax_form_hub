@@ -34,81 +34,16 @@ class SubscriptionService
     subscription
   end
 
-  # Add a mid-cycle quantity change to an active subscription
-  # This creates a prorated adjustment for the remainder of the current billing period
-  #
-  # @param subscription [Subscription] The subscription to modify
-  # @param quantity_change [Decimal] Change in quantity (positive or negative)
-  # @param effective_date [Date] Date the change takes effect
-  # @return [Hash] Contains :adjustment_amount, :remaining_days, :prorated_price
-  def self.add_mid_cycle_adjustment(subscription:, quantity_change:, effective_date: Date.current)
-    raise "Subscription must be active" unless subscription.active_on?(effective_date)
-    raise "Effective date must be within current billing period" unless subscription.active_on?(effective_date)
-
-    # Calculate proration for the remainder of the billing period
-    full_price = (quantity_change.abs * subscription.unit_price).to_f
-    
-    remaining_days = (subscription.current_period_end - effective_date).to_i
-    cycle_days = (subscription.current_period_end - subscription.current_period_start).to_i
-    
-    return zero_adjustment if remaining_days <= 0 || cycle_days <= 0
-
-    prorated_ratio = remaining_days.to_f / cycle_days
-    prorated_price = full_price * prorated_ratio
-    discount_amount = full_price - prorated_price
-
-    adjustment = {
-      type: 'mid_cycle_adjustment',
-      quantity_change: quantity_change,
-      effective_date: effective_date,
-      adjustment_amount: prorated_price.round(2),
-      discount_amount: discount_amount.round(2),
-      remaining_days: remaining_days,
-      cycle_days: cycle_days,
-      full_price: full_price.round(2)
-    }
-
-    # Store adjustment in metadata for tracking
-    subscription.metadata ||= {}
-    subscription.metadata['adjustments'] ||= []
-    subscription.metadata['adjustments'] << adjustment
-
-    subscription.save!
-    adjustment
-  end
-
   # Create an invoice from a subscription's current period
-  # with optional mid-cycle adjustments
   #
   # @param subscription [Subscription] The subscription to invoice
-  # @param adjustments [Array<Hash>, nil] Array of adjustments to include
   # @param invoice_number [String, nil] Optional custom invoice number
   # @return [Invoice] The created invoice
-  def self.generate_invoice_from_subscription(subscription:, adjustments: nil, invoice_number: nil)
+  def self.generate_invoice_from_subscription(subscription:, invoice_number: nil)
     raise "Subscription must be due for invoicing" unless subscription.due_for_invoicing?
 
     invoice = subscription.generate_next_invoice(invoice_number: invoice_number)
-
-    # Apply adjustments if provided
-    if adjustments.present?
-      apply_adjustments_to_invoice(invoice, adjustments)
-    end
-
     invoice
-  end
-
-  # Apply mid-cycle adjustments to an invoice
-  #
-  # @param invoice [Invoice] The invoice to modify
-  # @param adjustments [Array<Hash>] Array of adjustment hashes
-  def self.apply_adjustments_to_invoice(invoice, adjustments)
-    return if adjustments.blank?
-
-    adjustments.each do |adjustment|
-      add_adjustment_line_item(invoice, adjustment)
-    end
-
-    invoice.save!
   end
 
   # Pause a subscription temporarily
@@ -170,38 +105,4 @@ class SubscriptionService
     subscription
   end
 
-  private
-
-  def self.zero_adjustment
-    {
-      adjustment_amount: 0,
-      discount_amount: 0,
-      remaining_days: 0,
-      cycle_days: 0,
-      full_price: 0
-    }
-  end
-
-  def self.add_adjustment_line_item(invoice, adjustment)
-    line_items = invoice.line_items_data || []
-
-    adjustment_item = {
-      'description' => "Adjustment: #{adjustment[:type]}",
-      'quantity' => '1',
-      'price' => adjustment[:adjustment_amount].to_s,
-      'unit' => 'adjustment',
-      'tax_rate' => nil,
-      'optional_fields' => {
-        'adjustment_details' => {
-          'type' => adjustment[:type],
-          'effective_date' => adjustment[:effective_date].to_s,
-          'full_price' => adjustment[:full_price].to_s,
-          'discount_amount' => adjustment[:discount_amount].to_s
-        }
-      }
-    }
-
-    line_items << adjustment_item
-    invoice.update_column(:line_items_data, line_items)
-  end
 end

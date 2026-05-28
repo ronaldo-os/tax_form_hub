@@ -3,43 +3,43 @@
 class GenerateRecurringInvoicesJob < ApplicationJob
   queue_as :default
 
-  # Generate invoices for all subscriptions due for invoicing
+  # Generate invoices for all subscription contracts due for billing
   #
-  # RECURRING INVOICE WORKFLOW:
-  # - First invoice created for subscription: Parent/primary invoice (e.g., 2026-00001-009)
-  # - Subsequent invoices: Sub-invoices linked to parent (e.g., 2026-00001-009-01, 2026-00001-009-02, etc.)
+  # SUBSCRIPTION-BASED RECURRING INVOICE WORKFLOW:
+  # - Parent invoice acts as the subscription contract (e.g., 2026-00001-009)
+  # - Subsequent invoices are generated monthly linked to parent (e.g., 2026-00001-009-01, 2026-00001-009-02, etc.)
   #
   # This job runs periodically (typically daily) to:
-  # 1. Find all subscriptions with next_invoice_date <= today
-  # 2. Generate new invoices for each due subscription (automatically parent or sub-invoice)
-  # 3. Link sub-invoices to their parent via recurring_parent_invoice_id
-  # 4. Update subscription renewal information (current_period, next_invoice_date)
+  # 1. Find all invoices with subscription line-items due for billing
+  # 2. Generate new invoices for each due subscription contract
+  # 3. Link generated invoices to their parent via recurring_parent_invoice_id
+  # 4. Update parent invoice line items with new renewal dates
   # 5. Track job execution for monitoring
   #
-  # IMPORTANT: Always reference the original invoice ID (parent) as the key link between invoices
-  # See RECURRING_INVOICE_WORKFLOW.md for complete documentation
+  # IMPORTANT: Always reference the original invoice number (parent) as the billing reference
   def perform(on_date: Date.current)
-    subscriptions = Subscription.due_for_invoicing(on_date)
+    subscription_contracts = Invoice.subscription_contracts_due_for_billing(on_date)
     
-    Rails.logger.info "GenerateRecurringInvoicesJob: Found #{subscriptions.count} subscriptions due for invoicing"
+    # Filter to only those with subscription line-items that are due
+    due_contracts = subscription_contracts.select(&:subscription_due_for_billing?)
+    
+    Rails.logger.info "GenerateRecurringInvoicesJob: Found #{due_contracts.count} subscription contracts due for billing"
 
     results = {
-      total: subscriptions.count,
+      total: due_contracts.count,
       successful: 0,
       failed: 0,
       errors: []
     }
 
-    subscriptions.each do |subscription|
+    due_contracts.each do |subscription_contract|
       begin
-        invoice = subscription.generate_next_invoice
-        invoice_type = invoice.recurring_parent_invoice? ? "parent" : "sub-invoice"
-        parent_ref = invoice.recurring_parent_invoice_id ? " [parent: #{invoice.recurring_parent_invoice.invoice_number}]" : ""
+        invoice = subscription_contract.generate_subscription_invoice
         results[:successful] += 1
-        Rails.logger.info "Generated #{invoice_type} invoice #{invoice.invoice_number}#{parent_ref} for subscription #{subscription.id}"
+        Rails.logger.info "Generated subscription invoice #{invoice.invoice_number} for contract #{subscription_contract.invoice_number}"
       rescue StandardError => e
         results[:failed] += 1
-        error_msg = "Subscription #{subscription.id}: #{e.message}"
+        error_msg = "Subscription contract #{subscription_contract.invoice_number}: #{e.message}"
         results[:errors] << error_msg
         Rails.logger.error error_msg
       end

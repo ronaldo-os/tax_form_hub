@@ -70,7 +70,6 @@ export const OPTIONAL_FIELDS = {
         "serialID": "Serial number",
         "note": "Notes",
         "subscription": "Subscription",
-        "subscription_addition": "Subscription - Mid-cycle Addition",
         "despatchlinedocumentreference": "Shipping Notice Reference",
         "despatchlineiddocumentreference": "Shipping Notice Line Reference",
         "receiptlinedocumentreference": "Goods Receipt Reference",

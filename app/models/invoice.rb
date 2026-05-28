@@ -90,6 +90,165 @@ class Invoice < ApplicationRecord
     recurring_parent_invoice_id.present?
   end
 
+  # Check if this invoice has subscription line-items
+  def has_subscription_line_items?
+    return false if line_items_data.blank?
+
+    line_items_data.any? do |item|
+      item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && 
+      item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
+    end
+  end
+
+  # Get subscription line-items from this invoice
+  def subscription_line_items
+    return [] unless line_items_data.present?
+
+    line_items_data.select do |item|
+      item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && 
+      item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
+    end
+  end
+
+  # Check if this invoice is a subscription contract (parent invoice)
+  def subscription_contract?
+    has_subscription_line_items? && recurring_parent_invoice_id.nil?
+  end
+
+  # Check if this invoice is a generated subscription invoice (child)
+  def subscription_invoice?
+    billing_reference.present? && !has_subscription_line_items?
+  end
+
+  # Check if subscription is active
+  def subscription_active?
+    return false unless subscription_contract?
+    return false if archived?
+    
+    # Check if any subscription line-item has a renewal date in the future
+    subscription_line_items.any? do |item|
+      renewal_date = extract_subscription_field(item, 'renewal_date')
+      renewal_date.present? && Date.parse(renewal_date) >= Date.current
+    end
+  rescue
+    false
+  end
+
+  # Check if subscription is due for billing
+  def subscription_due_for_billing?
+    return false unless subscription_active?
+    
+    # Check if any subscription line-item has a renewal date that has passed
+    subscription_line_items.any? do |item|
+      renewal_date = extract_subscription_field(item, 'renewal_date')
+      renewal_date.present? && Date.parse(renewal_date) <= Date.current
+    end
+  rescue
+    false
+  end
+
+  # Generate the next subscription invoice
+  def generate_subscription_invoice
+    raise "Cannot generate invoice: not a subscription contract" unless subscription_contract?
+    raise "Cannot generate invoice: subscription not active" unless subscription_active?
+    raise "Cannot generate invoice: not due for billing" unless subscription_due_for_billing?
+
+    # Generate sub-invoice number
+    invoice_number = Invoice.next_recurring_sub_invoice_number(self)
+
+    # Create new line items with updated renewal dates
+    new_line_items_data = line_items_data.map do |item|
+      if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && 
+         item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
+        
+        # Update subscription renewal date
+        billing_cycle = extract_subscription_field(item, 'billing_cycle')
+        current_renewal_date = extract_subscription_field(item, 'renewal_date')
+        
+        if billing_cycle && current_renewal_date
+          new_renewal_date = calculate_next_period_date(Date.parse(current_renewal_date), billing_cycle)
+          new_item = item.deep_dup
+          
+          # Update the renewal date in optional fields
+          renewal_key = item['optional_fields'].keys.find { |k| k.to_s.include?('renewal_date') }
+          new_item['optional_fields'][renewal_key] = new_renewal_date.to_s
+          
+          new_item
+        else
+          item
+        end
+      else
+        item
+      end
+    end
+
+    # Create the new invoice
+    new_invoice = user.invoices.build(
+      recipient_company: recipient_company,
+      sale_from: sale_from,
+      invoice_type: invoice_type,
+      invoice_category: invoice_category,
+      issue_date: Date.current,
+      invoice_number: invoice_number,
+      currency: currency,
+      line_items_data: new_line_items_data,
+      recipient_note: recipient_note,
+      payment_terms: payment_terms,
+      price_adjustments: price_adjustments,
+      billing_reference: self.invoice_number,
+      recurring_parent_invoice_id: id,
+      recurring_sequence_number: recurring_sub_invoices.count + 1
+    )
+
+    if new_invoice.save
+      # Update parent invoice line items with new renewal dates
+      update(line_items_data: new_line_items_data)
+      new_invoice
+    else
+      raise "Failed to generate subscription invoice: #{new_invoice.errors.full_messages.join(', ')}"
+    end
+  end
+
+  # Calculate next period date based on billing cycle
+  def calculate_next_period_date(from_date, cycle)
+    case cycle
+    when 'monthly'
+      from_date >> 1
+    when 'quarterly'
+      from_date >> 3
+    when 'annual'
+      from_date >> 12
+    else
+      from_date >> 1 # Default to monthly
+    end
+  end
+
+  # Extract subscription field from line item
+  def extract_subscription_field(line_item, field_name)
+    return nil unless line_item.is_a?(Hash) && line_item['optional_fields'].is_a?(Hash)
+    
+    line_item['optional_fields'].find do |key, value|
+      key.to_s.include?(field_name)
+    end&.last
+  end
+
+  # Scope for finding subscription invoices due for billing
+  scope :subscription_contracts_due_for_billing, ->(date = Date.current) {
+    where(recurring_parent_invoice_id: nil)
+      .where(archived: false)
+      .where.not(line_items_data: nil)
+  }
+
+  # Scope for finding all subscription contracts
+  scope :subscription_contracts, -> {
+    where(recurring_parent_invoice_id: nil)
+  }
+
+  # Scope for finding subscription invoices (generated invoices)
+  scope :subscription_invoices, -> {
+    where.not(billing_reference: nil)
+  }
+
   def sender_company
     sale_from || user&.company
   end
@@ -126,71 +285,6 @@ class Invoice < ApplicationRecord
     )
   end
 
-  # Calculate prorated discounts for all subscription additions in this invoice
-  # @return [Array<Hash>] Array of proration calculations with line item references
-  def calculate_prorated_discounts
-    ProrationService.calculate_invoice_prorations(line_items_data)
-  end
-
-  # Build discount breakdown for display under line items
-  # @return [Hash] Hash mapping line item indices to their discount breakdowns
-  def discount_breakdown
-    @discount_breakdown ||= ProrationService.build_discount_breakdown(line_items_data)
-  end
-
-  # Check if invoice has any prorated subscription additions
-  # @return [Boolean]
-  def has_prorated_additions?
-    discount_breakdown.present?
-  end
-
-  # Calculate total discount amount from prorations
-  # @return [Float] Total discount amount
-  def total_prorated_discount
-    calculate_prorated_discounts.sum { |p| p[:discount_amount].to_f }
-  end
-
-  # Regenerate prorated calculations - call when line items change
-  # This updates the pro_rated_discount field in subscription_addition optional fields
-  def regenerate_proration_calculations
-    return unless line_items_data.present?
-
-    normalize_subscription_renewal_dates
-    prorations = calculate_prorated_discounts
-
-    # Update line_items_data with calculated discounts
-    prorations.each do |proration|
-      # Find the addition line item by index
-      addition_index = proration[:addition_line_item_index]
-      addition_item = line_items_data[addition_index]
-
-      next unless addition_item && addition_item['optional_fields']
-
-      # Find the specific subscription_addition group
-      addition_item['optional_fields'].each do |group_key, fields|
-        next unless group_key.to_s.start_with?('subscription_addition')
-
-        # Update the pro_rated_discount field if it exists in this group
-        discount_key = fields.keys.find { |k| k.include?('pro_rated_discount') }
-        if discount_key.present?
-          fields[discount_key] = proration[:discount_amount].to_s
-        end
-
-        # Update the pro_rated_amount field if it exists
-        amount_key = fields.keys.find { |k| k.include?('pro_rated_amount') }
-        if amount_key.present?
-          fields[amount_key] = proration[:pro_rated_price].to_s
-        end
-      end
-
-      # Update the line item price and quantity for the addition
-      addition_item['price'] = proration[:pro_rated_price].to_s
-      addition_item['quantity'] = proration[:accounts_added].to_s
-    end
-
-    # Mark for update if needed
-    self.line_items_data_will_change! if has_changes_to_save?
-  end
 
   def normalize_subscription_renewal_dates
     return if line_items_data.blank?

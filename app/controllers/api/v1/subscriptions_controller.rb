@@ -117,21 +117,6 @@ module Api
         render json: invoices, each_serializer: InvoiceSerializer
       end
 
-      # POST /api/v1/subscriptions/:id/mid-cycle-adjustment
-      def add_adjustment
-        begin
-          adjustment = SubscriptionService.add_mid_cycle_adjustment(
-            subscription: @subscription,
-            quantity_change: adjustment_params[:quantity_change],
-            effective_date: adjustment_params[:effective_date]&.to_date || Date.current
-          )
-
-          render json: adjustment, status: :created
-        rescue StandardError => e
-          render json: { error: e.message }, status: :unprocessable_entity
-        end
-      end
-
       # GET /api/v1/subscriptions/due-for-invoicing
       def due_for_invoicing
         subscriptions = Subscription.due_for_invoicing(Date.current)
@@ -163,10 +148,6 @@ module Api
           :start_date,
           :end_date
         )
-      end
-
-      def adjustment_params
-        params.require(:adjustment).permit(:quantity_change, :effective_date)
       end
     end
   end

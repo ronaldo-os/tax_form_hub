@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_19_000001) do
+ActiveRecord::Schema[7.2].define(version: 2026_05_28_104844) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -134,6 +134,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_19_000001) do
     t.bigint "subscription_id"
     t.bigint "recurring_parent_invoice_id"
     t.integer "recurring_sequence_number"
+    t.string "billing_reference"
+    t.index ["billing_reference"], name: "index_invoices_on_billing_reference"
     t.index ["recipient_company_id", "status"], name: "index_invoices_on_recipient_and_status"
     t.index ["recurring_parent_invoice_id"], name: "index_invoices_on_recurring_parent_id"
     t.index ["remit_to_location_id"], name: "index_invoices_on_remit_to_location_id"
