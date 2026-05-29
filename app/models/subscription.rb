@@ -168,8 +168,7 @@ class Subscription < ApplicationRecord
         'subscription' => {
           'start_date' => current_period_start.to_s,
           'end_date' => current_period_end.to_s,
-          'billing_cycle' => billing_cycle,
-          'renewal_date' => current_period_end.to_s
+          'billing_cycle' => billing_cycle
         }
       }
     }

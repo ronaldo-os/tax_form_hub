@@ -799,7 +799,7 @@ const initInvoiceForm = () => {
       subscription: [
         { name: "subscription.billing_cycle.select(monthly,quarterly,annual).4", label: "Billing Cycle", type: "select", options: ["monthly", "quarterly", "annual"], cols: 4 },
         { name: "subscription.start_date.date.4", label: "Start Date", type: "date", cols: 4 },
-        { name: "subscription.renewal_date.date.4", label: "Renewal Date", type: "date", cols: 4 }
+        { name: "subscription.end_date.date.4", label: "End Date", type: "date", cols: 4 }
       ],
     };
 
@@ -826,8 +826,8 @@ const initInvoiceForm = () => {
       }
     });
 
-    // Auto-calculate renewal date based on start date and billing cycle
-    function calculateRenewalDate(startDateStr, billingCycle) {
+    // Auto-calculate end date based on start date and billing cycle
+    function calculateEndDate(startDateStr, billingCycle) {
       if (!startDateStr || !billingCycle) return '';
       const startDate = new Date(startDateStr);
       if (isNaN(startDate.getTime())) return '';
@@ -847,31 +847,37 @@ const initInvoiceForm = () => {
           return '';
       }
 
-      const renewalDate = new Date(startDate);
-      renewalDate.setMonth(renewalDate.getMonth() + months);
-      return renewalDate.toISOString().split('T')[0];
+      const endDate = new Date(startDate);
+      endDate.setMonth(endDate.getMonth() + months);
+      return endDate.toISOString().split('T')[0];
     }
 
-    function updateRenewalDate($row) {
+    function updateEndDate($row) {
       const billingCycle = $row.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val();
       const $startDateInput = $row.find('input[name*="[optional_fields][subscription.start_date]"]');
       const startDate = $startDateInput.val();
-      const $renewalDateInput = $row.find('input[name*="[optional_fields][subscription.renewal_date]"]');
+      const $endDateInput = $row.find('input[name*="[optional_fields][subscription.end_date]"]');
+      const currentEndDate = $endDateInput.val();
 
-      if (billingCycle && startDate) {
-        const renewalDate = calculateRenewalDate(startDate, billingCycle);
-        $renewalDateInput.val(renewalDate);
+      // Only auto-fill end_date if it's currently empty — don't overwrite user's choice
+      if (billingCycle && startDate && !currentEndDate) {
+        const endDate = calculateEndDate(startDate, billingCycle);
+        if ($endDateInput[0] && $endDateInput[0]._flatpickr) {
+          $endDateInput[0]._flatpickr.setDate(endDate, true);
+        } else {
+          $endDateInput.val(endDate);
+        }
       }
     }
 
     $(document).on('change.invoice_form', 'select[name*="[optional_fields][subscription.billing_cycle]"]', function () {
       const $row = $(this).closest('tr.optional-field-row');
-      updateRenewalDate($row);
+      updateEndDate($row);
     });
 
     $(document).on('change.invoice_form', 'input[name*="[optional_fields][subscription.start_date]"]', function () {
       const $row = $(this).closest('tr.optional-field-row');
-      updateRenewalDate($row);
+      updateEndDate($row);
     });
 
     function syncSubscriptionQuantityToLineItem($subscriptionRow) {
@@ -971,13 +977,18 @@ const initInvoiceForm = () => {
       recalculateTotals();
 
       $dropdownRow.prev().find('.flatpickr-date').each(function () {
+        const $input = $(this);
         const fp = flatpickr(this, {
           dateFormat: "Y-m-d",
           allowInput: false,
           clickOpens: false,
+          onChange: function (selectedDates, dateStr) {
+            // Trigger jQuery change so event-delegated handlers (e.g. updateEndDate) fire
+            $input.trigger('change');
+          }
         });
 
-        $(this).off('click').on('click', function () {
+        $input.off('click').on('click', function () {
           fp.open();
         });
       });
@@ -1911,12 +1922,16 @@ const initInvoiceForm = () => {
     // Initialize Flatpickr for date fields
     function initFlatpickrs() {
       $('.flatpickr-date').each(function () {
+        const $input = $(this);
         const fp = flatpickr(this, {
           dateFormat: "Y-m-d",
           clickOpens: false,
           allowInput: false,
+          onChange: function (selectedDates, dateStr) {
+            $input.trigger('change');
+          }
         });
-        $(this).on('click', function () { fp.open(); });
+        $input.on('click', function () { fp.open(); });
       });
     }
 

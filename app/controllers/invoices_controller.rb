@@ -153,7 +153,7 @@ class InvoicesController < ApplicationController
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
         line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
         normalize_subscription_line_item_quantity!(line_item)
-        normalize_subscription_renewal_dates!(line_item)
+        normalize_subscription_end_dates!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -243,7 +243,7 @@ class InvoicesController < ApplicationController
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
         line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
         normalize_subscription_line_item_quantity!(line_item)
-        normalize_subscription_renewal_dates!(line_item)
+        normalize_subscription_end_dates!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -282,7 +282,7 @@ class InvoicesController < ApplicationController
           line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
         end
         normalize_subscription_line_item_quantity!(line_item)
-        normalize_subscription_renewal_dates!(line_item)
+        normalize_subscription_end_dates!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -376,7 +376,7 @@ class InvoicesController < ApplicationController
     if params[:invoice][:line_items_attributes].present?
       processed_items = params[:invoice][:line_items_attributes].values.map do |line_item|
         line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields]) if line_item[:optional_fields].present?
-        normalize_subscription_renewal_dates!(line_item)
+        normalize_subscription_end_dates!(line_item)
         line_item
       end
       @invoice.line_items_data = processed_items
@@ -462,7 +462,7 @@ class InvoicesController < ApplicationController
         if line_item[:optional_fields].present?
           line_item[:optional_fields] = process_optional_fields(line_item[:optional_fields])
         end
-        normalize_subscription_renewal_dates!(line_item)
+        normalize_subscription_end_dates!(line_item)
         line_item
       end
       original.line_items_data = processed_items
@@ -734,33 +734,37 @@ class InvoicesController < ApplicationController
     line_item
   end
 
-  def normalize_subscription_renewal_dates!(line_item)
-    return line_item unless line_item.is_a?(Hash)
-
+  def normalize_subscription_end_dates!(line_item)
+    return line_item unless line_item.is_a?(ActionController::Parameters) || line_item.is_a?(Hash)
+    
     optional_fields = line_item[:optional_fields] || line_item['optional_fields']
-    return line_item unless optional_fields.is_a?(Hash)
+    return line_item unless optional_fields.present?
 
-    subscription = optional_fields['subscription']
-    return line_item unless subscription.is_a?(Hash)
+    subscription = optional_fields[:subscription] || optional_fields['subscription']
+    return line_item unless subscription.present?
 
-    billing_cycle = subscription['billing_cycle']
-    start_date = subscription['start_date']
+    billing_cycle_key = subscription.keys.find { |k| k.to_s.include?('billing_cycle') }
+    billing_cycle = subscription[billing_cycle_key] if billing_cycle_key
+
+    start_date_key = subscription.keys.find { |k| k.to_s.include?('start_date') }
+    start_date = subscription[start_date_key] if start_date_key
+    
     return line_item if billing_cycle.blank? || start_date.blank?
 
-    expected_renewal_date = calculate_expected_renewal_date(start_date, billing_cycle)
-    return line_item unless expected_renewal_date
+    expected_end_date = calculate_expected_end_date(start_date, billing_cycle)
+    return line_item unless expected_end_date
 
-    renewal_date_key = subscription.keys.find { |k| k.to_s.include?('renewal_date') } || 'renewal_date'
-    current_renewal_date = subscription[renewal_date_key]
+    end_date_key = subscription.keys.find { |k| k.to_s.include?('end_date') } || 'end_date'
+    current_end_date = subscription[end_date_key]
 
-    if current_renewal_date.blank? || current_renewal_date.to_s != expected_renewal_date
-      subscription[renewal_date_key] = expected_renewal_date
+    if current_end_date.blank?
+      subscription[end_date_key] = expected_end_date
     end
-
+    
     line_item
   end
 
-  def calculate_expected_renewal_date(start_date_str, billing_cycle)
+  def calculate_expected_end_date(start_date_str, billing_cycle)
     return nil if start_date_str.blank? || billing_cycle.blank?
 
     start_date = if start_date_str.is_a?(Date)

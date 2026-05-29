@@ -26,7 +26,7 @@ class Invoice < ApplicationRecord
   attribute :invoice_category, :string, default: "standard"
   enum invoice_category: { standard: "standard", credit_note: "credit_note", quote: "quote" }
 
-  before_validation :normalize_subscription_renewal_dates
+  before_validation :normalize_subscription_end_dates
 
   validate :attachments_type_allowed
   validate :line_items_tax_selected
@@ -120,59 +120,90 @@ class Invoice < ApplicationRecord
     billing_reference.present? && !has_subscription_line_items?
   end
 
-  # Check if subscription is active
-  def subscription_active?
+  # Check if subscription is active (not archived, has subscription line items)
+  # The end_date represents the end of the CURRENT billing period, not the overall subscription expiry.
+  # A subscription remains active as long as it's not archived.
+  def subscription_active?(on_date = Date.current)
     return false unless subscription_contract?
     return false if archived?
-    
-    # Check if any subscription line-item has a renewal date in the future
+
     subscription_line_items.any? do |item|
-      renewal_date = extract_subscription_field(item, 'renewal_date')
-      renewal_date.present? && Date.parse(renewal_date) >= Date.current
+      start_date = extract_subscription_field(item, 'start_date')
+      billing_cycle = extract_subscription_field(item, 'billing_cycle')
+      start_date.present? && billing_cycle.present?
     end
   rescue
     false
   end
 
   # Check if subscription is due for billing
-  def subscription_due_for_billing?
-    return false unless subscription_active?
-    
-    # Check if any subscription line-item has a renewal date that has passed
+  # Due when on_date >= end_date (the current billing period has elapsed)
+  def subscription_due_for_billing?(on_date = Date.current)
+    return false unless subscription_active?(on_date)
+
     subscription_line_items.any? do |item|
-      renewal_date = extract_subscription_field(item, 'renewal_date')
-      renewal_date.present? && Date.parse(renewal_date) <= Date.current
+      end_date = extract_subscription_field(item, 'end_date')
+      end_date.present? && Date.parse(end_date) <= on_date
     end
   rescue
     false
   end
 
-  # Generate the next subscription invoice
-  def generate_subscription_invoice
+  # Generate subscription invoices for all elapsed billing periods up to on_date.
+  # For example, if billing is monthly, start_date is May 29, end_date is June 29,
+  # and on_date is August 29, this generates invoices for June 29 and July 29 periods.
+  # Returns an array of all generated invoices.
+  def generate_subscription_invoices(on_date = Date.current)
     raise "Cannot generate invoice: not a subscription contract" unless subscription_contract?
-    raise "Cannot generate invoice: subscription not active" unless subscription_active?
-    raise "Cannot generate invoice: not due for billing" unless subscription_due_for_billing?
+    raise "Cannot generate invoice: subscription not active" unless subscription_active?(on_date)
+    raise "Cannot generate invoice: not due for billing" unless subscription_due_for_billing?(on_date)
 
+    generated_invoices = []
+
+    # Keep generating invoices while the subscription is due for billing
+    while subscription_due_for_billing?(on_date)
+      invoice = generate_single_subscription_invoice
+      generated_invoices << invoice
+      reload # Reload to get updated line_items_data with new end_date
+    end
+
+    generated_invoices
+  end
+
+  # Generate the next single subscription invoice (one billing period)
+  def generate_subscription_invoice(on_date = Date.current)
+    raise "Cannot generate invoice: not a subscription contract" unless subscription_contract?
+    raise "Cannot generate invoice: subscription not active" unless subscription_active?(on_date)
+    raise "Cannot generate invoice: not due for billing" unless subscription_due_for_billing?(on_date)
+
+    generate_single_subscription_invoice
+  end
+
+  private def generate_single_subscription_invoice
     # Generate sub-invoice number
-    invoice_number = Invoice.next_recurring_sub_invoice_number(self)
+    new_invoice_number = Invoice.next_recurring_sub_invoice_number(self)
 
-    # Create new line items with updated renewal dates
+    # Create new line items with updated end dates (advance to next billing period)
     new_line_items_data = line_items_data.map do |item|
-      if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && 
+      if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) &&
          item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
-        
-        # Update subscription renewal date
+
         billing_cycle = extract_subscription_field(item, 'billing_cycle')
-        current_renewal_date = extract_subscription_field(item, 'renewal_date')
-        
-        if billing_cycle && current_renewal_date
-          new_renewal_date = calculate_next_period_date(Date.parse(current_renewal_date), billing_cycle)
+        current_end_date = extract_subscription_field(item, 'end_date')
+
+        if billing_cycle && current_end_date
+          new_end_date = calculate_next_period_date(Date.parse(current_end_date), billing_cycle)
+          new_start_date = current_end_date # New period starts where old one ended
           new_item = item.deep_dup
-          
-          # Update the renewal date in optional fields
-          renewal_key = item['optional_fields'].keys.find { |k| k.to_s.include?('renewal_date') }
-          new_item['optional_fields'][renewal_key] = new_renewal_date.to_s
-          
+
+          subscription = new_item['optional_fields']['subscription']
+          if subscription.is_a?(Hash)
+            end_key = subscription.keys.find { |k| k.to_s.include?('end_date') }
+            start_key = subscription.keys.find { |k| k.to_s.include?('start_date') }
+            subscription[end_key] = new_end_date.to_s if end_key
+            subscription[start_key] = new_start_date.to_s if start_key
+          end
+
           new_item
         else
           item
@@ -189,9 +220,9 @@ class Invoice < ApplicationRecord
       invoice_type: invoice_type,
       invoice_category: invoice_category,
       issue_date: Date.current,
-      invoice_number: invoice_number,
+      invoice_number: new_invoice_number,
       currency: currency,
-      line_items_data: new_line_items_data,
+      line_items_data: line_items_data, # The child gets the CURRENT period's line items
       recipient_note: recipient_note,
       payment_terms: payment_terms,
       price_adjustments: price_adjustments,
@@ -201,8 +232,8 @@ class Invoice < ApplicationRecord
     )
 
     if new_invoice.save
-      # Update parent invoice line items with new renewal dates
-      update(line_items_data: new_line_items_data)
+      # Advance the parent invoice's line items to the NEXT billing period
+      update_columns(line_items_data: new_line_items_data)
       new_invoice
     else
       raise "Failed to generate subscription invoice: #{new_invoice.errors.full_messages.join(', ')}"
@@ -227,7 +258,10 @@ class Invoice < ApplicationRecord
   def extract_subscription_field(line_item, field_name)
     return nil unless line_item.is_a?(Hash) && line_item['optional_fields'].is_a?(Hash)
     
-    line_item['optional_fields'].find do |key, value|
+    subscription = line_item['optional_fields']['subscription']
+    return nil unless subscription.is_a?(Hash)
+    
+    subscription.find do |key, value|
       key.to_s.include?(field_name)
     end&.last
   end
@@ -286,7 +320,7 @@ class Invoice < ApplicationRecord
   end
 
 
-  def normalize_subscription_renewal_dates
+  def normalize_subscription_end_dates
     return if line_items_data.blank?
 
     line_items_data.each do |item|
@@ -297,23 +331,27 @@ class Invoice < ApplicationRecord
       subscription = optional_fields['subscription']
       next unless subscription.is_a?(Hash)
 
-      billing_cycle = subscription['billing_cycle']
-      start_date = subscription['start_date']
+      billing_cycle_key = subscription.keys.find { |k| k.to_s.include?('billing_cycle') }
+      billing_cycle = subscription[billing_cycle_key] if billing_cycle_key
+
+      start_date_key = subscription.keys.find { |k| k.to_s.include?('start_date') }
+      start_date = subscription[start_date_key] if start_date_key
+
       next if billing_cycle.blank? || start_date.blank?
 
-      expected_renewal_date = expected_renewal_date_for(start_date, billing_cycle)
-      next unless expected_renewal_date
+      expected_end_date = expected_end_date_for(start_date, billing_cycle)
+      next unless expected_end_date
 
-      renewal_date_key = subscription.keys.find { |k| k.to_s.include?('renewal_date') } || 'renewal_date'
-      current_renewal_date = subscription[renewal_date_key]
+      end_date_key = subscription.keys.find { |k| k.to_s.include?('end_date') } || 'end_date'
+      current_end_date = subscription[end_date_key]
 
-      if current_renewal_date.blank? || current_renewal_date.to_s != expected_renewal_date
-        subscription[renewal_date_key] = expected_renewal_date
+      if current_end_date.blank?
+        subscription[end_date_key] = expected_end_date
       end
     end
   end
 
-  def expected_renewal_date_for(start_date_str, billing_cycle)
+  def expected_end_date_for(start_date_str, billing_cycle)
     start_date = if start_date_str.is_a?(Date)
                    start_date_str
                  else

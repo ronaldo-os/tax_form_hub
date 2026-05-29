@@ -21,7 +21,7 @@ class GenerateRecurringInvoicesJob < ApplicationJob
     subscription_contracts = Invoice.subscription_contracts_due_for_billing(on_date)
     
     # Filter to only those with subscription line-items that are due
-    due_contracts = subscription_contracts.select(&:subscription_due_for_billing?)
+    due_contracts = subscription_contracts.select { |contract| contract.subscription_due_for_billing?(on_date) }
     
     Rails.logger.info "GenerateRecurringInvoicesJob: Found #{due_contracts.count} subscription contracts due for billing"
 
@@ -29,14 +29,18 @@ class GenerateRecurringInvoicesJob < ApplicationJob
       total: due_contracts.count,
       successful: 0,
       failed: 0,
+      invoices_generated: 0,
       errors: []
     }
 
     due_contracts.each do |subscription_contract|
       begin
-        invoice = subscription_contract.generate_subscription_invoice
+        invoices = subscription_contract.generate_subscription_invoices(on_date)
         results[:successful] += 1
-        Rails.logger.info "Generated subscription invoice #{invoice.invoice_number} for contract #{subscription_contract.invoice_number}"
+        results[:invoices_generated] += invoices.size
+        invoices.each do |invoice|
+          Rails.logger.info "Generated subscription invoice #{invoice.invoice_number} for contract #{subscription_contract.invoice_number}"
+        end
       rescue StandardError => e
         results[:failed] += 1
         error_msg = "Subscription contract #{subscription_contract.invoice_number}: #{e.message}"
