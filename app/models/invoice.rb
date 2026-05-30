@@ -140,13 +140,57 @@ class Invoice < ApplicationRecord
   # Due when on_date >= end_date (the current billing period has elapsed)
   def subscription_due_for_billing?(on_date = Date.current)
     return false unless subscription_active?(on_date)
-
-    subscription_line_items.any? do |item|
-      end_date = extract_subscription_field(item, 'end_date')
-      end_date.present? && Date.parse(end_date) <= on_date
+    
+    total_expected = calculate_total_expected_child_invoices
+    if total_expected
+      return false if recurring_sub_invoices.count >= total_expected
     end
-  rescue
-    false
+
+    item = subscription_line_items.first
+    return false unless item
+    
+    start_d_str = extract_subscription_field(item, 'start_date')
+    cycle = extract_subscription_field(item, 'billing_cycle') || 'monthly'
+    return false unless start_d_str.present?
+    
+    start_d = Date.parse(start_d_str) rescue nil
+    return false unless start_d
+    
+    current_sequence = recurring_sub_invoices.count + 1
+    
+    next_billing_date = start_d
+    current_sequence.times do
+      next_billing_date = calculate_next_period_date(next_billing_date, cycle)
+    end
+    
+    next_billing_date <= on_date
+  end
+
+  def calculate_total_expected_child_invoices
+    return nil unless has_subscription_line_items?
+    
+    item = subscription_line_items.first
+    start_d_str = extract_subscription_field(item, 'start_date')
+    end_d_str = extract_subscription_field(item, 'end_date')
+    cycle = extract_subscription_field(item, 'billing_cycle') || 'monthly'
+
+    return nil unless start_d_str.present? && end_d_str.present?
+    
+    start_d = Date.parse(start_d_str) rescue nil
+    end_d = Date.parse(end_d_str) rescue nil
+    
+    return nil unless start_d && end_d
+    
+    current_d = start_d
+    count = 0
+    # Simulate billing cycles exactly to determine total periods
+    while current_d <= end_d
+      current_d = calculate_next_period_date(current_d, cycle)
+      count += 1
+    end
+                     
+    expected = count - 1
+    expected > 0 ? expected : 0
   end
 
   # Generate subscription invoices for all elapsed billing periods up to on_date.
@@ -182,34 +226,63 @@ class Invoice < ApplicationRecord
   private def generate_single_subscription_invoice
     # Generate sub-invoice number
     new_invoice_number = Invoice.next_recurring_sub_invoice_number(self)
+    
+    current_sequence_number = recurring_sub_invoices.count + 1
 
-    # Create new line items with updated end dates (advance to next billing period)
-    new_line_items_data = line_items_data.map do |item|
+    child_line_items_data = line_items_data.map do |item|
       if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) &&
          item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
 
-        billing_cycle = extract_subscription_field(item, 'billing_cycle')
-        current_end_date = extract_subscription_field(item, 'end_date')
-
-        if billing_cycle && current_end_date
-          new_end_date = calculate_next_period_date(Date.parse(current_end_date), billing_cycle)
-          new_start_date = current_end_date # New period starts where old one ended
-          new_item = item.deep_dup
-
+        billing_cycle = extract_subscription_field(item, 'billing_cycle') || 'monthly'
+        parent_start_d_str = extract_subscription_field(item, 'start_date')
+        parent_end_d_str = extract_subscription_field(item, 'end_date')
+        
+        parent_start_d = parent_start_d_str.present? ? (Date.parse(parent_start_d_str) rescue nil) : nil
+        
+        new_item = item.deep_dup
+        
+        if parent_start_d
+          child_start_d = parent_start_d
+          current_sequence_number.times do
+            child_start_d = calculate_next_period_date(child_start_d, billing_cycle)
+          end
+          child_end_d = calculate_next_period_date(child_start_d, billing_cycle)
+          
           subscription = new_item['optional_fields']['subscription']
           if subscription.is_a?(Hash)
-            end_key = subscription.keys.find { |k| k.to_s.include?('end_date') }
-            start_key = subscription.keys.find { |k| k.to_s.include?('start_date') }
-            subscription[end_key] = new_end_date.to_s if end_key
-            subscription[start_key] = new_start_date.to_s if start_key
+            end_key = subscription.keys.find { |k| k.to_s.include?('end_date') } || 'end_date'
+            start_key = subscription.keys.find { |k| k.to_s.include?('start_date') } || 'start_date'
+            
+            # The child's line item reflects its specific billing period
+            subscription[start_key] = child_start_d.to_s
+            subscription[end_key] = child_end_d.to_s
+            
+            # Retain the overall end date from the most parent invoice
+            if parent_end_d_str.present?
+              subscription['overall_end_date'] = parent_end_d_str
+            end
           end
-
-          new_item
-        else
-          item
         end
+        
+        total_payments = calculate_total_expected_child_invoices
+        total_payments = total_payments && total_payments > 0 ? total_payments : current_sequence_number
+
+        payment_type = case billing_cycle
+                       when 'monthly' then 'Monthly Payment'
+                       when 'quarterly' then 'Quarterly Payment'
+                       when 'annual' then 'Annual Payment'
+                       else 'Payment'
+                       end
+        
+        current_str = current_sequence_number.to_s.rjust(2, '0')
+        total_str = total_payments.to_s.rjust(2, '0')
+        
+        new_desc = "#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})"
+        
+        new_item['description'] = new_desc
+        new_item
       else
-        item
+        item.deep_dup
       end
     end
 
@@ -222,18 +295,18 @@ class Invoice < ApplicationRecord
       issue_date: Date.current,
       invoice_number: new_invoice_number,
       currency: currency,
-      line_items_data: line_items_data, # The child gets the CURRENT period's line items
+      line_items_data: child_line_items_data,
       recipient_note: recipient_note,
       payment_terms: payment_terms,
       price_adjustments: price_adjustments,
       billing_reference: self.invoice_number,
       recurring_parent_invoice_id: id,
-      recurring_sequence_number: recurring_sub_invoices.count + 1
+      recurring_sequence_number: current_sequence_number,
+      total: self.total,
+      invoice_info: self.invoice_info
     )
 
     if new_invoice.save
-      # Advance the parent invoice's line items to the NEXT billing period
-      update_columns(line_items_data: new_line_items_data)
       new_invoice
     else
       raise "Failed to generate subscription invoice: #{new_invoice.errors.full_messages.join(', ')}"
