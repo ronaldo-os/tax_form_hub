@@ -936,12 +936,10 @@ const initInvoiceForm = () => {
         } else if (field.type === "date") {
           inputHtml = `
           <input 
-            type="text"
+            type="date"
             name="${inputName}"
-            class="form-control form-control-sm flatpickr-date"
+            class="form-control form-control-sm"
             placeholder="${field.label}"
-            autocomplete="off"
-            readonly
           />
         `;
         } else {
@@ -975,23 +973,6 @@ const initInvoiceForm = () => {
       $dropdownRow.before(newRowHtml);
       updateCurrencyFields();
       recalculateTotals();
-
-      $dropdownRow.prev().find('.flatpickr-date').each(function () {
-        const $input = $(this);
-        const fp = flatpickr(this, {
-          dateFormat: "Y-m-d",
-          allowInput: false,
-          clickOpens: false,
-          onChange: function (selectedDates, dateStr) {
-            // Trigger jQuery change so event-delegated handlers (e.g. updateEndDate) fire
-            $input.trigger('change');
-          }
-        });
-
-        $input.off('click').on('click', function () {
-          fp.open();
-        });
-      });
     }
 
     $(document).on('change.invoice_form', 'select[id^="additional_field_"]', function () {
@@ -1031,11 +1012,16 @@ const initInvoiceForm = () => {
       const newRow = `
       <tr class="discount-item">
         <td class="align-top" colspan="2">
-          <select class="form-select price-adjustment-unit" data-field="unit">
+          <select class="form-select price-adjustment-unit mb-2" data-field="unit">
             <option value="discount">Discount</option>
             <option value="charge">Charge</option>
-            <option value="monthly_charge">Monthly Charge</option>
             <option value="fixedtax">Fixed Tax</option>
+          </select>
+          <select class="form-select frequency" data-field="frequency">
+            <option value="once">Once</option>
+            <option value="monthly">Monthly</option>
+            <option value="annually">Annually</option>
+            <option value="yearly">Yearly</option>
           </select>
         </td>
         <td class="align-top" colspan="2">
@@ -1059,7 +1045,7 @@ const initInvoiceForm = () => {
             <option value="Expediting fee">Expediting fee</option>
             <option value="Currency exchange differences">Currency exchange differences</option>
           </select>
-          <div class="monthly-charge-dates mt-2" style="display: none;">
+          <div class="frequency-dates mt-2" style="display: none;">
             <input type="date" class="form-control charge-start-date mb-1" placeholder="Start Date" data-field="charge_start_date">
             <input type="date" class="form-control charge-end-date" placeholder="End Date" data-field="charge_end_date">
           </div>
@@ -1085,19 +1071,29 @@ const initInvoiceForm = () => {
       updateRemoveButtons();
       updateDiscountsJSON();
       
-      // Show/hide monthly charge date fields based on selection
+      // Show/hide frequency date fields based on selection
       const $newRow = $('#line-items').find('.discount-item').last();
-      $newRow.find('.price-adjustment-unit').on('change', function() {
-        const isMonthlyCharge = $(this).val() === 'monthly_charge';
-        $(this).closest('tr').find('.monthly-charge-dates').toggle(isMonthlyCharge);
+      $newRow.find('.frequency').on('change', function() {
+        const freq = $(this).val();
+        const showDates = ['monthly', 'annually', 'yearly'].includes(freq);
+        $(this).closest('tr').find('.frequency-dates').toggle(showDates);
+        
+        // Trigger start date change to recompute end date based on new frequency
+        $(this).closest('tr').find('.charge-start-date').trigger('change');
       });
       
-      // Auto-compute end date when start date changes for monthly charges
+      // Auto-compute end date when start date changes
       $newRow.find('.charge-start-date').on('change', function() {
         const startDate = $(this).val();
-        if (startDate) {
+        const freq = $(this).closest('tr').find('.frequency').val();
+        
+        if (startDate && ['monthly', 'annually', 'yearly'].includes(freq)) {
           const date = new Date(startDate);
-          date.setMonth(date.getMonth() + 1);
+          if (freq === 'monthly') {
+            date.setMonth(date.getMonth() + 1);
+          } else if (freq === 'annually' || freq === 'yearly') {
+            date.setFullYear(date.getFullYear() + 1);
+          }
           const endDate = date.toISOString().split('T')[0];
           $(this).closest('tr').find('.charge-end-date').val(endDate);
         }
@@ -1137,12 +1133,12 @@ const initInvoiceForm = () => {
 
   function updateDiscountsJSON() {
     const discounts = [];
-    const validationErrors = [];
 
     $('.discount-item').each(function () {
       const $row = $(this);
 
       const type = ($row.find('.price-adjustment-unit').val() || "").trim();
+      const frequency = ($row.find('.frequency').val() || "once").trim();
       const description = ($row.find('.reason-code').val() || "").trim();
       const description_edit = ($row.find('.description-edit').val() || "").trim();
       const amount = parseCurrency($row.find('.amount').val());
@@ -1155,21 +1151,9 @@ const initInvoiceForm = () => {
       const charge_start_date = ($row.find('.charge-start-date').val() || "").trim();
       const charge_end_date = ($row.find('.charge-end-date').val() || "").trim();
 
-      // Validate monthly charge dates
-      if (type === 'monthly_charge') {
-        if (!charge_start_date) {
-          validationErrors.push('Monthly charge must have a start date');
-        }
-        if (!charge_end_date) {
-          validationErrors.push('Monthly charge must have an end date');
-        }
-        if (charge_start_date && charge_end_date && new Date(charge_start_date) >= new Date(charge_end_date)) {
-          validationErrors.push('Monthly charge end date must be after start date');
-        }
-      }
-
       discounts.push({
         type,
+        frequency,
         description: description || null,
         description_edit: description_edit || "",
         amount,
@@ -1179,20 +1163,6 @@ const initInvoiceForm = () => {
         charge_end_date: charge_end_date || null
       });
     });
-
-    // Validate charge periods against line item dates
-    if (validationErrors.length > 0) {
-      // Display validation errors
-      const errorContainer = $('#charge-validation-errors');
-      if (errorContainer.length === 0) {
-        $('#line-items').before('<td colspan="12"><div id="charge-validation-errors" class="alert alert-danger"></div></td>');
-      }
-      $('#charge-validation-errors').html('<strong class="bg-transparent">Please fix the following errors:</strong><ul class="mb-0 list-unstyled bg-transparent">' + 
-        validationErrors.map(err => `<li>${err}</li>`).join('') + '</ul>');
-      return;
-    } else {
-      $('#charge-validation-errors').remove();
-    }
 
     $('#price_adjustments_json, #price_adjustments_json_edit').val(JSON.stringify(discounts));
   }
@@ -1805,13 +1775,11 @@ const initInvoiceForm = () => {
               } else if (field.type === "date") {
                 inputHtml = `
                     <input 
-                      type="text"
+                      type="date"
                       name="${inputName}"
-                      class="form-control form-control-sm flatpickr-date"
+                      class="form-control form-control-sm"
                       placeholder="${field.label}"
                       value="${field.value || ''}"
-                      readonly
-                      autocomplete="off"
                     >
                   `;
               } else if (field.name.toLowerCase().includes("total")) {
@@ -1851,7 +1819,7 @@ const initInvoiceForm = () => {
 
               if (field.type === "select") {
                 const optionsHtml = field.options.map(opt =>
-                  `<option value="${opt}" ${opt === field.value ? "selected" : ""}>${opt}</option>`
+                  `<option value="${opt}" ${opt.toLowerCase() === (field.value || '').toLowerCase() ? "selected" : ""}>${opt}</option>`
                 ).join("");
                 inputHtml = `
                     <select name="${inputName}" class="form-select form-select-sm">
@@ -1862,13 +1830,11 @@ const initInvoiceForm = () => {
               } else if (field.type === "date") {
                 inputHtml = `
                     <input 
-                      type="text"
+                      type="date"
                       name="${inputName}"
-                      class="form-control form-control-sm flatpickr-date"
+                      class="form-control form-control-sm"
                       placeholder="${field.label}"
                       value="${field.value || ''}"
-                      readonly
-                      autocomplete="off"
                     >
                   `;
               } else if (field.name.toLowerCase().includes("total")) {
@@ -1919,27 +1885,6 @@ const initInvoiceForm = () => {
       }, 100);
     });
 
-    // Initialize Flatpickr for date fields
-    function initFlatpickrs() {
-      $('.flatpickr-date').each(function () {
-        const $input = $(this);
-        const fp = flatpickr(this, {
-          dateFormat: "Y-m-d",
-          clickOpens: false,
-          allowInput: false,
-          onChange: function (selectedDates, dateStr) {
-            $input.trigger('change');
-          }
-        });
-        $input.on('click', function () { fp.open(); });
-      });
-    }
-
-    initFlatpickrs();
-
-    $(document).on('DOMNodeInserted', '.flatpickr-date', function () {
-      initFlatpickrs();
-    });
 
     $(document).on("click", ".remove-group", function () {
       $(this).closest('tr.optional-field-row').remove();
@@ -2068,16 +2013,29 @@ const initInvoiceForm = () => {
       const totalFormatted = `${unitType === "true" ? "+" : "+"}${formatCurrency(amount)}`;
       const chargeStartDate = adjustment.charge_start_date || "";
       const chargeEndDate = adjustment.charge_end_date || "";
-      const isMonthlyCharge = unit === "monthly_charge";
+      
+      // Fallback: If legacy "monthly_charge" is in unit, convert to frequency "monthly"
+      let parsedUnit = unit;
+      let freq = adjustment.frequency || "once";
+      if (parsedUnit === "monthly_charge") {
+        parsedUnit = "charge"; // default to charge
+        freq = "monthly";
+      }
+      const showDates = ['monthly', 'annually', 'yearly'].includes(freq);
 
       return `
           <tr class="discount-item">
             <td class="align-top" colspan="2">
-              <select class="form-select price-adjustment-unit" data-field="unit">
-                <option value="discount"${unit === "discount" ? " selected" : ""}>Discount</option>
-                <option value="charge"${unit === "charge" ? " selected" : ""}>Charge</option>
-                <option value="monthly_charge"${unit === "monthly_charge" ? " selected" : ""}>Monthly Charge</option>
-                <option value="fixedtax"${unit === "fixedtax" ? " selected" : ""}>Fixed Tax</option>
+              <select class="form-select price-adjustment-unit mb-2" data-field="unit">
+                <option value="discount"${parsedUnit === "discount" ? " selected" : ""}>Discount</option>
+                <option value="charge"${parsedUnit === "charge" ? " selected" : ""}>Charge</option>
+                <option value="fixedtax"${parsedUnit === "fixedtax" ? " selected" : ""}>Fixed Tax</option>
+              </select>
+              <select class="form-select frequency" data-field="frequency">
+                <option value="once"${freq === "once" ? " selected" : ""}>Once</option>
+                <option value="monthly"${freq === "monthly" ? " selected" : ""}>Monthly</option>
+                <option value="annually"${freq === "annually" ? " selected" : ""}>Annually</option>
+                <option value="yearly"${freq === "yearly" ? " selected" : ""}>Yearly</option>
               </select>
             </td>
             <td class="align-top" colspan="2">
@@ -2085,7 +2043,7 @@ const initInvoiceForm = () => {
               <select class="form-select reason-code" data-field="description">
                 ${buildReasonOptions(description)}
               </select>
-              <div class="monthly-charge-dates mt-2" style="display: ${isMonthlyCharge ? 'block' : 'none'};">
+              <div class="frequency-dates mt-2" style="display: ${showDates ? 'block' : 'none'};">
                 <input type="date" class="form-control charge-start-date mb-1" placeholder="Start Date" data-field="charge_start_date" value="${chargeStartDate}">
                 <input type="date" class="form-control charge-end-date" placeholder="End Date" data-field="charge_end_date" value="${chargeEndDate}">
               </div>
@@ -2130,17 +2088,27 @@ const initInvoiceForm = () => {
       
       // Add event listeners for the newly rendered row
       const $newRow = $lastRow;
-      $newRow.find('.price-adjustment-unit').on('change', function() {
-        const isMonthlyCharge = $(this).val() === 'monthly_charge';
-        $(this).closest('tr').find('.monthly-charge-dates').toggle(isMonthlyCharge);
+      $newRow.find('.frequency').on('change', function() {
+        const freq = $(this).val();
+        const showDates = ['monthly', 'annually', 'yearly'].includes(freq);
+        $(this).closest('tr').find('.frequency-dates').toggle(showDates);
+        
+        // Trigger start date change to recompute end date based on new frequency
+        $(this).closest('tr').find('.charge-start-date').trigger('change');
       });
       
-      // Auto-compute end date when start date changes for monthly charges
+      // Auto-compute end date when start date changes
       $newRow.find('.charge-start-date').on('change', function() {
         const startDate = $(this).val();
-        if (startDate) {
+        const freq = $(this).closest('tr').find('.frequency').val();
+        
+        if (startDate && ['monthly', 'annually', 'yearly'].includes(freq)) {
           const date = new Date(startDate);
-          date.setMonth(date.getMonth() + 1);
+          if (freq === 'monthly') {
+            date.setMonth(date.getMonth() + 1);
+          } else if (freq === 'annually' || freq === 'yearly') {
+            date.setFullYear(date.getFullYear() + 1);
+          }
           const endDate = date.toISOString().split('T')[0];
           $(this).closest('tr').find('.charge-end-date').val(endDate);
         }
@@ -2329,6 +2297,32 @@ const initInvoiceForm = () => {
   // Validate tax selection on form submission
   $(document).on("submit", "form", function (e) {
     const $form = $(this);
+
+    // Validate recurring charge dates
+    let chargeErrors = [];
+    $('.discount-item').each(function () {
+      const freq = ($(this).find('.frequency').val() || "once").trim();
+      const startDate = ($(this).find('.charge-start-date').val() || "").trim();
+      const endDate = ($(this).find('.charge-end-date').val() || "").trim();
+      
+      if (['monthly', 'annually', 'yearly'].includes(freq)) {
+        if (!startDate && !chargeErrors.includes('Recurring charge must have a start date')) {
+          chargeErrors.push('Recurring charge must have a start date');
+        }
+        if (!endDate && !chargeErrors.includes('Recurring charge must have an end date')) {
+          chargeErrors.push('Recurring charge must have an end date');
+        }
+        if (startDate && endDate && new Date(startDate) >= new Date(endDate) && !chargeErrors.includes('Recurring charge end date must be after start date')) {
+          chargeErrors.push('Recurring charge end date must be after start date');
+        }
+      }
+    });
+
+    if (chargeErrors.length > 0) {
+      e.preventDefault();
+      showFlashMessage(chargeErrors.join("<br>"), "danger");
+      return false;
+    }
 
     // Validate credit note number for credit notes
     const $invoiceCategoryField = $form.find('input[name="invoice[invoice_category]"]');

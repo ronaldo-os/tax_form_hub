@@ -100,6 +100,17 @@ class Invoice < ApplicationRecord
     end
   end
 
+  # Check if this invoice has recurring price adjustments
+  def has_recurring_price_adjustments?
+    return false if price_adjustments.blank?
+    price_adjustments.any? { |adj| %w[monthly annually yearly].include?(adj['frequency']) }
+  end
+
+  # Check if this invoice has any recurring elements
+  def has_recurring_elements?
+    has_subscription_line_items? || has_recurring_price_adjustments?
+  end
+
   # Get subscription line-items from this invoice
   def subscription_line_items
     return [] unless line_items_data.present?
@@ -110,30 +121,65 @@ class Invoice < ApplicationRecord
     end
   end
 
+  # Get recurring price adjustments from this invoice
+  def recurring_price_adjustments
+    return [] unless price_adjustments.present?
+    
+    price_adjustments.select { |adj| %w[monthly annually yearly].include?(adj['frequency']) }
+  end
+
   # Check if this invoice is a subscription contract (parent invoice)
   def subscription_contract?
-    has_subscription_line_items? && recurring_parent_invoice_id.nil?
+    has_recurring_elements? && recurring_parent_invoice_id.nil?
   end
 
   # Check if this invoice is a generated subscription invoice (child)
   def subscription_invoice?
-    billing_reference.present? && !has_subscription_line_items?
+    billing_reference.present? && !has_recurring_elements?
   end
 
-  # Check if subscription is active (not archived, has subscription line items)
-  # The end_date represents the end of the CURRENT billing period, not the overall subscription expiry.
-  # A subscription remains active as long as it's not archived.
+  # Check if subscription is active (not archived, has subscription line items or recurring discounts)
   def subscription_active?(on_date = Date.current)
     return false unless subscription_contract?
     return false if archived?
 
-    subscription_line_items.any? do |item|
+    active_sub = subscription_line_items.any? do |item|
       start_date = extract_subscription_field(item, 'start_date')
       billing_cycle = extract_subscription_field(item, 'billing_cycle')
       start_date.present? && billing_cycle.present?
     end
+    
+    active_discount = recurring_price_adjustments.any? do |adj|
+      adj['charge_start_date'].present? && adj['frequency'].present?
+    end
+
+    active_sub || active_discount
   rescue
     false
+  end
+
+  def primary_recurring_item
+    if has_subscription_line_items?
+      item = subscription_line_items.first
+      {
+        start_date: extract_subscription_field(item, 'start_date'),
+        end_date: extract_subscription_field(item, 'end_date'),
+        cycle: extract_subscription_field(item, 'billing_cycle') || 'monthly'
+      }
+    elsif has_recurring_price_adjustments?
+      adj = recurring_price_adjustments.first
+      cycle = case adj['frequency']
+              when 'annually', 'yearly' then 'annual'
+              else 'monthly'
+              end
+      {
+        start_date: adj['charge_start_date'],
+        end_date: adj['charge_end_date'],
+        cycle: cycle
+      }
+    else
+      nil
+    end
   end
 
   # Check if subscription is due for billing
@@ -146,11 +192,11 @@ class Invoice < ApplicationRecord
       return false if recurring_sub_invoices.count >= total_expected
     end
 
-    item = subscription_line_items.first
-    return false unless item
+    primary_item = primary_recurring_item
+    return false unless primary_item
     
-    start_d_str = extract_subscription_field(item, 'start_date')
-    cycle = extract_subscription_field(item, 'billing_cycle') || 'monthly'
+    start_d_str = primary_item[:start_date]
+    cycle = primary_item[:cycle] || 'monthly'
     return false unless start_d_str.present?
     
     start_d = Date.parse(start_d_str) rescue nil
@@ -167,12 +213,14 @@ class Invoice < ApplicationRecord
   end
 
   def calculate_total_expected_child_invoices
-    return nil unless has_subscription_line_items?
+    return nil unless has_recurring_elements?
     
-    item = subscription_line_items.first
-    start_d_str = extract_subscription_field(item, 'start_date')
-    end_d_str = extract_subscription_field(item, 'end_date')
-    cycle = extract_subscription_field(item, 'billing_cycle') || 'monthly'
+    primary_item = primary_recurring_item
+    return nil unless primary_item
+    
+    start_d_str = primary_item[:start_date]
+    end_d_str = primary_item[:end_date]
+    cycle = primary_item[:cycle] || 'monthly'
 
     return nil unless start_d_str.present? && end_d_str.present?
     
@@ -286,6 +334,52 @@ class Invoice < ApplicationRecord
       end
     end
 
+    child_price_adjustments = price_adjustments.present? ? price_adjustments.map do |adj|
+      if %w[monthly annually yearly].include?(adj['frequency'])
+        new_adj = adj.deep_dup
+        parent_start_d_str = adj['charge_start_date']
+        billing_cycle = case adj['frequency']
+                        when 'annually', 'yearly' then 'annual'
+                        else 'monthly'
+                        end
+        
+        parent_start_d = parent_start_d_str.present? ? (Date.parse(parent_start_d_str) rescue nil) : nil
+        
+        if parent_start_d
+          child_start_d = parent_start_d
+          current_sequence_number.times do
+            child_start_d = calculate_next_period_date(child_start_d, billing_cycle)
+          end
+          child_end_d = calculate_next_period_date(child_start_d, billing_cycle)
+          
+          new_adj['charge_start_date'] = child_start_d.to_s
+          new_adj['charge_end_date'] = child_end_d.to_s
+          
+          total_payments = calculate_total_expected_child_invoices
+          total_payments = total_payments && total_payments > 0 ? total_payments : current_sequence_number
+          payment_type = case billing_cycle
+                         when 'monthly' then 'Monthly Charge'
+                         when 'quarterly' then 'Quarterly Charge'
+                         when 'annual' then 'Annual Charge'
+                         else 'Recurring Charge'
+                         end
+          current_str = current_sequence_number.to_s.rjust(2, '0')
+          total_str = total_payments.to_s.rjust(2, '0')
+          
+          new_desc = "#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})"
+          
+          if new_adj['description_edit'].present?
+            new_adj['description_edit'] = "#{new_adj['description_edit']} - #{new_desc}"
+          else
+            new_adj['description_edit'] = new_desc
+          end
+        end
+        new_adj
+      else
+        adj.deep_dup
+      end
+    end : nil
+
     # Create the new invoice
     new_invoice = user.invoices.build(
       recipient_company: recipient_company,
@@ -298,7 +392,7 @@ class Invoice < ApplicationRecord
       line_items_data: child_line_items_data,
       recipient_note: recipient_note,
       payment_terms: payment_terms,
-      price_adjustments: price_adjustments,
+      price_adjustments: child_price_adjustments,
       billing_reference: self.invoice_number,
       recurring_parent_invoice_id: id,
       recurring_sequence_number: current_sequence_number,

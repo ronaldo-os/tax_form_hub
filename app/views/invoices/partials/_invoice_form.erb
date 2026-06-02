@@ -5,7 +5,6 @@
 
         <% if @invoice.errors.any? %>
           <div class="alert alert-danger" role="alert">
-            <h6 class="alert-heading">Please fix the following errors:</h6>
             <ul class="mb-0">
               <% @invoice.errors.full_messages.each do |message| %>
                 <li><%= message %></li>
@@ -551,15 +550,15 @@
             <%= hidden_field_tag 'sender_company_id_type', sender&.company_id_type, id: 'sender_company_id_type' %>
             <%= hidden_field_tag 'sender_tax_number', sender&.tax_id_number, id: 'sender_tax_number' %>
             <%= hidden_field_tag 'sender_tax_id_type', sender&.tax_id_type, id: 'sender_tax_id_type' %>
-            <%= f.hidden_field :price_adjustments, value: @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json', data: { field_type: 'invoice_form_fields' } %>
-            <%= f.hidden_field :payment_terms, value: (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json', data: { field_type: 'invoice_form_fields' } %>
-            <%= f.hidden_field :invoice_info, value: @invoice.invoice_info.to_json.html_safe, id: 'optional_fields_json', data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :price_adjustments, value: @invoice.price_adjustments.to_json, id: 'price_adjustments_json', data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :payment_terms, value: (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json, id: 'payment_terms_json', data: { field_type: 'invoice_form_fields' } %>
+            <%= f.hidden_field :invoice_info, value: @invoice.invoice_info.to_json, id: 'optional_fields_json', data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :ship_from_location_id, id: "ship_from_location_id", data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :remit_to_location_id, id: "remit_to_location_id", data: { field_type: 'invoice_form_fields' } %>
             <%= f.hidden_field :tax_representative_location_id, id: "tax_representative_location_id", data: { field_type: 'invoice_form_fields' } %>
 
-            <%= hidden_field_tag :payment_terms_json_edit, (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json.html_safe, id: 'payment_terms_json_edit', data: { field_type: 'invoice_form_fields' } %>
-            <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json.html_safe, id: 'price_adjustments_json_edit', data: { field_type: 'invoice_form_fields' } %>
+            <%= hidden_field_tag :payment_terms_json_edit, (@invoice.payment_terms.to_h.merge(@payment_terms.to_h)).to_json, id: 'payment_terms_json_edit', data: { field_type: 'invoice_form_fields' } %>
+            <%= hidden_field_tag :price_adjustments_json_edit, @invoice.price_adjustments.to_json, id: 'price_adjustments_json_edit', data: { field_type: 'invoice_form_fields' } %>
         </div>
     <% unless @invoice.quote? || @invoice.credit_note? %>
     <div class="card-footer pb-3">
