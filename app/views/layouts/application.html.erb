@@ -83,6 +83,13 @@
             <% end %>
           </li>
 
+          <li class="<%= 'app-active' if request.path.starts_with?(subscriptions_path) rescue false %>">
+            <%= link_to subscriptions_path do %>
+              <div class="app-icon"><i class="fa-solid fa-repeat z-1"></i></div>
+              <div class="app-text">Subscriptions</div>
+            <% end %>
+          </li>
+
           <li class="<%= 'app-active' if request.path.starts_with?(locations_path) %>">
             <%= link_to locations_path do %>
               <div class="app-icon"><i class="fa-solid fa-location-dot z-1"></i></div>

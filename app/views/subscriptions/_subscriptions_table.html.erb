@@ -1,0 +1,85 @@
+<% if subscriptions.empty? %>
+  <div class="p-5 text-center text-muted">
+    <i class="fa-regular fa-folder-open fa-3x mb-3 opacity-50"></i>
+    <p class="mb-0 fs-5">No subscriptions found in this category.</p>
+  </div>
+<% else %>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th class="ps-4">Recipient</th>
+          <th>Description</th>
+          <th>Billing Cycle</th>
+          <th>Status</th>
+          <th>Next Invoice</th>
+          <th class="text-end">Amount</th>
+          <th class="pe-4 text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% subscriptions.each do |invoice| %>
+          <% primary_item = invoice.primary_recurring_item || {} %>
+          <tr>
+            <td class="ps-4 fw-medium">
+              <%= link_to invoice.recipient_company&.name || "Unknown Company", subscription_path(invoice), class: "text-decoration-none" %>
+            </td>
+            <td>
+              <span class="text-truncate d-inline-block" style="max-width: 200px;">
+                <%= invoice.message.presence || "Subscription Service" %>
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-secondary">
+                <i class="fa-solid fa-clock-rotate-left me-1"></i>
+                <%= (primary_item[:cycle] || 'monthly').capitalize %>
+              </span>
+            </td>
+            <td>
+              <% is_active = invoice.subscription_active? %>
+              <span class="badge <%= is_active ? 'bg-success' : 'bg-secondary' %>">
+                <%= is_active ? 'Active' : 'Finished' %>
+              </span>
+            </td>
+            <td>
+              <% if is_active && primary_item[:start_date] %>
+                <% 
+                  start_d = Date.parse(primary_item[:start_date]) rescue nil
+                  if start_d
+                    current_sequence = invoice.recurring_sub_invoices.count + 1
+                    next_date = start_d
+                    cycle = primary_item[:cycle] || 'monthly'
+                    current_sequence.times { next_date = invoice.calculate_next_period_date(next_date, cycle) }
+                    
+                    days_left = (next_date - Date.current).to_i
+                    text_class = days_left <= 7 ? "text-danger fw-bold" : "text-muted"
+                %>
+                <div class="<%= text_class %>">
+                  <%= next_date.strftime("%b %d, %Y") %>
+                  <small class="d-block">
+                    <% if days_left < 0 %>
+                      Overdue by <%= days_left.abs %> days
+                    <% elsif days_left == 0 %>
+                      Today
+                    <% else %>
+                      In <%= days_left %> days
+                    <% end %>
+                  </small>
+                </div>
+                <% end %>
+              <% else %>
+                <span class="text-muted">-</span>
+              <% end %>
+            </td>
+            <td class="text-end fw-semibold">
+              <%= number_to_currency(invoice.grand_total, unit: invoice.currency + ' ') %>
+            </td>
+            <td class="pe-4 text-end">
+              <%= link_to "View", subscription_path(invoice), class: "btn btn-sm btn-outline-primary" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
