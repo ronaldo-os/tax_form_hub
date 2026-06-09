@@ -5,7 +5,7 @@
 
 class SubscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_subscription_invoice, only: [:show]
+  before_action :set_subscription_invoice, only: [:show, :cancel]
 
   # GET /subscriptions
   # List all recurring invoices (subscription contracts) for the current user
@@ -41,6 +41,16 @@ class SubscriptionsController < ApplicationController
         end
         @upcoming_invoice_date = next_date
       end
+    end
+  end
+
+  # PATCH /subscriptions/:id/cancel
+  # Cancel an active subscription by archiving the parent invoice
+  def cancel
+    if @subscription.update(archived: true)
+      redirect_to subscriptions_path, notice: 'Subscription was successfully cancelled.'
+    else
+      redirect_to subscriptions_path, alert: 'Unable to cancel subscription.'
     end
   end
 

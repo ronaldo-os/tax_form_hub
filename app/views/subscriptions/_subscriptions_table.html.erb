@@ -4,7 +4,7 @@
     <p class="mb-0 fs-5">No subscriptions found in this category.</p>
   </div>
 <% else %>
-  <div class="table-responsive">
+  <div class="table-responsive overflow-visible">
     <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
@@ -75,11 +75,32 @@
               <%= number_to_currency(invoice.grand_total, unit: invoice.currency + ' ') %>
             </td>
             <td class="pe-4 text-end">
-              <%= link_to "View", subscription_path(invoice), class: "btn btn-sm btn-outline-primary" %>
+              <div class="dropdown text-center">
+                <button class="btn btn-link text-muted p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_<%= invoice.id %>" data-bs-toggle="dropdown" aria-expanded="false">⋮</button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="actionsDropdown_<%= invoice.id %>">
+                  <li>
+                    <%= link_to "View Details", subscription_path(invoice), class: "dropdown-item" %>
+                  </li>
+                  <li>
+                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#midCycleModal-<%= invoice.id %>">
+                      Add Mid-cycle Subscription
+                    </button>
+                  </li>
+                  <% if is_active %>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <%= link_to "Cancel Subscription", cancel_subscription_path(invoice), data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to cancel this subscription? This will stop all future recurring invoices." }, class: "dropdown-item text-danger" %>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
             </td>
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
+  <% subscriptions.each do |invoice| %>
+    <%= render "mid_cycle_modal", invoice: invoice %>
+  <% end %>
 <% end %>

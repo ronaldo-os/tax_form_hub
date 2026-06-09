@@ -59,7 +59,11 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
-  resources :subscriptions, only: [:index, :show]
+  resources :subscriptions, only: [:index, :show] do
+    member do
+      patch :cancel
+    end
+  end
 
   # Catch-all route for 404 errors 
   match "*path", to: "errors#not_found", via: :all, constraints: ->(req) { !req.path.start_with?("/rails/active_storage") }
