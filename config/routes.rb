@@ -62,6 +62,7 @@ Rails.application.routes.draw do
   resources :subscriptions, only: [:index, :show] do
     member do
       patch :cancel
+      post :add_mid_cycle_item
     end
   end
 

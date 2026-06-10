@@ -5,7 +5,7 @@
 
 class SubscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_subscription_invoice, only: [:show, :cancel]
+  before_action :set_subscription_invoice, only: [:show, :cancel, :add_mid_cycle_item]
 
   # GET /subscriptions
   # List all recurring invoices (subscription contracts) for the current user
@@ -54,7 +54,116 @@ class SubscriptionsController < ApplicationController
     end
   end
 
+  # POST /subscriptions/:id/add_mid_cycle_item
+  def add_mid_cycle_item
+    item_name = params[:item_name]
+    quantity = params[:quantity].to_f
+    price = params[:price].to_f
+    effective_date_str = params[:effective_date]
+    proration = params[:proration]
+    charge_type = params[:charge_type]
+    memo = params[:memo]
+    
+    effective_date = Date.parse(effective_date_str) rescue Date.current
+    
+    primary_item = @subscription.primary_recurring_item
+    billing_cycle = primary_item ? (primary_item[:cycle] || 'monthly') : 'monthly'
+    
+    # Calculate next billing date
+    start_d = primary_item ? (Date.parse(primary_item[:start_date]) rescue nil) : Date.current
+    if start_d
+      current_sequence = @subscription.recurring_sub_invoices.count + 1
+      next_date = start_d
+      current_sequence.times do
+        next_date = @subscription.calculate_next_period_date(next_date, billing_cycle)
+      end
+    else
+      next_date = effective_date >> 1
+    end
+    
+    amount_to_charge = 0.0
+    
+    if proration == 'prorate'
+      days_remaining = (next_date - effective_date).to_i
+      days_remaining = 0 if days_remaining < 0
+      
+      months = case billing_cycle
+               when 'monthly' then 1
+               when 'quarterly' then 3
+               when 'annual' then 12
+               else 1
+               end
+      cycle_start_date = next_date << months
+      total_days = (next_date - cycle_start_date).to_i
+      total_days = 30 if total_days <= 0
+      
+      proration_ratio = days_remaining.to_f / total_days.to_f
+      proration_ratio = 1.0 if proration_ratio > 1.0
+      
+      amount_to_charge = price * proration_ratio
+    elsif proration == 'full'
+      amount_to_charge = price
+    end
+    
+    if ['prorate', 'full'].include?(proration) && amount_to_charge > 0
+      generate_immediate_invoice(item_name, quantity, amount_to_charge, memo)
+    end
+    
+    if charge_type == 'recurring'
+      new_item = {
+        'description' => "#{item_name}#{memo.present? ? ' - ' + memo : ''}",
+        'quantity' => quantity.to_s,
+        'price' => price.to_s,
+        'unit' => 'service',
+        'tax' => '0',
+        'optional_fields' => {
+          'subscription' => {
+            'start_date' => next_date.to_s,
+            'billing_cycle' => billing_cycle
+          }
+        }
+      }
+      @subscription.add_subscription_item!(new_item)
+    end
+    
+    redirect_to subscription_path(@subscription), notice: 'Mid-cycle subscription item added successfully.'
+  end
+
   private
+
+  def generate_immediate_invoice(item_name, quantity, amount_to_charge, memo)
+    sub_invoice_number = Invoice.next_recurring_sub_invoice_number(@subscription) + "-mid"
+    
+    item = {
+      'description' => "Mid-cycle: #{item_name}#{memo.present? ? ' - ' + memo : ''}",
+      'quantity' => quantity.to_s,
+      'price' => ('%.2f' % amount_to_charge),
+      'unit' => 'service',
+      'tax' => '0'
+    }
+    
+    total_val = quantity * amount_to_charge
+    
+    new_invoice = current_user.invoices.build(
+      recipient_company: @subscription.recipient_company,
+      sale_from: @subscription.sale_from,
+      invoice_type: @subscription.invoice_type,
+      invoice_category: @subscription.invoice_category,
+      issue_date: Date.current,
+      invoice_number: sub_invoice_number,
+      currency: @subscription.currency,
+      line_items_data: [item],
+      recipient_note: memo,
+      billing_reference: @subscription.invoice_number,
+      recurring_parent_invoice_id: @subscription.id,
+      total: {
+        "subtotal" => ('%.2f' % total_val),
+        "grand_total" => ('%.2f' % total_val),
+        "charge" => ('%.2f' % total_val)
+      }
+    )
+    new_invoice.save!
+  end
 
   def set_subscription_invoice
     @subscription = current_user.invoices.find(params[:id])

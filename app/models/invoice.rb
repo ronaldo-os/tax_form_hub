@@ -571,6 +571,23 @@ class Invoice < ApplicationRecord
     end
   end
 
+  def add_subscription_item!(item_hash)
+    self.line_items_data ||= []
+    self.line_items_data << item_hash
+    
+    item_total = (item_hash[:price] || item_hash['price']).to_f * (item_hash[:quantity] || item_hash['quantity']).to_f
+    
+    current_total = self.total || {}
+    subtotal = current_total["subtotal"].to_f + item_total
+    grand_total = current_total["grand_total"].to_f + item_total
+    
+    current_total["subtotal"] = '%.2f' % subtotal
+    current_total["grand_total"] = '%.2f' % grand_total
+    
+    self.total = current_total
+    save!
+  end
+
   private
 
   def line_items_tax_selected
