@@ -36,7 +36,10 @@ class Invoice < ApplicationRecord
   validate :monthly_charge_dates_valid
 
   def line_items
-    line_items_data || []
+    return [] if line_items_data.blank?
+    line_items_data.reject do |item|
+      item.is_a?(Hash) && item.dig('optional_fields', 'hidden_on_parent')
+    end
   end
 
   def grand_total
@@ -277,7 +280,20 @@ class Invoice < ApplicationRecord
     
     current_sequence_number = recurring_sub_invoices.count + 1
 
-    child_line_items_data = line_items_data.map do |item|
+    primary_item_info = primary_recurring_item
+    primary_parent_start_d = primary_item_info && primary_item_info[:start_date].present? ? (Date.parse(primary_item_info[:start_date]) rescue nil) : nil
+    primary_cycle = primary_item_info ? (primary_item_info[:cycle] || 'monthly') : 'monthly'
+    
+    invoice_period_start = primary_parent_start_d || Date.current
+    current_sequence_number.times do
+      invoice_period_start = calculate_next_period_date(invoice_period_start, primary_cycle)
+    end
+
+    parent_changed = false
+    updated_parent_line_items = []
+    child_line_items_data = []
+
+    line_items_data.each do |item|
       if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) &&
          item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
 
@@ -287,11 +303,24 @@ class Invoice < ApplicationRecord
         
         parent_start_d = parent_start_d_str.present? ? (Date.parse(parent_start_d_str) rescue nil) : nil
         
+        if parent_start_d && parent_start_d > invoice_period_start
+          updated_parent_line_items << item
+          next
+        end
+        
         new_item = item.deep_dup
+        new_item['optional_fields']&.delete('hidden_on_parent')
         
         if parent_start_d
+          item_sequence = 0
+          temp_date = parent_start_d
+          while temp_date < invoice_period_start
+            temp_date = calculate_next_period_date(temp_date, billing_cycle)
+            item_sequence += 1
+          end
+          
           child_start_d = parent_start_d
-          current_sequence_number.times do
+          item_sequence.times do
             child_start_d = calculate_next_period_date(child_start_d, billing_cycle)
           end
           child_end_d = calculate_next_period_date(child_start_d, billing_cycle)
@@ -328,9 +357,31 @@ class Invoice < ApplicationRecord
         new_desc = "#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})"
         
         new_item['description'] = new_desc
-        new_item
+        updated_parent_line_items << item
+        child_line_items_data << new_item
+      elsif item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && item['optional_fields']['one_time_charge']
+        if !item['optional_fields']['billed']
+          target_date_str = item['optional_fields']['target_date']
+          target_date = target_date_str.present? ? (Date.parse(target_date_str) rescue nil) : nil
+          
+          if target_date && target_date > invoice_period_start
+            updated_parent_line_items << item
+          else
+            child_item = item.deep_dup
+            child_item['optional_fields']&.delete('hidden_on_parent')
+            child_line_items_data << child_item
+            
+            updated_parent_item = item.deep_dup
+            updated_parent_item['optional_fields']['billed'] = true
+            updated_parent_line_items << updated_parent_item
+            parent_changed = true
+          end
+        else
+          updated_parent_line_items << item
+        end
       else
-        item.deep_dup
+        updated_parent_line_items << item
+        child_line_items_data << item.deep_dup
       end
     end
 
@@ -345,9 +396,20 @@ class Invoice < ApplicationRecord
         
         parent_start_d = parent_start_d_str.present? ? (Date.parse(parent_start_d_str) rescue nil) : nil
         
+        if parent_start_d && parent_start_d > invoice_period_start
+          next nil
+        end
+        
         if parent_start_d
+          item_sequence = 0
+          temp_date = parent_start_d
+          while temp_date < invoice_period_start
+            temp_date = calculate_next_period_date(temp_date, billing_cycle)
+            item_sequence += 1
+          end
+
           child_start_d = parent_start_d
-          current_sequence_number.times do
+          item_sequence.times do
             child_start_d = calculate_next_period_date(child_start_d, billing_cycle)
           end
           child_end_d = calculate_next_period_date(child_start_d, billing_cycle)
@@ -378,7 +440,13 @@ class Invoice < ApplicationRecord
       else
         adj.deep_dup
       end
-    end : nil
+    end.compact : nil
+
+    child_subtotal = child_line_items_data.sum { |item| (item['price'].to_f * (item['quantity'] || 1).to_f) }
+    child_total = self.total.deep_dup || {}
+    child_total["subtotal"] = '%.2f' % child_subtotal
+    child_total["grand_total"] = '%.2f' % child_subtotal
+    child_total["charge"] = '%.2f' % child_subtotal if child_total.key?("charge")
 
     # Create the new invoice
     new_invoice = user.invoices.build(
@@ -396,11 +464,14 @@ class Invoice < ApplicationRecord
       billing_reference: self.invoice_number,
       recurring_parent_invoice_id: id,
       recurring_sequence_number: current_sequence_number,
-      total: self.total,
+      total: child_total,
       invoice_info: self.invoice_info
     )
 
     if new_invoice.save
+      if parent_changed
+        self.update_column(:line_items_data, updated_parent_line_items)
+      end
       new_invoice
     else
       raise "Failed to generate subscription invoice: #{new_invoice.errors.full_messages.join(', ')}"
@@ -563,10 +634,10 @@ class Invoice < ApplicationRecord
         errors.add(:invoice_number, "sub-invoice must follow parent number format (#{expected_prefix}XX)")
       end
       
-      # Validate sequence number format (should be 01, 02, 03, etc.)
+      # Validate sequence number format (should be 01, 02, 03, etc. or 01-mid)
       sequence_part = invoice_number.sub(expected_prefix, "")
-      unless sequence_part =~ /^\d{2}$/
-        errors.add(:invoice_number, "sub-invoice sequence must be two digits (01, 02, 03, etc.)")
+      unless sequence_part =~ /^\d{2}(-mid)?$/
+        errors.add(:invoice_number, "sub-invoice sequence must be two digits (01, 02, 03, etc.) with optional -mid suffix")
       end
     end
   end
@@ -575,16 +646,18 @@ class Invoice < ApplicationRecord
     self.line_items_data ||= []
     self.line_items_data << item_hash
     
-    item_total = (item_hash[:price] || item_hash['price']).to_f * (item_hash[:quantity] || item_hash['quantity']).to_f
-    
-    current_total = self.total || {}
-    subtotal = current_total["subtotal"].to_f + item_total
-    grand_total = current_total["grand_total"].to_f + item_total
-    
-    current_total["subtotal"] = '%.2f' % subtotal
-    current_total["grand_total"] = '%.2f' % grand_total
-    
-    self.total = current_total
+    unless item_hash.dig('optional_fields', 'hidden_on_parent')
+      item_total = (item_hash[:price] || item_hash['price']).to_f * (item_hash[:quantity] || item_hash['quantity']).to_f
+      
+      current_total = self.total || {}
+      subtotal = current_total["subtotal"].to_f + item_total
+      grand_total = current_total["grand_total"].to_f + item_total
+      
+      current_total["subtotal"] = '%.2f' % subtotal
+      current_total["grand_total"] = '%.2f' % grand_total
+      
+      self.total = current_total
+    end
     save!
   end
 

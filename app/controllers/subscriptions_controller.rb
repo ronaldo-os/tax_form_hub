@@ -42,6 +42,28 @@ class SubscriptionsController < ApplicationController
         @upcoming_invoice_date = next_date
       end
     end
+
+    @generated_mid_cycle_invoices = current_user.invoices.where(recurring_parent_invoice_id: @subscription.id).where("invoice_number LIKE ?", "%-mid").order(created_at: :desc)
+
+    @mid_cycle_pending_items = []
+    if primary_item && primary_item[:start_date]
+      primary_date = Date.parse(primary_item[:start_date]) rescue nil
+      if primary_date
+        @subscription.line_items.each do |item|
+          start_d_str = @subscription.extract_subscription_field(item, 'start_date')
+          next unless start_d_str
+          item_date = Date.parse(start_d_str) rescue nil
+          next unless item_date
+
+          if item_date > primary_date
+            @mid_cycle_pending_items << {
+              item: item,
+              expected_generation_date: @upcoming_invoice_date || item_date
+            }
+          end
+        end
+      end
+    end
   end
 
   # PATCH /subscriptions/:id/cancel
@@ -106,7 +128,20 @@ class SubscriptionsController < ApplicationController
     end
     
     if ['prorate', 'full'].include?(proration) && amount_to_charge > 0
-      generate_immediate_invoice(item_name, quantity, amount_to_charge, memo)
+      prorated_item = {
+        'description' => "Mid-cycle charge: #{item_name}#{memo.present? ? ' - ' + memo : ''}",
+        'quantity' => quantity.to_s,
+        'price' => ('%.2f' % amount_to_charge),
+        'unit' => 'service',
+        'tax' => '0',
+        'optional_fields' => {
+          'one_time_charge' => true,
+          'target_date' => next_date.to_s,
+          'billed' => false,
+          'hidden_on_parent' => true
+        }
+      }
+      @subscription.add_subscription_item!(prorated_item)
     end
     
     if charge_type == 'recurring'
@@ -118,15 +153,16 @@ class SubscriptionsController < ApplicationController
         'tax' => '0',
         'optional_fields' => {
           'subscription' => {
-            'start_date' => next_date.to_s,
+            'start_date' => effective_date.to_s,
             'billing_cycle' => billing_cycle
-          }
+          },
+          'hidden_on_parent' => true
         }
       }
       @subscription.add_subscription_item!(new_item)
     end
     
-    redirect_to subscription_path(@subscription), notice: 'Mid-cycle subscription item added successfully.'
+    redirect_to subscription_path(@subscription), notice: 'Mid-cycle subscription item added to the next invoice successfully.'
   end
 
   private
