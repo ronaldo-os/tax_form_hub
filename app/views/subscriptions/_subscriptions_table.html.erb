@@ -1,11 +1,5 @@
-<% if subscriptions.empty? %>
-  <div class="p-5 text-center text-muted">
-    <i class="fa-regular fa-folder-open fa-3x mb-3 opacity-50"></i>
-    <p class="mb-0 fs-5">No subscriptions found in this category.</p>
-  </div>
-<% else %>
-  <div class="table-responsive overflow-visible">
-    <table class="table table-hover align-middle mb-0">
+<div class="table-responsive overflow-visible">
+    <table class="table table-hover align-middle mb-0 subscription-table w-100">
       <thead class="table-light">
         <tr>
           <th class="ps-4">Recipient</th>
@@ -103,4 +97,3 @@
   <% subscriptions.each do |invoice| %>
     <%= render "mid_cycle_modal", invoice: invoice %>
   <% end %>
-<% end %>

@@ -280,8 +280,9 @@
             <div class="form-check mb-4">
               <%= f.check_box :save_payment_terms_for_future,
                     class: "form-check-input",
+                    id: "invoice_save_payment_terms_for_future",
                     checked: ( @save_payment_terms_for_future || @invoice.save_payment_terms_for_future? ) %>
-              <%= f.label :save_payment_terms_for_future, "Save payment terms and means for future invoices", class: "form-check-label" %>
+              <%= f.label :save_payment_terms_for_future, "Save payment terms and means for future invoices", class: "form-check-label", for: "invoice_save_payment_terms_for_future", style: "cursor: pointer;" %>
             </div>
             <% end %>
 
@@ -422,11 +423,12 @@
             <div class="form-check mb-4">
               <%= f.check_box :save_notes_for_future,
                     class: "form-check-input",
+                    id: "invoice_save_notes_for_future",
                     checked: ( @save_notes_for_future.present? ||
                       (@invoice.persisted? && @invoice.save_notes_for_future?) ||
                       (!@invoice.persisted? && @recipient_note.present?)
                     ) %>
-              <%= f.label :save_notes_for_future, "Save notes for future Invoices", class: "form-check-label" %>
+              <%= f.label :save_notes_for_future, "Save notes for future Invoices", class: "form-check-label", for: "invoice_save_notes_for_future", style: "cursor: pointer;" %>
             </div>
 
             <div class="mb-3">
@@ -575,11 +577,12 @@
             <div class="form-check mb-4">
               <%= f.check_box :save_footer_notes_for_future,
                     class: "form-check-input",
+                    id: "invoice_save_footer_notes_for_future",
                     checked: ( @save_footer_notes_for_future.present? ||
                       (@invoice.persisted? && @invoice.save_footer_notes_for_future?) ||
                       (!@invoice.persisted? && defined?(@footer_notes) && @footer_notes.present?)
                     ) %>
-              <%= f.label :save_footer_notes_for_future, "Save notes for future Invoices", class: "form-check-label" %>
+              <%= f.label :save_footer_notes_for_future, "Save notes for future Invoices", class: "form-check-label", for: "invoice_save_footer_notes_for_future", style: "cursor: pointer;" %>
             </div>
         </div>
     </div>

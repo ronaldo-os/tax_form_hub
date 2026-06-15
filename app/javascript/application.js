@@ -26,6 +26,10 @@ function loadPageSpecificModules() {
     import(/* webpackChunkName: "locations" */ './locations');
   }
 
+  if (path.includes('/subscriptions')) {
+    import(/* webpackChunkName: "subscriptions" */ './subscriptions');
+  }
+
   if (path.includes('/companies')) {
     import(/* webpackChunkName: "companies" */ './companies');
   }
@@ -384,7 +388,7 @@ function initApplication() {
     });
 
     // When a tab becomes visible, recalc the datatable layout
-    $(document).off('shown.bs.tab.dt').on('shown.bs.tab.dt', 'a[data-bs-toggle="tab"]', function (e) {
+    $(document).off('shown.bs.tab.dt').on('shown.bs.tab.dt', '[data-bs-toggle="tab"]', function (e) {
         $.fn.dataTable
             .tables({ visible: true, api: true })
             .columns.adjust()
