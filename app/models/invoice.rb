@@ -165,6 +165,7 @@ class Invoice < ApplicationRecord
     if has_subscription_line_items?
       item = subscription_line_items.first
       {
+        description: item['description'],
         start_date: extract_subscription_field(item, 'start_date'),
         end_date: extract_subscription_field(item, 'end_date'),
         cycle: extract_subscription_field(item, 'billing_cycle') || 'monthly'
@@ -176,6 +177,7 @@ class Invoice < ApplicationRecord
               else 'monthly'
               end
       {
+        description: adj['description_edit'],
         start_date: adj['charge_start_date'],
         end_date: adj['charge_end_date'],
         cycle: cycle

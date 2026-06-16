@@ -49,17 +49,39 @@ class SubscriptionsController < ApplicationController
     if primary_item && primary_item[:start_date]
       primary_date = Date.parse(primary_item[:start_date]) rescue nil
       if primary_date
-        @subscription.line_items.each do |item|
-          start_d_str = @subscription.extract_subscription_field(item, 'start_date')
-          next unless start_d_str
-          item_date = Date.parse(start_d_str) rescue nil
-          next unless item_date
+        latest_billed_date = primary_date
+        @subscription.recurring_sub_invoices.count.times do
+          latest_billed_date = @subscription.calculate_next_period_date(latest_billed_date, primary_item[:cycle] || 'monthly')
+        end
 
-          if item_date > primary_date
-            @mid_cycle_pending_items << {
-              item: item,
-              expected_generation_date: @upcoming_invoice_date || item_date
-            }
+        (@subscription.line_items_data || []).each do |item|
+          next unless item.is_a?(Hash)
+          optional_fields = item['optional_fields'] || {}
+          
+          if optional_fields['one_time_charge']
+            if !optional_fields['billed']
+              target_date = Date.parse(optional_fields['target_date']) rescue nil
+              @mid_cycle_pending_items << {
+                item: item,
+                expected_generation_date: target_date || @upcoming_invoice_date
+              }
+            end
+          else
+            start_d_str = @subscription.extract_subscription_field(item, 'start_date')
+            next unless start_d_str
+            item_date = Date.parse(start_d_str) rescue nil
+            next unless item_date
+
+            # Only consider it mid-cycle if it started after the primary subscription
+            if item_date > primary_date
+              # It's pending if it hasn't been billed in any sub-invoice yet
+              if item_date > latest_billed_date
+                @mid_cycle_pending_items << {
+                  item: item,
+                  expected_generation_date: @upcoming_invoice_date || item_date
+                }
+              end
+            end
           end
         end
       end

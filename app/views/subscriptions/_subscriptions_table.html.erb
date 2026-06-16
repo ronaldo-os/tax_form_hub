@@ -20,7 +20,7 @@
             </td>
             <td>
               <span class="text-truncate d-inline-block" style="max-width: 200px;">
-                <%= invoice.message.presence || "Subscription Service" %>
+                <%= primary_item[:description].presence || invoice.message.presence || "Subscription Service" %>
               </span>
             </td>
             <td>
