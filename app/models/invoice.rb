@@ -237,12 +237,12 @@ class Invoice < ApplicationRecord
     current_d = start_d
     count = 0
     # Simulate billing cycles exactly to determine total periods
-    while current_d <= end_d
+    while current_d < end_d
       current_d = calculate_next_period_date(current_d, cycle)
       count += 1
     end
                      
-    expected = count - 1
+    expected = count
     expected > 0 ? expected : 0
   end
 
@@ -321,6 +321,10 @@ class Invoice < ApplicationRecord
             item_sequence += 1
           end
           
+          # Calculate item specific total payments
+          is_mid_cycle = item.dig('optional_fields', 'hidden_on_parent')
+          item_end_d_str = is_mid_cycle ? primary_item_info&.dig(:end_date) : (parent_end_d_str.presence || primary_item_info&.dig(:end_date))
+          
           child_start_d = parent_start_d
           item_sequence.times do
             child_start_d = calculate_next_period_date(child_start_d, billing_cycle)
@@ -337,8 +341,8 @@ class Invoice < ApplicationRecord
             subscription[end_key] = child_end_d.to_s
             
             # Retain the overall end date from the most parent invoice
-            if parent_end_d_str.present?
-              subscription['overall_end_date'] = parent_end_d_str
+            if item_end_d_str.present?
+              subscription['overall_end_date'] = item_end_d_str
             end
           end
         end
@@ -359,6 +363,13 @@ class Invoice < ApplicationRecord
         new_desc = "#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})"
         
         new_item['description'] = new_desc
+        if new_item['total'].blank?
+          qty = (new_item['quantity'] || 1).to_f
+          prc = new_item['price'].to_f
+          tx = new_item['tax'].to_f
+          new_item['total'] = ('%.2f' % (qty * prc * (1 + tx / 100.0)))
+        end
+        
         updated_parent_line_items << item
         child_line_items_data << new_item
       elsif item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && item['optional_fields']['one_time_charge']
@@ -371,6 +382,14 @@ class Invoice < ApplicationRecord
           else
             child_item = item.deep_dup
             child_item['optional_fields']&.delete('hidden_on_parent')
+            
+            if child_item['total'].blank?
+              qty = (child_item['quantity'] || 1).to_f
+              prc = child_item['price'].to_f
+              tx = child_item['tax'].to_f
+              child_item['total'] = ('%.2f' % (qty * prc * (1 + tx / 100.0)))
+            end
+            
             child_line_items_data << child_item
             
             updated_parent_item = item.deep_dup
@@ -383,7 +402,16 @@ class Invoice < ApplicationRecord
         end
       else
         updated_parent_line_items << item
-        child_line_items_data << item.deep_dup
+        child_item = item.deep_dup
+        
+        if child_item['total'].blank?
+          qty = (child_item['quantity'] || 1).to_f
+          prc = child_item['price'].to_f
+          tx = child_item['tax'].to_f
+          child_item['total'] = ('%.2f' % (qty * prc * (1 + tx / 100.0)))
+        end
+        
+        child_line_items_data << child_item
       end
     end
 
@@ -410,6 +438,9 @@ class Invoice < ApplicationRecord
             item_sequence += 1
           end
 
+          # Calculate item specific total payments
+          item_end_d_str = adj['charge_end_date'].presence || primary_item_info&.dig(:end_date)
+
           child_start_d = parent_start_d
           item_sequence.times do
             child_start_d = calculate_next_period_date(child_start_d, billing_cycle)
@@ -419,8 +450,6 @@ class Invoice < ApplicationRecord
           new_adj['charge_start_date'] = child_start_d.to_s
           new_adj['charge_end_date'] = child_end_d.to_s
           
-          total_payments = calculate_total_expected_child_invoices
-          total_payments = total_payments && total_payments > 0 ? total_payments : current_sequence_number
           payment_type = case billing_cycle
                          when 'monthly' then 'Monthly Charge'
                          when 'quarterly' then 'Quarterly Charge'
@@ -433,7 +462,12 @@ class Invoice < ApplicationRecord
           new_desc = "#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})"
           
           if new_adj['description_edit'].present?
-            new_adj['description_edit'] = "#{new_adj['description_edit']} - #{new_desc}"
+            # Ensure we don't append the description multiple times
+            if new_adj['description_edit'].include?("for Invoice ##{self.invoice_number}")
+              new_adj['description_edit'] = new_adj['description_edit'].sub(/ - #{payment_type}.*$/, " - #{new_desc}")
+            else
+              new_adj['description_edit'] = "#{new_adj['description_edit']} - #{new_desc}"
+            end
           else
             new_adj['description_edit'] = new_desc
           end
@@ -648,18 +682,16 @@ class Invoice < ApplicationRecord
     self.line_items_data ||= []
     self.line_items_data << item_hash
     
-    unless item_hash.dig('optional_fields', 'hidden_on_parent')
-      item_total = (item_hash[:price] || item_hash['price']).to_f * (item_hash[:quantity] || item_hash['quantity']).to_f
-      
-      current_total = self.total || {}
-      subtotal = current_total["subtotal"].to_f + item_total
-      grand_total = current_total["grand_total"].to_f + item_total
-      
-      current_total["subtotal"] = '%.2f' % subtotal
-      current_total["grand_total"] = '%.2f' % grand_total
-      
-      self.total = current_total
-    end
+    item_total = (item_hash[:price] || item_hash['price']).to_f * (item_hash[:quantity] || item_hash['quantity']).to_f
+    
+    current_total = self.total || {}
+    subtotal = current_total["subtotal"].to_f + item_total
+    grand_total = current_total["grand_total"].to_f + item_total
+    
+    current_total["subtotal"] = '%.2f' % subtotal
+    current_total["grand_total"] = '%.2f' % grand_total
+    
+    self.total = current_total
     save!
   end
 

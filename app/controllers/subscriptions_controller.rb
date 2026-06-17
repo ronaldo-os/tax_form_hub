@@ -176,8 +176,9 @@ class SubscriptionsController < ApplicationController
         'optional_fields' => {
           'subscription' => {
             'start_date' => effective_date.to_s,
+            'end_date' => primary_item && primary_item[:end_date].present? ? primary_item[:end_date] : nil,
             'billing_cycle' => billing_cycle
-          },
+          }.compact,
           'hidden_on_parent' => true
         }
       }
