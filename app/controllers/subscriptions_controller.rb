@@ -46,6 +46,7 @@ class SubscriptionsController < ApplicationController
     @generated_mid_cycle_invoices = current_user.invoices.where(recurring_parent_invoice_id: @subscription.id).where("invoice_number LIKE ?", "%-mid").order(created_at: :desc)
 
     @mid_cycle_pending_items = []
+    @mid_cycle_generated_items = []
     if primary_item && primary_item[:start_date]
       primary_date = Date.parse(primary_item[:start_date]) rescue nil
       if primary_date
@@ -59,11 +60,20 @@ class SubscriptionsController < ApplicationController
           optional_fields = item['optional_fields'] || {}
           
           if optional_fields['one_time_charge']
+            target_date = Date.parse(optional_fields['target_date']) rescue nil
             if !optional_fields['billed']
-              target_date = Date.parse(optional_fields['target_date']) rescue nil
               @mid_cycle_pending_items << {
                 item: item,
-                expected_generation_date: target_date || @upcoming_invoice_date
+                expected_generation_date: target_date || @upcoming_invoice_date,
+                effective_date: target_date || @upcoming_invoice_date,
+                billing_cycle: 'One-time'
+              }
+            else
+              @mid_cycle_generated_items << {
+                item: item,
+                generation_date: target_date || @upcoming_invoice_date,
+                effective_date: target_date || @upcoming_invoice_date,
+                billing_cycle: 'One-time'
               }
             end
           else
@@ -71,6 +81,8 @@ class SubscriptionsController < ApplicationController
             next unless start_d_str
             item_date = Date.parse(start_d_str) rescue nil
             next unless item_date
+            
+            item_billing_cycle = @subscription.extract_subscription_field(item, 'billing_cycle') || 'Monthly'
 
             # Only consider it mid-cycle if it started after the primary subscription
             if item_date > primary_date
@@ -78,7 +90,16 @@ class SubscriptionsController < ApplicationController
               if item_date > latest_billed_date
                 @mid_cycle_pending_items << {
                   item: item,
-                  expected_generation_date: @upcoming_invoice_date || item_date
+                  expected_generation_date: @upcoming_invoice_date || item_date,
+                  effective_date: item_date,
+                  billing_cycle: item_billing_cycle.capitalize
+                }
+              else
+                @mid_cycle_generated_items << {
+                  item: item,
+                  generation_date: item_date,
+                  effective_date: item_date,
+                  billing_cycle: item_billing_cycle.capitalize
                 }
               end
             end
@@ -160,7 +181,7 @@ class SubscriptionsController < ApplicationController
           'one_time_charge' => true,
           'target_date' => next_date.to_s,
           'billed' => false,
-          'hidden_on_parent' => true
+          'hidden_on_parent' => (@subscription.issue_date != effective_date)
         }
       }
       @subscription.add_subscription_item!(prorated_item)
@@ -179,7 +200,7 @@ class SubscriptionsController < ApplicationController
             'end_date' => primary_item && primary_item[:end_date].present? ? primary_item[:end_date] : nil,
             'billing_cycle' => billing_cycle
           }.compact,
-          'hidden_on_parent' => true
+          'hidden_on_parent' => (@subscription.issue_date != effective_date)
         }
       }
       @subscription.add_subscription_item!(new_item)

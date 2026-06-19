@@ -40,14 +40,14 @@
             <div class="col-sm-6 col-md-4">
               <div class="text-muted small fw-semibold text-uppercase mb-1">Start Date</div>
               <div class="fs-5 fw-medium">
-                <%= primary_item[:start_date] ? Date.parse(primary_item[:start_date]).strftime("%B %d, %Y") : "N/A" %>
+                <%= primary_item[:start_date] ? Date.parse(primary_item[:start_date]).strftime("%b %d, %Y") : "N/A" %>
               </div>
             </div>
 
             <div class="col-sm-6 col-md-4">
               <div class="text-muted small fw-semibold text-uppercase mb-1">End Date</div>
               <div class="fs-5 fw-medium">
-                <%= primary_item[:end_date] ? Date.parse(primary_item[:end_date]).strftime("%B %d, %Y") : "Indefinite" %>
+                <%= primary_item[:end_date] ? Date.parse(primary_item[:end_date]).strftime("%b %d, %Y") : "Indefinite" %>
               </div>
             </div>
 
@@ -55,7 +55,7 @@
               <div class="text-muted small fw-semibold text-uppercase mb-1">Next Invoice</div>
               <div class="fs-5 fw-medium">
                 <% if is_active && @upcoming_invoice_date %>
-                  <%= @upcoming_invoice_date.strftime("%B %d, %Y") %>
+                  <%= @upcoming_invoice_date.strftime("%b %d, %Y") %>
                 <% else %>
                   <span class="text-muted">-</span>
                 <% end %>
@@ -78,80 +78,104 @@
           <p class="text-muted mt-2 mb-0">Track upcoming and recently generated mid-cycle subscription changes for this invoice.</p>
         </div>
         <div class="card-body p-0">
-          <div class="row g-0">
-            <div class="col-md-6 border-end">
-              <div class="p-4">
-                <h6 class="text-muted fw-semibold mb-3">Pending / Not Yet Generated</h6>
-                <% if @mid_cycle_pending_items.empty? %>
-                  <div class="text-center py-4">
-                    <i class="fa-regular fa-clock fa-2x text-muted opacity-50 mb-2"></i>
-                    <p class="text-muted small mb-0">No pending mid-cycle items.</p>
-                  </div>
-                <% else %>
-                  <div class="table-responsive">
-                    <table class="table table-hover table-sm align-middle mb-0">
-                      <thead class="table-light text-muted">
-                        <tr>
-                          <th>Item Description</th>
-                          <th>Generation Date</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% @mid_cycle_pending_items.each do |data| %>
-                          <tr>
-                            <td class="text-truncate" style="max-width: 150px;" title="<%= data[:item]['description'] %>">
-                              <small><%= data[:item]['description'] %></small>
-                            </td>
-                            <td>
-                              <span class="badge bg-info-subtle text-info fw-semibold border border-info-subtle">
-                                <%= data[:expected_generation_date].strftime("%b %d, %Y") %>
-                              </span>
-                            </td>
-                          </tr>
-                        <% end %>
-                      </tbody>
-                    </table>
-                  </div>
-                <% end %>
-              </div>
+          <% if @mid_cycle_pending_items.empty? && @generated_mid_cycle_invoices.empty? && @mid_cycle_generated_items.empty? %>
+            <div class="text-center py-5">
+              <i class="fa-solid fa-file-invoice fa-2x text-muted opacity-50 mb-3"></i>
+              <p class="text-muted mb-0">No mid-cycle items or invoices.</p>
             </div>
-            <div class="col-md-6">
-              <div class="p-4">
-                <h6 class="text-muted fw-semibold mb-3">Generated Mid-Cycle Invoices</h6>
-                <% if @generated_mid_cycle_invoices.empty? %>
-                  <div class="text-center py-4">
-                    <i class="fa-solid fa-file-invoice fa-2x text-muted opacity-50 mb-2"></i>
-                    <p class="text-muted small mb-0">No mid-cycle invoices generated yet.</p>
-                  </div>
-                <% else %>
-                  <div class="table-responsive">
-                    <table class="table table-hover table-sm align-middle mb-0">
-                      <thead class="table-light text-muted">
-                        <tr>
-                          <th>Invoice #</th>
-                          <th>Date</th>
-                          <th class="text-end">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <% @generated_mid_cycle_invoices.each do |invoice| %>
-                          <tr>
-                            <td>
-                              <%= link_to invoice.invoice_number, invoice_path(invoice), class: "text-decoration-none fw-medium", target: "_blank" %>
-                            </td>
-                            <td><small class="text-muted"><%= invoice.issue_date.strftime("%b %d, %Y") %></small></td>
-                            <td class="text-end fw-semibold">
-                              <%= number_to_currency(invoice.grand_total, unit: invoice.currency + ' ') %>
-                            </td>
-                          </tr>
+          <% else %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-muted">
+                  <tr>
+                    <th class="ps-4">Item Description</th>
+                    <th>Billing Cycle</th>
+                    <th>Effective Date</th>
+                    <th>Generation Date</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% 
+                    combined_items = []
+                    @mid_cycle_pending_items.each do |data|
+                      combined_items << {
+                        type: :pending,
+                        description: data[:item]['description'],
+                        date: data[:expected_generation_date],
+                        effective_date: data[:effective_date],
+                        billing_cycle: data[:billing_cycle],
+                        amount: data[:item]['price'],
+                        currency: @subscription.currency
+                      }
+                    end
+                    @mid_cycle_generated_items.each do |data|
+                      combined_items << {
+                        type: :generated,
+                        description: data[:item]['description'],
+                        date: data[:generation_date],
+                        effective_date: data[:effective_date],
+                        billing_cycle: data[:billing_cycle],
+                        amount: data[:item]['price'],
+                        currency: @subscription.currency,
+                        invoice: nil
+                      }
+                    end
+                    @generated_mid_cycle_invoices.each do |invoice|
+                      combined_items << {
+                        type: :generated,
+                        description: invoice.invoice_number,
+                        date: invoice.issue_date,
+                        effective_date: invoice.issue_date,
+                        billing_cycle: 'Mid-cycle Invoice',
+                        amount: invoice.grand_total,
+                        currency: invoice.currency,
+                        invoice: invoice
+                      }
+                    end
+                    combined_items.sort_by! { |item| item[:date] || Date.new(1970,1,1) }.reverse!
+                  %>
+                  <% combined_items.each do |item| %>
+                    <tr>
+                      <td class="ps-4">
+                        <% if item[:type] == :pending || item[:invoice].nil? %>
+                          <span class="text-truncate d-inline-block" style="max-width: 250px;" title="<%= item[:description] %>">
+                            <small><%= safe_join(item[:description].to_s.split("\n"), tag.br) %></small>
+                          </span>
+                        <% else %>
+                          <%= link_to item[:description], invoice_path(item[:invoice]), class: "text-decoration-none fw-medium", target: "_blank" %>
                         <% end %>
-                      </tbody>
-                    </table>
-                  </div>
-                <% end %>
-              </div>
+                      </td>
+                      <td>
+                        <small class="text-muted"><%= item[:billing_cycle] || '-' %></small>
+                      </td>
+                      <td>
+                        <small class="text-muted"><%= item[:effective_date]&.strftime("%b %d, %Y") || '-' %></small>
+                      </td>
+                      <td>
+                        <small class="text-muted"><%= item[:date]&.strftime("%b %d, %Y") || '-' %></small>
+                      </td>
+                      <td>
+                        <% if item[:type] == :pending %>
+                          <span class="badge bg-info-subtle text-info fw-semibold border border-info-subtle">Pending</span>
+                        <% else %>
+                          <span class="badge bg-success-subtle text-success fw-semibold border border-success-subtle">Generated</span>
+                        <% end %>
+                      </td>
+                      <td class="text-end pe-4 fw-semibold">
+                        <% if item[:amount].present? %>
+                          <%= number_to_currency(item[:amount], unit: item[:currency] + ' ') %>
+                        <% else %>
+                          -
+                        <% end %>
+                      </td>
+                    </tr>
+                  <% end %>
+                </tbody>
+              </table>
             </div>
-          </div>
+          <% end %>
         </div>
       </div>
 

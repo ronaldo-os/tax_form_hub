@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_05_28_104844) do
+ActiveRecord::Schema[7.2].define(version: 2026_06_03_084049) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -209,6 +209,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_05_28_104844) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "pending_adjustments", default: []
     t.index ["next_invoice_date"], name: "index_subscriptions_on_next_invoice_date"
     t.index ["recipient_company_id", "status"], name: "index_subscriptions_on_recipient_company_id_and_status"
     t.index ["recipient_company_id"], name: "index_subscriptions_on_recipient_company_id"

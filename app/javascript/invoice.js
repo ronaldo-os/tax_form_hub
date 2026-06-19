@@ -1256,6 +1256,8 @@ const initInvoiceForm = () => {
 
     $('#line-items .line-item').each(function () {
       const $row = $(this);
+      if ($row.hasClass('hidden-on-parent')) return;
+      
       const qty = parseFloat($row.find('.quantity').val()) || 0;
       const price = parseCurrency($row.find('.price').val());
       const pricePerQty = parseCurrency($row.find('.price-per-quantity').val()) || 0; // Use parseCurrency for safety
@@ -1691,7 +1693,13 @@ const initInvoiceForm = () => {
     lineIndex = data.length;
 
     data.forEach((item, i) => {
+      const isHidden = item.optional_fields && (item.optional_fields.hidden_on_parent === true || item.optional_fields.hidden_on_parent === 'true');
       const $html = $(getLineItemHTML(i, item.tax));
+      
+      if (isHidden) {
+        $html.addClass('d-none hidden-on-parent');
+      }
+      
       $lineItems.append($html);
 
       $html.find('.item-id').val(item.item_id);
@@ -1707,7 +1715,7 @@ const initInvoiceForm = () => {
       if (item.optional_fields) {
         Object.entries(item.optional_fields).forEach(([groupKey, fields]) => {
           const $optionalRow = $(`
-              <tr class="optional-field-row bg-light" data-optional-group="${groupKey}" data-line-index="${i}">
+              <tr class="optional-field-row bg-light ${isHidden ? 'd-none' : ''}" data-optional-group="${groupKey}" data-line-index="${i}">
                 <td></td><td></td>
               </tr>
             `);

@@ -147,16 +147,21 @@ class Invoice < ApplicationRecord
     return false if archived?
 
     active_sub = subscription_line_items.any? do |item|
-      start_date = extract_subscription_field(item, 'start_date')
-      billing_cycle = extract_subscription_field(item, 'billing_cycle')
-      start_date.present? && billing_cycle.present?
+      extract_subscription_field(item, 'start_date').present?
     end
     
     active_discount = recurring_price_adjustments.any? do |adj|
       adj['charge_start_date'].present? && adj['frequency'].present?
     end
 
-    active_sub || active_discount
+    return false unless (active_sub || active_discount)
+    
+    total_expected = calculate_total_expected_child_invoices
+    if total_expected
+      return false if recurring_sub_invoices.count >= total_expected
+    end
+    
+    true
   rescue
     false
   end
@@ -331,6 +336,13 @@ class Invoice < ApplicationRecord
           end
           child_end_d = calculate_next_period_date(child_start_d, billing_cycle)
           
+          if item_end_d_str.present?
+            overall_end_d = Date.parse(item_end_d_str) rescue nil
+            if overall_end_d && child_end_d > overall_end_d
+              child_end_d = overall_end_d
+            end
+          end
+          
           subscription = new_item['optional_fields']['subscription']
           if subscription.is_a?(Hash)
             end_key = subscription.keys.find { |k| k.to_s.include?('end_date') } || 'end_date'
@@ -347,9 +359,6 @@ class Invoice < ApplicationRecord
           end
         end
         
-        total_payments = calculate_total_expected_child_invoices
-        total_payments = total_payments && total_payments > 0 ? total_payments : current_sequence_number
-
         payment_type = case billing_cycle
                        when 'monthly' then 'Monthly Payment'
                        when 'quarterly' then 'Quarterly Payment'
@@ -357,10 +366,50 @@ class Invoice < ApplicationRecord
                        else 'Payment'
                        end
         
-        current_str = current_sequence_number.to_s.rjust(2, '0')
-        total_str = total_payments.to_s.rjust(2, '0')
-        
-        new_desc = "#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})"
+        if parent_start_d
+          first_billed_seq = 1
+          temp_start = primary_parent_start_d || Date.current
+          temp_start = calculate_next_period_date(temp_start, primary_cycle)
+          
+          while temp_start < parent_start_d
+            temp_start = calculate_next_period_date(temp_start, primary_cycle)
+            first_billed_seq += 1
+          end
+          
+          display_current_sequence = current_sequence_number - first_billed_seq + 1
+          display_current_sequence = 1 if display_current_sequence < 1
+          
+          display_total_payments = calculate_total_expected_child_invoices || current_sequence_number
+          
+          if item_end_d_str.present?
+            item_end_d = Date.parse(item_end_d_str) rescue nil
+            if item_end_d
+              last_seq = 0
+              temp_date = primary_parent_start_d || Date.current
+              while temp_date < item_end_d
+                last_seq += 1
+                temp_date = calculate_next_period_date(temp_date, primary_cycle)
+              end
+              display_total_payments = last_seq if last_seq > 0 && last_seq < display_total_payments
+            end
+          end
+          
+          display_total_payments = display_total_payments - first_billed_seq + 1
+          display_total_payments = display_total_payments > 0 ? display_total_payments : display_current_sequence
+          
+          current_str = display_current_sequence.to_s.rjust(2, '0')
+          total_str = display_total_payments.to_s.rjust(2, '0')
+        else
+          total_payments = calculate_total_expected_child_invoices
+          total_payments = total_payments && total_payments > 0 ? total_payments : current_sequence_number
+          current_str = current_sequence_number.to_s.rjust(2, '0')
+          total_str = total_payments.to_s.rjust(2, '0')
+        end
+        original_desc = item['description'] || ""
+        if original_desc.include?("for Invoice ##{self.invoice_number}")
+          original_desc = original_desc.sub(/\s*(- |\n)?.*for Invoice ##{self.invoice_number}.*$/, "")
+        end
+        new_desc = "#{original_desc}\n#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})".strip
         
         new_item['description'] = new_desc
         if new_item['total'].blank?
@@ -447,6 +496,13 @@ class Invoice < ApplicationRecord
           end
           child_end_d = calculate_next_period_date(child_start_d, billing_cycle)
           
+          if item_end_d_str.present?
+            overall_end_d = Date.parse(item_end_d_str) rescue nil
+            if overall_end_d && child_end_d > overall_end_d
+              child_end_d = overall_end_d
+            end
+          end
+          
           new_adj['charge_start_date'] = child_start_d.to_s
           new_adj['charge_end_date'] = child_end_d.to_s
           
@@ -456,18 +512,47 @@ class Invoice < ApplicationRecord
                          when 'annual' then 'Annual Charge'
                          else 'Recurring Charge'
                          end
-          current_str = current_sequence_number.to_s.rjust(2, '0')
-          total_str = total_payments.to_s.rjust(2, '0')
+          first_billed_seq = 1
+          temp_start = primary_parent_start_d || Date.current
+          temp_start = calculate_next_period_date(temp_start, primary_cycle)
+          
+          while temp_start < parent_start_d
+            temp_start = calculate_next_period_date(temp_start, primary_cycle)
+            first_billed_seq += 1
+          end
+          
+          display_current_sequence = current_sequence_number - first_billed_seq + 1
+          display_current_sequence = 1 if display_current_sequence < 1
+          
+          display_total_payments = calculate_total_expected_child_invoices || current_sequence_number
+          
+          if item_end_d_str.present?
+            item_end_d = Date.parse(item_end_d_str) rescue nil
+            if item_end_d
+              last_seq = 0
+              temp_date = primary_parent_start_d || Date.current
+              while temp_date < item_end_d
+                last_seq += 1
+                temp_date = calculate_next_period_date(temp_date, primary_cycle)
+              end
+              display_total_payments = last_seq if last_seq > 0 && last_seq < display_total_payments
+            end
+          end
+          
+          display_total_payments = display_total_payments - first_billed_seq + 1
+          display_total_payments = display_total_payments > 0 ? display_total_payments : display_current_sequence
+          
+          current_str = display_current_sequence.to_s.rjust(2, '0')
+          total_str = display_total_payments.to_s.rjust(2, '0')
           
           new_desc = "#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})"
           
           if new_adj['description_edit'].present?
-            # Ensure we don't append the description multiple times
-            if new_adj['description_edit'].include?("for Invoice ##{self.invoice_number}")
-              new_adj['description_edit'] = new_adj['description_edit'].sub(/ - #{payment_type}.*$/, " - #{new_desc}")
-            else
-              new_adj['description_edit'] = "#{new_adj['description_edit']} - #{new_desc}"
+            original_desc = new_adj['description_edit']
+            if original_desc.include?("for Invoice ##{self.invoice_number}")
+              original_desc = original_desc.sub(/\s*(- |\n)?.*for Invoice ##{self.invoice_number}.*$/, "")
             end
+            new_adj['description_edit'] = "#{original_desc}\n#{new_desc}".strip
           else
             new_adj['description_edit'] = new_desc
           end
@@ -682,16 +767,22 @@ class Invoice < ApplicationRecord
     self.line_items_data ||= []
     self.line_items_data << item_hash
     
-    item_total = (item_hash[:price] || item_hash['price']).to_f * (item_hash[:quantity] || item_hash['quantity']).to_f
+    optional_fields = item_hash[:optional_fields] || item_hash['optional_fields'] || {}
+    is_hidden = optional_fields[:hidden_on_parent] || optional_fields['hidden_on_parent']
     
-    current_total = self.total || {}
-    subtotal = current_total["subtotal"].to_f + item_total
-    grand_total = current_total["grand_total"].to_f + item_total
+    unless is_hidden
+      item_total = (item_hash[:price] || item_hash['price']).to_f * (item_hash[:quantity] || item_hash['quantity']).to_f
+      
+      current_total = self.total || {}
+      subtotal = current_total["subtotal"].to_f + item_total
+      grand_total = current_total["grand_total"].to_f + item_total
+      
+      current_total["subtotal"] = '%.2f' % subtotal
+      current_total["grand_total"] = '%.2f' % grand_total
+      
+      self.total = current_total
+    end
     
-    current_total["subtotal"] = '%.2f' % subtotal
-    current_total["grand_total"] = '%.2f' % grand_total
-    
-    self.total = current_total
     save!
   end
 

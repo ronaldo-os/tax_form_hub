@@ -72,7 +72,7 @@
 
         <div class="col-md-6 mb-2">
           <label class="h6 form-label">Issue Date</label>
-          <p class="mb-1"><%= invoice.issue_date %></p>
+          <p class="mb-1"><%= invoice.issue_date&.strftime("%b %d, %Y") || invoice.issue_date %></p>
         </div>
 
         <label class="h6 form-label">Currency</label>
@@ -109,7 +109,13 @@
               <div class="row">
                 <div class="col-md-<%= col_size %>">
                   <h6 class="form-label"><%= label %></h6>
-                  <p><%= value.presence || "-" %></p>
+                  <p>
+                    <% if key.to_s.include?('date') && value.present? %>
+                      <%= (Date.parse(value.to_s).strftime("%b %d, %Y") rescue value) %>
+                    <% else %>
+                      <%= value.presence || "-" %>
+                    <% end %>
+                  </p>
                 </div>
               </div>
             <% else %>
@@ -129,7 +135,13 @@
                   %>
                   <div class="col-md-<%= col_size %>">
                     <label><%= label %></label>
-                    <p><%= value.presence || "-" %></p>
+                    <p>
+                      <% if key.to_s.include?('date') && value.present? %>
+                        <%= (Date.parse(value.to_s).strftime("%b %d, %Y") rescue value) %>
+                      <% else %>
+                        <%= value.presence || "-" %>
+                      <% end %>
+                    </p>
                   </div>
                 <% end %>
               </div>
@@ -155,9 +167,13 @@
         </thead>
         <tbody id="line-items">
           <% invoice.line_items_data.each_with_index do |item, index| %>
+            <% 
+               optional = item["optional_fields"] || {}
+               next if optional["hidden_on_parent"] || optional[:hidden_on_parent]
+            %>
             <tr class="line-item">
               <td><%= item["item_id"] %></td>
-              <td><%= item["description"] %></td>
+              <td><%= safe_join(item["description"].to_s.split("\n"), tag.br) %></td>
               <td><%= item["quantity"] %></td>
               <td><%= item["unit"] %></td>
               <td><%= number_with_precision(item["price"].to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %></td>
@@ -175,7 +191,14 @@
                       <% if fields.present? %>
                         <span class="ms-3">
                           <% fields.each do |k, v| %>
-                            <span class="me-3"><%= k.gsub('_', ' ').titleize %>: <%= v %></span>
+                            <span class="me-3">
+                              <%= k.gsub('_', ' ').titleize %>: 
+                              <% if k.to_s.include?('date') && v.present? %>
+                                <%= (Date.parse(v.to_s).strftime("%b %d, %Y") rescue v) %>
+                              <% else %>
+                                <%= v %>
+                              <% end %>
+                            </span>
                           <% end %>
                         </span>
                       <% end %>
@@ -184,8 +207,35 @@
                 <% else %>
                   <tr class="bg-light">
                     <td colspan="7">
-                      <% fields.each do |k, v| %>
-                        <span class="me-3"><%= k.gsub('_', ' ').titleize %>: <%= v %></span>
+                      <% 
+                        orig_keys = fields.keys
+                        desired_order = ['billing_cycle', 'start_date', 'overall_end_date', 'end_date']
+                        keys = orig_keys.sort_by do |k|
+                          base = k.split('.').first
+                          idx = desired_order.index(base)
+                          idx ? idx : (desired_order.length + orig_keys.index(k))
+                        end
+                      %>
+                      <% keys.each do |k| %>
+                        <% v = fields[k] %>
+                        <% 
+                          base = k.split('.').first
+                          label_text = case base
+                                       when 'start_date' then 'From'
+                                       when 'overall_end_date' then 'To'
+                                       when 'end_date' then 'End Date'
+                                       when 'billing_cycle' then 'Billing Cycle'
+                                       else k.gsub('_', ' ').titleize
+                                       end
+                        %>
+                        <span class="me-3">
+                          <%= label_text %>: 
+                          <% if k.to_s.include?('date') && v.present? %>
+                            <%= (Date.parse(v.to_s).strftime("%b %d, %Y") rescue v) %>
+                          <% else %>
+                            <%= v %>
+                          <% end %>
+                        </span>
                       <% end %>
                     </td>
                   </tr>
@@ -201,6 +251,10 @@
             </tr>
 
             <% invoice.price_adjustments.each do |adjustment| %>
+              <% 
+                 optional = adjustment["optional_fields"] || {}
+                 next if optional["hidden_on_parent"] || optional[:hidden_on_parent]
+              %>
               <tr class="bg-light">
                 <td colspan="7">
                   <% ["type", "description", "amount", "unit"].each do |field| %>
@@ -211,7 +265,7 @@
                         <% if field == "amount" %>
                           <%= number_with_precision(value.to_s.gsub(',', '').to_f, precision: 2, delimiter: ',') %>
                         <% else %>
-                          <%= value %>
+                          <%= safe_join(value.to_s.split("\n"), tag.br) %>
                         <% end %>
                       </span>
                     <% end %>
@@ -230,7 +284,9 @@
                 <tr class="bg-light">
                   <td colspan="7" class="text-muted small">
                     <% if adjustment["charge_start_date"].present? %>
-                      <span><strong>Charge Period:</strong> <%= adjustment["charge_start_date"] %> to <%= adjustment["charge_end_date"] || "ongoing" %></span>
+                      <% start_formatted = (Date.parse(adjustment["charge_start_date"]).strftime("%b %d, %Y") rescue adjustment["charge_start_date"]) %>
+                      <% end_formatted = (adjustment["charge_end_date"].present? ? (Date.parse(adjustment["charge_end_date"]).strftime("%b %d, %Y") rescue adjustment["charge_end_date"]) : "ongoing") %>
+                      <span><strong>Charge Period:</strong> <%= start_formatted %> to <%= end_formatted %></span>
                     <% end %>
                   </td>
                 </tr>
@@ -318,7 +374,13 @@
                             <% next if field_key.ends_with?("_edit") || field_value.blank? %>
                             <tr>
                               <td class="fw-semibold" style="width: 40%;"><%= field_key.gsub('_', ' ').titleize %></td>
-                              <td><%= field_value %></td>
+                              <td>
+                                <% if field_key.to_s.include?('date') && field_value.present? %>
+                                  <%= (Date.parse(field_value.to_s).strftime("%b %d, %Y") rescue field_value) %>
+                                <% else %>
+                                  <%= field_value %>
+                                <% end %>
+                              </td>
                             </tr>
                           <% end %>
                         </tbody>
