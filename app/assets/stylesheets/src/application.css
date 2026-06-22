@@ -393,12 +393,13 @@ input[type="radio"] {
 .custom_tfh_alert {
   position: fixed;
   top: 70px;
-  right: 10px;
+  right: 20px;
   background: white;
   color: #080808;
   border-radius: 2px;
   border: 1px solid #00000010;
   box-shadow: 0 5px 5px rgba(0, 0, 0, 0.055);
+  max-width: 400px;
 }
 
 .alert_text_notice {

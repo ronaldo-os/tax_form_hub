@@ -70,12 +70,14 @@ import EmailValidationController from './controllers/email_validation_controller
 import LazyLoaderController from './controllers/lazy_loader_controller';
 import PasswordToggleController from './controllers/password_toggle_controller';
 import SidebarController from './controllers/sidebar_controller';
+import PasswordValidationController from './controllers/password_validation_controller';
 
 // Register all controllers
 stimulusApplication.register('email-validation', EmailValidationController);
 stimulusApplication.register('lazy-loader', LazyLoaderController);
 stimulusApplication.register('password-toggle', PasswordToggleController);
 stimulusApplication.register('sidebar', SidebarController);
+stimulusApplication.register('password-validation', PasswordValidationController);
 
 function updateThemeUI(theme) {
     const btn = document.getElementById('theme_toggle_btn');

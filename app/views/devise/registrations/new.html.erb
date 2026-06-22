@@ -3,7 +3,7 @@
     <div class="card">
       <div class="card-body p-5">
         <h2 class="mb-4 text-center">Sign up</h2>
-        <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+        <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { data: { controller: "password-validation" } }) do |f| %>
 
           <div class="mb-3">
             <%= f.label :email, class: "form-label" %>
@@ -27,20 +27,37 @@
 
           <div class="mb-3">
             <%= f.label :password, class: "form-label" %>
-            <% if @minimum_password_length %>
-              <small class="form-text text-muted mb-1">
-                (<%= @minimum_password_length %> characters minimum)
-              </small>
-            <% end %>
             <div class="input-group">
               <%= f.password_field :password,
                     autocomplete: "new-password",
                     class: "form-control border-end-0",
                     id: "password",
-                    required: true %>
+                    required: true,
+                    data: {
+                      password_validation_target: "password",
+                      action: "input->password-validation#validatePassword"
+                    } %>
               <span class="input-group-text">
                 <i class="fa-solid fa-eye toggle-password-icon" style="cursor: pointer;"></i>
               </span>
+            </div>
+            
+            <div class="mt-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <small class="fw-bold">Password Strength:</small>
+                <small data-password-validation-target="meterText" class="fw-bold text-muted"></small>
+              </div>
+              <div class="progress" style="height: 5px;">
+                <div class="progress-bar bg-danger" role="progressbar" style="width: 0%;" data-password-validation-target="meter"></div>
+              </div>
+            </div>
+
+            <div class="mt-2" style="font-size: 0.85rem;">
+              <div data-password-validation-target="lengthCheck" data-text="Minimum 12 characters" class="text-muted mb-1">○ Minimum 12 characters</div>
+              <div data-password-validation-target="uppercaseCheck" data-text="Contains uppercase letter" class="text-muted mb-1">○ Contains uppercase letter</div>
+              <div data-password-validation-target="lowercaseCheck" data-text="Contains lowercase letter" class="text-muted mb-1">○ Contains lowercase letter</div>
+              <div data-password-validation-target="numberCheck" data-text="Contains number" class="text-muted mb-1">○ Contains number</div>
+              <div data-password-validation-target="specialCheck" data-text="Contains special character" class="text-muted mb-1">○ Contains special character</div>
             </div>
           </div>
 
@@ -51,11 +68,16 @@
                     autocomplete: "new-password",
                     class: "form-control border-end-0",
                     id: "password_confirmation",
-                    required: true %>
+                    required: true,
+                    data: {
+                      password_validation_target: "confirmation",
+                      action: "input->password-validation#validateConfirmation"
+                    } %>
               <span class="input-group-text">
                 <i class="fa-solid fa-eye toggle-password-icon" style="cursor: pointer;"></i>
               </span>
             </div>
+            <div data-password-validation-target="matchError" class="invalid-feedback"></div>
           </div>
 
           <div class="d-grid">

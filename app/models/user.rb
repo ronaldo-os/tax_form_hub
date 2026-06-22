@@ -11,7 +11,7 @@ class User < ApplicationRecord
     message: "format is invalid or contains unsupported characters" 
   }
 
-
+  validates :password, password_complexity: true, if: :password_required?
   # Associations
   belongs_to :company, optional: true
   has_many :companies
