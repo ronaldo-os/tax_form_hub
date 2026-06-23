@@ -54,7 +54,19 @@
           </div>
           
           <div class="mb-3">
-            <label class="form-label d-block fw-medium">Charge Type</label>
+            <label class="form-label d-block fw-medium">Item Type</label>
+            <div class="form-check form-check-inline">
+              <%= f.radio_button :item_type, "charge", class: "form-check-input", id: "charge-#{invoice.id}", checked: true %>
+              <label class="form-check-label" for="charge-<%= invoice.id %>">Charge</label>
+            </div>
+            <div class="form-check form-check-inline">
+              <%= f.radio_button :item_type, "discount", class: "form-check-input", id: "discount-#{invoice.id}" %>
+              <label class="form-check-label" for="discount-<%= invoice.id %>">Discount</label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label d-block fw-medium">Charge / Discount Frequency</label>
             <div class="form-check form-check-inline">
               <%= f.radio_button :charge_type, "recurring", class: "form-check-input", id: "recurring-#{invoice.id}", checked: true %>
               <label class="form-check-label" for="recurring-<%= invoice.id %>">Recurring</label>

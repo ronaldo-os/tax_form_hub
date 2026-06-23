@@ -122,6 +122,7 @@ class SubscriptionsController < ApplicationController
   # POST /subscriptions/:id/add_mid_cycle_item
   def add_mid_cycle_item
     item_name = params[:item_name]
+    item_type = params[:item_type] || 'charge'
     quantity = params[:quantity].to_f
     price = params[:price].to_f
     effective_date_str = params[:effective_date]
@@ -171,10 +172,16 @@ class SubscriptionsController < ApplicationController
     end
     
     if ['prorate', 'full'].include?(proration) && amount_to_charge > 0
+      is_exact_start = (@subscription.issue_date == effective_date)
+      
+      unless charge_type == 'recurring' && is_exact_start
+      final_amount = item_type == 'discount' ? -amount_to_charge : amount_to_charge
+      desc_prefix = item_type == 'discount' ? "Mid-cycle discount" : "Mid-cycle charge"
+      
       prorated_item = {
-        'description' => "Mid-cycle charge: #{item_name}#{memo.present? ? ' - ' + memo : ''}",
+        'description' => "#{desc_prefix}: #{item_name}#{memo.present? ? ' - ' + memo : ''}",
         'quantity' => quantity.to_s,
-        'price' => ('%.2f' % amount_to_charge),
+        'price' => ('%.2f' % final_amount),
         'unit' => 'service',
         'tax' => '0',
         'optional_fields' => {
@@ -185,13 +192,17 @@ class SubscriptionsController < ApplicationController
         }
       }
       @subscription.add_subscription_item!(prorated_item)
+      end
     end
     
     if charge_type == 'recurring'
+      final_price = item_type == 'discount' ? -price : price
+      desc_suffix = item_type == 'discount' ? " (Discount)" : ""
+      
       new_item = {
-        'description' => "#{item_name}#{memo.present? ? ' - ' + memo : ''}",
+        'description' => "#{item_name}#{memo.present? ? ' - ' + memo : ''}#{desc_suffix}",
         'quantity' => quantity.to_s,
-        'price' => price.to_s,
+        'price' => final_price.to_s,
         'unit' => 'service',
         'tax' => '0',
         'optional_fields' => {
@@ -200,7 +211,7 @@ class SubscriptionsController < ApplicationController
             'end_date' => primary_item && primary_item[:end_date].present? ? primary_item[:end_date] : nil,
             'billing_cycle' => billing_cycle
           }.compact,
-          'hidden_on_parent' => (@subscription.issue_date != effective_date)
+          'hidden_on_parent' => ((@subscription.issue_date != effective_date) || proration == 'next')
         }
       }
       @subscription.add_subscription_item!(new_item)
