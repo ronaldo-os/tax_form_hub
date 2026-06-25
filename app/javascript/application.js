@@ -112,6 +112,21 @@ function handleThemeToggle(e) {
 
     console.log('Theme toggle clicked. Current:', currentTheme, 'New:', newTheme);
     
+    // Disable transitions temporarily
+    const css = document.createElement('style');
+    css.appendChild(
+        document.createTextNode(
+            `* {
+               -webkit-transition: none !important;
+               -moz-transition: none !important;
+               -o-transition: none !important;
+               -ms-transition: none !important;
+               transition: none !important;
+            }`
+        )
+    );
+    document.head.appendChild(css);
+
     document.documentElement.setAttribute('data-theme', newTheme);
     document.documentElement.setAttribute('data-bs-theme', newTheme);
     localStorage.setItem('theme', newTheme);
@@ -123,6 +138,10 @@ function handleThemeToggle(e) {
     // Dispatch custom event to notify components of theme change
     const event = new CustomEvent('theme:changed', { detail: { theme: newTheme } });
     document.dispatchEvent(event);
+
+    // Force repaint before re-enabling transitions
+    const _ = window.getComputedStyle(css).opacity;
+    document.head.removeChild(css);
 }
 
 function updateDynamicElementsForTheme(theme) {

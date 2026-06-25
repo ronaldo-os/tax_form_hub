@@ -218,6 +218,33 @@ function initInvoicePage() {
         if ($trigger.data('downloading')) return;
         $trigger.data('downloading', true);
 
+        const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        
+        let $overlay = $('#pdf-loading-overlay');
+        if (!$overlay.length) {
+            $overlay = $(`
+                <div id="pdf-loading-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div class="spinner-border pdf-spinner" style="width: 4rem; height: 4rem;" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h3 class="mt-4 pdf-text">Downloading PDF...</h3>
+                    <p class="pdf-subtext">Please do not close this window.</p>
+                </div>
+            `).appendTo('body');
+        }
+        
+        if (isDarkMode) {
+            $overlay.css({ 'background-color': 'rgba(33, 37, 41, 0.95)', 'color': '#f8f9fa' });
+            $overlay.find('.pdf-spinner').removeClass('text-primary').addClass('text-light');
+            $overlay.find('.pdf-subtext').css('color', '#adb5bd');
+        } else {
+            $overlay.css({ 'background-color': 'rgba(255, 255, 255, 0.95)', 'color': '#212529' });
+            $overlay.find('.pdf-spinner').removeClass('text-light').addClass('text-primary');
+            $overlay.find('.pdf-subtext').css('color', '#6c757d');
+        }
+        
+        $overlay.show();
+
         $.get(`/invoices/${invoiceId}/pdf_partial`, function (html) {
             const temp = document.createElement('div');
             temp.classList.add('force-light-mode', 'invoice-card');
@@ -238,6 +265,8 @@ function initInvoicePage() {
             if (!invoice) {
                 alert("Invoice HTML not found");
                 if (document.body.contains(temp)) document.body.removeChild(temp);
+                $trigger.data('downloading', false);
+                $('#pdf-loading-overlay').hide();
                 return;
             }
 
@@ -345,6 +374,21 @@ function initInvoicePage() {
                 const currentDataTheme = htmlElement.getAttribute('data-theme');
                 const currentBSTheme = htmlElement.getAttribute('data-bs-theme');
 
+                // Disable transitions temporarily to prevent animation during PDF capture
+                const noTransitionStyle = document.createElement('style');
+                noTransitionStyle.appendChild(
+                    document.createTextNode(
+                        `* {
+                           -webkit-transition: none !important;
+                           -moz-transition: none !important;
+                           -o-transition: none !important;
+                           -ms-transition: none !important;
+                           transition: none !important;
+                        }`
+                    )
+                );
+                document.head.appendChild(noTransitionStyle);
+
                 // Force light mode temporarily for high-fidelity capture
                 htmlElement.setAttribute('data-theme', 'light');
                 htmlElement.setAttribute('data-bs-theme', 'light');
@@ -356,6 +400,10 @@ function initInvoicePage() {
 
                     if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
                     else htmlElement.removeAttribute('data-bs-theme');
+
+                    // Force repaint and restore transitions
+                    const _ = window.getComputedStyle(noTransitionStyle).opacity;
+                    if (document.head.contains(noTransitionStyle)) document.head.removeChild(noTransitionStyle);
 
                     // Clean up
                     if (document.body.contains(temp)) document.body.removeChild(temp);
@@ -369,21 +417,28 @@ function initInvoicePage() {
                     if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
                     else htmlElement.removeAttribute('data-bs-theme');
 
+                    // Force repaint and restore transitions
+                    const _ = window.getComputedStyle(noTransitionStyle).opacity;
+                    if (document.head.contains(noTransitionStyle)) document.head.removeChild(noTransitionStyle);
+
                     alert('Failed to generate PDF. Please check the console for details and try again.');
                     if (document.body.contains(temp)) document.body.removeChild(temp);
                 }).finally(() => {
                     $trigger.data('downloading', false);
+                    $('#pdf-loading-overlay').hide();
                 });
             }).catch((error) => {
                 console.error('Error preparing PDF:', error);
                 alert('Failed to prepare PDF. Please try again.');
                 if (document.body.contains(temp)) document.body.removeChild(temp);
                 $trigger.data('downloading', false);
+                $('#pdf-loading-overlay').hide();
             });
         }).fail(function (xhr, status, error) {
             console.error('Error fetching invoice:', error);
             alert('Failed to load invoice data. Please try again.');
             $trigger.data('downloading', false);
+            $('#pdf-loading-overlay').hide();
         });
     });
 
