@@ -304,6 +304,11 @@ class Invoice < ApplicationRecord
       if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) &&
          item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
 
+        if item.dig('optional_fields', 'cancelled')
+          updated_parent_line_items << item
+          next
+        end
+
         billing_cycle = extract_subscription_field(item, 'billing_cycle') || 'monthly'
         parent_start_d_str = extract_subscription_field(item, 'start_date')
         parent_end_d_str = extract_subscription_field(item, 'end_date')

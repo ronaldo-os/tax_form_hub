@@ -5,7 +5,7 @@
 
 class SubscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_subscription_invoice, only: [:show, :cancel, :add_mid_cycle_item]
+  before_action :set_subscription_invoice, only: [:show, :cancel, :add_mid_cycle_item, :cancel_item]
 
   # GET /subscriptions
   # List all recurring invoices (subscription contracts) for the current user
@@ -55,8 +55,14 @@ class SubscriptionsController < ApplicationController
           latest_billed_date = @subscription.calculate_next_period_date(latest_billed_date, primary_item[:cycle] || 'monthly')
         end
 
-        (@subscription.line_items_data || []).each do |item|
+        primary_item_index = (@subscription.line_items_data || []).index do |i|
+          i.is_a?(Hash) && i['optional_fields'].is_a?(Hash) && i['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
+        end
+
+        (@subscription.line_items_data || []).each_with_index do |item, index|
           next unless item.is_a?(Hash)
+          next if index == primary_item_index
+          
           optional_fields = item['optional_fields'] || {}
           
           if optional_fields['one_time_charge']
@@ -64,6 +70,7 @@ class SubscriptionsController < ApplicationController
             if !optional_fields['billed']
               @mid_cycle_pending_items << {
                 item: item,
+                index: index,
                 expected_generation_date: target_date || @upcoming_invoice_date,
                 effective_date: target_date || @upcoming_invoice_date,
                 billing_cycle: 'One-time'
@@ -71,6 +78,7 @@ class SubscriptionsController < ApplicationController
             else
               @mid_cycle_generated_items << {
                 item: item,
+                index: index,
                 generation_date: target_date || @upcoming_invoice_date,
                 effective_date: target_date || @upcoming_invoice_date,
                 billing_cycle: 'One-time'
@@ -84,25 +92,42 @@ class SubscriptionsController < ApplicationController
             
             item_billing_cycle = @subscription.extract_subscription_field(item, 'billing_cycle') || 'Monthly'
 
-            # Only consider it mid-cycle if it started after the primary subscription
-            if item_date > primary_date
-              # It's pending if it hasn't been billed in any sub-invoice yet
-              if item_date > latest_billed_date
-                @mid_cycle_pending_items << {
-                  item: item,
-                  expected_generation_date: @upcoming_invoice_date || item_date,
-                  effective_date: item_date,
-                  billing_cycle: item_billing_cycle.capitalize
-                }
-              else
-                @mid_cycle_generated_items << {
-                  item: item,
-                  generation_date: item_date,
-                  effective_date: item_date,
-                  billing_cycle: item_billing_cycle.capitalize
-                }
-              end
+            is_pending = false
+            if item_date > latest_billed_date
+              is_pending = true
+            elsif item_date == latest_billed_date && optional_fields['hidden_on_parent']
+              is_pending = true
             end
+
+            if is_pending
+              @mid_cycle_pending_items << {
+                item: item,
+                index: index,
+                expected_generation_date: @upcoming_invoice_date || item_date,
+                effective_date: item_date,
+                billing_cycle: item_billing_cycle.capitalize
+              }
+            else
+              @mid_cycle_generated_items << {
+                item: item,
+                index: index,
+                generation_date: item_date,
+                effective_date: item_date,
+                billing_cycle: item_billing_cycle.capitalize
+              }
+            end
+          end
+          
+          if optional_fields['cancellation']
+            cancellation_date = Date.parse(optional_fields['effective_date']) rescue Date.current
+            @mid_cycle_generated_items << {
+              item: item,
+              index: index,
+              generation_date: cancellation_date,
+              effective_date: cancellation_date,
+              billing_cycle: 'Cancellation',
+              is_cancellation: true
+            }
           end
         end
       end
@@ -112,10 +137,163 @@ class SubscriptionsController < ApplicationController
   # PATCH /subscriptions/:id/cancel
   # Cancel an active subscription by archiving the parent invoice
   def cancel
+    effective_date_str = params[:effective_date]
+    billing_option = params[:billing_option] || 'none'
+    reason = params[:reason]
+    
+    effective_date = Date.parse(effective_date_str) rescue Date.current
+    primary_item = @subscription.primary_recurring_item
+    
+    if ['prorate', 'full'].include?(billing_option) && primary_item
+      billing_cycle = primary_item[:cycle] || 'monthly'
+      start_d = Date.parse(primary_item[:start_date]) rescue Date.current
+      
+      current_sequence = @subscription.recurring_sub_invoices.count + 1
+      next_date = start_d
+      current_sequence.times do
+        next_date = @subscription.calculate_next_period_date(next_date, billing_cycle)
+      end
+      
+      # Determine base price by summing all recurring item prices
+      recurring_price = @subscription.line_items_data.select do |item|
+        item.is_a?(Hash) && item.dig('optional_fields', 'subscription').present? && !item.dig('optional_fields', 'hidden_on_parent')
+      end.sum { |item| (item['price'].to_f * (item['quantity'] || 1).to_f) }
+      
+      amount_to_charge = 0.0
+      
+      if billing_option == 'prorate'
+        days_remaining = (next_date - effective_date).to_i
+        days_remaining = 0 if days_remaining < 0
+        
+        months = case billing_cycle
+                 when 'monthly' then 1
+                 when 'quarterly' then 3
+                 when 'annual' then 12
+                 else 1
+                 end
+        cycle_start_date = next_date << months
+        total_days = (next_date - cycle_start_date).to_i
+        total_days = 30 if total_days <= 0
+        
+        proration_ratio = days_remaining.to_f / total_days.to_f
+        proration_ratio = 1.0 if proration_ratio > 1.0
+        
+        amount_to_charge = recurring_price * proration_ratio
+      elsif billing_option == 'full'
+        amount_to_charge = recurring_price
+      end
+      
+      if amount_to_charge > 0
+        desc = "Final Invoice - #{billing_option == 'prorate' ? 'Prorated' : 'Full'} Charge"
+        generate_immediate_invoice(desc, 1, amount_to_charge, reason)
+      end
+    end
+    
+    cancellation_item = {
+      'description' => "Subscription Cancelled#{reason.present? ? ' - ' + reason : ''}",
+      'quantity' => '1',
+      'price' => '0.00',
+      'unit' => 'service',
+      'tax' => '0',
+      'optional_fields' => {
+        'cancellation' => true,
+        'effective_date' => effective_date.to_s,
+        'billing_option' => billing_option,
+        'hidden_on_parent' => true
+      }
+    }
+    @subscription.add_subscription_item!(cancellation_item)
+    
     if @subscription.update(archived: true)
-      redirect_to subscriptions_path, notice: 'Subscription was successfully cancelled.'
+      redirect_to subscription_path(@subscription), notice: 'Subscription was successfully cancelled.'
     else
-      redirect_to subscriptions_path, alert: 'Unable to cancel subscription.'
+      redirect_to subscription_path(@subscription), alert: 'Unable to cancel subscription.'
+    end
+  end
+
+  # PATCH /subscriptions/:id/cancel_item
+  def cancel_item
+    item_index = params[:item_index].to_i
+    effective_date_str = params[:effective_date]
+    billing_option = params[:billing_option] || 'none'
+    reason = params[:reason]
+    
+    effective_date = Date.parse(effective_date_str) rescue Date.current
+    
+    line_items = @subscription.line_items_data || []
+    item = line_items[item_index]
+    
+    if item.blank? || !item.is_a?(Hash)
+      redirect_to subscription_path(@subscription), alert: 'Item not found.'
+      return
+    end
+
+    billing_cycle = @subscription.extract_subscription_field(item, 'billing_cycle') || 'monthly'
+    start_d_str = @subscription.extract_subscription_field(item, 'start_date')
+    start_d = start_d_str.present? ? (Date.parse(start_d_str) rescue Date.current) : Date.current
+    
+    if ['prorate', 'full'].include?(billing_option)
+      current_sequence = @subscription.recurring_sub_invoices.count + 1
+      next_date = start_d
+      current_sequence.times do
+        next_date = @subscription.calculate_next_period_date(next_date, billing_cycle)
+      end
+      
+      item_price = (item['price'].to_f * (item['quantity'] || 1).to_f)
+      amount_to_charge = 0.0
+      
+      if billing_option == 'prorate'
+        days_remaining = (next_date - effective_date).to_i
+        days_remaining = 0 if days_remaining < 0
+        
+        months = case billing_cycle
+                 when 'monthly' then 1
+                 when 'quarterly' then 3
+                 when 'annual' then 12
+                 else 1
+                 end
+        cycle_start_date = next_date << months
+        total_days = (next_date - cycle_start_date).to_i
+        total_days = 30 if total_days <= 0
+        
+        proration_ratio = days_remaining.to_f / total_days.to_f
+        proration_ratio = 1.0 if proration_ratio > 1.0
+        
+        amount_to_charge = item_price * proration_ratio
+      elsif billing_option == 'full'
+        amount_to_charge = item_price
+      end
+      
+      if amount_to_charge > 0
+        desc = "Final Invoice (#{item['description']}) - #{billing_option == 'prorate' ? 'Prorated' : 'Full'} Charge"
+        generate_immediate_invoice(desc, 1, amount_to_charge, reason)
+      end
+    end
+    
+    # Mark the original item as cancelled
+    item['optional_fields'] ||= {}
+    item['optional_fields']['cancelled'] = true
+    
+    cancellation_item = {
+      'description' => "Item Cancelled: #{item['description']}#{reason.present? ? ' - ' + reason : ''}",
+      'quantity' => '1',
+      'price' => '0.00',
+      'unit' => 'service',
+      'tax' => '0',
+      'optional_fields' => {
+        'cancellation' => true,
+        'effective_date' => effective_date.to_s,
+        'billing_option' => billing_option,
+        'hidden_on_parent' => true
+      }
+    }
+    
+    line_items << cancellation_item
+    
+    if @subscription.update(line_items_data: line_items)
+      redirect_to subscription_path(@subscription), notice: 'Mid-cycle item was successfully cancelled.'
+    else
+      redirect_to subscription_path(@subscription), alert: 'Unable to cancel item.'
     end
   end
 

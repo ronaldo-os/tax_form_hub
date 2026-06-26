@@ -73,9 +73,12 @@
       </div>
 
       <div class="card shadow-sm border-0 rounded-3 mb-4">
-        <div class="card-header border-bottom-0 pt-4 pb-3 px-4">
-          <h5 class="mb-0 fw-bold"> Mid-Cycle Overview</h5>
-          <p class="text-muted mt-2 mb-0">Track upcoming and recently generated mid-cycle subscription changes for this invoice.</p>
+        <div class="card-header border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
+          <div>
+            <h5 class="mb-0 fw-bold"> Mid-Cycle Overview</h5>
+            <p class="text-muted mt-2 mb-0">Track upcoming and recently generated mid-cycle subscription changes for this invoice.</p>
+          </div>
+
         </div>
         <div class="card-body p-0">
           <% if @mid_cycle_pending_items.empty? && @generated_mid_cycle_invoices.empty? && @mid_cycle_generated_items.empty? %>
@@ -93,7 +96,8 @@
                     <th>Effective Date</th>
                     <th>Generation Date</th>
                     <th>Status</th>
-                    <th class="text-end pe-4">Amount</th>
+                    <th class="text-end">Amount</th>
+                    <th class="text-end pe-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -107,7 +111,9 @@
                         effective_date: data[:effective_date],
                         billing_cycle: data[:billing_cycle],
                         amount: data[:item]['price'],
-                        currency: @subscription.currency
+                        currency: @subscription.currency,
+                        item: data[:item],
+                        index: data[:index]
                       }
                     end
                     @mid_cycle_generated_items.each do |data|
@@ -119,7 +125,10 @@
                         billing_cycle: data[:billing_cycle],
                         amount: data[:item]['price'],
                         currency: @subscription.currency,
-                        invoice: nil
+                        invoice: nil,
+                        item: data[:item],
+                        index: data[:index],
+                        is_cancellation: data[:is_cancellation]
                       }
                     end
                     @generated_mid_cycle_invoices.each do |invoice|
@@ -157,17 +166,27 @@
                         <small class="text-muted"><%= item[:date]&.strftime("%b %d, %Y") || '-' %></small>
                       </td>
                       <td>
-                        <% if item[:type] == :pending %>
+                        <% if item[:is_cancellation] || (item[:item].is_a?(Hash) && item[:item].dig('optional_fields', 'cancelled')) %>
+                          <span class="badge bg-danger-subtle text-danger fw-semibold border border-danger-subtle">Cancelled</span>
+                        <% elsif item[:type] == :pending %>
                           <span class="badge bg-info-subtle text-info fw-semibold border border-info-subtle">Pending</span>
                         <% else %>
                           <span class="badge bg-success-subtle text-success fw-semibold border border-success-subtle">Generated</span>
                         <% end %>
                       </td>
-                      <td class="text-end pe-4 fw-semibold">
+                      <td class="text-end fw-semibold">
                         <% if item[:amount].present? %>
                           <%= number_to_currency(item[:amount], unit: item[:currency] + ' ') %>
                         <% else %>
                           -
+                        <% end %>
+                      </td>
+                      <td class="text-end pe-4">
+                        <% if (item[:type] == :pending || item[:type] == :generated) && item[:invoice].nil? && !item[:item].dig('optional_fields', 'one_time_charge') && !item[:item].dig('optional_fields', 'cancelled') && !item[:is_cancellation] %>
+                          <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelItemModal-<%= item[:index] %>">
+                            Cancel
+                          </button>
+                          <%= render "cancel_item_modal", subscription: @subscription, item: item %>
                         <% end %>
                       </td>
                     </tr>
@@ -262,3 +281,5 @@
     </div>
   </div>
 </div>
+
+<%= render "cancel_subscription_modal", subscription: @subscription %>

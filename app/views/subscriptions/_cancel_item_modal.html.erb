@@ -1,0 +1,63 @@
+<div class="modal fade" id="cancelItemModal-<%= item[:index] %>" tabindex="-1" aria-labelledby="cancelItemModalLabel-<%= item[:index] %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold text-danger" id="cancelItemModalLabel-<%= item[:index] %>">
+          <i class="fa-solid fa-triangle-exclamation me-2"></i>Cancel Item
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <%= form_with url: cancel_item_subscription_path(subscription), method: :patch, local: true do |f| %>
+        <%= hidden_field_tag :item_index, item[:index] %>
+        <div class="modal-body pt-3 text-start">
+          <p class="text-muted mb-4">
+            Are you sure you want to cancel the mid-cycle item <strong>"<%= item[:description] %>"</strong>? It will no longer appear on future recurring invoices.
+          </p>
+
+          <div class="mb-4">
+            <label for="effectiveDate-<%= item[:index] %>" class="form-label fw-semibold">Effective Cancellation Date</label>
+            <%= f.date_field :effective_date, class: "form-control", id: "effectiveDate-#{item[:index]}", value: Date.current, required: true %>
+            <div class="form-text text-muted">This date will be recorded as the cancellation date.</div>
+          </div>
+          
+          <div class="mb-4">
+            <label class="form-label fw-semibold mb-3">Final Invoice Billing Option for this Item</label>
+            
+            <div class="form-check mb-3">
+              <%= f.radio_button :billing_option, "none", class: "form-check-input", id: "itemBillingNone-#{item[:index]}", checked: true %>
+              <label class="form-check-label" for="itemBillingNone-<%= item[:index] %>">
+                <span class="d-block fw-medium">No Final Invoice</span>
+                <span class="d-block text-muted small">Cancel immediately without generating any additional invoices for this item.</span>
+              </label>
+            </div>
+            
+            <div class="form-check mb-3">
+              <%= f.radio_button :billing_option, "prorate", class: "form-check-input", id: "itemBillingProrate-#{item[:index]}" %>
+              <label class="form-check-label" for="itemBillingProrate-<%= item[:index] %>">
+                <span class="d-block fw-medium">Prorated Amount</span>
+                <span class="d-block text-muted small">Generate a final invoice prorated based on the remaining days in the current cycle for this item.</span>
+              </label>
+            </div>
+            
+            <div class="form-check mb-2">
+              <%= f.radio_button :billing_option, "full", class: "form-check-input", id: "itemBillingFull-#{item[:index]}" %>
+              <label class="form-check-label" for="itemBillingFull-<%= item[:index] %>">
+                <span class="d-block fw-medium">Full Amount</span>
+                <span class="d-block text-muted small">Generate a final invoice for the full regular billing cycle amount of this item.</span>
+              </label>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="itemCancellationReason-<%= item[:index] %>" class="form-label fw-semibold">Reason / Note (Optional)</label>
+            <%= f.text_area :reason, class: "form-control", id: "itemCancellationReason-#{item[:index]}", rows: 2, placeholder: "e.g. Customer requested cancellation" %>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top-0 rounded-bottom">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Keep Item</button>
+          <%= f.submit "Cancel Item", class: "btn btn-danger" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
