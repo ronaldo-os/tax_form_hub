@@ -1,0 +1,61 @@
+<div class="modal fade" id="cancelledDetailsModal-<%= item[:index] %>" tabindex="-1" aria-labelledby="cancelledDetailsModalLabel-<%= item[:index] %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fw-bold text-danger" id="cancelledDetailsModalLabel-<%= item[:index] %>">
+          <i class="fa-solid fa-circle-info me-2"></i>Cancellation Details
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-3 text-start">
+        <% 
+          optional_fields = item[:item]['optional_fields'] || {} 
+          cancel_desc = item[:description]
+          
+          if !item[:is_cancellation]
+            # If this is the original item, find the corresponding cancellation item in line_items_data
+            cancellation_item = @subscription.line_items_data.find do |li|
+              li.is_a?(Hash) && li.dig('optional_fields', 'cancellation') && li['description'].to_s.include?(item[:item]['description'].to_s)
+            end
+            
+            if cancellation_item
+              optional_fields = cancellation_item['optional_fields'] || {}
+              cancel_desc = cancellation_item['description']
+            end
+          end
+        %>
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-muted mb-1">Item Description</label>
+          <div class="fs-6"><%= cancel_desc %></div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-muted mb-1">Effective Cancellation Date</label>
+          <div class="fs-6">
+            <%= optional_fields['effective_date'] ? Date.parse(optional_fields['effective_date']).strftime("%b %d, %Y") : "N/A" %>
+          </div>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label fw-semibold text-muted mb-1">Final Invoice Billing Option</label>
+          <div class="fs-6">
+            <% billing_option = optional_fields['billing_option'] || 'none' %>
+            <% if billing_option == 'none' %>
+              No Final Invoice
+            <% elsif billing_option == 'prorate' %>
+              Prorated Amount
+            <% elsif billing_option == 'full' %>
+              Full Amount
+            <% else %>
+              <%= billing_option.capitalize %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light border-top-0 rounded-bottom">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

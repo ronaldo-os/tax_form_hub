@@ -148,7 +148,11 @@
                   <% combined_items.each do |item| %>
                     <tr>
                       <td class="ps-4">
-                        <% if item[:type] == :pending || item[:invoice].nil? %>
+                        <% if item[:is_cancellation] || (item[:item].is_a?(Hash) && item[:item].dig('optional_fields', 'cancelled')) %>
+                          <a href="#" class="text-truncate d-inline-block text-decoration-none fw-medium text-danger" style="max-width: 250px;" title="<%= item[:description] %>" data-bs-toggle="modal" data-bs-target="#cancelledDetailsModal-<%= item[:index] %>">
+                            <small><%= safe_join(item[:description].to_s.split("\n"), tag.br) %></small>
+                          </a>
+                        <% elsif item[:type] == :pending || item[:invoice].nil? %>
                           <span class="text-truncate d-inline-block" style="max-width: 250px;" title="<%= item[:description] %>">
                             <small><%= safe_join(item[:description].to_s.split("\n"), tag.br) %></small>
                           </span>
@@ -187,6 +191,9 @@
                             Cancel
                           </button>
                           <%= render "cancel_item_modal", subscription: @subscription, item: item %>
+                        <% end %>
+                        <% if item[:is_cancellation] || (item[:item].is_a?(Hash) && item[:item].dig('optional_fields', 'cancelled')) %>
+                          <%= render "cancelled_details_modal", item: item %>
                         <% end %>
                       </td>
                     </tr>

@@ -186,12 +186,24 @@ input[type="radio"] {
   accent-color: #212529;
 }
 
+input[type="checkbox"]:checked,
+input[type="radio"]:checked {
+  background-color: #212529;
+  border-color: #212529;
+}
+
 [data-theme="light"] input[type="checkbox"],
 [data-theme="light"] input[type="radio"] {
   border-radius: 0;
   background-color: #ffffff;
   border: 2px solid #d1d1d1;
   accent-color: #00aeff;
+}
+
+[data-theme="light"] input[type="checkbox"]:checked,
+[data-theme="light"] input[type="radio"]:checked {
+  background-color: #00aeff;
+  border-color: #00aeff;
 }
 
 .border {
