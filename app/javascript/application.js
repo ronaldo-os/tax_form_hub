@@ -56,6 +56,113 @@ if ('serviceWorker' in navigator) {
 
 import Rails from "@rails/ujs";
 import "@hotwired/turbo-rails";
+import { Turbo } from "@hotwired/turbo-rails";
+
+Turbo.config.forms.confirm = (message, element) => {
+  return new Promise((resolve) => {
+    let finalMessage = message;
+    let title = "Confirmation";
+    let confirmText = "OK";
+    
+    let isLogout = false;
+    let isDiscard = false;
+
+    try {
+      // Turbo creates a hidden form for data-turbo-method links and strips original IDs/classes.
+      // So we must check the message text as well to reliably identify the action.
+      if (element) {
+        isLogout = element.id === 'logout-btn' || 
+                   (typeof element.closest === 'function' && element.closest('#logout-btn') !== null) ||
+                   message.toLowerCase().includes('log out');
+                   
+        isDiscard = element.classList?.contains('discard-btn') || 
+                    element.classList?.contains('discard-form') || 
+                    (typeof element.closest === 'function' && (element.closest('.discard-btn') !== null || element.closest('.discard-form') !== null)) ||
+                    message.toLowerCase().includes('discard');
+      } else {
+        isLogout = message.toLowerCase().includes('log out');
+        isDiscard = message.toLowerCase().includes('discard');
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
+    if (window.isInvoiceFormDirty && (isLogout || isDiscard)) {
+      title = "Unsaved Changes";
+      finalMessage = "You have unsaved changes. If you continue, your changes will be lost. Are you sure you want to proceed?";
+      confirmText = isLogout ? "Continue" : "Discard";
+    }
+
+    const modalHtml = `
+      <div class="modal fade" id="turboConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title">${title}</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p>${finalMessage}</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="turboConfirmCancel">Cancel</button>
+              <button type="button" class="btn btn-danger" id="turboConfirmAccept">${confirmText}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const existingModal = document.getElementById('turboConfirmModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modalElement = document.getElementById('turboConfirmModal');
+    
+    // Fallback if bootstrap is undefined or missing
+    if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+      console.warn("Bootstrap not found, falling back to native confirm");
+      const userConfirmed = window.confirm(finalMessage);
+      if (userConfirmed) window.isInvoiceFormDirty = false;
+      resolve(userConfirmed);
+      return;
+    }
+    
+    let modal;
+    try {
+      modal = new bootstrap.Modal(modalElement);
+    } catch(e) {
+      // Fallback if bootstrap is not globally accessible
+      console.error(e);
+      const userConfirmed = window.confirm(finalMessage);
+      if (userConfirmed) window.isInvoiceFormDirty = false;
+      resolve(userConfirmed);
+      return;
+    }
+    
+    document.getElementById('turboConfirmAccept').addEventListener('click', () => {
+      window.isInvoiceFormDirty = false;
+      modal.hide();
+      resolve(true);
+    });
+
+    document.getElementById('turboConfirmCancel').addEventListener('click', () => {
+      modal.hide();
+      resolve(false);
+    });
+
+    modalElement.addEventListener('hidden.bs.modal', () => {
+      modalElement.remove();
+      resolve(false);
+    });
+
+    modal.show();
+  });
+};
+
 import { Application } from "@hotwired/stimulus";
 Rails.start();
 

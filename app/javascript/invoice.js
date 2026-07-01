@@ -16,6 +16,12 @@ const initInvoiceForm = () => {
   // Cleanup previous document listeners for invoice form
   $(document).off('.invoice_form');
 
+  window.isInvoiceFormDirty = false;
+  $(document).on("input change click keyup", "#invoice-form input, #invoice-form select, #invoice-form textarea, #invoice-form .nested-fields, .add_fields", function(e) {
+    if (e.type === 'click' && $(this).is('.discard-btn, .btn-back, input[type="submit"]')) return;
+    window.isInvoiceFormDirty = true;
+  });
+
   // Clear attachment-related fields when form initializes
   const fileInput = document.getElementById('attachments');
   if (fileInput) {
@@ -2303,7 +2309,7 @@ const initInvoiceForm = () => {
   });
 
   // Validate tax selection on form submission
-  $(document).on("submit", "form", function (e) {
+  $(document).on("submit", "#invoice-form", function (e) {
     const $form = $(this);
 
     // Validate recurring charge dates
