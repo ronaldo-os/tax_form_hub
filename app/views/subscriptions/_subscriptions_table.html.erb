@@ -30,13 +30,16 @@
               </span>
             </td>
             <td>
-              <% is_active = invoice.subscription_active? %>
-              <span class="badge <%= is_active ? 'bg-success' : 'bg-secondary' %>">
-                <%= is_active ? 'Active' : 'Finished' %>
-              </span>
+              <% if invoice.subscription_active? %>
+                <span class="badge bg-success">Active</span>
+              <% elsif invoice.subscription_cancelled? %>
+                <span class="badge bg-danger">Cancelled</span>
+              <% else %>
+                <span class="badge bg-secondary">Finished</span>
+              <% end %>
             </td>
             <td>
-              <% if is_active && primary_item[:start_date] %>
+              <% if invoice.subscription_active? && primary_item[:start_date] %>
                 <% 
                   start_d = Date.parse(primary_item[:start_date]) rescue nil
                   if start_d
@@ -75,15 +78,25 @@
                   <li>
                     <%= link_to "View Details", subscription_path(invoice), class: "dropdown-item" %>
                   </li>
-                  <li>
-                    <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#midCycleModal-<%= invoice.id %>">
-                      Add Mid-cycle Subscription
-                    </button>
-                  </li>
-                  <% if is_active %>
+                  <% if invoice.subscription_active? %>
+                    <li>
+                      <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#midCycleModal-<%= invoice.id %>">
+                        Add Mid-cycle Subscription
+                      </button>
+                    </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                      <%= link_to "Cancel Subscription", cancel_subscription_path(invoice), data: { turbo_method: :patch, turbo_confirm: "Are you sure you want to cancel this subscription? This will stop all future recurring invoices." }, class: "dropdown-item text-danger" %>
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-<%= invoice.id %>">
+                        Cancel Subscription
+                      </button>
+                    </li>
+                  <% end %>
+                  <% if invoice.subscription_cancelled? %>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelledDetailsModal-<%= invoice.id %>">
+                        View Cancellation Details
+                      </button>
                     </li>
                   <% end %>
                 </ul>
@@ -96,4 +109,18 @@
   </div>
   <% subscriptions.each do |invoice| %>
     <%= render "mid_cycle_modal", invoice: invoice %>
+    <% if invoice.subscription_active? %>
+      <%= render "cancel_subscription_modal", subscription: invoice %>
+    <% end %>
+    <% if invoice.subscription_cancelled? && invoice.cancellation_line_item %>
+      <% 
+        cancel_item = {
+          index: invoice.id,
+          is_cancellation: true,
+          item: invoice.cancellation_line_item,
+          description: invoice.cancellation_line_item['description']
+        }
+      %>
+      <%= render "cancelled_details_modal", item: cancel_item %>
+    <% end %>
   <% end %>

@@ -186,7 +186,7 @@
                         <% end %>
                       </td>
                       <td class="text-end pe-4">
-                        <% if (item[:type] == :pending || item[:type] == :generated) && item[:invoice].nil? && !item[:item].dig('optional_fields', 'one_time_charge') && !item[:item].dig('optional_fields', 'cancelled') && !item[:is_cancellation] %>
+                        <% if @subscription.subscription_active? && (item[:type] == :pending || item[:type] == :generated) && item[:invoice].nil? && !item[:item].dig('optional_fields', 'one_time_charge') && !item[:item].dig('optional_fields', 'cancelled') && !item[:is_cancellation] %>
                           <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelItemModal-<%= item[:index] %>">
                             Cancel
                           </button>

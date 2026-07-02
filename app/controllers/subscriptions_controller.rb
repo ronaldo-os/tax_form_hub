@@ -20,7 +20,8 @@ class SubscriptionsController < ApplicationController
     @subscriptions = all_parent_invoices.select(&:subscription_contract?)
 
     @active_subscriptions = @subscriptions.select { |inv| inv.subscription_active? }
-    @finished_subscriptions = @subscriptions.reject { |inv| inv.subscription_active? }
+    @cancelled_subscriptions = @subscriptions.select { |inv| inv.subscription_cancelled? }
+    @finished_subscriptions = @subscriptions.select { |inv| inv.subscription_finished? }
   end
 
   # GET /subscriptions/:id

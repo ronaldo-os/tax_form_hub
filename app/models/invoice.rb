@@ -166,6 +166,23 @@ class Invoice < ApplicationRecord
     false
   end
 
+  def subscription_cancelled?
+    return false unless subscription_contract?
+    archived?
+  end
+
+  def cancellation_line_item
+    return nil unless subscription_contract?
+    line_items_data.to_a.find do |item|
+      item.is_a?(Hash) && item.dig('optional_fields', 'cancellation') && item['description'].to_s.start_with?("Subscription Cancelled")
+    end
+  end
+
+  def subscription_finished?
+    return false unless subscription_contract?
+    !subscription_active? && !subscription_cancelled?
+  end
+
   def primary_recurring_item
     if has_subscription_line_items?
       item = subscription_line_items.first
