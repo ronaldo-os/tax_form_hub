@@ -131,6 +131,10 @@ a {
   height: calc(1.6em + 0.75rem + 2px);
 }
 
+.form-check-label {
+  cursor: pointer;
+}
+
 .form-control,
 .form-select,
 .input-group-text {
@@ -184,6 +188,10 @@ input[type="radio"] {
   background-color: #ffffff;
   border: 2px solid #212529;
   accent-color: #212529;
+  appearance: auto !important; /* Force native checkbox to be clickable and visible */
+  cursor: pointer;
+  position: relative;
+  z-index: 2; /* Ensure it is above any overlays */
 }
 
 input[type="checkbox"]:checked,
@@ -198,6 +206,10 @@ input[type="radio"]:checked {
   background-color: #ffffff;
   border: 2px solid #d1d1d1;
   accent-color: #00aeff;
+  appearance: auto !important;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
 }
 
 [data-theme="light"] input[type="checkbox"]:checked,
