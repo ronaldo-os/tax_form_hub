@@ -19,8 +19,11 @@
             <div class="col-sm-6 col-md-4">
               <div class="text-muted small fw-semibold text-uppercase mb-1">Status</div>
               <% is_active = @subscription.subscription_active? %>
-              <span class="badge <%= is_active ? 'bg-success' : 'bg-secondary' %> fs-6 px-3 py-2">
-                <%= is_active ? 'Active' : 'Finished' %>
+              <% is_cancelled = @subscription.subscription_cancelled? %>
+              <% status_class = is_active ? 'bg-success' : (is_cancelled ? 'bg-danger' : 'bg-secondary') %>
+              <% status_text = is_active ? 'Active' : (is_cancelled ? 'Cancelled' : 'Finished') %>
+              <span class="badge <%= status_class %> fs-6 px-3 py-2">
+                <%= status_text %>
               </span>
             </div>
             

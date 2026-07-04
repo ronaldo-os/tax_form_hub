@@ -473,16 +473,6 @@ class Invoice < ApplicationRecord
         end
       else
         updated_parent_line_items << item
-        child_item = item.deep_dup
-        
-        if child_item['total'].blank?
-          qty = (child_item['quantity'] || 1).to_f
-          prc = child_item['price'].to_f
-          tx = child_item['tax'].to_f
-          child_item['total'] = ('%.2f' % (qty * prc * (1 + tx / 100.0)))
-        end
-        
-        child_line_items_data << child_item
       end
     end
 
@@ -585,11 +575,53 @@ class Invoice < ApplicationRecord
       end
     end.compact : nil
 
-    child_subtotal = child_line_items_data.sum { |item| (item['price'].to_f * (item['quantity'] || 1).to_f) }
-    child_total = self.total.deep_dup || {}
+    child_subtotal = 0.0
+    child_grand_total = 0.0
+    total_tax = 0.0
+    tax_breakdown = {}
+    
+    child_line_items_data.each do |item|
+      qty = (item['quantity'] || 1).to_f
+      prc = item['price'].to_f
+      tx_rate = item['tax'].to_f
+      
+      base = qty * prc
+      # Attempt to determine exact line_total_before_tax if item['total'] already exists
+      if item['total'].present?
+        # Reverse engineer base from total if tax rate is known, avoiding division by 0
+        line_total_before_tax = tx_rate > 0 ? (item['total'].to_f / (1.0 + tx_rate / 100.0)) : item['total'].to_f
+      else
+        line_total_before_tax = base
+      end
+      
+      item_tax = line_total_before_tax * (tx_rate / 100.0)
+      
+      child_subtotal += line_total_before_tax
+      total_tax += item_tax
+      child_grand_total += item['total'].present? ? item['total'].to_f : (line_total_before_tax + item_tax)
+      
+      tax_name = tx_rate == tx_rate.to_i ? "#{tx_rate.to_i}%" : "#{tx_rate}%"
+      
+      tax_breakdown[tax_name] ||= { "basis" => 0.0, "tax" => 0.0 }
+      tax_breakdown[tax_name]["basis"] += line_total_before_tax
+      tax_breakdown[tax_name]["tax"] += item_tax
+    end
+    
+    # Format the tax_breakdown values nicely
+    tax_breakdown.each do |k, v|
+      tax_breakdown[k]["basis"] = '%.2f' % v["basis"]
+      tax_breakdown[k]["tax"] = '%.2f' % v["tax"]
+    end
+    
+    child_total = {}
     child_total["subtotal"] = '%.2f' % child_subtotal
-    child_total["grand_total"] = '%.2f' % child_subtotal
-    child_total["charge"] = '%.2f' % child_subtotal if child_total.key?("charge")
+    child_total["grand_total"] = '%.2f' % child_grand_total
+    child_total["tax_breakdown"] = tax_breakdown
+    child_total["tax"] = '%.2f' % total_tax
+    
+    if self.total.is_a?(Hash) && self.total.key?("charge")
+      child_total["charge"] = '%.2f' % 0.0 # Don't arbitrarily set charge to subtotal. If there's a recurring global charge it needs its own logic, but default to 0 to prevent bugs.
+    end
 
     # Create the new invoice
     new_invoice = user.invoices.build(
