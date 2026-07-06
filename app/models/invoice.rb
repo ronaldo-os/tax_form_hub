@@ -580,6 +580,10 @@ class Invoice < ApplicationRecord
     total_tax = 0.0
     tax_breakdown = {}
     
+    total_monthly_subscription_value = 0.0
+    total_annual_subscription_value = 0.0
+    total_subscription_value = 0.0
+    
     child_line_items_data.each do |item|
       qty = (item['quantity'] || 1).to_f
       prc = item['price'].to_f
@@ -605,8 +609,80 @@ class Invoice < ApplicationRecord
       tax_breakdown[tax_name] ||= { "basis" => 0.0, "tax" => 0.0 }
       tax_breakdown[tax_name]["basis"] += line_total_before_tax
       tax_breakdown[tax_name]["tax"] += item_tax
+      
+      if item['optional_fields'] && item['optional_fields']['subscription']
+        sub_fields = item['optional_fields']['subscription']
+        billing_cycle_key = sub_fields.keys.find { |k| k.to_s.include?('billing_cycle') }
+        billing_cycle = billing_cycle_key ? sub_fields[billing_cycle_key].to_s.downcase : 'monthly'
+        
+        monthly_val = 0.0
+        annual_val = 0.0
+        case billing_cycle
+        when 'monthly'
+          monthly_val = line_total_before_tax
+          annual_val = line_total_before_tax * 12.0
+        when 'quarterly'
+          monthly_val = line_total_before_tax / 3.0
+          annual_val = line_total_before_tax * 4.0
+        when 'annual', 'yearly', 'annually'
+          monthly_val = line_total_before_tax / 12.0
+          annual_val = line_total_before_tax
+        else
+          monthly_val = line_total_before_tax
+          annual_val = line_total_before_tax * 12.0
+        end
+
+        total_monthly_subscription_value += monthly_val
+        total_annual_subscription_value += annual_val
+        total_subscription_value += line_total_before_tax
+      end
     end
     
+    discount_amount = 0.0
+    charge_amount = 0.0
+    fixed_tax = 0.0
+
+    (child_price_adjustments || []).each do |adj|
+      type = (adj['type'] || "").to_s.strip.downcase
+      frequency = (adj['frequency'] || "once").to_s.strip.downcase
+      is_percent = (adj['unit'] == "%")
+      qty = (adj['amount'] || 0).to_f
+
+      value = 0.0
+      if type == "monthly_charge"
+        value = is_percent ? total_monthly_subscription_value * (qty / 100.0) : qty
+      else
+        if is_percent
+          if frequency == 'monthly'
+            value = total_monthly_subscription_value * (qty / 100.0)
+          elsif frequency == 'annually' || frequency == 'yearly'
+            value = total_annual_subscription_value * (qty / 100.0)
+          elsif frequency != 'once'
+            value = total_subscription_value * (qty / 100.0)
+          else
+            value = child_subtotal * (qty / 100.0)
+          end
+        else
+          value = qty
+        end
+      end
+
+      adj['total'] = '%.2f' % (type == 'discount' ? -value : value)
+
+      if type == 'discount'
+        discount_amount += value
+      elsif type == 'charge' || type == 'monthly_charge'
+        charge_amount += value
+      elsif type == 'fixedtax'
+        fixed_tax += value
+        tax_breakdown["Fixed Tax"] ||= { "basis" => child_subtotal, "tax" => 0.0 }
+        tax_breakdown["Fixed Tax"]["tax"] += value
+      end
+    end
+
+    adjusted_subtotal = child_subtotal - discount_amount + charge_amount
+    child_grand_total = adjusted_subtotal + total_tax + fixed_tax
+
     # Format the tax_breakdown values nicely
     tax_breakdown.each do |k, v|
       tax_breakdown[k]["basis"] = '%.2f' % v["basis"]
@@ -614,7 +690,7 @@ class Invoice < ApplicationRecord
     end
     
     child_total = {}
-    child_total["subtotal"] = '%.2f' % child_subtotal
+    child_total["subtotal"] = '%.2f' % adjusted_subtotal
     child_total["grand_total"] = '%.2f' % child_grand_total
     child_total["tax_breakdown"] = tax_breakdown
     child_total["tax"] = '%.2f' % total_tax

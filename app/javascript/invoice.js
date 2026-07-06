@@ -1259,6 +1259,8 @@ const initInvoiceForm = () => {
     let fixedTax = 0;
     let taxBreakdown = {};
     let totalMonthlySubscriptionValue = 0;
+    let totalAnnualSubscriptionValue = 0;
+    let totalSubscriptionValue = 0;
 
     $('#line-items .line-item').each(function () {
       const $row = $(this);
@@ -1355,12 +1357,20 @@ const initInvoiceForm = () => {
       if ($subscriptionRow.length > 0) {
         const billingCycle = ($subscriptionRow.find('select[name*="[optional_fields][subscription.billing_cycle]"]').val() || "monthly").trim().toLowerCase();
         let monthlyVal = lineTotal;
+        let annualVal = lineTotal;
         if (billingCycle === "quarterly") {
           monthlyVal = lineTotal / 3;
+          annualVal = lineTotal * 4;
         } else if (billingCycle === "annual") {
           monthlyVal = lineTotal / 12;
+          annualVal = lineTotal;
+        } else {
+          monthlyVal = lineTotal;
+          annualVal = lineTotal * 12;
         }
         totalMonthlySubscriptionValue += monthlyVal;
+        totalAnnualSubscriptionValue += annualVal;
+        totalSubscriptionValue += lineTotal;
       }
 
       if (taxRateVal !== null && taxRateVal !== "" && taxRateVal !== undefined) {
@@ -1377,6 +1387,7 @@ const initInvoiceForm = () => {
       const $row = $(this);
 
       const type = ($row.find('select.price-adjustment-unit').val() || "").trim();
+      const frequency = ($row.find('select.frequency').val() || "once").trim().toLowerCase();
       const isPercent = $row.find('select.unit-type').val() === "true";
       const qty = parseCurrency($row.find('.amount').val());
 
@@ -1384,7 +1395,19 @@ const initInvoiceForm = () => {
       if (type === "monthly_charge") {
         value = isPercent ? totalMonthlySubscriptionValue * (qty / 100) : qty;
       } else {
-        value = isPercent ? subtotal * (qty / 100) : qty;
+        if (isPercent) {
+          if (frequency === "monthly") {
+            value = totalMonthlySubscriptionValue * (qty / 100);
+          } else if (frequency === "annually" || frequency === "yearly") {
+            value = totalAnnualSubscriptionValue * (qty / 100);
+          } else if (frequency !== "once") { // Any other recurring
+            value = totalSubscriptionValue * (qty / 100);
+          } else {
+            value = subtotal * (qty / 100);
+          }
+        } else {
+          value = qty;
+        }
       }
 
       // Format global adjustment totals
