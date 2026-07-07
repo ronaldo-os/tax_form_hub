@@ -205,10 +205,24 @@ class SubscriptionsController < ApplicationController
     }
     @subscription.add_subscription_item!(cancellation_item)
     
-    if @subscription.update(archived: true)
-      redirect_to subscription_path(@subscription), notice: 'Subscription was successfully cancelled.'
+    has_custom_items = @subscription.line_items_data.any? do |item|
+      item.is_a?(Hash) &&
+        item.dig('optional_fields', 'subscription').blank? &&
+        item.dig('optional_fields', 'cancellation').blank?
+    end
+
+    if has_custom_items
+      if @subscription.save
+        redirect_to subscription_path(@subscription), notice: 'Subscription was successfully cancelled.'
+      else
+        redirect_to subscription_path(@subscription), alert: 'Unable to cancel subscription.'
+      end
     else
-      redirect_to subscription_path(@subscription), alert: 'Unable to cancel subscription.'
+      if @subscription.update(archived: true)
+        redirect_to subscription_path(@subscription), notice: 'Subscription was successfully cancelled.'
+      else
+        redirect_to subscription_path(@subscription), alert: 'Unable to cancel subscription.'
+      end
     end
   end
 

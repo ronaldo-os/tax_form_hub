@@ -145,6 +145,7 @@ class Invoice < ApplicationRecord
   def subscription_active?(on_date = Date.current)
     return false unless subscription_contract?
     return false if archived?
+    return false if subscription_cancelled?
 
     active_sub = subscription_line_items.any? do |item|
       extract_subscription_field(item, 'start_date').present?
@@ -168,7 +169,7 @@ class Invoice < ApplicationRecord
 
   def subscription_cancelled?
     return false unless subscription_contract?
-    archived?
+    archived? || cancellation_line_item.present?
   end
 
   def cancellation_line_item
