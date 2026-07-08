@@ -2335,6 +2335,15 @@ const initInvoiceForm = () => {
   $(document).on("submit", "#invoice-form", function (e) {
     const $form = $(this);
 
+    const reenableFormButtons = () => {
+      setTimeout(() => {
+        $form.find('input[type="submit"], button, .btn').prop('disabled', false).removeAttr('disabled').removeClass('disabled');
+        if (typeof window.Rails !== 'undefined' && window.Rails.enableFormElements) {
+          window.Rails.enableFormElements($form[0]);
+        }
+      }, 200);
+    };
+
     // Validate recurring charge dates
     let chargeErrors = [];
     $('.discount-item').each(function () {
@@ -2358,6 +2367,28 @@ const initInvoiceForm = () => {
     if (chargeErrors.length > 0) {
       e.preventDefault();
       showFlashMessage(chargeErrors.join("<br>"), "danger");
+      reenableFormButtons();
+      return false;
+    }
+
+    // Validate subscription dates
+    let subscriptionErrors = [];
+    $form.find('tr.optional-field-row[data-optional-group="subscription"]').each(function() {
+      const startDate = ($(this).find('input[name*="subscription.start_date"]').val() || "").trim();
+      const endDate = ($(this).find('input[name*="subscription.end_date"]').val() || "").trim();
+      
+      if (!startDate && !subscriptionErrors.includes('Subscription must have a start date')) {
+        subscriptionErrors.push('Subscription must have a start date');
+      }
+      if (!endDate && !subscriptionErrors.includes('Subscription must have an end date')) {
+        subscriptionErrors.push('Subscription must have an end date');
+      }
+    });
+
+    if (subscriptionErrors.length > 0) {
+      e.preventDefault();
+      showFlashMessage(subscriptionErrors.join("<br>"), "danger");
+      reenableFormButtons();
       return false;
     }
 
@@ -2375,6 +2406,7 @@ const initInvoiceForm = () => {
             $numberField[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
             $numberField.focus();
           }
+          reenableFormButtons();
           return false;
         }
       }
