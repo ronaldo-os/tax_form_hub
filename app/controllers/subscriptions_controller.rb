@@ -17,11 +17,17 @@ class SubscriptionsController < ApplicationController
                                       .where(recurring_parent_invoice_id: nil)
                                       .order(created_at: :desc)
     
-    @subscriptions = all_parent_invoices.select(&:subscription_contract?)
-
+    all_subscription_contracts = all_parent_invoices.select(&:subscription_contract?)
+    
+    @subscriptions = all_subscription_contracts.select(&:has_subscription_line_items?)
     @active_subscriptions = @subscriptions.select { |inv| inv.subscription_active? }
     @cancelled_subscriptions = @subscriptions.select { |inv| inv.subscription_cancelled? }
     @finished_subscriptions = @subscriptions.select { |inv| inv.subscription_finished? }
+
+    @price_adjustments = all_subscription_contracts.reject(&:has_subscription_line_items?)
+    @active_price_adjustments = @price_adjustments.select { |inv| inv.subscription_active? }
+    @cancelled_price_adjustments = @price_adjustments.select { |inv| inv.subscription_cancelled? }
+    @finished_price_adjustments = @price_adjustments.select { |inv| inv.subscription_finished? }
   end
 
   # GET /subscriptions/:id

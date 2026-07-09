@@ -67,6 +67,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :price_adjustments, only: [:show]
+
   # Catch-all route for 404 errors 
   match "*path", to: "errors#not_found", via: :all, constraints: ->(req) { !req.path.start_with?("/rails/active_storage") }
 end
