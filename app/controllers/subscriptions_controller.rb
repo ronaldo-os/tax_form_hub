@@ -217,17 +217,22 @@ class SubscriptionsController < ApplicationController
         item.dig('optional_fields', 'cancellation').blank?
     end
 
+    is_price_adjustment = !@subscription.has_subscription_line_items?
+    redirect_path = is_price_adjustment ? price_adjustment_path(@subscription) : subscription_path(@subscription)
+    notice_msg = is_price_adjustment ? 'Price adjustment was successfully cancelled.' : 'Subscription was successfully cancelled.'
+    alert_msg = is_price_adjustment ? 'Unable to cancel price adjustment.' : 'Unable to cancel subscription.'
+
     if has_custom_items
       if @subscription.save
-        redirect_to subscription_path(@subscription), notice: 'Subscription was successfully cancelled.'
+        redirect_to redirect_path, notice: notice_msg
       else
-        redirect_to subscription_path(@subscription), alert: 'Unable to cancel subscription.'
+        redirect_to redirect_path, alert: alert_msg
       end
     else
       if @subscription.update(archived: true)
-        redirect_to subscription_path(@subscription), notice: 'Subscription was successfully cancelled.'
+        redirect_to redirect_path, notice: notice_msg
       else
-        redirect_to subscription_path(@subscription), alert: 'Unable to cancel subscription.'
+        redirect_to redirect_path, alert: alert_msg
       end
     end
   end

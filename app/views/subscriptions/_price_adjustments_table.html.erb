@@ -8,7 +8,8 @@
           <th>Billing Cycle</th>
           <th>Status</th>
           <th>Next Invoice</th>
-          <th class="text-end pe-4">Adjustment Amount</th>
+          <th class="text-end">Adjustment Amount</th>
+          <th class="pe-4 text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -85,8 +86,34 @@
                 <span class="text-muted">-</span>
               <% end %>
             </td>
-            <td class="text-end fw-semibold pe-4">
+            <td class="text-end fw-semibold">
               <%= amount_display %>
+            </td>
+            <td class="pe-4 text-end">
+              <div class="dropdown text-center">
+                <button class="btn btn-link text-muted p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_<%= invoice.id %>" data-bs-toggle="dropdown" aria-expanded="false">⋮</button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="actionsDropdown_<%= invoice.id %>">
+                  <li>
+                    <%= link_to "View Details", price_adjustment_path(invoice), class: "dropdown-item" %>
+                  </li>
+                  <% if invoice.subscription_active? %>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-<%= invoice.id %>">
+                        Cancel Price Adjustment
+                      </button>
+                    </li>
+                  <% end %>
+                  <% if invoice.subscription_cancelled? %>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelledDetailsModal-<%= invoice.id %>">
+                        View Cancellation Details
+                      </button>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
             </td>
           </tr>
         <% end %>
@@ -95,7 +122,7 @@
   </div>
   <% subscriptions.each do |invoice| %>
     <% if invoice.subscription_active? %>
-      <%= render "cancel_subscription_modal", subscription: invoice %>
+      <%= render "cancel_subscription_modal", subscription: invoice, item_type: "Price Adjustment" %>
     <% end %>
     <% if invoice.subscription_cancelled? && invoice.cancellation_line_item %>
       <% 
