@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="<%= current_user&.theme || 'light' %>" data-bs-theme="<%= current_user&.theme || 'light' %>">
   <head>
+    <meta name="user-theme" content="<%= current_user&.theme || 'light' %>">
     <title><%= content_for(:title) || "Tax Form Hub" %></title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <%= csrf_meta_tags %>
@@ -27,14 +28,6 @@
 
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module", defer: true %>
     <%= yield :javascripts %>
-
-    <script>
-      (function() {
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-        document.documentElement.setAttribute('data-bs-theme', savedTheme);
-      })();
-    </script>
   </head>
   <body data-devise="<%= devise_controller? %>" class="bg-light">
 

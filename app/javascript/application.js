@@ -236,7 +236,19 @@ function handleThemeToggle(e) {
 
     document.documentElement.setAttribute('data-theme', newTheme);
     document.documentElement.setAttribute('data-bs-theme', newTheme);
-    localStorage.setItem('theme', newTheme);
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+        fetch('/profile/theme', {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify({ theme: newTheme })
+        }).catch(err => console.error('Failed to save theme:', err));
+    }
+    
     updateThemeUI(newTheme);
     
     // Update dynamic elements that don't automatically respond to theme changes
@@ -343,8 +355,9 @@ function handleThemeToggleEvent(e) {
 }
 
 function initApplication() {
-    // Theme Toggle Logic - Ensure theme is synced from localStorage (especially after Turbo navigation)
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    // Theme Toggle Logic - Ensure theme is synced from server rendering
+    const metaTheme = document.querySelector('meta[name="user-theme"]')?.getAttribute('content');
+    const savedTheme = metaTheme || document.documentElement.getAttribute('data-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     document.documentElement.setAttribute('data-bs-theme', savedTheme);
     

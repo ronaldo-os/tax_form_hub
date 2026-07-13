@@ -15,6 +15,7 @@ Rails.application.routes.draw do
     get   'profile/edit' => 'users/registrations#edit',   as: :edit_profile
     patch 'profile/edit' => 'users/registrations#update', as: :profile
     put   'profile/edit' => 'users/registrations#update'
+    patch 'profile/theme' => 'users/themes#update', as: :update_theme
   end
 
   root "tax_submissions#home"
