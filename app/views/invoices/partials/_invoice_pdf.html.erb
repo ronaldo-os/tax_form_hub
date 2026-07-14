@@ -154,17 +154,19 @@
     <!-- Line Items Table -->
     <div class="table-responsive">
       <table class="table align-middle table-hover text-nowrap mt-4">
-        <thead class="table-light">
-          <tr>
-            <th style="width: 100px;">Item ID</th>
-            <th style="width: 300px;">Description</th>
-            <th style="width: 100px;">Quantity</th>
-            <th style="width: 100px;">Unit</th>
-            <th style="width: 150px;">Price per unit</th>
-            <th style="width: 100px;">Tax (%)</th>
-            <th style="width: 150px;" class="text-end">Total</th>
-          </tr>
-        </thead>
+        <% if invoice.line_items.present? %>
+          <thead class="table-light">
+            <tr>
+              <th style="width: 100px;">Item ID</th>
+              <th style="width: 300px;">Description</th>
+              <th style="width: 100px;">Quantity</th>
+              <th style="width: 100px;">Unit</th>
+              <th style="width: 150px;">Price per unit</th>
+              <th style="width: 100px;">Tax (%)</th>
+              <th style="width: 150px;" class="text-end">Total</th>
+            </tr>
+          </thead>
+        <% end %>
         <tbody id="line-items">
           <% invoice.line_items_data.each_with_index do |item, index| %>
             <% 
