@@ -159,7 +159,7 @@ class Invoice < ApplicationRecord
     
     total_expected = calculate_total_expected_child_invoices
     if total_expected
-      return false if recurring_sub_invoices.count >= total_expected
+      return false if recurring_sub_invoices.count >= (total_expected - 1)
     end
     
     true
@@ -217,7 +217,7 @@ class Invoice < ApplicationRecord
     
     total_expected = calculate_total_expected_child_invoices
     if total_expected
-      return false if recurring_sub_invoices.count >= total_expected
+      return false if recurring_sub_invoices.count >= (total_expected - 1)
     end
 
     primary_item = primary_recurring_item
@@ -405,10 +405,11 @@ class Invoice < ApplicationRecord
             first_billed_seq += 1
           end
           
-          display_current_sequence = current_sequence_number - first_billed_seq + 1
+          actual_payment_sequence = current_sequence_number + 1
+          display_current_sequence = actual_payment_sequence - first_billed_seq + 1
           display_current_sequence = 1 if display_current_sequence < 1
           
-          display_total_payments = calculate_total_expected_child_invoices || current_sequence_number
+          display_total_payments = calculate_total_expected_child_invoices || actual_payment_sequence
           
           if item_end_d_str.present?
             item_end_d = Date.parse(item_end_d_str) rescue nil
@@ -429,9 +430,10 @@ class Invoice < ApplicationRecord
           current_str = display_current_sequence.to_s.rjust(2, '0')
           total_str = display_total_payments.to_s.rjust(2, '0')
         else
+          actual_payment_sequence = current_sequence_number + 1
           total_payments = calculate_total_expected_child_invoices
-          total_payments = total_payments && total_payments > 0 ? total_payments : current_sequence_number
-          current_str = current_sequence_number.to_s.rjust(2, '0')
+          total_payments = total_payments && total_payments > 0 ? total_payments : actual_payment_sequence
+          current_str = actual_payment_sequence.to_s.rjust(2, '0')
           total_str = total_payments.to_s.rjust(2, '0')
         end
         original_desc = item['description'] || ""
@@ -486,7 +488,7 @@ class Invoice < ApplicationRecord
     child_price_adjustments = price_adjustments.present? ? price_adjustments.map do |adj|
       if %w[monthly annually yearly].include?(adj['frequency'])
         new_adj = adj.deep_dup
-        parent_start_d_str = adj['charge_start_date']
+        parent_start_d_str = adj['charge_start_date'].presence || primary_item_info&.dig(:start_date)
         billing_cycle = case adj['frequency']
                         when 'annually', 'yearly' then 'annual'
                         else 'monthly'
@@ -545,10 +547,11 @@ class Invoice < ApplicationRecord
             first_billed_seq += 1
           end
           
-          display_current_sequence = current_sequence_number - first_billed_seq + 1
+          actual_payment_sequence = current_sequence_number + 1
+          display_current_sequence = actual_payment_sequence - first_billed_seq + 1
           display_current_sequence = 1 if display_current_sequence < 1
           
-          display_total_payments = calculate_total_expected_child_invoices || current_sequence_number
+          display_total_payments = calculate_total_expected_child_invoices || actual_payment_sequence
           
           if item_end_d_str.present?
             item_end_d = Date.parse(item_end_d_str) rescue nil
