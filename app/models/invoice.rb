@@ -737,7 +737,8 @@ class Invoice < ApplicationRecord
       recurring_parent_invoice_id: id,
       recurring_sequence_number: current_sequence_number,
       total: child_total,
-      invoice_info: self.invoice_info
+      invoice_info: self.invoice_info,
+      status: invoice_type == "sale" ? "sent" : "pending"
     )
 
     if new_invoice.save
