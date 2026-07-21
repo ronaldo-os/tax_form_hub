@@ -53,23 +53,29 @@
                     <div class="modal-body">
                         <div class="row">
                         <% invoice.attachments.each do |file| %>
-                            <div class="col-md-6 mb-3">
                             <% if file.content_type.start_with?("image/") %>
-                                <%= link_to url_for(file), target: "_blank" do %>
-                                <img src="<%= url_for(file) %>" class="img-fluid rounded border" alt="Attachment" loading="lazy">
-                                <% end %>
+                                <div class="col-12 mb-3">
+                                  <div class="d-flex align-items-center justify-content-center bg-light border rounded p-2" style="min-height: 200px;">
+                                    <%= link_to url_for(file), target: "_blank", class: "d-block text-center" do %>
+                                      <img src="<%= url_for(file) %>" class="img-fluid rounded shadow-sm" style="max-height: 70vh; object-fit: contain;" alt="Attachment" loading="lazy">
+                                    <% end %>
+                                  </div>
+                                </div>
                             <% elsif file.content_type == "application/pdf" %>
-                                <div class="d-flex align-items-center justify-content-between border p-2 rounded">
-                                <span><%= file.filename.to_s %></span>
-                                <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
+                                <div class="col-md-6 mb-3">
+                                  <div class="d-flex align-items-center justify-content-between border p-2 rounded">
+                                  <span><%= file.filename.to_s %></span>
+                                  <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
+                                  </div>
                                 </div>
                             <% else %>
-                                <div class="border p-2 rounded">
-                                <span><%= file.filename.to_s %></span>
-                                <%= link_to "Download", url_for(file), class: "btn btn-sm btn-outline-secondary", target: "_blank" %>
+                                <div class="col-md-6 mb-3">
+                                  <div class="border p-2 rounded">
+                                  <span><%= file.filename.to_s %></span>
+                                  <%= link_to "Download", url_for(file), class: "btn btn-sm btn-outline-secondary", target: "_blank" %>
+                                  </div>
                                 </div>
                             <% end %>
-                            </div>
                         <% end %>
                         </div>
                     </div>

@@ -133,9 +133,11 @@ class InvoiceDatatable < BaseDatatable
       modal_content = invoice.attachments.map do |file|
         file_url = view.url_for(file)
         if file.content_type.to_s.start_with?("image/")
-          content_tag(:div, class: 'col-md-6 mb-3') do
-            link_to(file_url, target: "_blank") do
-              tag.img(src: file_url, class: 'img-fluid rounded border', alt: 'Attachment', loading: 'lazy')
+          content_tag(:div, class: 'col-12 mb-3') do
+            content_tag(:div, class: 'd-flex align-items-center justify-content-center bg-light border rounded p-2', style: 'min-height: 200px;') do
+              link_to(file_url, target: "_blank", class: 'd-block text-center') do
+                tag.img(src: file_url, class: 'img-fluid rounded shadow-sm', style: 'max-height: 70vh; object-fit: contain;', alt: 'Attachment', loading: 'lazy')
+              end
             end
           end
         elsif file.content_type.to_s == 'application/pdf'

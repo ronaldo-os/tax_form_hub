@@ -253,7 +253,26 @@ class InvoicesController < ApplicationController
       redirect_to invoices_path, notice: "#{category_name} created successfully."
     else
       set_form_resources
-      render :new
+      respond_to do |format|
+        format.turbo_stream do
+          messages = @invoice.errors.full_messages
+          html = if messages.size > 1
+                   "<ol class='mb-0 ps-3'>#{messages.map { |m| "<li>#{m}</li>" }.join}</ol>"
+                 else
+                   "<span>#{messages.first}</span>"
+                 end
+          render turbo_stream: turbo_stream.append("main_content_div", %(
+            <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start" role="alert">
+              <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_danger"></i>
+              <div>#{html}</div>
+            </div>
+          ))
+        end
+        format.html do
+          flash.now[:alert] = @invoice.errors.full_messages.join("<br />") if @invoice.errors.any?
+          render :new, status: :unprocessable_entity
+        end
+      end
     end
   end
 
@@ -356,7 +375,26 @@ class InvoicesController < ApplicationController
       end
     else
       set_form_resources
-      render :edit
+      respond_to do |format|
+        format.turbo_stream do
+          messages = @invoice.errors.full_messages
+          html = if messages.size > 1
+                   "<ol class='mb-0 ps-3'>#{messages.map { |m| "<li>#{m}</li>" }.join}</ol>"
+                 else
+                   "<span>#{messages.first}</span>"
+                 end
+          render turbo_stream: turbo_stream.append("main_content_div", %(
+            <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start" role="alert">
+              <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_danger"></i>
+              <div>#{html}</div>
+            </div>
+          ))
+        end
+        format.html do
+          flash.now[:alert] = @invoice.errors.full_messages.join("<br />") if @invoice.errors.any?
+          render :edit, status: :unprocessable_entity
+        end
+      end
     end
   end
 
@@ -434,7 +472,26 @@ class InvoicesController < ApplicationController
       end
     else
       set_form_resources
-      render :new
+      respond_to do |format|
+        format.turbo_stream do
+          messages = @invoice.errors.full_messages
+          html = if messages.size > 1
+                   "<ol class='mb-0 ps-3'>#{messages.map { |m| "<li>#{m}</li>" }.join}</ol>"
+                 else
+                   "<span>#{messages.first}</span>"
+                 end
+          render turbo_stream: turbo_stream.append("main_content_div", %(
+            <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start" role="alert">
+              <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_danger"></i>
+              <div>#{html}</div>
+            </div>
+          ))
+        end
+        format.html do
+          flash.now[:alert] = @invoice.errors.full_messages.join("<br />") if @invoice.errors.any?
+          render :new, status: :unprocessable_entity
+        end
+      end
     end
   end
 
@@ -523,7 +580,26 @@ class InvoicesController < ApplicationController
     else
       @invoice = original # Ensure @invoice is set for the edit view
       set_form_resources
-      render :edit
+      respond_to do |format|
+        format.turbo_stream do
+          messages = original.errors.full_messages
+          html = if messages.size > 1
+                   "<ol class='mb-0 ps-3'>#{messages.map { |m| "<li>#{m}</li>" }.join}</ol>"
+                 else
+                   "<span>#{messages.first}</span>"
+                 end
+          render turbo_stream: turbo_stream.append("main_content_div", %(
+            <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start" role="alert">
+              <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_danger"></i>
+              <div>#{html}</div>
+            </div>
+          ))
+        end
+        format.html do
+          flash.now[:alert] = original.errors.full_messages.join("<br />") if original.errors.any?
+          render :edit, status: :unprocessable_entity
+        end
+      end
     end
   end
 

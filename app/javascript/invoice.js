@@ -2344,6 +2344,22 @@ const initInvoiceForm = () => {
       }, 200);
     };
 
+    // Validate recipient company selection
+    const recipientId = $form.find('#recipient_company_id').val();
+    if (!recipientId || recipientId.trim() === '') {
+      e.preventDefault();
+      showFlashMessage("Please select a recipient company before saving.", "danger");
+      
+      const searchInput = document.getElementById('company_search_input');
+      if (searchInput) {
+        searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        searchInput.focus();
+      }
+      
+      reenableFormButtons();
+      return false;
+    }
+
     // Validate recurring charge dates
     let chargeErrors = [];
     $('.discount-item').each(function () {

@@ -27,4 +27,32 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert invoice.save_notes_for_future, "save_notes_for_future should be true"
     assert invoice.save_footer_notes_for_future, "save_footer_notes_for_future should be true"
   end
+
+  test "datatable returns centered image attachment html" do
+    # Create an invoice
+    invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "sent"
+    )
+    
+    # Attach a fake image
+    file = fixture_file_upload(Rails.root.join('test', 'fixtures', 'files', 'test_image.png'), 'image/png')
+    invoice.attachments.attach(file)
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", format: :json }
+    
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    
+    # Assert there is data
+    assert_not_empty data
+    
+    # Check if the attachments column contains the new centered div HTML for images
+    attachment_html = data.first["attachments"]
+    assert_match /d-flex align-items-center justify-content-center/, attachment_html
+    assert_match /object-fit: contain/, attachment_html
+    assert_match /max-height: 70vh/, attachment_html
+  end
 end

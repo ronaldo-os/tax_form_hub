@@ -3,15 +3,7 @@
     <div class="card-body">
       <%= form_with model: @invoice, html: { id: "invoice-form", multipart: true, class: "" } do |f| %>
 
-        <% if @invoice.errors.any? %>
-          <div class="alert alert-danger" role="alert">
-            <ul class="mb-0">
-              <% @invoice.errors.full_messages.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
+
 
         <h5 class="text-secondary">
           <%= if @invoice.quote?
