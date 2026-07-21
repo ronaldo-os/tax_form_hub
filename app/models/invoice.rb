@@ -43,7 +43,7 @@ class Invoice < ApplicationRecord
   end
 
   def grand_total
-    total["grand_total"].to_f
+    total["grand_total"].to_s.delete(',').to_f
   end
 
   # Generate next invoice number for user
@@ -243,30 +243,61 @@ class Invoice < ApplicationRecord
   def calculate_total_expected_child_invoices
     return nil unless has_recurring_elements?
     
-    primary_item = primary_recurring_item
-    return nil unless primary_item
-    
-    start_d_str = primary_item[:start_date]
-    end_d_str = primary_item[:end_date]
-    cycle = primary_item[:cycle] || 'monthly'
+    max_expected = 0
 
-    return nil unless start_d_str.present? && end_d_str.present?
-    
-    start_d = Date.parse(start_d_str) rescue nil
-    end_d = Date.parse(end_d_str) rescue nil
-    
-    return nil unless start_d && end_d
-    
-    current_d = start_d
-    count = 0
-    # Simulate billing cycles exactly to determine total periods
-    while current_d < end_d
-      current_d = calculate_next_period_date(current_d, cycle)
-      count += 1
+    if has_subscription_line_items?
+      subscription_line_items.each do |item|
+        start_d_str = extract_subscription_field(item, 'start_date')
+        end_d_str = extract_subscription_field(item, 'end_date')
+        cycle = extract_subscription_field(item, 'billing_cycle') || 'monthly'
+        
+        return nil unless start_d_str.present?
+        return nil unless end_d_str.present?
+
+        start_d = Date.parse(start_d_str) rescue nil
+        end_d = Date.parse(end_d_str) rescue nil
+
+        return nil unless start_d && end_d
+
+        current_d = start_d
+        count = 0
+        while current_d < end_d
+          current_d = calculate_next_period_date(current_d, cycle)
+          count += 1
+        end
+        max_expected = count if count > max_expected
+      end
     end
-                     
-    expected = count
-    expected > 0 ? expected : 0
+
+    if has_recurring_price_adjustments?
+      recurring_price_adjustments.each do |adj|
+        start_d_str = adj['charge_start_date']
+        end_d_str = adj['charge_end_date']
+        
+        cycle = case adj['frequency']
+                when 'annually', 'yearly' then 'annual'
+                else 'monthly'
+                end
+
+        return nil unless start_d_str.present?
+        return nil unless end_d_str.present?
+
+        start_d = Date.parse(start_d_str) rescue nil
+        end_d = Date.parse(end_d_str) rescue nil
+
+        return nil unless start_d && end_d
+
+        current_d = start_d
+        count = 0
+        while current_d < end_d
+          current_d = calculate_next_period_date(current_d, cycle)
+          count += 1
+        end
+        max_expected = count if count > max_expected
+      end
+    end
+
+    max_expected > 0 ? max_expected : 0
   end
 
   # Generate subscription invoices for all elapsed billing periods up to on_date.
@@ -357,7 +388,12 @@ class Invoice < ApplicationRecord
           
           # Calculate item specific total payments
           is_mid_cycle = item.dig('optional_fields', 'hidden_on_parent')
-          item_end_d_str = is_mid_cycle ? primary_item_info&.dig(:end_date) : (parent_end_d_str.presence || primary_item_info&.dig(:end_date))
+          
+          parent_idx = item.dig('optional_fields', 'parent_item_index')
+          specific_parent = parent_idx.present? ? line_items_data[parent_idx.to_i] : nil
+          fallback_end_d_str = specific_parent ? extract_subscription_field(specific_parent, 'end_date') : primary_item_info&.dig(:end_date)
+          
+          item_end_d_str = is_mid_cycle ? fallback_end_d_str : (parent_end_d_str.presence || primary_item_info&.dig(:end_date))
           
           child_start_d = parent_start_d
           item_sequence.times do
@@ -379,11 +415,13 @@ class Invoice < ApplicationRecord
             
             # The child's line item reflects its specific billing period
             subscription[start_key] = child_start_d.to_s
-            subscription[end_key] = child_end_d.to_s
+            subscription['overall_end_date'] = child_end_d.to_s
             
             # Retain the overall end date from the most parent invoice
             if item_end_d_str.present?
-              subscription['overall_end_date'] = item_end_d_str
+              subscription[end_key] = item_end_d_str
+            else
+              subscription.delete(end_key)
             end
           end
         end
@@ -444,9 +482,9 @@ class Invoice < ApplicationRecord
         
         new_item['description'] = new_desc
         if new_item['total'].blank?
-          qty = (new_item['quantity'] || 1).to_f
-          prc = new_item['price'].to_f
-          tx = new_item['tax'].to_f
+          qty = (new_item['quantity'] || 1).to_s.delete(',').to_f
+          prc = new_item['price'].to_s.delete(',').to_f
+          tx = new_item['tax'].to_s.delete(',').to_f
           new_item['total'] = ('%.2f' % (qty * prc * (1 + tx / 100.0)))
         end
         
@@ -923,11 +961,11 @@ class Invoice < ApplicationRecord
     is_hidden = optional_fields[:hidden_on_parent] || optional_fields['hidden_on_parent']
     
     unless is_hidden
-      item_total = (item_hash[:price] || item_hash['price']).to_f * (item_hash[:quantity] || item_hash['quantity']).to_f
+      item_total = (item_hash[:price] || item_hash['price']).to_s.delete(',').to_f * (item_hash[:quantity] || item_hash['quantity']).to_s.delete(',').to_f
       
       current_total = self.total || {}
-      subtotal = current_total["subtotal"].to_f + item_total
-      grand_total = current_total["grand_total"].to_f + item_total
+      subtotal = current_total["subtotal"].to_s.delete(',').to_f + item_total
+      grand_total = current_total["grand_total"].to_s.delete(',').to_f + item_total
       
       current_total["subtotal"] = '%.2f' % subtotal
       current_total["grand_total"] = '%.2f' % grand_total
@@ -995,10 +1033,10 @@ class Invoice < ApplicationRecord
 
       if start_date.present? && end_date.present?
         begin
-          start = Date.parse(start_date)
+          start_d = Date.parse(start_date)
           end_d = Date.parse(end_date)
 
-          if start >= end_d
+          if start_d >= end_d
             errors.add(:price_adjustments, "at index #{index + 1}: Monthly charge end date must be after start date")
           end
         rescue Date::Error

@@ -4,7 +4,7 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
 
   setup do
-    @user = User.create!(email: "test_#{Time.now.to_i}@example.com", password: "password", password_confirmation: "password")
+    @user = User.create!(email: "test_#{Time.now.to_i}@example.com", password: "Password123!@#Secure", password_confirmation: "Password123!@#Secure")
     sign_in @user
   end
 

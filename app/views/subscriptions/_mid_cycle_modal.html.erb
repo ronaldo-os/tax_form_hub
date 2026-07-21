@@ -1,53 +1,54 @@
-<div class="modal fade" id="midCycleModal-<%= invoice.id %>" tabindex="-1" aria-labelledby="midCycleModalLabel-<%= invoice.id %>" aria-hidden="true">
+<div class="modal fade" id="midCycleModal-<%= invoice.id %>-<%= item_index %>" tabindex="-1" aria-labelledby="midCycleModalLabel-<%= invoice.id %>-<%= item_index %>" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title fw-semibold" id="midCycleModalLabel-<%= invoice.id %>">Add Mid-cycle Subscription</h5>
+        <h5 class="modal-title fw-semibold" id="midCycleModalLabel-<%= invoice.id %>-<%= item_index %>">Add Mid-cycle Subscription</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <%= form_with url: add_mid_cycle_item_subscription_path(invoice), method: :post, local: true do |f| %>
+        <%= f.hidden_field :parent_item_index, value: item_index %>
         <div class="modal-body">
           <div class="mb-3">
-            <label for="itemName-<%= invoice.id %>" class="form-label fw-medium">Service / Item Name</label>
-            <%= f.text_field :item_name, class: "form-control", id: "itemName-#{invoice.id}", placeholder: "e.g. Extra user license", required: true %>
+            <label for="itemName-<%= invoice.id %>-<%= item_index %>" class="form-label fw-medium">Service / Item Name</label>
+            <%= f.text_field :item_name, class: "form-control", id: "itemName-#{invoice.id}-#{item_index}", placeholder: "e.g. Extra user license", required: true %>
           </div>
           
           <div class="row mb-3">
             <div class="col-md-6">
-              <label for="quantity-<%= invoice.id %>" class="form-label fw-medium">Quantity</label>
-              <%= f.number_field :quantity, class: "form-control", id: "quantity-#{invoice.id}", value: "1", min: "1", required: true %>
+              <label for="quantity-<%= invoice.id %>-<%= item_index %>" class="form-label fw-medium">Quantity</label>
+              <%= f.number_field :quantity, class: "form-control", id: "quantity-#{invoice.id}-#{item_index}", value: "1", min: "1", required: true %>
             </div>
             <div class="col-md-6">
-              <label for="price-<%= invoice.id %>" class="form-label fw-medium">Unit Price</label>
+              <label for="price-<%= invoice.id %>-<%= item_index %>" class="form-label fw-medium">Unit Price</label>
               <div class="input-group">
                 <span class="input-group-text">₱</span>
-                <%= f.number_field :price, class: "form-control", id: "price-#{invoice.id}", placeholder: "0.00", step: "0.01", required: true %>
+                <%= f.number_field :price, class: "form-control", id: "price-#{invoice.id}-#{item_index}", placeholder: "0.00", step: "0.01", required: true %>
               </div>
             </div>
           </div>
           
           <div class="mb-3">
-            <label for="effectiveDate-<%= invoice.id %>" class="form-label fw-medium">Effective Date</label>
-            <%= f.date_field :effective_date, class: "form-control", id: "effectiveDate-#{invoice.id}", value: Date.current, required: true %>
+            <label for="effectiveDate-<%= invoice.id %>-<%= item_index %>" class="form-label fw-medium">Effective Date</label>
+            <%= f.date_field :effective_date, class: "form-control", id: "effectiveDate-#{invoice.id}-#{item_index}", value: Date.current, required: true %>
           </div>
           
           <div class="mb-3">
             <label class="form-label d-block fw-medium">Proration Handling</label>
             <div class="form-check">
-              <%= f.radio_button :proration, "prorate", class: "form-check-input", id: "prorate-#{invoice.id}", checked: true %>
-              <label class="form-check-label" for="prorate-<%= invoice.id %>">
+              <%= f.radio_button :proration, "prorate", class: "form-check-input", id: "prorate-#{invoice.id}-#{item_index}", checked: true %>
+              <label class="form-check-label" for="prorate-<%= invoice.id %>-<%= item_index %>">
                 <strong>Prorate:</strong> Charge for remaining days in cycle
               </label>
             </div>
             <div class="form-check">
-              <%= f.radio_button :proration, "full", class: "form-check-input", id: "full-#{invoice.id}" %>
-              <label class="form-check-label" for="full-<%= invoice.id %>">
+              <%= f.radio_button :proration, "full", class: "form-check-input", id: "full-#{invoice.id}-#{item_index}" %>
+              <label class="form-check-label" for="full-<%= invoice.id %>-<%= item_index %>">
                 <strong>Full Amount:</strong> Charge the full cycle amount
               </label>
             </div>
             <div class="form-check">
-              <%= f.radio_button :proration, "next", class: "form-check-input", id: "next-#{invoice.id}" %>
-              <label class="form-check-label" for="next-<%= invoice.id %>">
+              <%= f.radio_button :proration, "next", class: "form-check-input", id: "next-#{invoice.id}-#{item_index}" %>
+              <label class="form-check-label" for="next-<%= invoice.id %>-<%= item_index %>">
                 <strong>Do Not Charge Now:</strong> Bill next regular cycle
               </label>
             </div>
@@ -56,30 +57,34 @@
           <div class="mb-3">
             <label class="form-label d-block fw-medium">Item Type</label>
             <div class="form-check form-check-inline">
-              <%= f.radio_button :item_type, "charge", class: "form-check-input", id: "charge-#{invoice.id}", checked: true %>
-              <label class="form-check-label" for="charge-<%= invoice.id %>">Charge</label>
+              <%= f.radio_button :item_type, "charge", class: "form-check-input", id: "charge-#{invoice.id}-#{item_index}", checked: true %>
+              <label class="form-check-label" for="charge-<%= invoice.id %>-<%= item_index %>">Charge</label>
             </div>
             <div class="form-check form-check-inline">
-              <%= f.radio_button :item_type, "discount", class: "form-check-input", id: "discount-#{invoice.id}" %>
-              <label class="form-check-label" for="discount-<%= invoice.id %>">Discount</label>
+              <%= f.radio_button :item_type, "discount", class: "form-check-input", id: "discount-#{invoice.id}-#{item_index}" %>
+              <label class="form-check-label" for="discount-<%= invoice.id %>-<%= item_index %>">Discount</label>
             </div>
           </div>
           
           <div class="mb-3">
-            <label class="form-label d-block fw-medium">Charge / Discount Frequency</label>
-            <div class="form-check form-check-inline">
-              <%= f.radio_button :charge_type, "recurring", class: "form-check-input", id: "recurring-#{invoice.id}", checked: true %>
-              <label class="form-check-label" for="recurring-<%= invoice.id %>">Recurring</label>
+            <label class="form-label d-block fw-medium">Charge Frequency</label>
+            <div class="form-check">
+              <%= f.radio_button :charge_type, "one_time", class: "form-check-input", id: "one_time-#{invoice.id}-#{item_index}", checked: true %>
+              <label class="form-check-label" for="one_time-<%= invoice.id %>-<%= item_index %>">
+                <strong>One-time:</strong> Charge only once
+              </label>
             </div>
-            <div class="form-check form-check-inline">
-              <%= f.radio_button :charge_type, "onetime", class: "form-check-input", id: "onetime-#{invoice.id}" %>
-              <label class="form-check-label" for="onetime-<%= invoice.id %>">One-Time</label>
+            <div class="form-check">
+              <%= f.radio_button :charge_type, "recurring", class: "form-check-input", id: "recurring-#{invoice.id}-#{item_index}" %>
+              <label class="form-check-label" for="recurring-<%= invoice.id %>-<%= item_index %>">
+                <strong>Recurring:</strong> Add to subscription ongoing
+              </label>
             </div>
           </div>
           
           <div class="mb-3">
-            <label for="memo-<%= invoice.id %>" class="form-label fw-medium">Description / Memo</label>
-            <%= f.text_area :memo, class: "form-control", id: "memo-#{invoice.id}", rows: 2, placeholder: "Optional notes..." %>
+            <label for="memo-<%= invoice.id %>-<%= item_index %>" class="form-label fw-medium">Memo / Internal Notes (Optional)</label>
+            <%= f.text_area :memo, class: "form-control", id: "memo-#{invoice.id}-#{item_index}", rows: 2 %>
           </div>
         </div>
         <div class="modal-footer">

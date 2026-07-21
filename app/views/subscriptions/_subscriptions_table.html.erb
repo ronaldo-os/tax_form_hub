@@ -12,40 +12,44 @@
         </tr>
       </thead>
       <tbody>
-        <% subscriptions.each do |invoice| %>
-          <% primary_item = invoice.primary_recurring_item || {} %>
+        <% subscriptions.each do |wrapper| %>
+          <% invoice = wrapper.invoice %>
+          <% item = wrapper.item %>
+          <% item_index = wrapper.index %>
+          <% cycle = invoice.extract_subscription_field(item, 'billing_cycle') || 'monthly' %>
+          <% start_date_str = invoice.extract_subscription_field(item, 'start_date') %>
+          
           <tr>
             <td class="ps-4 fw-medium">
-              <%= link_to invoice.recipient_company&.name || "Unknown Company", subscription_path(invoice), class: "text-decoration-none" %>
+              <%= link_to invoice.recipient_company&.name || "Unknown Company", subscription_path(invoice, item_index: item_index), class: "text-decoration-none" %>
             </td>
             <td>
               <span class="text-truncate d-inline-block" style="max-width: 200px;">
-                <%= primary_item[:description].presence || invoice.message.presence || "Subscription Service" %>
+                <%= item['description'].presence || "Subscription Service" %>
               </span>
             </td>
             <td>
               <span class="badge bg-secondary">
                 <i class="fa-solid fa-clock-rotate-left me-1"></i>
-                <%= (primary_item[:cycle] || 'monthly').capitalize %>
+                <%= cycle.capitalize %>
               </span>
             </td>
             <td>
-              <% if invoice.subscription_active? %>
+              <% if wrapper.subscription_active? %>
                 <span class="badge bg-success">Active</span>
-              <% elsif invoice.subscription_cancelled? %>
+              <% elsif wrapper.subscription_cancelled? %>
                 <span class="badge bg-danger">Cancelled</span>
               <% else %>
                 <span class="badge bg-secondary">Finished</span>
               <% end %>
             </td>
             <td>
-              <% if invoice.subscription_active? && primary_item[:start_date] %>
+              <% if wrapper.subscription_active? && start_date_str.present? %>
                 <% 
-                  start_d = Date.parse(primary_item[:start_date]) rescue nil
+                  start_d = Date.parse(start_date_str) rescue nil
                   if start_d
                     current_sequence = invoice.recurring_sub_invoices.count + 1
                     next_date = start_d
-                    cycle = primary_item[:cycle] || 'monthly'
                     current_sequence.times { next_date = invoice.calculate_next_period_date(next_date, cycle) }
                     
                     days_left = (next_date - Date.current).to_i
@@ -69,32 +73,32 @@
               <% end %>
             </td>
             <td class="text-end fw-semibold">
-              <%= number_to_currency(invoice.grand_total, unit: invoice.currency + ' ') %>
+              <%= number_to_currency(wrapper.total_amount, unit: invoice.currency + ' ') %>
             </td>
             <td class="pe-4 text-end">
               <div class="dropdown text-center">
-                <button class="btn btn-link text-muted p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_<%= invoice.id %>" data-bs-toggle="dropdown" aria-expanded="false">⋮</button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="actionsDropdown_<%= invoice.id %>">
+                <button class="btn btn-link text-muted p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_<%= invoice.id %>_<%= item_index %>" data-bs-toggle="dropdown" aria-expanded="false">⋮</button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="actionsDropdown_<%= invoice.id %>_<%= item_index %>">
                   <li>
-                    <%= link_to "View Details", subscription_path(invoice), class: "dropdown-item" %>
+                    <%= link_to "View Details", subscription_path(invoice, item_index: item_index), class: "dropdown-item" %>
                   </li>
-                  <% if invoice.subscription_active? %>
+                  <% if wrapper.subscription_active? %>
                     <li>
-                      <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#midCycleModal-<%= invoice.id %>">
+                      <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#midCycleModal-<%= invoice.id %>-<%= item_index %>">
                         Add Mid-cycle Subscription
                       </button>
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-<%= invoice.id %>">
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-<%= invoice.id %>-<%= item_index %>">
                         Cancel Subscription
                       </button>
                     </li>
                   <% end %>
-                  <% if invoice.subscription_cancelled? %>
+                  <% if wrapper.subscription_cancelled? %>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelledDetailsModal-<%= invoice.id %>">
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelledDetailsModal-<%= invoice.id %>-<%= item_index %>">
                         View Cancellation Details
                       </button>
                     </li>
@@ -107,15 +111,17 @@
       </tbody>
     </table>
   </div>
-  <% subscriptions.each do |invoice| %>
-    <%= render "mid_cycle_modal", invoice: invoice %>
-    <% if invoice.subscription_active? %>
-      <%= render "cancel_subscription_modal", subscription: invoice %>
+  <% subscriptions.each do |wrapper| %>
+    <% invoice = wrapper.invoice %>
+    <% item_index = wrapper.index %>
+    <%= render "mid_cycle_modal", invoice: invoice, item_index: item_index %>
+    <% if wrapper.subscription_active? %>
+      <%= render "cancel_subscription_modal", subscription: invoice, item_index: item_index %>
     <% end %>
-    <% if invoice.subscription_cancelled? && invoice.cancellation_line_item %>
+    <% if wrapper.subscription_cancelled? && invoice.cancellation_line_item %>
       <% 
         cancel_item = {
-          index: invoice.id,
+          index: invoice.id.to_s + "-" + item_index.to_s,
           is_cancellation: true,
           item: invoice.cancellation_line_item,
           description: invoice.cancellation_line_item['description']

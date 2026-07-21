@@ -19,10 +19,21 @@ class SubscriptionsController < ApplicationController
     
     all_subscription_contracts = all_parent_invoices.select(&:subscription_contract?)
     
-    @subscriptions = all_subscription_contracts.select(&:has_subscription_line_items?)
-    @active_subscriptions = @subscriptions.select { |inv| inv.subscription_active? }
-    @cancelled_subscriptions = @subscriptions.select { |inv| inv.subscription_cancelled? }
-    @finished_subscriptions = @subscriptions.select { |inv| inv.subscription_finished? }
+    @subscriptions = []
+    
+    all_subscription_contracts.each do |invoice|
+      if invoice.line_items_data.is_a?(Array)
+        invoice.line_items_data.each_with_index do |item, idx|
+          if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
+            @subscriptions << SubscriptionItemWrapper.new(invoice, item, idx)
+          end
+        end
+      end
+    end
+    
+    @active_subscriptions = @subscriptions.select { |wrapper| wrapper.subscription_active? }
+    @cancelled_subscriptions = @subscriptions.select { |wrapper| wrapper.subscription_cancelled? }
+    @finished_subscriptions = @subscriptions.select { |wrapper| wrapper.subscription_finished? }
 
     @price_adjustments = all_subscription_contracts.reject(&:has_subscription_line_items?)
     @active_price_adjustments = @price_adjustments.select { |inv| inv.subscription_active? }
@@ -35,12 +46,30 @@ class SubscriptionsController < ApplicationController
   def show
     @invoices = @subscription.recurring_sub_invoices.order(issue_date: :desc).limit(10)
     
-    primary_item = @subscription.primary_recurring_item
+    first_sub_index = (@subscription.line_items_data || []).index do |i|
+      i.is_a?(Hash) && i['optional_fields'].is_a?(Hash) && i['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') } && !i.dig('optional_fields', 'hidden_on_parent')
+    end
+
+    @item_index = params[:item_index].present? ? params[:item_index].to_i : first_sub_index
+
+    primary_line_item = @item_index ? @subscription.line_items_data[@item_index] : nil
+    primary_item = nil
+    if primary_line_item
+      primary_item = {
+        description: primary_line_item['description'],
+        cycle: @subscription.extract_subscription_field(primary_line_item, 'billing_cycle') || 'monthly',
+        start_date: @subscription.extract_subscription_field(primary_line_item, 'start_date'),
+        end_date: @subscription.extract_subscription_field(primary_line_item, 'end_date')
+      }
+    end
+
     if primary_item
       start_d = Date.parse(primary_item[:start_date]) rescue nil
       cycle = primary_item[:cycle] || 'monthly'
       
-      if start_d && @subscription.subscription_active?
+      @wrapper = SubscriptionItemWrapper.new(@subscription, primary_line_item, @item_index)
+      
+      if start_d && @wrapper.subscription_active?
         current_sequence = @subscription.recurring_sub_invoices.count + 1
         next_date = start_d
         current_sequence.times do
@@ -62,15 +91,20 @@ class SubscriptionsController < ApplicationController
           latest_billed_date = @subscription.calculate_next_period_date(latest_billed_date, primary_item[:cycle] || 'monthly')
         end
 
-        primary_item_index = (@subscription.line_items_data || []).index do |i|
-          i.is_a?(Hash) && i['optional_fields'].is_a?(Hash) && i['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
-        end
-
         (@subscription.line_items_data || []).each_with_index do |item, index|
           next unless item.is_a?(Hash)
-          next if index == primary_item_index
+          next if index == @item_index
           
           optional_fields = item['optional_fields'] || {}
+          
+          # Skip other main subscriptions that don't have hidden_on_parent
+          is_another_main_subscription = optional_fields['subscription'].present? && !optional_fields['hidden_on_parent']
+          next if is_another_main_subscription
+          
+          # Filter by parent_item_index
+          parent_idx = optional_fields['parent_item_index']
+          expected_parent_idx = parent_idx.present? ? parent_idx.to_i : first_sub_index
+          next unless expected_parent_idx == @item_index
           
           if optional_fields['one_time_charge']
             target_date = Date.parse(optional_fields['target_date']) rescue nil
@@ -317,9 +351,9 @@ class SubscriptionsController < ApplicationController
     line_items << cancellation_item
     
     if @subscription.update(line_items_data: line_items)
-      redirect_to subscription_path(@subscription), notice: 'Mid-cycle item was successfully cancelled.'
+      redirect_to subscription_path(@subscription, item_index: item_index), notice: 'Mid-cycle item was successfully cancelled.'
     else
-      redirect_to subscription_path(@subscription), alert: 'Unable to cancel item.'
+      redirect_to subscription_path(@subscription, item_index: item_index), alert: 'Unable to cancel item.'
     end
   end
 
@@ -327,8 +361,8 @@ class SubscriptionsController < ApplicationController
   def add_mid_cycle_item
     item_name = params[:item_name]
     item_type = params[:item_type] || 'charge'
-    quantity = params[:quantity].to_f
-    price = params[:price].to_f
+    quantity = params[:quantity].to_s.delete(',').to_f
+    price = params[:price].to_s.delete(',').to_f
     effective_date_str = params[:effective_date]
     proration = params[:proration]
     charge_type = params[:charge_type]
@@ -336,7 +370,18 @@ class SubscriptionsController < ApplicationController
     
     effective_date = Date.parse(effective_date_str) rescue Date.current
     
-    primary_item = @subscription.primary_recurring_item
+    item_index = params[:parent_item_index].present? ? params[:parent_item_index].to_i : nil
+    primary_line_item = item_index ? @subscription.line_items_data[item_index] : nil
+    
+    if primary_line_item
+      primary_item = {
+        cycle: @subscription.extract_subscription_field(primary_line_item, 'billing_cycle') || 'monthly',
+        start_date: @subscription.extract_subscription_field(primary_line_item, 'start_date'),
+        end_date: @subscription.extract_subscription_field(primary_line_item, 'end_date')
+      }
+    else
+      primary_item = @subscription.primary_recurring_item
+    end
     billing_cycle = primary_item ? (primary_item[:cycle] || 'monthly') : 'monthly'
     
     # Calculate next billing date
@@ -392,7 +437,8 @@ class SubscriptionsController < ApplicationController
           'one_time_charge' => true,
           'target_date' => next_date.to_s,
           'billed' => false,
-          'hidden_on_parent' => (@subscription.issue_date != effective_date)
+          'hidden_on_parent' => (@subscription.issue_date != effective_date),
+          'parent_item_index' => params[:parent_item_index]
         }
       }
       @subscription.add_subscription_item!(prorated_item)
@@ -415,13 +461,14 @@ class SubscriptionsController < ApplicationController
             'end_date' => primary_item && primary_item[:end_date].present? ? primary_item[:end_date] : nil,
             'billing_cycle' => billing_cycle
           }.compact,
-          'hidden_on_parent' => ((@subscription.issue_date != effective_date) || proration == 'next')
+          'hidden_on_parent' => ((@subscription.issue_date != effective_date) || proration == 'next'),
+          'parent_item_index' => params[:parent_item_index]
         }
       }
       @subscription.add_subscription_item!(new_item)
     end
     
-    redirect_to subscription_path(@subscription), notice: 'Mid-cycle subscription item added to the next invoice successfully.'
+    redirect_to subscription_path(@subscription, item_index: params[:parent_item_index]), notice: 'Mid-cycle subscription item added to the next invoice successfully.'
   end
 
   private

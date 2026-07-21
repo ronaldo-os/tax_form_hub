@@ -141,15 +141,15 @@ class InvoiceDatatable < BaseDatatable
         elsif file.content_type.to_s == 'application/pdf'
           content_tag(:div, class: 'col-md-6 mb-3') do
             content_tag(:div, class: 'd-flex align-items-center justify-content-between border p-2 rounded') do
-              concat(content_tag(:span, file.filename.to_s))
-              concat(link_to('View PDF', view.url_for(file), target: '_blank', class: 'btn btn-sm btn-outline-secondary'))
+              content_tag(:span, file.filename.to_s) +
+              link_to('View PDF', view.url_for(file), target: '_blank', class: 'btn btn-sm btn-outline-secondary')
             end
           end
         else
           content_tag(:div, class: 'col-md-6 mb-3') do
             content_tag(:div, class: 'border p-2 rounded') do
-              concat(content_tag(:span, file.filename.to_s))
-              concat(link_to('Download', file_url, class: 'btn btn-sm btn-outline-secondary', target: '_blank'))
+              content_tag(:span, file.filename.to_s) +
+              link_to('Download', file_url, class: 'btn btn-sm btn-outline-secondary', target: '_blank')
             end
           end
         end

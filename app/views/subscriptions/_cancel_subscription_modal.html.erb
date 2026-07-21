@@ -1,23 +1,24 @@
 <% item_type = local_assigns[:item_type] || "Subscription" %>
 <% lower_item_type = item_type.downcase %>
-<div class="modal fade" id="cancelSubscriptionModal-<%= subscription.id %>" tabindex="-1" aria-labelledby="cancelSubscriptionModalLabel-<%= subscription.id %>" aria-hidden="true">
+<div class="modal fade" id="cancelSubscriptionModal-<%= subscription.id %>-<%= item_index %>" tabindex="-1" aria-labelledby="cancelSubscriptionModalLabel-<%= subscription.id %>-<%= item_index %>" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header border-bottom-0 pb-0">
-        <h5 class="modal-title fw-bold text-danger" id="cancelSubscriptionModalLabel-<%= subscription.id %>">
+        <h5 class="modal-title fw-bold text-danger" id="cancelSubscriptionModalLabel-<%= subscription.id %>-<%= item_index %>">
           <i class="fa-solid fa-triangle-exclamation me-2"></i>Cancel <%= item_type %>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <%= form_with url: cancel_subscription_path(subscription), method: :patch, local: true do |f| %>
+      <%= form_with url: cancel_item_subscription_path(subscription), method: :patch, local: true do |f| %>
+        <%= f.hidden_field :item_index, value: item_index %>
         <div class="modal-body pt-3">
           <p class="text-muted mb-4">
             Are you sure you want to cancel this <%= lower_item_type %>? The <%= lower_item_type %> will be marked as finished and no future regular invoices will be generated.
           </p>
 
           <div class="mb-4">
-            <label for="effectiveDate-<%= subscription.id %>" class="form-label fw-semibold">Effective Cancellation Date</label>
-            <%= f.date_field :effective_date, class: "form-control", id: "effectiveDate-#{subscription.id}", value: Date.current, required: true %>
+            <label for="effectiveDate-<%= subscription.id %>-<%= item_index %>" class="form-label fw-semibold">Effective Cancellation Date</label>
+            <%= f.date_field :effective_date, class: "form-control", id: "effectiveDate-#{subscription.id}-#{item_index}", value: Date.current, required: true %>
             <div class="form-text text-muted">This date will be recorded as the cancellation date.</div>
           </div>
           
@@ -25,24 +26,24 @@
             <label class="form-label fw-semibold mb-3">Final Invoice Billing Option</label>
             
             <div class="form-check mb-3">
-              <%= f.radio_button :billing_option, "none", class: "form-check-input", id: "billingNone-#{subscription.id}", checked: true %>
-              <label class="form-check-label" for="billingNone-<%= subscription.id %>">
+              <%= f.radio_button :billing_option, "none", class: "form-check-input", id: "billingNone-#{subscription.id}-#{item_index}", checked: true %>
+              <label class="form-check-label" for="billingNone-<%= subscription.id %>-<%= item_index %>">
                 <span class="d-block fw-medium">No Final Invoice</span>
                 <span class="d-block text-muted small">Cancel immediately without generating any additional invoices.</span>
               </label>
             </div>
             
             <div class="form-check mb-3">
-              <%= f.radio_button :billing_option, "prorate", class: "form-check-input", id: "billingProrate-#{subscription.id}" %>
-              <label class="form-check-label" for="billingProrate-<%= subscription.id %>">
+              <%= f.radio_button :billing_option, "prorate", class: "form-check-input", id: "billingProrate-#{subscription.id}-#{item_index}" %>
+              <label class="form-check-label" for="billingProrate-<%= subscription.id %>-<%= item_index %>">
                 <span class="d-block fw-medium">Prorated Amount</span>
                 <span class="d-block text-muted small">Generate a final invoice prorated based on the remaining days in the current cycle.</span>
               </label>
             </div>
             
             <div class="form-check mb-2">
-              <%= f.radio_button :billing_option, "full", class: "form-check-input", id: "billingFull-#{subscription.id}" %>
-              <label class="form-check-label" for="billingFull-<%= subscription.id %>">
+              <%= f.radio_button :billing_option, "full", class: "form-check-input", id: "billingFull-#{subscription.id}-#{item_index}" %>
+              <label class="form-check-label" for="billingFull-<%= subscription.id %>-<%= item_index %>">
                 <span class="d-block fw-medium">Full Amount</span>
                 <span class="d-block text-muted small">Generate a final invoice for the full regular billing cycle amount.</span>
               </label>
@@ -50,8 +51,8 @@
           </div>
           
           <div class="mb-3">
-            <label for="cancellationReason-<%= subscription.id %>" class="form-label fw-semibold">Reason / Note (Optional)</label>
-            <%= f.text_area :reason, class: "form-control", id: "cancellationReason-#{subscription.id}", rows: 2, placeholder: "e.g. Customer requested cancellation" %>
+            <label for="cancellationReason-<%= subscription.id %>-<%= item_index %>" class="form-label fw-semibold">Reason / Note (Optional)</label>
+            <%= f.text_area :reason, class: "form-control", id: "cancellationReason-#{subscription.id}-#{item_index}", rows: 2, placeholder: "e.g. Customer requested cancellation" %>
           </div>
         </div>
         <div class="modal-footer bg-light border-top-0 rounded-bottom">

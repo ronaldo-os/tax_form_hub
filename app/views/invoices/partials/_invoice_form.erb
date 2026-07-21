@@ -425,8 +425,8 @@
                     class: "form-check-input",
                     id: "invoice_save_notes_for_future",
                     checked: ( @save_notes_for_future.present? ||
-                      (@invoice.persisted? && @invoice.save_notes_for_future?) ||
-                      (!@invoice.persisted? && @recipient_note.present?)
+                      @invoice.save_notes_for_future? ||
+                      (!@invoice.persisted? && @recipient_note.present? && @save_notes_for_future.nil?)
                     ) %>
               <%= f.label :save_notes_for_future, "Save notes for future Invoices", class: "form-check-label", for: "invoice_save_notes_for_future", style: "cursor: pointer;" %>
             </div>
@@ -579,10 +579,10 @@
                     class: "form-check-input",
                     id: "invoice_save_footer_notes_for_future",
                     checked: ( @save_footer_notes_for_future.present? ||
-                      (@invoice.persisted? && @invoice.save_footer_notes_for_future?) ||
-                      (!@invoice.persisted? && defined?(@footer_notes) && @footer_notes.present?)
+                      @invoice.save_footer_notes_for_future? ||
+                      (!@invoice.persisted? && defined?(@footer_notes) && @footer_notes.present? && @save_footer_notes_for_future.nil?)
                     ) %>
-              <%= f.label :save_footer_notes_for_future, "Save notes for future Invoices", class: "form-check-label", for: "invoice_save_footer_notes_for_future", style: "cursor: pointer;" %>
+              <%= f.label :save_footer_notes_for_future, "Save footer notes for future Invoices", class: "form-check-label", for: "invoice_save_footer_notes_for_future", style: "cursor: pointer;" %>
             </div>
         </div>
     </div>
