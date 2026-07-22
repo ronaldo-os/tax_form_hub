@@ -2334,6 +2334,9 @@ const initInvoiceForm = () => {
   // Validate tax selection on form submission
   $(document).on("submit", "#invoice-form", function (e) {
     const $form = $(this);
+    if (typeof updateDiscountsJSON === 'function') {
+      updateDiscountsJSON();
+    }
 
     const reenableFormButtons = () => {
       setTimeout(() => {

@@ -29,7 +29,7 @@ class PriceAdjustmentsController < ApplicationController
 
   def set_price_adjustment
     @price_adjustment = current_user.invoices.find(params[:id])
-    unless @price_adjustment.has_recurring_price_adjustments? && !@price_adjustment.has_subscription_line_items?
+    unless @price_adjustment.has_recurring_price_adjustments?
       redirect_to subscriptions_path, alert: 'Not a valid price adjustment.'
     end
   end

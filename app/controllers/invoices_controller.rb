@@ -314,6 +314,13 @@ class InvoicesController < ApplicationController
       clean_params.delete(:payment_terms_json_edit)
     end
 
+    # Handle price adjustments JSON edit
+    if params[:price_adjustments_json_edit].present?
+      parsed_adj = JSON.parse(params[:price_adjustments_json_edit]) rescue []
+      clean_params[:price_adjustments] = parsed_adj if parsed_adj.present? || clean_params[:price_adjustments].blank?
+      clean_params.delete(:price_adjustments_json_edit)
+    end
+
     # Handle new attachments
     if params[:invoice][:attachments].present?
       params[:invoice][:attachments].each do |attachment|
@@ -873,7 +880,7 @@ class InvoicesController < ApplicationController
             JSON.parse(raw.gsub(/=>/, ':'))
           rescue JSON::ParserError
             Rails.logger.warn "Invalid JSON for #{field}: #{raw.inspect}"
-            {}
+            field == 'price_adjustments' ? [] : {}
           end
         when Hash, ActionController::Parameters
           raw.to_unsafe_h

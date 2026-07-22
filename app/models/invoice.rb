@@ -106,7 +106,13 @@ class Invoice < ApplicationRecord
   # Check if this invoice has recurring price adjustments
   def has_recurring_price_adjustments?
     return false if price_adjustments.blank?
-    price_adjustments.any? { |adj| %w[monthly annually yearly].include?(adj['frequency']) }
+    return false unless price_adjustments.is_a?(Array)
+
+    price_adjustments.any? do |adj|
+      next false unless adj.is_a?(Hash)
+      freq = adj['frequency'] || adj[:frequency] || (adj['unit'] == 'monthly_charge' || adj[:unit] == 'monthly_charge' ? 'monthly' : nil)
+      %w[monthly annually yearly].include?(freq.to_s)
+    end
   end
 
   # Check if this invoice has any recurring elements
@@ -126,9 +132,13 @@ class Invoice < ApplicationRecord
 
   # Get recurring price adjustments from this invoice
   def recurring_price_adjustments
-    return [] unless price_adjustments.present?
+    return [] unless price_adjustments.present? && price_adjustments.is_a?(Array)
     
-    price_adjustments.select { |adj| %w[monthly annually yearly].include?(adj['frequency']) }
+    price_adjustments.select do |adj|
+      next false unless adj.is_a?(Hash)
+      freq = adj['frequency'] || adj[:frequency] || (adj['unit'] == 'monthly_charge' || adj[:unit] == 'monthly_charge' ? 'monthly' : nil)
+      %w[monthly annually yearly].include?(freq.to_s)
+    end
   end
 
   # Check if this invoice is a subscription contract (parent invoice)
@@ -148,17 +158,27 @@ class Invoice < ApplicationRecord
     return false if subscription_cancelled?
 
     active_sub = subscription_line_items.any? do |item|
-      extract_subscription_field(item, 'start_date').present?
+      end_d_str = extract_subscription_field(item, 'end_date')
+      end_d = Date.parse(end_d_str.to_s) rescue nil if end_d_str.present?
+      next false if end_d && on_date > end_d
+
+      start_d_str = extract_subscription_field(item, 'start_date')
+      start_d_str.present? || end_d_str.present?
     end
     
     active_discount = recurring_price_adjustments.any? do |adj|
-      adj['charge_start_date'].present? && adj['frequency'].present?
+      end_d_str = adj['charge_end_date'] || adj[:charge_end_date]
+      end_d = Date.parse(end_d_str.to_s) rescue nil if end_d_str.present?
+      next false if end_d && on_date > end_d
+
+      freq = adj['frequency'] || adj[:frequency]
+      freq.present? && %w[monthly annually yearly].include?(freq.to_s)
     end
 
     return false unless (active_sub || active_discount)
     
     total_expected = calculate_total_expected_child_invoices
-    if total_expected
+    if total_expected && total_expected > 1
       return false if recurring_sub_invoices.count >= (total_expected - 1)
     end
     
@@ -251,13 +271,12 @@ class Invoice < ApplicationRecord
         end_d_str = extract_subscription_field(item, 'end_date')
         cycle = extract_subscription_field(item, 'billing_cycle') || 'monthly'
         
-        return nil unless start_d_str.present?
-        return nil unless end_d_str.present?
+        next unless start_d_str.present? && end_d_str.present?
 
-        start_d = Date.parse(start_d_str) rescue nil
-        end_d = Date.parse(end_d_str) rescue nil
+        start_d = Date.parse(start_d_str.to_s) rescue nil
+        end_d = Date.parse(end_d_str.to_s) rescue nil
 
-        return nil unless start_d && end_d
+        next unless start_d && end_d && start_d < end_d
 
         current_d = start_d
         count = 0
@@ -271,21 +290,21 @@ class Invoice < ApplicationRecord
 
     if has_recurring_price_adjustments?
       recurring_price_adjustments.each do |adj|
-        start_d_str = adj['charge_start_date']
-        end_d_str = adj['charge_end_date']
+        start_d_str = adj['charge_start_date'] || adj[:charge_start_date] || issue_date&.to_s
+        end_d_str = adj['charge_end_date'] || adj[:charge_end_date]
         
-        cycle = case adj['frequency']
+        freq = adj['frequency'] || adj[:frequency]
+        cycle = case freq.to_s
                 when 'annually', 'yearly' then 'annual'
                 else 'monthly'
                 end
 
-        return nil unless start_d_str.present?
-        return nil unless end_d_str.present?
+        next unless start_d_str.present? && end_d_str.present?
 
-        start_d = Date.parse(start_d_str) rescue nil
-        end_d = Date.parse(end_d_str) rescue nil
+        start_d = Date.parse(start_d_str.to_s) rescue nil
+        end_d = Date.parse(end_d_str.to_s) rescue nil
 
-        return nil unless start_d && end_d
+        next unless start_d && end_d && start_d < end_d
 
         current_d = start_d
         count = 0
@@ -1015,32 +1034,36 @@ class Invoice < ApplicationRecord
   end
 
   def monthly_charge_dates_valid
-    return unless price_adjustments.present?
+    return unless price_adjustments.present? && price_adjustments.is_a?(Array)
 
     price_adjustments.each_with_index do |adjustment, index|
-      next unless adjustment['type'] == 'monthly_charge'
+      next unless adjustment.is_a?(Hash)
+      freq = adjustment['frequency'] || adjustment[:frequency]
+      adj_type = adjustment['type'] || adjustment[:type]
+      is_recurring = %w[monthly annually yearly].include?(freq.to_s) || adj_type == 'monthly_charge'
+      next unless is_recurring
 
-      start_date = adjustment['charge_start_date']
-      end_date = adjustment['charge_end_date']
+      start_date = adjustment['charge_start_date'] || adjustment[:charge_start_date]
+      end_date = adjustment['charge_end_date'] || adjustment[:charge_end_date]
 
       if start_date.blank?
-        errors.add(:price_adjustments, "at index #{index + 1}: Monthly charge must have a start date")
+        errors.add(:price_adjustments, "at index #{index + 1}: Recurring charge must have a start date")
       end
 
       if end_date.blank?
-        errors.add(:price_adjustments, "at index #{index + 1}: Monthly charge must have an end date")
+        errors.add(:price_adjustments, "at index #{index + 1}: Recurring charge must have an end date")
       end
 
       if start_date.present? && end_date.present?
         begin
-          start_d = Date.parse(start_date)
-          end_d = Date.parse(end_date)
+          start_d = Date.parse(start_date.to_s)
+          end_d = Date.parse(end_date.to_s)
 
           if start_d >= end_d
-            errors.add(:price_adjustments, "at index #{index + 1}: Monthly charge end date must be after start date")
+            errors.add(:price_adjustments, "at index #{index + 1}: Recurring charge end date must be after start date")
           end
         rescue Date::Error
-          errors.add(:price_adjustments, "at index #{index + 1}: Invalid date format for monthly charge")
+          errors.add(:price_adjustments, "at index #{index + 1}: Invalid date format for recurring charge")
         end
       end
     end

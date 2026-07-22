@@ -25,7 +25,7 @@
             type_label = (adj['type'] || adj['unit'] || 'Adjustment').capitalize
             
             amount_val = adj['amount'].to_f
-            unit_val = adj['unit'] == '%' ? '%' : (invoice.currency + ' ')
+            unit_val = adj['unit'] == '%' ? '%' : ((invoice.currency.presence || 'PHP') + ' ')
             amount_display = adj['unit'] == '%' ? "#{amount_val}%" : number_to_currency(amount_val, unit: unit_val)
           %>
           <tr>
@@ -122,7 +122,7 @@
   </div>
   <% subscriptions.each do |invoice| %>
     <% if invoice.subscription_active? %>
-      <%= render "cancel_subscription_modal", subscription: invoice, item_type: "Price Adjustment" %>
+      <%= render "cancel_subscription_modal", subscription: invoice, item_type: "Price Adjustment", item_index: 0 %>
     <% end %>
     <% if invoice.subscription_cancelled? && invoice.cancellation_line_item %>
       <% 

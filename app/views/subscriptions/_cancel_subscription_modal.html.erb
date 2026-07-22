@@ -1,5 +1,6 @@
 <% item_type = local_assigns[:item_type] || "Subscription" %>
 <% lower_item_type = item_type.downcase %>
+<% item_index = local_assigns[:item_index] %>
 <div class="modal fade" id="cancelSubscriptionModal-<%= subscription.id %>-<%= item_index %>" tabindex="-1" aria-labelledby="cancelSubscriptionModalLabel-<%= subscription.id %>-<%= item_index %>" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">

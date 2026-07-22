@@ -35,7 +35,7 @@ class SubscriptionsController < ApplicationController
     @cancelled_subscriptions = @subscriptions.select { |wrapper| wrapper.subscription_cancelled? }
     @finished_subscriptions = @subscriptions.select { |wrapper| wrapper.subscription_finished? }
 
-    @price_adjustments = all_subscription_contracts.reject(&:has_subscription_line_items?)
+    @price_adjustments = all_parent_invoices.select(&:has_recurring_price_adjustments?)
     @active_price_adjustments = @price_adjustments.select { |inv| inv.subscription_active? }
     @cancelled_price_adjustments = @price_adjustments.select { |inv| inv.subscription_cancelled? }
     @finished_price_adjustments = @price_adjustments.select { |inv| inv.subscription_finished? }
