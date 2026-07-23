@@ -2211,6 +2211,9 @@ const initInvoiceForm = () => {
         if (file.type.startsWith('image/')) {
           const objectUrl = URL.createObjectURL(file);
           contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 150px; object-fit: contain;">`;
+        } else if (file.type === 'application/pdf') {
+          const objectUrl = URL.createObjectURL(file);
+          contentHtml = `<embed src="${objectUrl}" type="application/pdf" class="w-100 mb-2" style="height: 150px;" />`;
         } else {
           contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
         }
