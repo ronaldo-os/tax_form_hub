@@ -8,6 +8,12 @@ function initSubmissionTables() {
 
     ['#taxSubmissionsTableActive', '#taxSubmissionsTableArchived'].forEach(function (selector) {
         if ($(selector).length) {
+            if ($.fn.DataTable.isDataTable(selector)) {
+                const table = $(selector).DataTable();
+                submissionTables.push(table);
+                return;
+            }
+
             const table = $(selector).DataTable({
                 responsive: true,
                 paging: true,
@@ -15,7 +21,6 @@ function initSubmissionTables() {
                 info: true,
                 lengthChange: true,
                 pageLength: 10,
-                destroy: true,
                 stateSave: true,
                 language: {
                     search: "_INPUT_",

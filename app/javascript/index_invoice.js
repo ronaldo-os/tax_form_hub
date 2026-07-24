@@ -234,11 +234,11 @@ function initInvoicePage() {
         }
         
         if (isDarkMode) {
-            $overlay.css({ 'background-color': 'rgba(33, 37, 41, 0.95)', 'color': '#f8f9fa' });
+            $overlay.css({ 'background-color': '#212529', 'color': '#f8f9fa' });
             $overlay.find('.pdf-spinner').removeClass('text-primary').addClass('text-light');
             $overlay.find('.pdf-subtext').css('color', '#adb5bd');
         } else {
-            $overlay.css({ 'background-color': 'rgba(255, 255, 255, 0.95)', 'color': '#212529' });
+            $overlay.css({ 'background-color': '#ffffff', 'color': '#212529' });
             $overlay.find('.pdf-spinner').removeClass('text-light').addClass('text-primary');
             $overlay.find('.pdf-subtext').css('color', '#6c757d');
         }
@@ -489,14 +489,49 @@ function initInvoicePage() {
         }
 
         const displayFiles = isMultiple ? files : [files[0]];
+
+        if (!isMultiple && displayFiles.length === 1) {
+            $list.addClass('file-preview-single');
+        } else {
+            $list.addClass('file-preview-grid');
+        }
+
         displayFiles.forEach(file => {
-            const size = Math.round(file.size / 1024);
-            $list.append(`
-                <li class="list-group-item d-flex justify-content-between align-items-center file-list-item">
-                    <span class="file-name-wrapper" title="${file.name}">${file.name}</span>
-                    <span class="badge bg-secondary rounded-pill ms-2 flex-shrink-0">${size} KB</span>
-                </li>
-            `);
+            const isImage = file.type.startsWith('image/');
+            const isPDF = file.type === 'application/pdf';
+            let previewHTML = '';
+
+            if (isImage) {
+                const objectUrl = URL.createObjectURL(file);
+                previewHTML = `
+                    <li class="list-group-item file-preview-item p-0 border-0">
+                        <div class="file-preview-container">
+                            <img src="${objectUrl}" alt="${file.name}" class="file-preview-image" title="${file.name}">
+                            <div class="file-preview-name">${file.name}</div>
+                        </div>
+                    </li>
+                `;
+            } else if (isPDF) {
+                const objectUrl = URL.createObjectURL(file);
+                previewHTML = `
+                    <li class="list-group-item file-preview-item p-0 border-0">
+                        <div class="file-preview-container">
+                            <embed src="${objectUrl}" type="application/pdf" class="w-100 rounded" style="height: 350px; min-height: 40vh;" />
+                            <div class="file-preview-name text-center small p-1 text-truncate" title="${file.name}">${file.name}</div>
+                        </div>
+                    </li>
+                `;
+            } else {
+                const size = Math.round(file.size / 1024);
+                previewHTML = `
+                    <li class="list-group-item d-flex justify-content-between align-items-center file-list-item">
+                        <span class="file-name-wrapper" title="${file.name}">${file.name}</span>
+                        <span class="badge bg-secondary rounded-pill ms-2 flex-shrink-0">${size} KB</span>
+                    </li>
+                `;
+            }
+
+            $list.append(previewHTML);
         });
     });
 }

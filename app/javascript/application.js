@@ -622,11 +622,12 @@ window.addEventListener('pageshow', function (event) {
 
 // Global Teardown for DataTables to fix Turbo Caching issues
 document.addEventListener("turbo:before-cache", function () {
-    if ($.fn.DataTable) {
-        $('.dataTable').each(function () {
-            // Destroy the DataTable, removing the structure, so the cache saves a clean table
-            const dt = $(this).DataTable();
-            if (dt) dt.destroy();
+    if (typeof $ !== 'undefined' && $.fn.DataTable) {
+        $('.dataTable, .submissionsTable, #taxSubmissionsTableActive, #taxSubmissionsTableArchived').each(function () {
+            if ($.fn.DataTable.isDataTable(this)) {
+                const dt = $(this).DataTable();
+                if (dt) dt.destroy();
+            }
         });
     }
 

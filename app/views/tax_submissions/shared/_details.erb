@@ -70,18 +70,21 @@
       <div class="card-header bg-light border-0">
         <h6 class="fw-bold mb-0">Form 2307</h6>
       </div>
-      <div class="card-body d-flex align-items-center justify-content-center">
+      <div class="card-body d-flex flex-column align-items-center justify-content-center">
         <% if @tax_submission.form_2307.attached? %>
+          <span class="fw-semibold text-muted mb-2 text-truncate d-inline-block mw-100 text-center" title="<%= @tax_submission.form_2307.filename.to_s %>" data-bs-toggle="tooltip">
+            <%= @tax_submission.form_2307.filename.to_s %>
+          </span>
           <%= link_to url_for(@tax_submission.form_2307), target: "_blank", class: "d-block w-100 text-center" do %>
             <% if @tax_submission.form_2307.content_type == "application/pdf" %>
-              <div class="p-4 bg-white rounded border d-flex flex-column align-items-center">
-                <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
-                <p class="mt-2 mb-0 small fw-semibold">View PDF</p>
-              </div>
+              <embed src="<%= url_for(@tax_submission.form_2307) %>"
+                    type="application/pdf"
+                    class="w-100 rounded border mb-2"
+                    style="height: 450px;" />
             <% else %>
               <%= image_tag url_for(@tax_submission.form_2307),
                   class: "img-fluid rounded border shadow-sm",
-                  style: "max-height: 250px; object-fit: contain;" %>
+                  style: "max-height: 450px; object-fit: contain;" %>
             <% end %>
           <% end %>
         <% else %>
@@ -101,26 +104,36 @@
         <% if @tax_submission.deposit_slip.attached? %>
           <% if @tax_submission.deposit_slip.count == 1 %>
             <% file = @tax_submission.deposit_slip.first %>
+            <div class="text-center mb-2">
+              <span class="fw-semibold text-muted text-truncate d-inline-block mw-100" title="<%= file.filename.to_s %>" data-bs-toggle="tooltip">
+                <%= file.filename.to_s %>
+              </span>
+            </div>
             <%= link_to url_for(file), target: "_blank", class: "d-block text-center" do %>
               <% if file.content_type == "application/pdf" %>
-                <div class="p-4 bg-white rounded border d-flex flex-column align-items-center">
-                  <i class="bi bi-file-earmark-pdf fs-1 text-danger"></i>
-                  <p class="mt-2 mb-0 small fw-semibold">View PDF</p>
-                </div>
+                <embed src="<%= url_for(file) %>"
+                      type="application/pdf"
+                      class="w-100 rounded border mb-2"
+                      style="height: 450px;" />
               <% else %>
-                <%= image_tag url_for(file), class: "img-fluid rounded border shadow-sm", style: "max-height: 250px; object-fit: contain;" %>
+                <%= image_tag url_for(file), class: "img-fluid rounded border shadow-sm", style: "max-height: 450px; object-fit: contain;" %>
               <% end %>
             <% end %>
           <% else %>
             <div class="row g-3">
               <% @tax_submission.deposit_slip.each do |file| %>
                 <div class="col-6">
+                  <div class="text-center mb-1">
+                    <span class="fw-semibold text-muted text-truncate d-inline-block mw-100 small" title="<%= file.filename.to_s %>" data-bs-toggle="tooltip">
+                      <%= file.filename.to_s %>
+                    </span>
+                  </div>
                   <%= link_to url_for(file), target: "_blank", class: "d-block text-center" do %>
                     <% if file.content_type == "application/pdf" %>
-                      <div class="p-3 bg-white rounded border d-flex flex-column align-items-center">
-                        <i class="bi bi-file-earmark-pdf fs-3 text-danger"></i>
-                        <p class="mt-2 mb-0 small">View PDF</p>
-                      </div>
+                      <embed src="<%= url_for(file) %>"
+                            type="application/pdf"
+                            class="w-100 rounded border mb-2"
+                            style="height: 350px;" />
                     <% else %>
                       <%= image_tag url_for(file), class: "img-fluid rounded border shadow-sm", style: "max-height: 200px; object-fit: contain;" %>
                     <% end %>

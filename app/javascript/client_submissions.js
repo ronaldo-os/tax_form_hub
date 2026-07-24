@@ -8,6 +8,12 @@ function initClientSubmissionsPage() {
     const tables = [];
 
     $('.submissionsTable').each(function () {
+        if ($.fn.DataTable.isDataTable(this)) {
+            const table = $(this).DataTable();
+            tables.push(table);
+            return;
+        }
+
         const table = $(this).DataTable({
             responsive: true,
             paging: true,
@@ -16,7 +22,6 @@ function initClientSubmissionsPage() {
             order: [[5, 'desc']],
             pageLength: 10,
             lengthChange: true,
-            destroy: true,
             stateSave: true,
             initComplete: function () {
                 const api = this.api();
@@ -106,10 +111,13 @@ function initClientSubmissionsPage() {
                         </li>
                     `;
                 } else if (isPDF) {
+                    const objectUrl = URL.createObjectURL(file);
                     previewHTML = `
-                        <li class="list-group-item file-preview-item p-3 border-0 d-flex flex-column align-items-center justify-content-center bg-light rounded">
-                            <i class="bi bi-file-earmark-pdf fs-2 text-danger mb-2"></i>
-                            <span class="file-preview-name text-center small" title="${file.name}">${file.name}</span>
+                        <li class="list-group-item file-preview-item p-0 border-0">
+                            <div class="file-preview-container">
+                                <embed src="${objectUrl}" type="application/pdf" class="w-100 rounded" style="height: 350px; min-height: 40vh;" />
+                                <div class="file-preview-name text-center small p-1 text-truncate" title="${file.name}">${file.name}</div>
+                            </div>
                         </li>
                     `;
                 } else {
@@ -254,6 +262,14 @@ document.addEventListener('theme:changed', function(e) {
         input.style.setProperty('background-color', '');
         input.style.setProperty('color', '');
         input.style.setProperty('border-color', '');
+    });
+});
+
+document.addEventListener("turbo:before-cache", function () {
+    $('.submissionsTable').each(function () {
+        if ($.fn.DataTable.isDataTable(this)) {
+            $(this).DataTable().destroy();
+        }
     });
 });
 

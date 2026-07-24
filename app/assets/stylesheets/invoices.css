@@ -22,8 +22,10 @@
   margin-bottom: 2px;
 }
 
-#invoice-preview .line-item td {
-  border-top: 2px solid var(--border-color);
+#invoice-preview .line-item td,
+#invoice_card .line-item td,
+.invoice-card .line-item td {
+  border-top: 1px solid var(--border-color) !important;
 }
 
 #invoice_card tr {

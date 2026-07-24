@@ -507,10 +507,12 @@
 
 
           <div class="<%= invoice.quote? ? 'col-md-12 mt-4' : 'col-md-6' %>">
-            <div class="mb-3">
-              <h5 class="mb-3 fw-semibold">Message</h5>
-              <p class="mb-1"><%= simple_format(invoice.recipient_note) %></p>
-            </div>
+            <% if invoice.recipient_note.present? %>
+              <div class="mb-3">
+                <h5 class="mb-3 fw-semibold">Message</h5>
+                <p class="mb-1"><%= simple_format(invoice.recipient_note) %></p>
+              </div>
+            <% end %>
 
             <% persisted_attachments = invoice.attachments.select(&:persisted?) %>
             <div id="attachments-section" class="<%= 'd-none' if persisted_attachments.empty? %>">
@@ -561,14 +563,16 @@
               </div>
             </div>
             <div id="modal_new_attachments_preview"></div>
-            <p id="no-attachments-msg" class="text-muted mt-5 <%= 'd-none' if persisted_attachments.any? %>">No attachments uploaded.</p>
+            <p id="no-attachments-msg" class="text-muted mt-0 <%= 'd-none' if persisted_attachments.any? %>">No attachments uploaded.</p>
           </div>
         </div>
 
       <% unless invoice.quote? %>
-      <div class="card-footer bg-transparent">
-        <p><%= simple_format(invoice.footer_notes) %></p>
-      </div>
+        <% if invoice.footer_notes.present? %>
+          <div class="card-footer bg-transparent">
+            <p><%= simple_format(invoice.footer_notes) %></p>
+          </div>
+        <% end %>
       <% end %>
     <% end %>
     </div>

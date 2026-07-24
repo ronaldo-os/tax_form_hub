@@ -44,19 +44,32 @@
 
                 <!-- Form 2307 Modal -->
                 <div class="modal fade" id="form2307Modal-<%= submission.id %>" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-md modal-dialog-scrollable">
+                  <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
                       <div class="modal-header border-0">
                         <h5 class="modal-title">Form 2307</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                       </div>
-                      <div class="modal-body d-flex justify-content-center">
-                        <% if submission.form_2307.content_type.start_with?("image/") %>
-                          <%= image_tag submission.form_2307, class: "img-fluid rounded border", alt: "Form 2307" %>
-                        <% else %>
-                          <%= link_to "View PDF", rails_blob_path(submission.form_2307, disposition: "inline"),
-                                target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
-                        <% end %>
+                      <div class="modal-body">
+                        <div class="d-flex flex-column align-items-center text-center">
+                          <span class="fw-semibold text-muted mb-2 text-truncate d-inline-block mw-100" title="<%= submission.form_2307.filename.to_s %>" data-bs-toggle="tooltip">
+                            <%= submission.form_2307.filename.to_s %>
+                          </span>
+                          <% if submission.form_2307.content_type.start_with?("image/") %>
+                            <%= link_to url_for(submission.form_2307), target: "_blank" do %>
+                              <%= image_tag submission.form_2307, class: "img-fluid rounded border", alt: "Form 2307" %>
+                            <% end %>
+                          <% elsif submission.form_2307.content_type == "application/pdf" %>
+                            <%= link_to url_for(submission.form_2307), target: "_blank", class: "w-100" do %>
+                              <embed src="<%= url_for(submission.form_2307) %>" type="application/pdf" class="w-100 rounded border" style="height: 650px; min-height: 75vh;" />
+                            <% end %>
+                          <% else %>
+                            <div class="border p-3 rounded w-100 mt-1">
+                              <%= link_to "View PDF", rails_blob_path(submission.form_2307, disposition: "inline"),
+                                    target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
+                            </div>
+                          <% end %>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -76,7 +89,7 @@
 
                 <!-- Deposit Slips Modal -->
                 <div class="modal fade" id="depositModal-<%= submission.id %>" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-md modal-dialog-scrollable">
+                  <div class="modal-dialog modal-xl modal-dialog-scrollable">
                     <div class="modal-content">
                       <div class="modal-header border-0">
                         <h5 class="modal-title">Deposit Slips</h5>
@@ -85,18 +98,26 @@
                       <div class="modal-body">
                         <div class="row justify-content-center">
                           <% submission.deposit_slip.each do |file| %>
-                            <div class="col-md-6 mb-3 d-flex justify-content-center">
-                              <% if file.content_type.start_with?("image/") %>
-                                <%= link_to url_for(file), target: "_blank" do %>
-                                  <%= image_tag file, class: "img-fluid rounded border", alt: "Deposit Slip" %>
+                            <div class="<%= submission.deposit_slip.count > 1 ? 'col-md-6' : 'col-12' %> mb-3 d-flex justify-content-center">
+                              <div class="d-flex flex-column align-items-center text-center w-100">
+                                <span class="fw-semibold text-muted mb-2 text-truncate d-inline-block mw-100" title="<%= file.filename.to_s %>" data-bs-toggle="tooltip">
+                                  <%= file.filename.to_s %>
+                                </span>
+                                <% if file.content_type.start_with?("image/") %>
+                                  <%= link_to url_for(file), target: "_blank" do %>
+                                    <%= image_tag file, class: "img-fluid rounded border", alt: "Deposit Slip" %>
+                                  <% end %>
+                                <% elsif file.content_type == "application/pdf" %>
+                                  <%= link_to url_for(file), target: "_blank", class: "w-100" do %>
+                                    <embed src="<%= url_for(file) %>" type="application/pdf" class="w-100 rounded border" style="height: 600px; min-height: 70vh;" />
+                                  <% end %>
+                                <% else %>
+                                  <div class="border p-3 rounded w-100 mt-1">
+                                    <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"),
+                                          target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
+                                  </div>
                                 <% end %>
-                              <% else %>
-                                <div class="d-flex flex-column align-items-center border p-2 rounded text-center">
-                                  <span><%= file.filename.to_s %></span>
-                                  <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"),
-                                        target: "_blank", class: "btn btn-sm btn-outline-secondary mt-2" %>
-                                </div>
-                              <% end %>
+                              </div>
                             </div>
                           <% end %>
                         </div>
