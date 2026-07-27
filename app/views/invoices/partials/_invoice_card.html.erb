@@ -255,8 +255,8 @@
                           <% 
                             base = key.split('.').first
                             label_text = case base
-                                         when 'start_date' then 'From'
-                                         when 'overall_end_date' then 'To'
+                                         when 'start_date' then 'Start Date'
+                                         when 'overall_end_date' then 'Overall End Date'
                                          when 'end_date' then 'End Date'
                                          when 'billing_cycle' then 'Billing Cycle'
                                          else base.humanize
@@ -265,7 +265,9 @@
                           <td class="align-top">
                             <label class="fw-bold small d-block"><%= label_text %></label>
                             <span class="text-muted small">
-                              <% if key.to_s.include?('date') && value.present? %>
+                              <% if key.to_s.include?('billing_cycle') && value.present? %>
+                                <%= value.to_s.capitalize %>
+                              <% elsif key.to_s.include?('date') && value.present? %>
                                 <%= (Date.parse(value.to_s).strftime("%b %d, %Y") rescue value) %>
                               <% else %>
                                 <%= value %>

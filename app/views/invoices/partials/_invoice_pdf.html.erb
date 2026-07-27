@@ -223,8 +223,8 @@
                         <% 
                           base = k.split('.').first
                           label_text = case base
-                                       when 'start_date' then 'From'
-                                       when 'overall_end_date' then 'To'
+                                       when 'start_date' then 'Start Date'
+                                       when 'overall_end_date' then 'Overall End Date'
                                        when 'end_date' then 'End Date'
                                        when 'billing_cycle' then 'Billing Cycle'
                                        else k.gsub('_', ' ').titleize
@@ -232,7 +232,9 @@
                         %>
                         <span class="me-3">
                           <%= label_text %>: 
-                          <% if k.to_s.include?('date') && v.present? %>
+                          <% if k.to_s.include?('billing_cycle') && v.present? %>
+                            <%= v.to_s.capitalize %>
+                          <% elsif k.to_s.include?('date') && v.present? %>
                             <%= (Date.parse(v.to_s).strftime("%b %d, %Y") rescue v) %>
                           <% else %>
                             <%= v %>

@@ -912,17 +912,23 @@ const initInvoiceForm = () => {
         let inputHtml = '';
         const inputName = `invoice[line_items_attributes][${rowIndex}][optional_fields][${field.name}]`;
         const placeholder = field.label ? ` placeholder="${field.label}"` : '';
+        const labelHtml = field.label ? `<label class="form-label small text-muted mb-1 fw-semibold d-block">${field.label}</label>` : '';
 
         if (field.type === "select") {
-          const optionsHtml = field.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+          const optionsHtml = field.options.map(opt => {
+            const displayText = opt.charAt(0).toUpperCase() + opt.slice(1);
+            return `<option value="${opt}">${displayText}</option>`;
+          }).join('');
           inputHtml = `
+          ${labelHtml}
           <select name="${inputName}" class="form-select form-select-sm"${field.disabled ? ' disabled' : ''}>
-            <option value="" disabled selected>${field.label}</option>
+            <option value="" disabled selected>Select ${field.label}</option>
             ${optionsHtml}
           </select>
         `;
         } else if (field.type === "textarea") {
           inputHtml = `
+          ${labelHtml}
           <textarea 
             name="${inputName}" 
             class="form-control form-control-sm"
@@ -931,6 +937,7 @@ const initInvoiceForm = () => {
         `;
         } else if (field.type === "text_only") {
           inputHtml = `
+          ${labelHtml}
           <span class="form-control-plaintext text-end optional-total" 
             data-total-type="${selectedKey}" 
             data-line-index="${rowIndex}">0.00</span>
@@ -941,6 +948,7 @@ const initInvoiceForm = () => {
         `;
         } else if (field.type === "date") {
           inputHtml = `
+          ${labelHtml}
           <input 
             type="date"
             name="${inputName}"
@@ -950,6 +958,7 @@ const initInvoiceForm = () => {
         `;
         } else {
           inputHtml = `
+          ${labelHtml}
           <input 
             type="${field.type}" 
             name="${inputName}" 
@@ -959,7 +968,7 @@ const initInvoiceForm = () => {
         `;
         }
 
-        newRowHtml += `<td>${inputHtml}</td>`;
+        newRowHtml += `<td class="align-top">${inputHtml}</td>`;
       });
 
       const totalCols = 7;
@@ -1052,7 +1061,9 @@ const initInvoiceForm = () => {
             <option value="Currency exchange differences">Currency exchange differences</option>
           </select>
           <div class="frequency-dates mt-2" style="display: none;">
-            <input type="date" class="form-control charge-start-date mb-1" placeholder="Start Date" data-field="charge_start_date">
+            <label class="form-label small text-muted mb-1 fw-semibold d-block">Start Date</label>
+            <input type="date" class="form-control charge-start-date mb-2" placeholder="Start Date" data-field="charge_start_date">
+            <label class="form-label small text-muted mb-1 fw-semibold d-block">End Date</label>
             <input type="date" class="form-control charge-end-date" placeholder="End Date" data-field="charge_end_date">
           </div>
         </td>
@@ -1853,19 +1864,23 @@ const initInvoiceForm = () => {
             fieldsToRender.forEach(field => {
               let inputHtml = "";
               const inputName = `invoice[line_items_attributes][${i}][optional_fields][${groupKey}.${field.name}]`;
+              const labelHtml = field.label ? `<label class="form-label small text-muted mb-1 fw-semibold d-block">${field.label}</label>` : '';
 
               if (field.type === "select") {
-                const optionsHtml = field.options.map(opt =>
-                  `<option value="${opt}" ${opt.toLowerCase() === (field.value || '').toLowerCase() ? "selected" : ""}>${opt}</option>`
-                ).join("");
+                const optionsHtml = field.options.map(opt => {
+                  const displayText = opt.charAt(0).toUpperCase() + opt.slice(1);
+                  return `<option value="${opt}" ${opt.toLowerCase() === (field.value || '').toLowerCase() ? "selected" : ""}>${displayText}</option>`;
+                }).join("");
                 inputHtml = `
+                    ${labelHtml}
                     <select name="${inputName}" class="form-select form-select-sm">
-                      <option value="" disabled ${!field.value ? "selected" : ""}>${field.label}</option>
+                      <option value="" disabled ${!field.value ? "selected" : ""}>Select ${field.label}</option>
                       ${optionsHtml}
                     </select>
                   `;
               } else if (field.type === "date") {
                 inputHtml = `
+                    ${labelHtml}
                     <input 
                       type="date"
                       name="${inputName}"
@@ -1876,11 +1891,13 @@ const initInvoiceForm = () => {
                   `;
               } else if (field.name.toLowerCase().includes("total")) {
                 inputHtml = `
+                    ${labelHtml}
                     <span class="form-control-plaintext text-end optional-total" data-total-type="${groupKey}" data-line-index="${i}">0.00</span>
                     <input type="hidden" name="${inputName}" class="form-control optional-total-input" value="${field.value}">
                   `;
               } else {
                 inputHtml = `
+                    ${labelHtml}
                     <input 
                       type="${field.type}"
                       name="${inputName}"
@@ -1891,7 +1908,7 @@ const initInvoiceForm = () => {
                   `;
               }
 
-              newRowHtml += `<td>${inputHtml}</td>`;
+              newRowHtml += `<td class="align-top">${inputHtml}</td>`;
             });
           }
 
@@ -2081,7 +2098,9 @@ const initInvoiceForm = () => {
                 ${buildReasonOptions(description)}
               </select>
               <div class="frequency-dates mt-2" style="display: ${showDates ? 'block' : 'none'};">
-                <input type="date" class="form-control charge-start-date mb-1" placeholder="Start Date" data-field="charge_start_date" value="${chargeStartDate}">
+                <label class="form-label small text-muted mb-1 fw-semibold d-block">Start Date</label>
+                <input type="date" class="form-control charge-start-date mb-2" placeholder="Start Date" data-field="charge_start_date" value="${chargeStartDate}">
+                <label class="form-label small text-muted mb-1 fw-semibold d-block">End Date</label>
                 <input type="date" class="form-control charge-end-date" placeholder="End Date" data-field="charge_end_date" value="${chargeEndDate}">
               </div>
             </td>
@@ -2453,6 +2472,9 @@ const initInvoiceForm = () => {
       }
       return false;
     }
+
+    // Form is valid and submitting - clear dirty flag so navigation after submit is allowed
+    window.isInvoiceFormDirty = false;
   });
 
   // Invoice Preview Modal

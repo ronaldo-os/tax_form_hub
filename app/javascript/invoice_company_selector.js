@@ -148,6 +148,7 @@ export function initCompanySelector() {
 
     function selectCompany(company) {
         hiddenInput.value = company.id;
+        window.isInvoiceFormDirty = true;
 
         updatePreview(company);
 
@@ -220,6 +221,7 @@ export function initCompanySelector() {
             selectorInterface.classList.remove('d-none');
             hiddenInput.value = '';
             input.value = '';
+            window.isInvoiceFormDirty = true;
             
             // Clear eligible invoices dropdown
             const originalInvoiceSelect = document.getElementById('credit_note_original_invoice_id');
