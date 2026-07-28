@@ -79,6 +79,9 @@ function initCompanyPage() {
             return;
         }
 
+        $submitBtn.prop('disabled', false);
+        $imagePreview.css('border', '');
+
         const reader = new FileReader();
         reader.onload = function (loadEvent) {
             $imagePreview.attr('src', loadEvent.target.result);

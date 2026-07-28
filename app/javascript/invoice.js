@@ -660,10 +660,14 @@ const initInvoiceForm = () => {
 
     if ($select.length) {
       $.each(COUNTRY_OPTIONS, function (i, country) {
-        $select.append($('<option>', {
-          value: country,
-          text: country
-        }));
+        if (!country || !country.trim()) return;
+        const escapedCountry = country.replace(/"/g, '\\"');
+        if ($select.find('option[value="' + escapedCountry + '"]').length === 0) {
+          $select.append($('<option>', {
+            value: country,
+            text: country
+          }));
+        }
       });
     }
 

@@ -42,5 +42,8 @@ module TaxFormHub
     # Add datatables directory to autoload paths for DataTables server-side processing
     config.autoload_paths << Rails.root.join('app/datatables')
     config.eager_load_paths << Rails.root.join('app/datatables')
+
+    # Resolve ActiveStorage attachments to proxy URLs to prevent expiring redirect issues
+    config.active_storage.resolve_model_to_route = :rails_storage_proxy
   end
 end
