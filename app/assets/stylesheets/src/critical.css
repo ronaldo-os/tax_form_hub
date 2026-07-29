@@ -96,17 +96,20 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: none;
 }
 
-.app-sidebar ul li a .app-icon {
+.app-sidebar ul li a .app-icon,
+.app-sidebar ul li .app-icon {
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-width: 60px;
-  padding-left: 10px;
+  min-width: 70px;
+  width: 70px;
+  padding-left: 0;
   height: 70px;
   font-size: 1.5em;
   color: var(--text-sidebar);
   transition: 0.5s;
+  text-align: center;
 }
 
 .app-sidebar ul li a .app-text {

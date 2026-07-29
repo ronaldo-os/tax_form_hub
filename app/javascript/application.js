@@ -475,7 +475,7 @@ function initApplication() {
     const $mobileToggle = $("#mobile_menu_toggle");
     const $sidebar = $(".app-sidebar");
     // Exclude the theme toggle button from the menu list items
-    const $menuListItems = $(".app-menu-list li, .app-bottom li").not("#theme_toggle_btn");
+    const $menuListItems = $(".app-menu-list li").not("#theme_toggle_btn");
 
     // Remove existing handlers to prevent duplicate binding
     $menuToggle.off("click");

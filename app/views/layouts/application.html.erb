@@ -54,7 +54,7 @@
         <li class="app-logo" id="desktop_app_logo">
           <%= link_to root_path, class: "d-flex align-items-center" do %>
             <div class="app-icon text-primary">
-            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <i class="fa-solid fa-cloud-arrow-up fa-fw"></i>
             </div>
             <div class="app-text text-primary">Tax Form Hub</div>
           <% end %>
@@ -64,60 +64,56 @@
         <div class="app-menu-list">
           <li class="<%= 'app-active' if request.path == root_path || request.path.starts_with?('/admin') %>">
             <%= link_to root_path do %>
-              <div class="app-icon"><i class="fa-solid fa-file-invoice-dollar z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-file-invoice-dollar fa-fw z-1"></i></div>
               <div class="app-text">Taxes</div>
             <% end %>
           </li>
 
           <li class="<%= 'app-active' if request.path.starts_with?(invoices_path) %>">
             <%= link_to invoices_path do %>
-              <div class="app-icon"><i class="fa-solid fa-file-invoice z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-file-invoice fa-fw z-1"></i></div>
               <div class="app-text">Invoices</div>
             <% end %>
           </li>
 
           <li class="<%= 'app-active' if request.path.starts_with?(subscriptions_path) rescue false %>">
             <%= link_to subscriptions_path do %>
-              <div class="app-icon"><i class="fa-solid fa-repeat z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-repeat fa-fw z-1"></i></div>
               <div class="app-text">Subscriptions</div>
             <% end %>
           </li>
 
           <li class="<%= 'app-active' if request.path.starts_with?(locations_path) %>">
             <%= link_to locations_path do %>
-              <div class="app-icon"><i class="fa-solid fa-location-dot z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-location-dot fa-fw z-1"></i></div>
               <div class="app-text">Locations</div>
             <% end %>
           </li>
 
-
           <li class="<%= 'app-active' if request.path.starts_with?(networks_path) %>">
             <%= link_to networks_path do %>
-              <div class="app-icon"><i class="fa-solid fa-network-wired z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-network-wired fa-fw z-1"></i></div>
               <div class="app-text">Network</div>
             <% end %>
           </li>
-        </div>
 
-        <!-- Bottom Section -->
-        <div class="app-bottom">
           <li class="<%= 'app-active' if request.path.starts_with?(edit_profile_path) %>">
             <%= link_to edit_profile_path do %>
-              <div class="app-icon"><i class="fa-solid fa-user-gear z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-user-gear fa-fw z-1"></i></div>
               <div class="app-text">User Profile</div>
             <% end %>
           </li>
 
           <li class="<%= 'app-active' if request.path.starts_with?(companies_path) %>">
             <%= link_to companies_path, data: { turbo: false } do %>
-              <div class="app-icon"><i class="fa-solid fa-building z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-building fa-fw z-1"></i></div>
               <div class="app-text">Company Profile</div>
             <% end %>
           </li>
 
           <li id="theme_toggle_btn" style="cursor: pointer;">
             <a>
-              <div class="app-icon"><i class="fa-solid fa-moon z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-moon fa-fw z-1"></i></div>
               <div class="app-text">Dark Mode</div>
             </a>
           </li>
@@ -126,7 +122,7 @@
             <%= link_to destroy_user_session_path,
                         data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to log out?" },
                         id: "logout-btn" do %>
-              <div class="app-icon"><i class="fa-solid fa-right-from-bracket z-1"></i></div>
+              <div class="app-icon"><i class="fa-solid fa-right-from-bracket fa-fw z-1"></i></div>
               <div class="app-text">Log out</div>
             <% end %>
           </li>
