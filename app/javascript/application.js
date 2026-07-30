@@ -16,6 +16,7 @@ function loadPageSpecificModules() {
 
   if (path.includes('/tax_submissions') || path === '/') {
     import(/* webpackChunkName: "client_submissions" */ './client_submissions');
+    import(/* webpackChunkName: "admin_client_submissions" */ './admin_client_submissions');
   }
 
   if (path.includes('/admin')) {
@@ -473,14 +474,18 @@ function initApplication() {
     // Sidenav toggle function 
     const $menuToggle = $("#desktop_menu_toggle");
     const $mobileToggle = $("#mobile_menu_toggle");
+    const $mobileClose = $("#mobile_menu_close");
     const $sidebar = $(".app-sidebar");
+    const $body = $("body");
     // Exclude the theme toggle button from the menu list items
     const $menuListItems = $(".app-menu-list li").not("#theme_toggle_btn");
 
     // Remove existing handlers to prevent duplicate binding
     $menuToggle.off("click");
     $mobileToggle.off("click");
+    $mobileClose.off("click");
     $menuListItems.off("click");
+    $(document).off("keyup.sidebar");
 
     // === Desktop toggle ===
     $menuToggle.on("click", function () {
@@ -492,15 +497,33 @@ function initApplication() {
     $mobileToggle.on("click", function () {
         $mobileToggle.toggleClass("app-active");
         $sidebar.toggleClass("app-active");
+        $body.toggleClass("mobile-menu-open", $sidebar.hasClass("app-active"));
+    });
+
+    // === Mobile close button ===
+    $mobileClose.on("click", function () {
+        $sidebar.removeClass("app-active");
+        $mobileToggle.removeClass("app-active");
+        $body.removeClass("mobile-menu-open");
+    });
+
+    // === Escape key to close mobile sidebar ===
+    $(document).on("keyup.sidebar", function(e) {
+        if (e.key === "Escape" && $sidebar.hasClass("app-active") && window.innerWidth <= 991.98) {
+            $sidebar.removeClass("app-active");
+            $mobileToggle.removeClass("app-active");
+            $body.removeClass("mobile-menu-open");
+        }
     });
 
     $menuListItems.on("click", function () {
         $menuListItems.removeClass("app-active");
         $(this).addClass("app-active");
 
-        if (window.innerWidth <= 768) {
+        if (window.innerWidth <= 991.98) {
             $sidebar.removeClass("app-active");
             $mobileToggle.removeClass("app-active");
+            $body.removeClass("mobile-menu-open");
         }
     });
 

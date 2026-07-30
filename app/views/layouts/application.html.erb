@@ -20,9 +20,8 @@
       <%= raw File.read(Rails.root.join('app/assets/builds/critical.css')) if File.exist?(Rails.root.join('app/assets/builds/critical.css')) %>
     </style>
 
-    <!-- Non-critical CSS loaded asynchronously -->
-    <link rel="preload" href="<%= asset_path('application.css') %>" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="<%= asset_path('application.css') %>"></noscript>
+    <!-- Stylesheets -->
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
 
     <%= yield :stylesheets %>
 
@@ -38,19 +37,31 @@
     </div>
     
     <div class="app-header d-flex align-items-center justify-content-between">
-      <%= link_to root_path, class: "d-flex align-items-center text-decoration-none" do %>
-        <div class="app-icon text-primary">
-          <i class="fa-solid fa-cloud-arrow-up"></i>
+      <div class="d-flex align-items-center gap-3 overflow-hidden">
+        <div class="mobile-app-menu-toggle flex-shrink-0" id="mobile_menu_toggle" role="button" aria-label="Toggle navigation">
+          <i class="fa-solid fa-bars"></i>
         </div>
-        <div class="app-text text-primary ms-2">TAX FORM HUB</div>
-      <% end %>
-
-      <div class="mobile-app-menu-toggle" id="mobile_menu_toggle"></div>
+        <h1 class="mobile-page-title mb-0 fs-5 text-truncate fw-bold">
+          <%= content_for(:page_title) || content_for(:title) || "Tax Form Hub" %>
+        </h1>
+      </div>
     </div>
 
     <div class="app-sidebar">
+      <div class="mobile-sidebar-header position-relative d-flex align-items-center justify-content-center px-3 py-3 border-bottom">
+        <%= link_to root_path, class: "d-flex align-items-center justify-content-center text-decoration-none" do %>
+          <div class="app-icon text-primary fs-3">
+            <i class="fa-solid fa-cloud-arrow-up fa-fw"></i>
+          </div>
+          <div class="app-text text-primary ms-2 fs-5 fw-bold text-uppercase">Tax Form Hub</div>
+        <% end %>
+        <div class="mobile-app-menu-close position-absolute end-0 me-3" id="mobile_menu_close" role="button" aria-label="Close menu">
+          <i class="fa-solid fa-xmark fs-4"></i>
+        </div>
+      </div>
+
       <ul>
-        <!-- App logo -->
+        <!-- App logo for desktop -->
         <li class="app-logo" id="desktop_app_logo">
           <%= link_to root_path, class: "d-flex align-items-center" do %>
             <div class="app-icon text-primary">

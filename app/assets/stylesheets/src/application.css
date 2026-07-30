@@ -1,3 +1,5 @@
+@import "../responsive.css";
+
 :root,
 [data-theme="light"] {
   --main-color: #00aeff;
@@ -509,20 +511,28 @@ input[type="radio"]:checked {
 
 
 /* SIDEBAR  */
-.app-sidebar {
-  top: 0px;
-  position: fixed;
-  width: 80px;
-  height: 100%;
-  background: var(--bg-sidebar);
-  z-index: 100000;
-  transition: 0.5s;
-  padding-left: 10px;
-  overflow: hidden;
+@media (min-width: 992px) {
+  .mobile-sidebar-header {
+    display: none !important;
+  }
 }
 
-.app-sidebar.app-active {
-  width: 300px;
+@media (min-width: 992px) {
+  .app-sidebar {
+    top: 0px;
+    position: fixed;
+    width: 80px;
+    height: 100%;
+    background: var(--bg-sidebar);
+    z-index: 100000;
+    transition: 0.5s;
+    padding-left: 10px;
+    overflow: hidden;
+  }
+
+  .app-sidebar.app-active {
+    width: 300px;
+  }
 }
 
 .app-sidebar ul {
@@ -663,104 +673,41 @@ input[type="radio"]:checked {
   object-fit: cover;
 }
 
-.app-menu-toggle {
-  position: fixed;
-  top: 75px;
-  left: 60px;
-  width: 30px;
-  height: 30px;
-  border-radius: 100px;
-  background: var(--bg-sidebar);
-  z-index: 100001;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: left 0.5s;
-  border: 1px solid var(--border-color);
-}
+@media (min-width: 992px) {
+  .app-menu-toggle {
+    position: fixed;
+    top: 75px;
+    left: 60px;
+    width: 30px;
+    height: 30px;
+    border-radius: 100px;
+    background: var(--bg-sidebar);
+    z-index: 100001;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: left 0.5s;
+    border: 1px solid var(--border-color);
+  }
 
-.app-menu-toggle i {
-  color: var(--active-color);
-  font-size: 15px;
-  transition: transform 0.5s ease;
-}
+  .app-menu-toggle i {
+    color: var(--active-color);
+    font-size: 15px;
+    transition: transform 0.5s ease;
+  }
 
-.app-menu-toggle.app-active {
-  left: 280px;
-}
+  .app-menu-toggle.app-active {
+    left: 280px;
+  }
 
-.app-menu-toggle.app-active i {
-  transform: rotate(180deg);
-}
+  .app-menu-toggle.app-active i {
+    transform: rotate(180deg);
+  }
 
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 15px;
-}
-
-#mobile_menu_toggle {
-  width: 40px;
-  height: 40px;
-  background: #00aeff;
-  border-radius: 6px;
-  cursor: pointer;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  z-index: 100002;
-}
-
-#mobile_menu_toggle::before,
-#mobile_menu_toggle::after {
-  content: "";
-  position: absolute;
-  width: 20px;
-  height: 3px;
-  background: #fff;
-  transition: 0.4s;
-}
-
-#mobile_menu_toggle::before {
-  transform: translateY(-6px);
-  box-shadow: 0 6px 0 #fff;
-}
-
-#mobile_menu_toggle::after {
-  transform: translateY(6px);
-}
-
-#mobile_menu_toggle.app-active::before {
-  transform: rotate(45deg);
-  box-shadow: none;
-}
-
-#mobile_menu_toggle.app-active::after {
-  transform: rotate(-45deg);
-}
-
-.app-header {
-  padding-left: 25px;
-  display: none !important;
-}
-
-.app-header .app-icon {
-  font-size: 2em;
-  margin-right: 15px;
-  color: var(--app-clr, #00aeff);
-}
-
-.app-header .app-text {
-  font-size: 1.2em;
-  font-weight: 500;
-  color: var(--app-clr, #00aeff);
-}
-
-.app-header .app-text {
-  margin-left: 8px;
+  .app-header {
+    display: none !important;
+  }
 }
 
 /* Datatable */
@@ -982,6 +929,7 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
     color: var(--text-main) !important;
     border-color: var(--border-color) !important;
 }
+
 
 [data-theme="dark"] .file-upload-input::file-selector-button:hover {
     background-color: var(--bg-tertiary) !important;

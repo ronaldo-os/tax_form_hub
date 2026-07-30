@@ -1,3 +1,5 @@
+@import "../responsive.css";
+
 /* Critical CSS - Above the fold styles */
 /* Theme variables - MUST be first for proper rendering */
 :root,
@@ -65,17 +67,25 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--bg-body) !important;
 }
 
+@media (min-width: 992px) {
+  .mobile-sidebar-header {
+    display: none !important;
+  }
+}
+
 /* Sidebar - always visible on desktop */
-.app-sidebar {
-  top: 0px;
-  position: fixed;
-  width: 80px;
-  height: 100%;
-  background: var(--bg-sidebar);
-  z-index: 100000;
-  transition: 0.5s;
-  padding-left: 10px;
-  overflow: hidden;
+@media (min-width: 992px) {
+  .app-sidebar {
+    top: 0px;
+    position: fixed;
+    width: 80px;
+    height: 100%;
+    background: var(--bg-sidebar);
+    z-index: 100000;
+    transition: 0.5s;
+    padding-left: 10px;
+    overflow: hidden;
+  }
 }
 
 .app-sidebar ul {
@@ -126,18 +136,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Main content area */
-#main_content_div {
-  padding-bottom: 1px;
-  margin-left: calc(var(--bs-gutter-x, 1.5rem) * 2);
+@media (min-width: 992px) {
+  #main_content_div {
+    padding-bottom: 1px;
+    margin-left: calc(var(--bs-gutter-x, 1.5rem) * 2);
+  }
 }
 
-/* App header */
-.app-header {
-  display: none !important;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 15px;
-  padding-left: 25px;
+/* App header - hidden on desktop */
+@media (min-width: 992px) {
+  .app-header {
+    display: none !important;
+  }
 }
 
 .app-header .app-icon {
@@ -153,21 +163,23 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Menu toggle */
-.app-menu-toggle {
-  position: fixed;
-  top: 75px;
-  left: 60px;
-  width: 30px;
-  height: 30px;
-  border-radius: 100px;
-  background: var(--bg-sidebar);
-  z-index: 100001;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: left 0.5s;
-  border: 1px solid var(--border-color);
+@media (min-width: 992px) {
+  .app-menu-toggle {
+    position: fixed;
+    top: 75px;
+    left: 60px;
+    width: 30px;
+    height: 30px;
+    border-radius: 100px;
+    background: var(--bg-sidebar);
+    z-index: 100001;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: left 0.5s;
+    border: 1px solid var(--border-color);
+  }
 }
 
 /* Basic utility classes */

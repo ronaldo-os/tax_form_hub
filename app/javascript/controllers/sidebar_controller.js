@@ -45,21 +45,23 @@ export default class extends Controller {
     if (!this.hasSidebarTarget) return
 
     const sidebar = this.sidebarTarget
-    const isMobile = window.innerWidth <= 768
+    const isMobile = window.innerWidth <= 991.98
 
     if (isMobile) {
-      // Mobile: only mobile toggle controls it
+      // Mobile/Tablet: only mobile toggle controls it
       sidebar.classList.toggle(this.activeClass, this.isMobileOpen)
       sidebar.setAttribute("aria-hidden", !this.isMobileOpen)
+      document.body.classList.toggle("mobile-menu-open", this.isMobileOpen)
     } else {
       // Desktop: only desktop toggle controls it
       sidebar.classList.toggle(this.activeClass, this.isDesktopOpen)
       sidebar.setAttribute("aria-hidden", !this.isDesktopOpen)
+      document.body.classList.remove("mobile-menu-open")
     }
   }
 
   updateToggleStates() {
-    const isMobile = window.innerWidth <= 768
+    const isMobile = window.innerWidth <= 991.98
 
     if (this.hasDesktopToggleTarget) {
       this.desktopToggleTarget.setAttribute("aria-expanded", this.isDesktopOpen)
@@ -73,11 +75,12 @@ export default class extends Controller {
   }
 
   handleResize() {
-    const isMobile = window.innerWidth <= 768
+    const isMobile = window.innerWidth <= 991.98
 
     // Auto-close mobile sidebar when resizing to desktop
     if (!isMobile && this.isMobileOpen) {
       this.isMobileOpen = false
+      document.body.classList.remove("mobile-menu-open")
       this.updateSidebarState()
     }
 
@@ -96,18 +99,20 @@ export default class extends Controller {
     // Add active class to clicked item
     event.currentTarget.classList.add(this.activeClass)
 
-    // On mobile, close sidebar after selection
-    if (window.innerWidth <= 768 && this.isMobileOpen) {
+    // On mobile/tablet, close sidebar after selection
+    if (window.innerWidth <= 991.98 && this.isMobileOpen) {
       this.isMobileOpen = false
+      document.body.classList.remove("mobile-menu-open")
       this.updateSidebarState()
       this.updateToggleStates()
     }
   }
 
   close() {
-    const isMobile = window.innerWidth <= 768
+    const isMobile = window.innerWidth <= 991.98
     if (isMobile) {
       this.isMobileOpen = false
+      document.body.classList.remove("mobile-menu-open")
     } else {
       this.isDesktopOpen = false
     }
