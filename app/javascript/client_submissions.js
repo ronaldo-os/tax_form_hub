@@ -1,3 +1,12 @@
+function fixEmptyRowColspan(tableApi) {
+    if (!tableApi) return;
+    const $table = $(tableApi.table().node());
+    const totalCols = $table.find('thead tr:first-child th').length || tableApi.columns().count();
+    if (totalCols) {
+        $table.find('tbody td.dataTables_empty').attr('colspan', totalCols);
+    }
+}
+
 function initClientSubmissionsPage() {
     // This script targets the home page where the user can submit documents
     // The path is strictly "/" for now based on previous code, but let's check for home
@@ -22,7 +31,17 @@ function initClientSubmissionsPage() {
             order: [[5, 'desc']],
             pageLength: 10,
             lengthChange: true,
-            stateSave: true,
+            language: {
+                search: "_INPUT_",
+                searchPlaceholder: "Search submissions...",
+                lengthMenu: "_MENU_",
+                info: "Showing _START_-_END_ of _TOTAL_ submissions",
+                infoEmpty: "Showing 0-0 of 0 submissions",
+                paginate: {
+                    previous: '<i class="fa-solid fa-chevron-left"></i>',
+                    next: '<i class="fa-solid fa-chevron-right"></i>'
+                }
+            },
             initComplete: function () {
                 const api = this.api();
                 const $container = $(api.table().container());
@@ -35,7 +54,76 @@ function initClientSubmissionsPage() {
                 $container.find('div.dataTables_filter label').contents().filter(function () {
                     return this.nodeType === 3;
                 }).remove();
+
+                // Setup filter bar container around dataTables_length
+                const $lengthDiv = $container.find('div.dataTables_length');
+                $lengthDiv.addClass('custom-filter-bar d-flex flex-wrap align-items-center gap-2');
+
+                // Find column indices by header text
+                const headers = api.columns().header().toArray();
+                const companyColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('company'));
+                const statusColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('status'));
+
+                // Create Company Filter Select if company column exists
+                if (companyColIdx !== -1 && !$container.find('.custom-company-filter').length) {
+                    const $companySelect = $('<select class="form-select form-select-sm custom-company-filter"><option value="">All Companies</option></select>');
+
+                    const companySet = new Set();
+                    api.column(companyColIdx).data().each(function (d) {
+                        const cleanText = $('<div>').html(d).text().trim();
+                        if (cleanText && cleanText !== 'N/A') {
+                            companySet.add(cleanText);
+                        }
+                    });
+
+                    Array.from(companySet).sort().forEach(function (comp) {
+                        $companySelect.append(`<option value="${comp}">${comp}</option>`);
+                    });
+
+                    $companySelect.on('change', function () {
+                        const val = $(this).val();
+                        if (val) {
+                            api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
+                        } else {
+                            api.column(companyColIdx).search('').draw();
+                        }
+                    });
+
+                    $lengthDiv.append($companySelect);
+                }
+
+                // Create Status Filter Select if status column exists
+                if (statusColIdx !== -1 && !$container.find('.custom-status-filter').length) {
+                    const $statusSelect = $(`
+                        <select class="form-select form-select-sm custom-status-filter">
+                            <option value="">All Statuses</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Processed">Processed</option>
+                            <option value="Reviewed">Reviewed</option>
+                            <option value="Processed & Reviewed">Processed & Reviewed</option>
+                        </select>
+                    `);
+
+                    $statusSelect.on('change', function () {
+                        const val = $(this).val();
+                        if (val) {
+                            api.column(statusColIdx).search($.fn.dataTable.util.escapeRegex(val), true, false).draw();
+                        } else {
+                            api.column(statusColIdx).search('').draw();
+                        }
+                    });
+
+                    $lengthDiv.append($statusSelect);
+                }
+            },
+            drawCallback: function () {
+                const api = this.api();
+                fixEmptyRowColspan(api);
             }
+        });
+
+        $(table.table().node()).on('draw.dt responsive-resize.dt', function () {
+            fixEmptyRowColspan(table);
         });
 
         tables.push(table);
@@ -47,6 +135,10 @@ function initClientSubmissionsPage() {
         sessionStorage.setItem('activeClientSubmissionsTabId', targetId);
         tables.forEach(function (table) {
             table.columns.adjust().responsive.recalc();
+            fixEmptyRowColspan(table);
+            setTimeout(function() {
+                fixEmptyRowColspan(table);
+            }, 50);
         });
     });
 
@@ -86,14 +178,14 @@ function initClientSubmissionsPage() {
             }
 
             const displayFiles = multiple ? files : [files[0]];
-            
+
             // For single file, use full width; for multiple, use grid layout
             if (!multiple && displayFiles.length === 1) {
                 $list.addClass('file-preview-single');
             } else {
                 $list.addClass('file-preview-grid');
             }
-            
+
             displayFiles.forEach(file => {
                 const isImage = file.type.startsWith('image/');
                 const isPDF = file.type === 'application/pdf';
@@ -129,7 +221,7 @@ function initClientSubmissionsPage() {
                         </li>
                     `;
                 }
-                
+
                 $list.append(previewHTML);
             });
         });
@@ -209,15 +301,15 @@ function initClientSubmissionsPage() {
     // Handle resubmission flow: pre-fill company and invoice, then open modal
     const prefillCompanyId = $("#prefill_company_id").val();
     const prefillInvoiceId = $("#prefill_invoice_id").val();
-    
+
     if (prefillCompanyId && prefillInvoiceId) {
         // Set the company select value
         $("#company_select").val(prefillCompanyId).trigger("change");
-        
+
         // Wait for invoices to load, then set the invoice value
-        setTimeout(function() {
+        setTimeout(function () {
             $("#invoice_select").val(prefillInvoiceId);
-            
+
             // Open the modal
             const modalEl = document.getElementById("submitDocsModal");
             if (modalEl) {
@@ -249,7 +341,7 @@ function initClientSubmissionsPage() {
 }
 
 // Listen for theme changes and update modal file inputs
-document.addEventListener('theme:changed', function(e) {
+document.addEventListener('theme:changed', function (e) {
     // Update file inputs in submitDocsModal
     const modalFileInputs = document.querySelectorAll('#submitDocsModal .file-upload-input, #submitDocsModal input[type="file"]');
     modalFileInputs.forEach(input => {
@@ -257,7 +349,7 @@ document.addEventListener('theme:changed', function(e) {
         const className = input.className;
         input.className = '';
         input.className = className;
-        
+
         // Force CSS variable updates
         input.style.setProperty('background-color', '');
         input.style.setProperty('color', '');

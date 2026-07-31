@@ -2,7 +2,7 @@ class LocationsController < ApplicationController
   before_action :set_location, only: %i[update destroy]
 
   def index
-    @locations = current_user.locations.includes(:company)
+    @locations = current_user.locations
   end
 
   def new
@@ -14,10 +14,10 @@ class LocationsController < ApplicationController
 
     respond_to do |format|
       if @location.save
-        format.html { redirect_to locations_path, status: :see_other, notice: "Location was successfully created." }
-        format.json { render :index, status: :created, location: @location }
+        format.html { redirect_to locations_path, notice: "Location was successfully created." }
+        format.json { render json: @location, status: :created }
       else
-        format.html { render :new, status: :unprocessable_entity }
+        format.html { redirect_to locations_path, alert: @location.errors.full_messages.to_sentence }
         format.json { render json: @location.errors, status: :unprocessable_entity }
       end
     end
@@ -31,14 +31,12 @@ class LocationsController < ApplicationController
   end
 
   def update
-    @location = current_user.locations.find(params[:id])
-
     respond_to do |format|
       if @location.update(location_params)
-        format.html { redirect_to locations_path, status: :see_other, notice: "Location was successfully updated." }
-        format.json { render :index, status: :ok, location: @location }
+        format.html { redirect_to locations_path, notice: "Location was successfully updated." }
+        format.json { render json: @location, status: :ok }
       else
-        format.html { render :edit, status: :unprocessable_entity }
+        format.html { redirect_to locations_path, alert: @location.errors.full_messages.to_sentence }
         format.json { render json: @location.errors, status: :unprocessable_entity }
       end
     end

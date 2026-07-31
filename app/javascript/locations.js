@@ -1,3 +1,14 @@
+function fixEmptyRowColspan(api) {
+    const table = api.table().node();
+    const $emptyCell = $(table).find('td.dataTables_empty');
+    if ($emptyCell.length) {
+        const totalCols = $(table).find('thead tr:first-child th').length;
+        if (totalCols > 0) {
+            $emptyCell.attr('colspan', totalCols);
+        }
+    }
+}
+
 function initLocationsPage() {
     if (!window.location.pathname.includes("/locations")) return;
 
@@ -5,6 +16,17 @@ function initLocationsPage() {
         responsive: true,
         autoWidth: false,
         destroy: true,
+        language: {
+            search: "_INPUT_",
+            searchPlaceholder: "Search locations...",
+            lengthMenu: "_MENU_",
+            info: "Showing _START_-_END_ of _TOTAL_ locations",
+            infoEmpty: "Showing 0-0 of 0 locations",
+            paginate: {
+                previous: '<i class="fa-solid fa-chevron-left"></i>',
+                next: '<i class="fa-solid fa-chevron-right"></i>'
+            }
+        },
         initComplete: function () {
             const api = this.api();
             const $container = $(api.table().container());
@@ -17,7 +39,81 @@ function initLocationsPage() {
             $container.find('div.dataTables_filter label').contents().filter(function () {
                 return this.nodeType === 3;
             }).remove();
+
+            // Setup filter bar container around dataTables_length
+            const $lengthDiv = $container.find('div.dataTables_length');
+            $lengthDiv.addClass('custom-filter-bar d-flex flex-wrap align-items-center gap-2');
+
+            // Find column indices by header text
+            const headers = api.columns().header().toArray();
+            const typeColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('type'));
+            const companyColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('company'));
+
+            // Create Type Filter Select if Type column exists
+            if (typeColIdx !== -1 && !$container.find('.custom-type-filter').length) {
+                const $typeSelect = $('<select class="form-select form-select-sm custom-type-filter"><option value="">All Types</option></select>');
+
+                const typeSet = new Set();
+                api.column(typeColIdx).data().each(function (d) {
+                    const cleanText = $('<div>').html(d).text().trim();
+                    if (cleanText && cleanText !== 'N/A') {
+                        typeSet.add(cleanText);
+                    }
+                });
+
+                Array.from(typeSet).sort().forEach(function (t) {
+                    $typeSelect.append(`<option value="${t}">${t}</option>`);
+                });
+
+                $typeSelect.on('change', function () {
+                    const val = $(this).val();
+                    if (val) {
+                        api.column(typeColIdx).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
+                    } else {
+                        api.column(typeColIdx).search('').draw();
+                    }
+                });
+
+                $lengthDiv.append($typeSelect);
+            }
+
+            // Create Company Filter Select if Company column exists
+            if (companyColIdx !== -1 && !$container.find('.custom-company-filter').length) {
+                const $companySelect = $('<select class="form-select form-select-sm custom-company-filter"><option value="">All Companies</option></select>');
+
+                const companySet = new Set();
+                api.column(companyColIdx).data().each(function (d) {
+                    const cleanText = $('<div>').html(d).text().trim();
+                    if (cleanText && cleanText !== 'N/A') {
+                        companySet.add(cleanText);
+                    }
+                });
+
+                Array.from(companySet).sort().forEach(function (comp) {
+                    $companySelect.append(`<option value="${comp}">${comp}</option>`);
+                });
+
+                $companySelect.on('change', function () {
+                    const val = $(this).val();
+                    if (val) {
+                        api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
+                    } else {
+                        api.column(companyColIdx).search('').draw();
+                    }
+                });
+
+                $lengthDiv.append($companySelect);
+            }
+        },
+        drawCallback: function () {
+            const api = this.api();
+            fixEmptyRowColspan(api);
         }
+    });
+
+    // Fix empty row colspan on draw and resize
+    $table.on('draw.dt responsive-resize.dt', function () {
+        fixEmptyRowColspan($table);
     });
 
     const $form = $('#locationModal form');

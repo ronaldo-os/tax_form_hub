@@ -1,3 +1,12 @@
+function fixEmptyRowColspan(tableApi) {
+    if (!tableApi) return;
+    const $table = $(tableApi.table().node());
+    const totalCols = $table.find('thead tr:first-child th').length || tableApi.columns().count();
+    if (totalCols) {
+        $table.find('tbody td.dataTables_empty').attr('colspan', totalCols);
+    }
+}
+
 function initSubmissionTables() {
     // Check if we are on the admin or user submissions page
     if (!window.location.pathname.match(/(\/admin\/tax_submissions|\/tax_submissions)/)) {
@@ -25,7 +34,13 @@ function initSubmissionTables() {
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search submissions...",
-                    lengthMenu: "Show _MENU_ entries",
+                    lengthMenu: "_MENU_",
+                    info: "Showing _START_-_END_ of _TOTAL_ submissions",
+                    infoEmpty: "Showing 0-0 of 0 submissions",
+                    paginate: {
+                        previous: '<i class="fa-solid fa-chevron-left"></i>',
+                        next: '<i class="fa-solid fa-chevron-right"></i>'
+                    }
                 },
                 initComplete: function () {
                     const api = this.api();
@@ -39,7 +54,76 @@ function initSubmissionTables() {
                     $container.find('div.dataTables_filter label').contents().filter(function () {
                         return this.nodeType === 3;
                     }).remove();
+
+                    // Setup filter bar container around dataTables_length
+                    const $lengthDiv = $container.find('div.dataTables_length');
+                    $lengthDiv.addClass('custom-filter-bar d-flex flex-wrap align-items-center gap-2');
+
+                    // Find column indices by header text
+                    const headers = api.columns().header().toArray();
+                    const companyColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('company'));
+                    const statusColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('status'));
+
+                    // Create Company Filter Select if company column exists
+                    if (companyColIdx !== -1 && !$container.find('.custom-company-filter').length) {
+                        const $companySelect = $('<select class="form-select form-select-sm custom-company-filter"><option value="">All Companies</option></select>');
+
+                        const companySet = new Set();
+                        api.column(companyColIdx).data().each(function (d) {
+                            const cleanText = $('<div>').html(d).text().trim();
+                            if (cleanText && cleanText !== 'N/A') {
+                                companySet.add(cleanText);
+                            }
+                        });
+
+                        Array.from(companySet).sort().forEach(function (comp) {
+                            $companySelect.append(`<option value="${comp}">${comp}</option>`);
+                        });
+
+                        $companySelect.on('change', function () {
+                            const val = $(this).val();
+                            if (val) {
+                                api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
+                            } else {
+                                api.column(companyColIdx).search('').draw();
+                            }
+                        });
+
+                        $lengthDiv.append($companySelect);
+                    }
+
+                    // Create Status Filter Select if status column exists
+                    if (statusColIdx !== -1 && !$container.find('.custom-status-filter').length) {
+                        const $statusSelect = $(`
+                            <select class="form-select form-select-sm custom-status-filter">
+                                <option value="">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Processed">Processed</option>
+                                <option value="Reviewed">Reviewed</option>
+                                <option value="Processed & Reviewed">Processed & Reviewed</option>
+                            </select>
+                        `);
+
+                        $statusSelect.on('change', function () {
+                            const val = $(this).val();
+                            if (val) {
+                                api.column(statusColIdx).search($.fn.dataTable.util.escapeRegex(val), true, false).draw();
+                            } else {
+                                api.column(statusColIdx).search('').draw();
+                            }
+                        });
+
+                        $lengthDiv.append($statusSelect);
+                    }
+                },
+                drawCallback: function () {
+                    const api = this.api();
+                    fixEmptyRowColspan(api);
                 }
+            });
+
+            $(table.table().node()).on('draw.dt responsive-resize.dt', function () {
+                fixEmptyRowColspan(table);
             });
 
             submissionTables.push(table);
@@ -51,6 +135,10 @@ function initSubmissionTables() {
         sessionStorage.setItem('activeIncomingSubmissionsTab', $(e.target).attr('id'));
         submissionTables.forEach(function (table) {
             table.columns.adjust().responsive.recalc();
+            fixEmptyRowColspan(table);
+            setTimeout(function() {
+                fixEmptyRowColspan(table);
+            }, 50);
         });
     });
 

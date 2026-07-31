@@ -1,3 +1,408 @@
+@media (max-width: 991.98px) {
+  .custom_nav_tabs {
+    display: flex;
+    width: 100%;
+  }
+
+  .custom_nav_tabs .nav-item {
+    flex: 1 1 0%;
+    text-align: center;
+  }
+
+  .custom_nav_tabs .nav-link {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Full screen width container on mobile - TAX SUBMISSIONS & LOCATIONS PAGES ONLY */
+  .tax-submissions-page,
+  .tax-submissions-page.container,
+  .tax-submissions-page .container,
+  .locations-page,
+  .locations-page.container,
+  .locations-page .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .tax-submissions-page .row,
+  .locations-page .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .tax-submissions-page > .d-flex:not(.custom_nav_tabs),
+  .locations-page > .d-flex:not(.custom_nav_tabs) {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Remove card styling on mobile - TAX SUBMISSIONS & LOCATIONS PAGES ONLY */
+  .tax-submissions-page .card,
+  .locations-page .card {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  .tax-submissions-page .card-body,
+  .locations-page .card-body {
+    padding: 0 !important;
+  }
+
+  /* DataTables wrapper strictly confined to screen width */
+  .tax-submissions-page div.dataTables_wrapper,
+  .locations-page div.dataTables_wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .tax-submissions-page div.dataTables_wrapper div.dataTables_filter,
+  .tax-submissions-page div.dataTables_wrapper div.dataTables_length,
+  .tax-submissions-page div.dataTables_wrapper div.dataTables_info,
+  .tax-submissions-page div.dataTables_wrapper div.dataTables_paginate,
+  .locations-page div.dataTables_wrapper div.dataTables_filter,
+  .locations-page div.dataTables_wrapper div.dataTables_length,
+  .locations-page div.dataTables_wrapper div.dataTables_info,
+  .locations-page div.dataTables_wrapper div.dataTables_paginate {
+    padding-left: 0;
+    padding-right: 0;
+    box-sizing: border-box !important;
+  }
+
+  /* Remove col-sm-12 padding on the datatable container */
+  .tax-submissions-page div.dataTables_wrapper .col-sm-12,
+  .locations-page div.dataTables_wrapper .col-sm-12 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* Isolated horizontal scroll box ONLY for middle table row */
+  .tax-submissions-page div.dataTables_wrapper > .row:nth-child(2),
+  .tax-submissions-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child),
+  .locations-page div.dataTables_wrapper > .row:nth-child(2),
+  .locations-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child) {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .tax-submissions-page table.dataTable,
+  .locations-page table.dataTable {
+    display: table !important;
+    width: 100% !important;
+    max-width: none !important;
+    border-radius: 5px !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    border: 1px solid var(--border-color) !important;
+    overflow: hidden !important;
+  }
+
+  .tax-submissions-page table.dataTable thead th:first-child,
+  .locations-page table.dataTable thead th:first-child {
+    border-top-left-radius: 5px !important;
+  }
+
+  .tax-submissions-page table.dataTable thead th:last-child,
+  .locations-page table.dataTable thead th:last-child {
+    border-top-right-radius: 5px !important;
+  }
+
+  .tax-submissions-page table.dataTable tbody tr:last-child td:first-child,
+  .locations-page table.dataTable tbody tr:last-child td:first-child {
+    border-bottom-left-radius: 5px !important;
+  }
+
+  .tax-submissions-page table.dataTable tbody tr:last-child td:last-child,
+  .locations-page table.dataTable tbody tr:last-child td:last-child {
+    border-bottom-right-radius: 5px !important;
+  }
+
+  .tax-submissions-page table.dataTable th,
+  .tax-submissions-page table.dataTable td,
+  .tax-submissions-page .table th,
+  .tax-submissions-page .table td,
+  .tax-submissions-page table.dataTable th.dtr-hidden,
+  .tax-submissions-page table.dataTable td.dtr-hidden,
+  .locations-page table.dataTable th,
+  .locations-page table.dataTable td,
+  .locations-page .table th,
+  .locations-page .table td,
+  .locations-page table.dataTable th.dtr-hidden,
+  .locations-page table.dataTable td.dtr-hidden {
+    display: table-cell !important;
+    white-space: nowrap !important;
+  }
+
+  .tax-submissions-page table.dataTable td.dtr-control::before,
+  .tax-submissions-page table.dataTable th.dtr-control::before,
+  .locations-page table.dataTable td.dtr-control::before,
+  .locations-page table.dataTable th.dtr-control::before {
+    display: none !important;
+  }
+
+  /* Tax Submissions & Locations Pages DataTables Formatting (Mobile & Tablets Only) */
+  .tax-submissions-page .dataTables_wrapper,
+  .locations-page .dataTables_wrapper {
+    font-family: inherit;
+    color: var(--text-main);
+  }
+
+  .tax-submissions-page .dataTables_wrapper > .row:first-child,
+  .locations-page .dataTables_wrapper > .row:first-child {
+    display: flex !important;
+    flex-direction: column-reverse !important;
+    gap: 12px !important;
+    margin-bottom: 16px !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .tax-submissions-page .dataTables_wrapper > .row:first-child > div,
+  .locations-page .dataTables_wrapper > .row:first-child > div {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 0 0 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .tax-submissions-page div.dataTables_filter,
+  .locations-page div.dataTables_filter {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    float: none !important;
+  }
+
+  .tax-submissions-page div.dataTables_filter label,
+  .locations-page div.dataTables_filter label {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    display: block !important;
+  }
+
+  /* Search input with theme variables */
+  .tax-submissions-page div.dataTables_filter input,
+  .locations-page div.dataTables_filter input {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    border-radius: 12px !important;
+    padding: 10px 16px 10px 42px !important;
+    border: 1px solid var(--border-color) !important;
+    background-color: var(--input-bg) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: 14px center !important;
+    background-size: 16px 16px !important;
+    font-size: 0.925rem !important;
+    color: var(--input-text) !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transition: all 0.2s ease;
+    box-sizing: border-box !important;
+  }
+
+  .tax-submissions-page div.dataTables_filter input:focus,
+  .locations-page div.dataTables_filter input:focus {
+    border-color: var(--main-color) !important;
+    background-color: var(--input-bg) !important;
+    box-shadow: 0 0 0 3px rgba(0, 174, 255, 0.15) !important;
+  }
+
+  /* Styled per-page, company, and type dropdowns in a single flex row */
+  .tax-submissions-page div.dataTables_length,
+  .locations-page div.dataTables_length {
+    margin: 0 !important;
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 8px !important;
+    float: none !important;
+  }
+
+  .tax-submissions-page div.dataTables_length select,
+  .tax-submissions-page .custom-company-filter,
+  .tax-submissions-page .custom-status-filter,
+  .locations-page div.dataTables_length select,
+  .locations-page .custom-company-filter,
+  .locations-page .custom-type-filter {
+    border-radius: 8px !important;
+    border: 1px solid var(--border-color) !important;
+    background-color: var(--input-bg) !important;
+    padding: 6px 28px 6px 12px !important;
+    font-size: 0.875rem !important;
+    color: var(--input-text) !important;
+    font-weight: 500 !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    height: 38px !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    white-space: nowrap !important;
+  }
+
+  /* Table Header & Cells with theme variables */
+  .tax-submissions-page table.dataTable thead th,
+  .locations-page table.dataTable thead th {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-muted) !important;
+    font-size: 0.825rem !important;
+    font-weight: 600 !important;
+    text-transform: capitalize !important;
+    letter-spacing: 0.02em !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 12px 16px !important;
+  }
+
+  .tax-submissions-page table.dataTable tbody td,
+  .locations-page table.dataTable tbody td {
+    padding: 14px 16px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    color: var(--text-main) !important;
+    background-color: var(--card-bg) !important;
+    font-size: 0.9rem !important;
+    vertical-align: middle !important;
+  }
+
+  .tax-submissions-page table.dataTable tbody tr:hover td,
+  .locations-page table.dataTable tbody tr:hover td {
+    background-color: var(--bg-secondary) !important;
+  }
+
+  .tax-submissions-page table.dataTable tbody td.dataTables_empty,
+  .locations-page table.dataTable tbody td.dataTables_empty {
+    text-align: center !important;
+    padding: 32px 16px !important;
+    color: var(--text-muted) !important;
+    font-weight: 500 !important;
+    width: 100% !important;
+  }
+
+  /* Centered Info & Pagination controls with theme variables */
+  .tax-submissions-page div.dataTables_wrapper > .row:last-child,
+  .locations-page div.dataTables_wrapper > .row:last-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 24px;
+    margin-bottom: 16px;
+    padding: 0;
+  }
+
+  .tax-submissions-page div.dataTables_info,
+  .locations-page div.dataTables_info {
+    text-align: center !important;
+    color: var(--text-muted) !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .tax-submissions-page div.dataTables_paginate,
+  .locations-page div.dataTables_paginate {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 0 !important;
+    width: 100% !important;
+    float: none !important;
+    text-align: center !important;
+  }
+
+  .tax-submissions-page div.dataTables_paginate .pagination,
+  .locations-page div.dataTables_paginate .pagination {
+    display: flex !important;
+    gap: 6px !important;
+    margin: 0 !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .tax-submissions-page div.dataTables_paginate .page-item .page-link,
+  .locations-page div.dataTables_paginate .page-item .page-link {
+    border: none !important;
+    background: var(--bg-tertiary) !important;
+    color: var(--text-main) !important;
+    font-weight: 500 !important;
+    font-size: 0.875rem !important;
+    min-width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 10px !important;
+    transition: all 0.2s ease;
+    box-shadow: none !important;
+  }
+
+  .tax-submissions-page div.dataTables_paginate .page-item:hover .page-link,
+  .locations-page div.dataTables_paginate .page-item:hover .page-link {
+    background-color: var(--bg-secondary) !important;
+    color: var(--text-main) !important;
+  }
+
+  .tax-submissions-page div.dataTables_paginate .page-item.active .page-link,
+  .locations-page div.dataTables_paginate .page-item.active .page-link {
+    background-color: var(--main-color) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 6px rgba(0, 174, 255, 0.3) !important;
+  }
+
+  .tax-submissions-page div.dataTables_paginate .page-item.disabled .page-link,
+  .locations-page div.dataTables_paginate .page-item.disabled .page-link {
+    color: var(--text-muted) !important;
+    background: var(--bg-secondary) !important;
+    cursor: not-allowed !important;
+    opacity: 0.5;
+  }
+}
+
+/* Desktop layout overrides (leave desktop view completely original) */
+@media (min-width: 992px) {
+  .custom-company-filter,
+  .custom-status-filter,
+  .custom-type-filter {
+    display: none !important;
+  }
+}
+
 @media (max-width: 767.98px) {
   #action_buttons_container {
     position: relative;
@@ -22,7 +427,9 @@
 }
 
 @media (max-width: 991.98px) {
-  #desktop_menu_toggle, #desktop_app_logo {
+
+  #desktop_menu_toggle,
+  #desktop_app_logo {
     display: none !important;
   }
 
@@ -96,7 +503,8 @@
     letter-spacing: -0.01em;
   }
 
-  .app-logo, .app-menu-list {
+  .app-logo,
+  .app-menu-list {
     padding-left: 0;
     margin-top: 0;
   }
@@ -178,7 +586,13 @@
     touch-action: none;
   }
 
-  .container, .container-fluid, .container-lg, .container-md, .container-sm, .container-xl, .container-xxl {
+  .container,
+  .container-fluid,
+  .container-lg,
+  .container-md,
+  .container-sm,
+  .container-xl,
+  .container-xxl {
     padding-left: calc(var(--bs-gutter-x) * .5);
   }
 
