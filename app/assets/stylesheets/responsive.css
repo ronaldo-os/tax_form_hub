@@ -645,3 +645,138 @@
     border-radius: 0.2rem;
   }
 }
+
+/* Auth Pages Mobile & Tablet Overrides (Phones & Tablets < 992px ONLY) */
+@media (max-width: 991.98px) {
+  .auth-page-wrapper {
+    min-height: 100vh;
+    min-height: 100dvh;
+    width: 100%;
+    background-color: #ffffff !important;
+    color: var(--text-main);
+    box-sizing: border-box;
+    padding: 1.5rem 1rem !important;
+  }
+
+  .auth-page-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto;
+    box-sizing: border-box;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .auth-card,
+  .auth-page-container .card,
+  .auth-page-wrapper .card,
+  [data-theme="dark"] .auth-card,
+  [data-theme="dark"] .auth-page-container .card,
+  [data-theme="light"] .auth-card,
+  [data-theme="light"] .auth-page-container .card {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  .auth-card .card-body,
+  .auth-page-container .card-body,
+  .auth-page-wrapper .card-body {
+    padding: 0 !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+  }
+
+  /* Touch friendly inputs and buttons for mobile & tablets */
+  .auth-page-container .form-control {
+    background-color: var(--input-bg);
+    color: var(--input-text);
+    border-color: var(--border-color);
+    min-height: 48px;
+    height: 48px;
+    border-radius: 10px !important;
+  }
+
+  .auth-page-container .form-control:focus {
+    border-color: var(--main-color);
+    box-shadow: 0 0 0 3px rgba(0, 174, 255, 0.18);
+    background-color: var(--input-bg);
+    color: var(--input-text);
+  }
+
+  /* Input group matching for password input and toggle eye icon span */
+  .auth-page-container .input-group {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .auth-page-container .input-group .form-control {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 10px !important;
+    border-bottom-left-radius: 10px !important;
+  }
+
+  .auth-page-container .input-group-text {
+    min-height: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 1rem;
+    border-color: var(--border-color);
+    color: var(--text-muted);
+    border-top-right-radius: 10px !important;
+    border-bottom-right-radius: 10px !important;
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    background-color: transparent !important;
+    border-left: 0 !important;
+  }
+
+  .auth-page-container .input-group:focus-within .form-control,
+  .auth-page-container .input-group:focus-within .input-group-text {
+    border-color: var(--main-color);
+  }
+
+  .auth-page-container .btn-primary {
+    min-height: 48px;
+    border-radius: 10px !important;
+    background-color: var(--main-color);
+    border-color: var(--main-color);
+  }
+
+  .auth-page-container .btn-primary:hover,
+  .auth-page-container .btn-primary:focus {
+    background-color: var(--active-color);
+    border-color: var(--active-color);
+  }
+}
+
+@media (max-width: 576px) {
+  .auth-page-wrapper {
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+  }
+
+  .auth-page-container h2 {
+    font-size: 1.5rem !important;
+  }
+}
+
+@media (max-height: 650px) {
+  .auth-page-wrapper {
+    align-items: flex-start !important;
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+}
