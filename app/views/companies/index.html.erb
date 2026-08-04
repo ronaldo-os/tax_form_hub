@@ -6,259 +6,264 @@
   <meta name="turbo-cache-control" content="no-cache">
 <% end %>
 
-<div class="container py-2 py-md-5">
-  <div class="d-flex justify-content-end align-items-end mb-3">
-      <%= link_to "View As Visitor", company_path(@company), class: "btn btn-primary" %>
+<div class="companies-page container py-2 py-md-4">
+  <div class="d-flex justify-content-end align-items-center mb-4">
+    <%= link_to company_path(@company), class: "btn btn-outline-primary btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center gap-2 fw-semibold" do %>
+      <i class="fa-solid fa-eye"></i> View As Visitor
+    <% end %>
   </div>
-  
 
-  <div class="row mt-4">
-    <div class="col-md-3">
-      <div class="card shadow-sm rounded-3 border-0 mob-mb-4">
-        <div class="card-body p-4">
+  <%= form_with(model: @company, local: true, html: { multipart: true, id: "company-form", autocomplete: "off", data: { turbo: false } }) do |f| %>            
+    <div class="row g-4">
+      <div class="col-lg-4 col-xl-3">
+        <div class="card shadow-sm rounded-4 border-0 mb-4 mob-mb-4">
+          <div class="card-body p-4">
+              <!-- Profile Image -->
+              <div class="mb-4 text-center">
+                <div id="image-preview-wrapper" 
+                    class="position-relative d-inline-block"
+                    style="cursor: pointer;">
 
-          <%= form_with(model: @company, local: true, html: { multipart: true, id: "company-form", autocomplete: "off", data: { turbo: false } }) do |f| %>            
-            <!-- Profile Image -->
-            <div class="mb-5 text-center">
-              <div id="image-preview-wrapper" 
-                  class="position-relative d-inline-block"
-                  style="cursor: pointer;">
+                  <% company_image_url = (@company.profile_image.attached? && @company.profile_image.attachment&.persisted?) ? url_for(@company.profile_image) : asset_path("user_avatar_default.png") %>
+                  <%= image_tag(
+                    company_image_url,
+                    id: "image-preview",
+                    data: { default_src: company_image_url },
+                    class: "rounded-circle shadow-sm border border-3 border-white",
+                    style: "width: 140px; height: 140px; object-fit: cover;",
+                    loading: "lazy"
+                  ) %>
 
-                <% company_image_url = (@company.profile_image.attached? && @company.profile_image.attachment&.persisted?) ? url_for(@company.profile_image) : asset_path("user_avatar_default.png") %>
-                <%= image_tag(
-                  company_image_url,
-                  id: "image-preview",
-                  data: { default_src: company_image_url },
-                  class: "rounded-circle border shadow-sm",
-                  style: "width: 160px; height: 160px; object-fit: cover;",
-                  loading: "lazy"
-                ) %>
+                  <!-- Overlay Camera Icon -->
+                  <label for="profile_image_input" 
+                        class="position-absolute d-flex align-items-center justify-content-center bg-primary text-white rounded-circle shadow-sm"
+                        style="bottom: 5px; right: 5px; width: 40px; height: 40px; cursor: pointer; transition: transform 0.2s ease;">
+                    <i class="fas fa-camera" style="font-size: 15px;"></i>
+                  </label>
 
-                <!-- Overlay Camera Icon -->
-                <label for="profile_image_input" 
-                      class="position-absolute d-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm"
-                      style="bottom: 10px; right: 10px; width: 38px; height: 38px; cursor: pointer;">
-                  <i class="fas fa-camera text-primary" style="font-size: 16px;"></i>
-                </label>
+                  <%= f.file_field :profile_image,
+                    accept: "image/*",
+                    id: "profile_image_input",
+                    style: "display: none;" %>
+                </div>
 
-                <%= f.file_field :profile_image,
-                  accept: "image/*",
-                  id: "profile_image_input",
-                  style: "display: none;" %>
+                <div class="mt-3">
+                  <small class="text-muted small">
+                    <%= (@company.profile_image.attached? && @company.profile_image.attachment&.persisted?) ? "Click photo to upload a new one" : "Click avatar to upload image" %>
+                  </small>
+                </div>
+
+                <% if @company.errors[:profile_image].any? %>
+                  <div class="text-danger small mt-1">
+                    <%= @company.errors[:profile_image].first %>
+                  </div>
+                <% end %>
               </div>
 
-              <div class="mt-3">
-                <small class="text-muted">
-                  <%= (@company.profile_image.attached? && @company.profile_image.attachment&.persisted?) ? "Click your photo to upload a new one" : "No profile image yet. Click to upload." %>
+              <!-- Company Name + Website -->
+              <h5 class="fw-bold text-center mb-1">
+                <%= @company.name.presence || "No company name" %>
+              </h5>
+
+              <% if @company.website.present? %>
+                <% full_url = @company.website =~ /\Ahttp(s)?:\/\// ? @company.website : "https://#{@company.website}" %>
+                <p class="text-center mb-4 small">
+                  <a href="<%= full_url %>" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-primary fw-semibold">
+                    <%= @company.website %>
+                  </a>
+                </p>
+              <% else %>
+                <p class="text-center mb-4 text-muted small">No website</p>
+              <% end %>
+
+              <hr class="my-4 opacity-25">
+
+              <!-- About Section -->
+              <div class="mb-4">
+                <small class="text-uppercase text-muted fw-bold fs-7 tracking-wider">About</small>
+                <ul class="list-unstyled mt-3 mb-0">
+                  <li class="d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-laptop text-primary icon-fixed"></i>
+                    <span id="company_industry_text" class="small fw-medium">
+                      <%= Company::INDUSTRIES.find { |label, value, _| value == @company.industry }&.first.presence || "N/A" %>
+                    </span>
+                  </li>
+                  <li class="d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-users text-primary icon-fixed"></i>
+                    <span id="company_size_text" class="small fw-medium">
+                      <%= Company::SIZES.find { |label, value, _| value == @company.size }&.first.presence || "N/A" %>
+                    </span>
+                  </li>
+                  <li class="d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-briefcase text-primary icon-fixed"></i>
+                    <span id="company_ownership_text" class="small fw-medium">
+                      <%= Company::OWNERSHIPS.find { |label, value, _| value == @company.ownership }&.first.presence || "N/A" %>
+                    </span>
+                  </li>
+                  <li class="d-flex align-items-center">
+                    <i class="fa-solid fa-location-dot text-primary icon-fixed"></i>
+                    <span id="company_location_text" class="small fw-medium">
+                      <%= [ @company.address, @company.country ].select(&:present?).join(", ").presence || "N/A" %>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              <hr class="my-4 opacity-25">
+
+              <!-- Contact Section -->
+              <div class="mb-4">
+                <small class="text-uppercase text-muted fw-bold fs-7 tracking-wider">Contact</small>
+                <ul class="list-unstyled mt-3 mb-0">
+                  <li class="d-flex align-items-center mb-3">
+                    <i class="fa-solid fa-phone text-primary icon-fixed"></i>
+                    <span id="company_phone_text" class="small fw-medium"><%= @company.phone.presence || "N/A" %></span>
+                  </li>
+                  <li class="d-flex align-items-center">
+                    <i class="fa-solid fa-envelope text-primary icon-fixed"></i>
+                    <span id="company_email_text" class="small fw-medium text-break"><%= @company.email_address.presence || "N/A" %></span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Map -->
+              <div id="map-container" class="rounded-3 overflow-hidden mt-4">
+                <!-- Error message placeholder -->
+                <div id="map-error" class="text-danger fw-semibold mb-2" style="display: none; font-size: 12px;">
+                  <!-- error text will be injected here -->
+                </div>
+
+                <!-- Map iframe -->
+                <iframe
+                  id="map-frame"
+                  width="100%"
+                  height="150"
+                  frameborder="0"
+                  scrolling="no"
+                  src="">
+                </iframe>
+
+                <small class="text-muted d-block mt-2" style="font-size: 11px;">
+                  © OpenStreetMap contributors
                 </small>
               </div>
+          </div>
+        </div>
+      </div>
 
-              <% if @company.errors[:profile_image].any? %>
-                <div class="text-danger small mt-1">
-                  <%= @company.errors[:profile_image].first %>
+      <div class="col-lg-8 col-xl-9">
+        <div class="card shadow-sm rounded-4 border-0 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
+              <i class="fa-solid fa-building"></i> Company Information
+            </h5>
+            <div class="row g-3 g-md-4">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :name, "Company Name", class: "form-label fw-semibold" %>
+                  <%= f.text_field :name, class: "form-control" %>
                 </div>
-              <% end %>
-            </div>
-
-
-            <!-- Company Name + Website -->
-            <h4 class="fw-bold text-center mb-1">
-              <%= @company.name.presence || "No company name" %>
-            </h4>
-
-            <% if @company.website.present? %>
-              <% full_url = @company.website =~ /\Ahttp(s)?:\/\// ? @company.website : "https://#{@company.website}" %>
-              <p class="text-center mb-4">
-                <a href="<%= full_url %>" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-primary fw-semibold">
-                  <%= @company.website %>
-                </a>
-              </p>
-            <% else %>
-              <p class="text-center mb-4 text-muted">No website</p>
-            <% end %>
-
-            <!-- About Section -->
-            <div class="mb-4">
-              <small class="text-uppercase text-muted fw-semibold">About</small>
-              <ul class="list-unstyled mt-3 mb-0">
-                <li class="d-flex mb-2">
-                  <i class="fa-solid fa-laptop text-secondary icon-fixed"></i>
-                  <span id="company_industry_text">
-                    <%= Company::INDUSTRIES.find { |label, value, _| value == @company.industry }&.first.presence || "N/A" %>
-                  </span>
-                </li>
-                <li class="d-flex mb-2">
-                  <i class="fa-solid fa-users text-secondary icon-fixed"></i>
-                  <span id="company_size_text">
-                    <%= Company::SIZES.find { |label, value, _| value == @company.size }&.first.presence || "N/A" %>
-                  </span>
-                </li>
-                <li class="d-flex mb-2">
-                  <i class="fa-solid fa-briefcase text-secondary icon-fixed"></i>
-                  <span id="company_ownership_text">
-                    <%= Company::OWNERSHIPS.find { |label, value, _| value == @company.ownership }&.first.presence || "N/A" %>
-                  </span>
-                </li>
-                <li class="d-flex">
-                  <i class="fa-solid fa-location-dot text-secondary icon-fixed"></i>
-                  <span id="company_location_text">
-                    <%= [ @company.address, @company.country ].select(&:present?).join(", ").presence || "N/A" %>
-                  </span>
-                </li>
-              </ul>
-            </div>
-
-            <!-- Contact Section -->
-            <div class="mb-4">
-              <small class="text-uppercase text-muted fw-semibold">Contact</small>
-              <ul class="list-unstyled mt-3 mb-0">
-                <li class="d-flex mb-2">
-                  <i class="fa-solid fa-phone text-secondary icon-fixed"></i>
-                  <span id="company_phone_text"><%= @company.phone.presence || "N/A" %></span>
-                </li>
-                <li class="d-flex">
-                  <i class="fa-solid fa-envelope text-secondary icon-fixed"></i>
-                  <span id="company_email_text"><%= @company.email_address.presence || "N/A" %></span>
-                </li>
-              </ul>
-            </div>
-
-
-            <!-- Map -->
-            <div id="map-container">
-              <!-- Error message placeholder -->
-              <div id="map-error" class="text-danger fw-semibold mb-2" style="display: none; font-size: 12px;">
-                <!-- error text will be injected here -->
+                <div class="mb-3">
+                  <%= f.label :website, class: "form-label fw-semibold" %>
+                  <%= f.text_field :website, class: "form-control" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :industry, class: "form-label fw-semibold" %>
+                  <%= f.select :industry, Company::INDUSTRIES, {}, class: "form-select" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :ownership, "Company Ownership", class: "form-label fw-semibold" %>
+                  <%= f.select :ownership, Company::OWNERSHIPS, {}, class: "form-select" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :address, "Company Address", class: "form-label fw-semibold" %>
+                  <%= f.text_field :address, class: "form-control" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :country, "Country/Region", class: "form-label fw-semibold" %>
+                  <%= f.select :country, Company::COUNTRIES, { prompt: "Select country" }, class: "form-select" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :phone, class: "form-label fw-semibold" %>
+                  <%= f.text_field :phone, class: "form-control" %>
+                </div>
               </div>
 
-              <!-- Map iframe -->
-              <iframe
-                id="map-frame"
-                width="100%"
-                height="150"
-                frameborder="0"
-                scrolling="no"
-                src="">
-              </iframe>
-
-              <small class="text-muted d-block mt-2" style="font-size: 11px;">
-                © OpenStreetMap contributors
-              </small>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :description, "Company Description", class: "form-label fw-semibold" %>
+                  <%= f.text_area :description, class: "form-control company_description_textarea" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :size, "Company Size", class: "form-label fw-semibold" %>
+                  <%= f.select :size, Company::SIZES, {}, class: "form-select" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :share_capital, class: "form-label fw-semibold" %>
+                  <div class="input-group input-group-md">
+                    <span class="input-group-text">PHP</span>
+                    <%= f.text_field :share_capital,
+                        class: "form-control border-left-0",
+                        placeholder: "Enter share capital",
+                        data: { behavior: "currency-format" } %>
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :registration_address, class: "form-label fw-semibold" %>
+                  <%= f.text_field :registration_address, class: "form-control" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :email_address, "Company Email Address", class: "form-label fw-semibold" %>
+                  <%= f.text_field :email_address, class: "form-control" %>
+                </div>
+              </div>
             </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm rounded-4 border-0 mb-4">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-4 text-primary d-flex align-items-center gap-2">
+              <i class="fa-solid fa-id-card"></i> Company Identifiers
+            </h5>
+            <div class="row g-3 g-md-4">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :company_id_type, "Company ID Type", class: "form-label fw-semibold" %>
+                  <%= f.select :company_id_type, Company::ID_TYPES, { include_blank: "Select company ID type" }, class: "form-select", id: "company_id_type" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :tax_id_type, "Tax ID Type", class: "form-label fw-semibold" %>
+                  <%= f.select :tax_id_type, Company::TAX_ID_TYPES, { include_blank: "Select tax ID type" }, class: "form-select", id: "tax_id_type" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :gln, "GLN", class: "form-label fw-semibold" %>
+                  <%= f.text_field :gln, class: "form-control" %>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <%= f.label :company_id_number, "Company ID Number", class: "form-label fw-semibold", id: "company_id_number_label" %>
+                  <%= f.text_field :company_id_number, class: "form-control" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :tax_id_number, "Tax ID Number", class: "form-label fw-semibold", id: "tax_id_number_label" %>
+                  <%= f.text_field :tax_id_number, class: "form-control" %>
+                </div>
+                <div class="mb-3">
+                  <%= f.label :internal_identifier, "Internal Identifier", class: "form-label fw-semibold" %>
+                  <%= f.text_field :internal_identifier, class: "form-control" %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end align-items-center gap-2 mt-4 mb-4 mob-mb-4 flex-wrap">
+          <%= link_to "Back", root_path, class: "btn btn-outline-secondary rounded-pill px-4" %>
+          <%= f.submit "Save Changes", class: "btn btn-primary rounded-pill px-4 py-2 fw-semibold", id: "update-company-btn" %>
         </div>
       </div>
     </div>
-
-
-    <div class="col-md-9">
-      <div class="card shadow-sm rounded-3 border-0 mb-4">
-        <div class="card-body p-4">
-          <h5 class="fw-bold mb-4 text-primary">Company Information</h5>
-          <div class="row g-4">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <%= f.label :name, "Company Name", class: "form-label fw-semibold" %>
-                <%= f.text_field :name, class: "form-control" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :website, class: "form-label fw-semibold" %>
-                <%= f.text_field :website, class: "form-control" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :industry, class: "form-label fw-semibold" %>
-                <%= f.select :industry, Company::INDUSTRIES, {}, class: "form-select form-select" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :ownership, "Company Ownership", class: "form-label fw-semibold" %>
-                <%= f.select :ownership, Company::OWNERSHIPS, {}, class: "form-select form-select" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :address, "Company Address", class: "form-label fw-semibold" %>
-                <%= f.text_field :address, class: "form-control" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :country, "Country/Region", class: "form-label fw-semibold" %>
-                <%= f.select :country, Company::COUNTRIES, { prompt: "Select country" }, class: "form-select" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :phone, class: "form-label fw-semibold" %>
-                <%= f.text_field :phone, class: "form-control" %>
-              </div>
-            </div>
-
-            <div class="col-md-6">
-              <div class="mb-3">
-                <%= f.label :description, "Company Description", class: "form-label fw-semibold" %>
-                <%= f.text_area :description, class: "form-control company_description_textarea" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :size, "Company Size", class: "form-label fw-semibold" %>
-                <%= f.select :size, Company::SIZES, {}, class: "form-select form-select" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :share_capital, class: "form-label fw-semibold" %>
-                <div class="input-group input-group-md">
-                  <span class="input-group-text">PHP</span>
-                  <%= f.text_field :share_capital,
-                      class: "form-control border-left-0",
-                      placeholder: "Enter share capital",
-                      data: { behavior: "currency-format" } %>
-                </div>
-              </div>
-              <div class="mb-3">
-                <%= f.label :registration_address, class: "form-label fw-semibold" %>
-                <%= f.text_field :registration_address, class: "form-control" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :email_address, "Company Email Address", class: "form-label fw-semibold" %>
-                <%= f.text_field :email_address, class: "form-control" %>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card shadow-sm rounded-3 border-0">
-        <div class="card-body p-4">
-          <h5 class="fw-bold mb-4 text-primary">Company Identifiers</h5>
-          <div class="row g-4">
-            <div class="col-md-6">
-              <div class="mb-3">
-                <%= f.label :company_id_type, "Company ID Type", class: "form-label fw-semibold" %>
-                <%= f.select :company_id_type, Company::ID_TYPES, { include_blank: "Select company ID type" }, class: "form-select form-select", id: "company_id_type" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :tax_id_type, "Tax ID Type", class: "form-label fw-semibold" %>
-                <%= f.select :tax_id_type, Company::TAX_ID_TYPES, { include_blank: "Select tax ID type" }, class: "form-select form-select", id: "tax_id_type" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :gln, "GLN", class: "form-label fw-semibold" %>
-                <%= f.text_field :gln, class: "form-control" %>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="mb-3">
-                <%= f.label :company_id_number, "Company ID Number", class: "form-label fw-semibold", id: "company_id_number_label" %>
-                <%= f.text_field :company_id_number, class: "form-control" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :tax_id_number, "Tax ID Number", class: "form-label fw-semibold", id: "tax_id_number_label" %>
-                <%= f.text_field :tax_id_number, class: "form-control" %>
-              </div>
-              <div class="mb-3">
-                <%= f.label :internal_identifier, "Internal Identifier", class: "form-label fw-semibold" %>
-                <%= f.text_field :internal_identifier, class: "form-control" %>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="d-flex justify-content-end gap-2 mt-4 mob-mb-4">
-        <%= link_to "Back", root_path, class: "btn btn-back px-4" %>
-        <%= f.submit "Save Changes", class: "btn btn-primary px-4", id: "update-company-btn" %>
-      </div>
-    <% end %>
-
-  </div>
+  <% end %>
 </div>

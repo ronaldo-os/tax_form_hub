@@ -270,7 +270,6 @@ stimulusApplication.register('password-validation', PasswordValidationController
 function updateThemeUI(theme) {
     const btn = document.getElementById('theme_toggle_btn');
     if (!btn) {
-        console.warn('Theme button not found');
         return;
     }
     

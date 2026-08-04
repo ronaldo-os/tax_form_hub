@@ -1,7 +1,56 @@
 @media (max-width: 991.98px) {
+  /* ==========================================================================
+     MOBILE & TABLETS: CONVERT CARD BORDERS INTO MODERN 3D SHADOW
+     ========================================================================== */
+  .card,
+  .card-filter,
+  .invoice-card,
+  #invoice_card {
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+                0 8px 10px -6px rgba(0, 0, 0, 0.05),
+                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+    border-radius: 12px !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
+
+  [data-theme="dark"] .card,
+  [data-theme="dark"] .card-filter,
+  [data-theme="dark"] .invoice-card,
+  [data-theme="dark"] #invoice_card {
+    border: none !important;
+    border-color: transparent !important;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
+                0 6px 12px -2px rgba(0, 0, 0, 0.18),
+                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+  }
+
+  .card-filter.active {
+    border: none !important;
+    box-shadow: 0 12px 28px -4px rgba(0, 174, 255, 0.35),
+                0 0 0 2px var(--main-color) !important;
+  }
+
+  [data-theme="dark"] .card-filter.active {
+    border: none !important;
+    box-shadow: 0 14px 30px -4px rgba(0, 174, 255, 0.45),
+                0 0 0 2px var(--main-color) !important;
+  }
+
   .custom_nav_tabs {
     display: flex;
     width: 100%;
+    padding: 0;
+    background: transparent !important;
+    background-color: transparent !important;
+    border-radius: 12px;
+    gap: 6px;
+  }
+
+  [data-theme="dark"] .custom_nav_tabs {
+    background: transparent !important;
+    background-color: transparent !important;
   }
 
   .custom_nav_tabs .nav-item {
@@ -9,21 +58,29 @@
     text-align: center;
   }
 
-  .custom_nav_tabs .nav-link {
+  .custom_nav_tabs.nav-tabs .nav-link {
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
+    padding: 9px 8px;
+    font-size: 0.85rem;
   }
 
-  /* Full screen width container on mobile - TAX SUBMISSIONS & LOCATIONS PAGES ONLY */
+  /* Full screen width container on mobile - TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS & COMPANIES PAGES */
   .tax-submissions-page,
   .tax-submissions-page.container,
   .tax-submissions-page .container,
   .locations-page,
   .locations-page.container,
-  .locations-page .container {
+  .locations-page .container,
+  .subscriptions-page,
+  .subscriptions-page.container,
+  .subscriptions-page .container,
+  .companies-page,
+  .companies-page.container,
+  .companies-page .container {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
     max-width: 100% !important;
@@ -32,36 +89,85 @@
     box-sizing: border-box !important;
   }
 
+  .companies-page .card {
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+                0 8px 10px -6px rgba(0, 0, 0, 0.05),
+                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+  }
+
+  [data-theme="dark"] .companies-page .card {
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
+                0 6px 12px -2px rgba(0, 0, 0, 0.18),
+                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+  }
+
+  .companies-page .form-control,
+  .companies-page .form-select {
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .companies-page .icon-fixed {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--bg-tertiary);
+    margin-right: 12px;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
   .tax-submissions-page .row,
-  .locations-page .row {
+  .locations-page .row,
+  .subscriptions-page .row {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
 
   .tax-submissions-page > .d-flex:not(.custom_nav_tabs),
-  .locations-page > .d-flex:not(.custom_nav_tabs) {
+  .locations-page > .d-flex:not(.custom_nav_tabs),
+  .subscriptions-page > .d-flex:not(.custom_nav_tabs) {
     padding-left: 0;
     padding-right: 0;
   }
 
-  /* Remove card styling on mobile - TAX SUBMISSIONS & LOCATIONS PAGES ONLY */
+  /* Modern 3D Card Styling for Mobile & Tablets - TAX SUBMISSIONS, LOCATIONS & SUBSCRIPTIONS PAGES */
   .tax-submissions-page .card,
-  .locations-page .card {
-    background: transparent !important;
+  .locations-page .card,
+  .subscriptions-page .card {
+    background: var(--card-bg) !important;
     border: none !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+                0 8px 10px -6px rgba(0, 0, 0, 0.05),
+                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  [data-theme="dark"] .tax-submissions-page .card,
+  [data-theme="dark"] .locations-page .card,
+  [data-theme="dark"] .subscriptions-page .card {
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
+                0 6px 12px -2px rgba(0, 0, 0, 0.18),
+                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .tax-submissions-page .card-body,
-  .locations-page .card-body {
-    padding: 0 !important;
+  .locations-page .card-body,
+  .subscriptions-page .card-body {
+    padding: 0.75rem !important;
   }
 
   /* DataTables wrapper strictly confined to screen width */
   .tax-submissions-page div.dataTables_wrapper,
-  .locations-page div.dataTables_wrapper {
+  .locations-page div.dataTables_wrapper,
+  .subscriptions-page div.dataTables_wrapper {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
@@ -78,7 +184,11 @@
   .locations-page div.dataTables_wrapper div.dataTables_filter,
   .locations-page div.dataTables_wrapper div.dataTables_length,
   .locations-page div.dataTables_wrapper div.dataTables_info,
-  .locations-page div.dataTables_wrapper div.dataTables_paginate {
+  .locations-page div.dataTables_wrapper div.dataTables_paginate,
+  .subscriptions-page div.dataTables_wrapper div.dataTables_filter,
+  .subscriptions-page div.dataTables_wrapper div.dataTables_length,
+  .subscriptions-page div.dataTables_wrapper div.dataTables_info,
+  .subscriptions-page div.dataTables_wrapper div.dataTables_paginate {
     padding-left: 0;
     padding-right: 0;
     box-sizing: border-box !important;
@@ -86,7 +196,8 @@
 
   /* Remove col-sm-12 padding on the datatable container */
   .tax-submissions-page div.dataTables_wrapper .col-sm-12,
-  .locations-page div.dataTables_wrapper .col-sm-12 {
+  .locations-page div.dataTables_wrapper .col-sm-12,
+  .subscriptions-page div.dataTables_wrapper .col-sm-12 {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -95,7 +206,9 @@
   .tax-submissions-page div.dataTables_wrapper > .row:nth-child(2),
   .tax-submissions-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child),
   .locations-page div.dataTables_wrapper > .row:nth-child(2),
-  .locations-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child) {
+  .locations-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child),
+  .subscriptions-page div.dataTables_wrapper > .row:nth-child(2),
+  .subscriptions-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child) {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: auto !important;
@@ -109,7 +222,8 @@
   }
 
   .tax-submissions-page table.dataTable,
-  .locations-page table.dataTable {
+  .locations-page table.dataTable,
+  .subscriptions-page table.dataTable {
     display: table !important;
     width: 100% !important;
     max-width: none !important;
@@ -121,22 +235,26 @@
   }
 
   .tax-submissions-page table.dataTable thead th:first-child,
-  .locations-page table.dataTable thead th:first-child {
+  .locations-page table.dataTable thead th:first-child,
+  .subscriptions-page table.dataTable thead th:first-child {
     border-top-left-radius: 5px !important;
   }
 
   .tax-submissions-page table.dataTable thead th:last-child,
-  .locations-page table.dataTable thead th:last-child {
+  .locations-page table.dataTable thead th:last-child,
+  .subscriptions-page table.dataTable thead th:last-child {
     border-top-right-radius: 5px !important;
   }
 
   .tax-submissions-page table.dataTable tbody tr:last-child td:first-child,
-  .locations-page table.dataTable tbody tr:last-child td:first-child {
+  .locations-page table.dataTable tbody tr:last-child td:first-child,
+  .subscriptions-page table.dataTable tbody tr:last-child td:first-child {
     border-bottom-left-radius: 5px !important;
   }
 
   .tax-submissions-page table.dataTable tbody tr:last-child td:last-child,
-  .locations-page table.dataTable tbody tr:last-child td:last-child {
+  .locations-page table.dataTable tbody tr:last-child td:last-child,
+  .subscriptions-page table.dataTable tbody tr:last-child td:last-child {
     border-bottom-right-radius: 5px !important;
   }
 
@@ -151,7 +269,13 @@
   .locations-page .table th,
   .locations-page .table td,
   .locations-page table.dataTable th.dtr-hidden,
-  .locations-page table.dataTable td.dtr-hidden {
+  .locations-page table.dataTable td.dtr-hidden,
+  .subscriptions-page table.dataTable th,
+  .subscriptions-page table.dataTable td,
+  .subscriptions-page .table th,
+  .subscriptions-page .table td,
+  .subscriptions-page table.dataTable th.dtr-hidden,
+  .subscriptions-page table.dataTable td.dtr-hidden {
     display: table-cell !important;
     white-space: nowrap !important;
   }
@@ -159,19 +283,23 @@
   .tax-submissions-page table.dataTable td.dtr-control::before,
   .tax-submissions-page table.dataTable th.dtr-control::before,
   .locations-page table.dataTable td.dtr-control::before,
-  .locations-page table.dataTable th.dtr-control::before {
+  .locations-page table.dataTable th.dtr-control::before,
+  .subscriptions-page table.dataTable td.dtr-control::before,
+  .subscriptions-page table.dataTable th.dtr-control::before {
     display: none !important;
   }
 
-  /* Tax Submissions & Locations Pages DataTables Formatting (Mobile & Tablets Only) */
+  /* Tax Submissions, Locations & Subscriptions Pages DataTables Formatting (Mobile & Tablets Only) */
   .tax-submissions-page .dataTables_wrapper,
-  .locations-page .dataTables_wrapper {
+  .locations-page .dataTables_wrapper,
+  .subscriptions-page .dataTables_wrapper {
     font-family: inherit;
     color: var(--text-main);
   }
 
   .tax-submissions-page .dataTables_wrapper > .row:first-child,
-  .locations-page .dataTables_wrapper > .row:first-child {
+  .locations-page .dataTables_wrapper > .row:first-child,
+  .subscriptions-page .dataTables_wrapper > .row:first-child {
     display: flex !important;
     flex-direction: column-reverse !important;
     gap: 12px !important;
@@ -181,7 +309,8 @@
   }
 
   .tax-submissions-page .dataTables_wrapper > .row:first-child > div,
-  .locations-page .dataTables_wrapper > .row:first-child > div {
+  .locations-page .dataTables_wrapper > .row:first-child > div,
+  .subscriptions-page .dataTables_wrapper > .row:first-child > div {
     width: 100% !important;
     max-width: 100% !important;
     flex: 0 0 100% !important;
@@ -190,7 +319,8 @@
   }
 
   .tax-submissions-page div.dataTables_filter,
-  .locations-page div.dataTables_filter {
+  .locations-page div.dataTables_filter,
+  .subscriptions-page div.dataTables_filter {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -198,7 +328,8 @@
   }
 
   .tax-submissions-page div.dataTables_filter label,
-  .locations-page div.dataTables_filter label {
+  .locations-page div.dataTables_filter label,
+  .subscriptions-page div.dataTables_filter label {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -207,7 +338,8 @@
 
   /* Search input with theme variables */
   .tax-submissions-page div.dataTables_filter input,
-  .locations-page div.dataTables_filter input {
+  .locations-page div.dataTables_filter input,
+  .subscriptions-page div.dataTables_filter input {
     width: 100% !important;
     max-width: 100% !important;
     margin-left: 0 !important;
@@ -228,7 +360,8 @@
   }
 
   .tax-submissions-page div.dataTables_filter input:focus,
-  .locations-page div.dataTables_filter input:focus {
+  .locations-page div.dataTables_filter input:focus,
+  .subscriptions-page div.dataTables_filter input:focus {
     border-color: var(--main-color) !important;
     background-color: var(--input-bg) !important;
     box-shadow: 0 0 0 3px rgba(0, 174, 255, 0.15) !important;
@@ -236,7 +369,8 @@
 
   /* Styled per-page, company, and type dropdowns in a single flex row */
   .tax-submissions-page div.dataTables_length,
-  .locations-page div.dataTables_length {
+  .locations-page div.dataTables_length,
+  .subscriptions-page div.dataTables_length {
     margin: 0 !important;
     width: 100% !important;
     display: flex !important;
@@ -252,7 +386,10 @@
   .tax-submissions-page .custom-status-filter,
   .locations-page div.dataTables_length select,
   .locations-page .custom-company-filter,
-  .locations-page .custom-type-filter {
+  .locations-page .custom-type-filter,
+  .subscriptions-page div.dataTables_length select,
+  .subscriptions-page .custom-company-filter,
+  .subscriptions-page .custom-status-filter {
     border-radius: 8px !important;
     border: 1px solid var(--border-color) !important;
     background-color: var(--input-bg) !important;
@@ -275,7 +412,8 @@
 
   /* Table Header & Cells with theme variables */
   .tax-submissions-page table.dataTable thead th,
-  .locations-page table.dataTable thead th {
+  .locations-page table.dataTable thead th,
+  .subscriptions-page table.dataTable thead th {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-muted) !important;
     font-size: 0.825rem !important;
@@ -287,7 +425,8 @@
   }
 
   .tax-submissions-page table.dataTable tbody td,
-  .locations-page table.dataTable tbody td {
+  .locations-page table.dataTable tbody td,
+  .subscriptions-page table.dataTable tbody td {
     padding: 14px 16px !important;
     border-bottom: 1px solid var(--border-color) !important;
     color: var(--text-main) !important;
@@ -297,12 +436,14 @@
   }
 
   .tax-submissions-page table.dataTable tbody tr:hover td,
-  .locations-page table.dataTable tbody tr:hover td {
+  .locations-page table.dataTable tbody tr:hover td,
+  .subscriptions-page table.dataTable tbody tr:hover td {
     background-color: var(--bg-secondary) !important;
   }
 
   .tax-submissions-page table.dataTable tbody td.dataTables_empty,
-  .locations-page table.dataTable tbody td.dataTables_empty {
+  .locations-page table.dataTable tbody td.dataTables_empty,
+  .subscriptions-page table.dataTable tbody td.dataTables_empty {
     text-align: center !important;
     padding: 32px 16px !important;
     color: var(--text-muted) !important;
@@ -312,7 +453,8 @@
 
   /* Centered Info & Pagination controls with theme variables */
   .tax-submissions-page div.dataTables_wrapper > .row:last-child,
-  .locations-page div.dataTables_wrapper > .row:last-child {
+  .locations-page div.dataTables_wrapper > .row:last-child,
+  .subscriptions-page div.dataTables_wrapper > .row:last-child {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -324,7 +466,8 @@
   }
 
   .tax-submissions-page div.dataTables_info,
-  .locations-page div.dataTables_info {
+  .locations-page div.dataTables_info,
+  .subscriptions-page div.dataTables_info {
     text-align: center !important;
     color: var(--text-muted) !important;
     font-size: 0.875rem !important;
@@ -334,7 +477,8 @@
   }
 
   .tax-submissions-page div.dataTables_paginate,
-  .locations-page div.dataTables_paginate {
+  .locations-page div.dataTables_paginate,
+  .subscriptions-page div.dataTables_paginate {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -345,7 +489,8 @@
   }
 
   .tax-submissions-page div.dataTables_paginate .pagination,
-  .locations-page div.dataTables_paginate .pagination {
+  .locations-page div.dataTables_paginate .pagination,
+  .subscriptions-page div.dataTables_paginate .pagination {
     display: flex !important;
     gap: 6px !important;
     margin: 0 !important;
@@ -354,7 +499,8 @@
   }
 
   .tax-submissions-page div.dataTables_paginate .page-item .page-link,
-  .locations-page div.dataTables_paginate .page-item .page-link {
+  .locations-page div.dataTables_paginate .page-item .page-link,
+  .subscriptions-page div.dataTables_paginate .page-item .page-link {
     border: none !important;
     background: var(--bg-tertiary) !important;
     color: var(--text-main) !important;
@@ -372,13 +518,15 @@
   }
 
   .tax-submissions-page div.dataTables_paginate .page-item:hover .page-link,
-  .locations-page div.dataTables_paginate .page-item:hover .page-link {
+  .locations-page div.dataTables_paginate .page-item:hover .page-link,
+  .subscriptions-page div.dataTables_paginate .page-item:hover .page-link {
     background-color: var(--bg-secondary) !important;
     color: var(--text-main) !important;
   }
 
   .tax-submissions-page div.dataTables_paginate .page-item.active .page-link,
-  .locations-page div.dataTables_paginate .page-item.active .page-link {
+  .locations-page div.dataTables_paginate .page-item.active .page-link,
+  .subscriptions-page div.dataTables_paginate .page-item.active .page-link {
     background-color: var(--main-color) !important;
     color: #ffffff !important;
     font-weight: 600 !important;
@@ -386,7 +534,8 @@
   }
 
   .tax-submissions-page div.dataTables_paginate .page-item.disabled .page-link,
-  .locations-page div.dataTables_paginate .page-item.disabled .page-link {
+  .locations-page div.dataTables_paginate .page-item.disabled .page-link,
+  .subscriptions-page div.dataTables_paginate .page-item.disabled .page-link {
     color: var(--text-muted) !important;
     background: var(--bg-secondary) !important;
     cursor: not-allowed !important;
@@ -492,10 +641,19 @@
     right: 0;
     height: 64px;
     background: var(--bg-sidebar);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: none !important;
     z-index: 100002;
     padding: 0 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+                0 8px 10px -6px rgba(0, 0, 0, 0.05),
+                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+  }
+
+  [data-theme="dark"] .app-header {
+    border-bottom: none !important;
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
+                0 6px 12px -2px rgba(0, 0, 0, 0.18),
+                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .mobile-page-title {
@@ -669,27 +827,33 @@
 
   .auth-card,
   .auth-page-container .card,
-  .auth-page-wrapper .card,
-  [data-theme="dark"] .auth-card,
-  [data-theme="dark"] .auth-page-container .card,
-  [data-theme="light"] .auth-card,
-  [data-theme="light"] .auth-page-container .card {
-    background: transparent !important;
-    background-color: transparent !important;
-    border: 0 !important;
+  .auth-page-wrapper .card {
+    background: var(--card-bg) !important;
+    background-color: var(--card-bg) !important;
+    border: none !important;
     border-width: 0 !important;
     border-style: none !important;
     border-color: transparent !important;
-    box-shadow: none !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+                0 8px 10px -6px rgba(0, 0, 0, 0.05),
+                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
     outline: none !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
+    border-radius: 16px !important;
+    margin: 0 auto !important;
+  }
+
+  [data-theme="dark"] .auth-card,
+  [data-theme="dark"] .auth-page-container .card,
+  [data-theme="dark"] .auth-page-wrapper .card {
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
+                0 6px 12px -2px rgba(0, 0, 0, 0.18),
+                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .auth-card .card-body,
   .auth-page-container .card-body,
   .auth-page-wrapper .card-body {
-    padding: 0 !important;
+    padding: 1.5rem !important;
     background: transparent !important;
     background-color: transparent !important;
     border: none !important;

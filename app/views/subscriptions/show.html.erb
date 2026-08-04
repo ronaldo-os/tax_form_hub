@@ -1,7 +1,9 @@
-<div class="container mt-5">
-  <div class="d-flex justify-content-between mt-5 mb-3">
+<div class="container py-2 py-md-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <%= link_to "Back", subscriptions_path, class: "btn btn-back btn-md" %>
+      <%= link_to subscriptions_path, class: "btn btn-outline-secondary btn-sm rounded-pill px-3 d-inline-flex align-items-center gap-2" do %>
+        <i class="fa-solid fa-arrow-left"></i> Back to Subscriptions
+      <% end %>
     </div>
   </div>
 
@@ -9,89 +11,144 @@
 
   <div class="row">
     <div class="col-lg-8">
-      <div class="card shadow-sm border-0 rounded-3 mb-4">
-        <div class="card-header border-bottom-0 pt-4 pb-3 px-4">
-          <h5 class="mb-0 fw-bold">Subscription Overview</h5>
-          <p class="text-muted mt-2 mb-0">For <%= @subscription.recipient_company&.name || "Unknown Company" %></p>
+      <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-transparent border-bottom-0 pt-4 pb-2 px-4">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+              <h5 class="mb-1 fw-bold">Subscription Overview</h5>
+              <p class="text-muted small mb-0">For <span class="fw-semibold text-main"><%= @subscription.recipient_company&.name || "Unknown Company" %></span></p>
+            </div>
+            <% is_active = @wrapper ? @wrapper.subscription_active? : @subscription.subscription_active? %>
+            <% is_cancelled = @wrapper ? @wrapper.subscription_cancelled? : @subscription.subscription_cancelled? %>
+            <% status_class = is_active ? 'bg-success-subtle text-success border border-success-subtle' : (is_cancelled ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle') %>
+            <% status_text = is_active ? 'Active' : (is_cancelled ? 'Cancelled' : 'Finished') %>
+            <span class="badge <%= status_class %> fs-6 px-3 py-2 rounded-pill fw-semibold">
+              <i class="fa-solid fa-circle me-1 small" style="font-size: 0.6rem;"></i> <%= status_text %>
+            </span>
+          </div>
         </div>
-        <div class="card-body px-4 py-4">
-          <div class="row g-4">
-            <div class="col-sm-6 col-md-4">
-              <div class="text-muted small fw-semibold text-uppercase mb-1">Status</div>
-              <% is_active = @wrapper ? @wrapper.subscription_active? : @subscription.subscription_active? %>
-              <% is_cancelled = @wrapper ? @wrapper.subscription_cancelled? : @subscription.subscription_cancelled? %>
-              <% status_class = is_active ? 'bg-success' : (is_cancelled ? 'bg-danger' : 'bg-secondary') %>
-              <% status_text = is_active ? 'Active' : (is_cancelled ? 'Cancelled' : 'Finished') %>
-              <span class="badge <%= status_class %> fs-6 px-3 py-2">
-                <%= status_text %>
-              </span>
-            </div>
-            
-            <div class="col-sm-6 col-md-4">
-              <div class="text-muted small fw-semibold text-uppercase mb-1">Billing Cycle</div>
-              <div class="fs-5 fw-medium"><%= (primary_item[:cycle] || 'monthly').capitalize %></div>
-            </div>
-
-            <div class="col-sm-6 col-md-4">
-              <div class="text-muted small fw-semibold text-uppercase mb-1">Amount</div>
-              <div class="fs-5 fw-medium text-primary">
-                <% amount_to_show = @wrapper ? @wrapper.total_amount : @subscription.grand_total %>
-                <%= number_to_currency(amount_to_show, unit: @subscription.currency + ' ') %>
-                <small class="text-muted fs-6">/ <%= primary_item[:cycle] || 'monthly' %></small>
+        <div class="card-body px-4 pb-4 pt-3">
+          <div class="row g-3">
+            <div class="col-6 col-md-4">
+              <div class="overview-stat-tile p-3 h-100">
+                <div class="text-muted small fw-medium mb-1">Billing Cycle</div>
+                <div class="fs-6 fw-bold text-main"><%= (primary_item[:cycle] || 'monthly').capitalize %></div>
               </div>
             </div>
 
-            <div class="col-sm-6 col-md-4">
-              <div class="text-muted small fw-semibold text-uppercase mb-1">Start Date</div>
-              <div class="fs-5 fw-medium">
-                <%= primary_item[:start_date] ? Date.parse(primary_item[:start_date]).strftime("%b %d, %Y") : "N/A" %>
+            <div class="col-6 col-md-4">
+              <div class="overview-stat-tile p-3 h-100">
+                <div class="text-muted small fw-medium mb-1">Recurring Amount</div>
+                <div class="fs-6 fw-bold text-primary">
+                  <% amount_to_show = @wrapper ? @wrapper.total_amount : @subscription.grand_total %>
+                  <%= number_to_currency(amount_to_show, unit: @subscription.currency + ' ') %>
+                  <small class="text-muted font-normal fs-7">/<%= (primary_item[:cycle] || 'monthly').first(3) %></small>
+                </div>
               </div>
             </div>
 
-            <div class="col-sm-6 col-md-4">
-              <div class="text-muted small fw-semibold text-uppercase mb-1">End Date</div>
-              <div class="fs-5 fw-medium">
-                <%= primary_item[:end_date] ? Date.parse(primary_item[:end_date]).strftime("%b %d, %Y") : "Indefinite" %>
+            <div class="col-6 col-md-4">
+              <div class="overview-stat-tile p-3 h-100">
+                <div class="text-muted small fw-medium mb-1">Start Date</div>
+                <div class="fs-6 fw-semibold text-main">
+                  <%= primary_item[:start_date] ? Date.parse(primary_item[:start_date]).strftime("%b %d, %Y") : "N/A" %>
+                </div>
               </div>
             </div>
 
-            <div class="col-sm-6 col-md-4">
-              <div class="text-muted small fw-semibold text-uppercase mb-1">Next Invoice</div>
-              <div class="fs-5 fw-medium">
-                <% if is_active && @upcoming_invoice_date %>
-                  <%= @upcoming_invoice_date.strftime("%b %d, %Y") %>
-                <% else %>
-                  <span class="text-muted">-</span>
-                <% end %>
+            <div class="col-6 col-md-4">
+              <div class="overview-stat-tile p-3 h-100">
+                <div class="text-muted small fw-medium mb-1">End Date</div>
+                <div class="fs-6 fw-semibold text-main">
+                  <%= primary_item[:end_date] ? Date.parse(primary_item[:end_date]).strftime("%b %d, %Y") : "Indefinite" %>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-8">
+              <div class="overview-stat-tile p-3 h-100">
+                <div class="text-muted small fw-medium mb-1">Next Invoice Date</div>
+                <div class="fs-6 fw-semibold text-main">
+                  <% if is_active && @upcoming_invoice_date %>
+                    <i class="fa-regular fa-calendar-check text-primary me-1"></i> <%= @upcoming_invoice_date.strftime("%b %d, %Y") %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </div>
               </div>
             </div>
             
             <div class="col-12">
-              <div class="text-muted small fw-semibold text-uppercase mb-1">Description</div>
-              <div class="p-3 border rounded-3">
-                <%= @subscription.message.presence || "No description provided." %>
+              <div class="overview-stat-tile p-3">
+                <div class="text-muted small fw-medium mb-1">Description</div>
+                <div class="text-main small">
+                  <%= @subscription.message.presence || "No description provided." %>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card shadow-sm border-0 rounded-3 mb-4">
-        <div class="card-header border-bottom-0 pt-4 pb-3 px-4 d-flex justify-content-between align-items-center">
-          <div>
-            <h5 class="mb-0 fw-bold"> Mid-Cycle Overview</h5>
-            <p class="text-muted mt-2 mb-0">Track upcoming and recently generated mid-cycle subscription changes for this invoice.</p>
-          </div>
-
+      <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-transparent border-bottom-0 pt-4 pb-2 px-4">
+          <h5 class="mb-1 fw-bold">Price Adjustments Overview</h5>
+          <p class="text-muted small mb-0">Track upcoming and recently generated mid-cycle subscription changes for this invoice.</p>
         </div>
-        <div class="card-body p-0">
+        <div class="card-body p-0 p-md-2">
           <% if @mid_cycle_pending_items.empty? && @generated_mid_cycle_invoices.empty? && @mid_cycle_generated_items.empty? %>
             <div class="text-center py-5">
-              <i class="fa-solid fa-file-invoice fa-2x text-muted opacity-50 mb-3"></i>
+              <i class="fa-solid fa-receipt fa-2x text-muted opacity-50 mb-3"></i>
               <p class="text-muted mb-0">No mid-cycle items or invoices.</p>
             </div>
           <% else %>
-            <div class="table-responsive">
+            <% 
+              combined_items = []
+              @mid_cycle_pending_items.each do |data|
+                combined_items << {
+                  type: :pending,
+                  description: data[:item]['description'],
+                  date: data[:expected_generation_date],
+                  effective_date: data[:effective_date],
+                  billing_cycle: data[:billing_cycle],
+                  amount: data[:item]['price'],
+                  currency: @subscription.currency,
+                  item: data[:item],
+                  index: data[:index]
+                }
+              end
+              @mid_cycle_generated_items.each do |data|
+                combined_items << {
+                  type: :generated,
+                  description: data[:item]['description'],
+                  date: data[:generation_date],
+                  effective_date: data[:effective_date],
+                  billing_cycle: data[:billing_cycle],
+                  amount: data[:item]['price'],
+                  currency: @subscription.currency,
+                  invoice: nil,
+                  item: data[:item],
+                  index: data[:index],
+                  is_cancellation: data[:is_cancellation]
+                }
+              end
+              @generated_mid_cycle_invoices.each do |invoice|
+                combined_items << {
+                  type: :generated,
+                  description: invoice.invoice_number,
+                  date: invoice.issue_date,
+                  effective_date: invoice.issue_date,
+                  billing_cycle: 'Mid-cycle Invoice',
+                  amount: invoice.grand_total,
+                  currency: invoice.currency,
+                  invoice: invoice
+                }
+              end
+              combined_items.sort_by! { |item| item[:date] || Date.new(1970,1,1) }.reverse!
+            %>
+
+            <!-- Desktop View: Table -->
+            <div class="table-responsive d-none d-md-block">
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light text-muted">
                   <tr>
@@ -105,50 +162,6 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% 
-                    combined_items = []
-                    @mid_cycle_pending_items.each do |data|
-                      combined_items << {
-                        type: :pending,
-                        description: data[:item]['description'],
-                        date: data[:expected_generation_date],
-                        effective_date: data[:effective_date],
-                        billing_cycle: data[:billing_cycle],
-                        amount: data[:item]['price'],
-                        currency: @subscription.currency,
-                        item: data[:item],
-                        index: data[:index]
-                      }
-                    end
-                    @mid_cycle_generated_items.each do |data|
-                      combined_items << {
-                        type: :generated,
-                        description: data[:item]['description'],
-                        date: data[:generation_date],
-                        effective_date: data[:effective_date],
-                        billing_cycle: data[:billing_cycle],
-                        amount: data[:item]['price'],
-                        currency: @subscription.currency,
-                        invoice: nil,
-                        item: data[:item],
-                        index: data[:index],
-                        is_cancellation: data[:is_cancellation]
-                      }
-                    end
-                    @generated_mid_cycle_invoices.each do |invoice|
-                      combined_items << {
-                        type: :generated,
-                        description: invoice.invoice_number,
-                        date: invoice.issue_date,
-                        effective_date: invoice.issue_date,
-                        billing_cycle: 'Mid-cycle Invoice',
-                        amount: invoice.grand_total,
-                        currency: invoice.currency,
-                        invoice: invoice
-                      }
-                    end
-                    combined_items.sort_by! { |item| item[:date] || Date.new(1970,1,1) }.reverse!
-                  %>
                   <% combined_items.each do |item| %>
                     <tr>
                       <td class="ps-4">
@@ -204,6 +217,69 @@
                   <% end %>
                 </tbody>
               </table>
+            </div>
+
+            <!-- Mobile & Tablet View: Cards -->
+            <div class="d-block d-md-none p-3">
+              <% combined_items.each do |item| %>
+                <div class="mid-cycle-mobile-card p-3 mb-3">
+                  <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <div class="fw-semibold text-main text-break fs-6">
+                      <% if item[:is_cancellation] || (item[:item].is_a?(Hash) && item[:item].dig('optional_fields', 'cancelled')) %>
+                        <a href="#" class="text-decoration-none text-danger" data-bs-toggle="modal" data-bs-target="#cancelledDetailsModal-<%= item[:index] %>">
+                          <%= safe_join(item[:description].to_s.split("\n"), tag.br) %>
+                        </a>
+                      <% elsif item[:type] == :pending || item[:invoice].nil? %>
+                        <span><%= safe_join(item[:description].to_s.split("\n"), tag.br) %></span>
+                      <% else %>
+                        <%= link_to item[:description], invoice_path(item[:invoice]), class: "text-decoration-none text-primary", target: "_blank" %>
+                      <% end %>
+                    </div>
+                    <div>
+                      <% if item[:is_cancellation] || (item[:item].is_a?(Hash) && item[:item].dig('optional_fields', 'cancelled')) %>
+                        <span class="badge bg-danger-subtle text-danger fw-semibold border border-danger-subtle">Cancelled</span>
+                      <% elsif item[:type] == :pending %>
+                        <span class="badge bg-info-subtle text-info fw-semibold border border-info-subtle">Pending</span>
+                      <% else %>
+                        <span class="badge bg-success-subtle text-success fw-semibold border border-success-subtle">Generated</span>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <div class="row g-2 my-2 small">
+                    <div class="col-6">
+                      <span class="text-muted d-block small">Billing Cycle</span>
+                      <span class="fw-medium text-main"><%= item[:billing_cycle] || '-' %></span>
+                    </div>
+                    <div class="col-6 text-end">
+                      <span class="text-muted d-block small">Amount</span>
+                      <span class="fw-bold text-main">
+                        <% if item[:amount].present? %>
+                          <%= number_to_currency(item[:amount], unit: item[:currency] + ' ') %>
+                        <% else %>
+                          -
+                        <% end %>
+                      </span>
+                    </div>
+                    <div class="col-6">
+                      <span class="text-muted d-block small">Effective Date</span>
+                      <span class="text-main"><%= item[:effective_date]&.strftime("%b %d, %Y") || '-' %></span>
+                    </div>
+                    <div class="col-6 text-end">
+                      <span class="text-muted d-block small">Generation Date</span>
+                      <span class="text-main"><%= item[:date]&.strftime("%b %d, %Y") || '-' %></span>
+                    </div>
+                  </div>
+
+                  <% if @subscription.subscription_active? && (item[:type] == :pending || item[:type] == :generated) && item[:invoice].nil? && !item[:item].dig('optional_fields', 'one_time_charge') && !item[:item].dig('optional_fields', 'cancelled') && !item[:is_cancellation] %>
+                    <div class="mt-3 pt-2 border-top text-end">
+                      <button type="button" class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#cancelItemModal-<%= item[:index] %>">
+                        Cancel Adjustment
+                      </button>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
             </div>
           <% end %>
         </div>

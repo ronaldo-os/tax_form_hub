@@ -42,17 +42,34 @@
 
 .card-filter {
   cursor: pointer;
-  transition: all 0.2s ease;
+  border: none !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .card-filter:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.12),
+              0 10px 14px -4px rgba(0, 0, 0, 0.08),
+              0 4px 6px 0 rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="dark"] .card-filter:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.35),
+              0 8px 14px -2px rgba(0, 0, 0, 0.22),
+              0 0 0 1px rgba(255, 255, 255, 0.1) !important;
 }
 
 .card-filter.active {
-  border: 2px solid var(--main-color);
-  box-shadow: 0 0 10px rgba(13, 110, 253, 0.25);
+  border: none !important;
+  box-shadow: 0 12px 28px -4px rgba(0, 174, 255, 0.35),
+              0 0 0 2px var(--main-color) !important;
+}
+
+[data-theme="dark"] .card-filter.active {
+  border: none !important;
+  box-shadow: 0 14px 30px -4px rgba(0, 174, 255, 0.45),
+              0 0 0 2px var(--main-color) !important;
 }
 
 .card-filter.active p,

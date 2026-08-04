@@ -390,17 +390,52 @@ input[type="radio"]:checked {
   border: 1px solid var(--border-color) !important;
 }
 
-/* Cards */
-.card {
-  border-radius: 2px;
-  border: 1px solid !important;
-  border-color: #ededed !important;
+/* Cards - Modern 3D Shadow System */
+.card,
+.card-filter,
+.invoice-card,
+#invoice_card {
+  border-radius: 12px;
+  border: none !important;
+  border-color: transparent !important;
   background-color: var(--card-bg);
   color: var(--text-main);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+              0 8px 10px -6px rgba(0, 0, 0, 0.05),
+              0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-[data-theme="dark"] .card {
-  border-color: var(--border-color) !important;
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-filter,
+[data-theme="dark"] .invoice-card,
+[data-theme="dark"] #invoice_card {
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
+              0 6px 12px -2px rgba(0, 0, 0, 0.18),
+              0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+}
+
+/* Overview Stat Tiles & Mobile Adjustment Cards */
+.overview-stat-tile {
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.mid-cycle-mobile-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-theme="dark"] .mid-cycle-mobile-card {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 /* Modals */
@@ -485,28 +520,81 @@ input[type="radio"]:checked {
   left: -35px;
 }
 
-/* Custom tabs */
+/* Custom tabs - Transparent Track & Floating Active Card System */
 .custom_nav_tabs {
-  border-radius: 0px;
-  border-color: transparent;
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  background: transparent !important;
+  background-color: transparent !important;
+  border-radius: 12px;
+  border: none !important;
+  gap: 6px;
+}
+
+.custom_nav_tabs.nav-tabs {
+  border-bottom: none !important;
+}
+
+.custom_nav_tabs .nav-item {
+  margin-bottom: 0;
 }
 
 .custom_nav_tabs.nav-tabs .nav-link {
-  color: grey;
-  border: 3px solid transparent;
+  color: var(--text-muted);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid transparent !important;
   background-color: transparent;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
 .custom_nav_tabs.nav-tabs .nav-link:hover {
-  color: grey;
-  border-color: transparent;
+  color: var(--text-main);
+  background-color: var(--bg-tertiary);
+  border-color: transparent !important;
 }
 
 .custom_nav_tabs.nav-tabs .nav-link.active,
 .custom_nav_tabs.nav-tabs .nav-link.active:hover {
-  color: var(--main-color);
-  border-color: transparent transparent var(--main-color) transparent;
-  background-color: transparent;
+  color: var(--main-color) !important;
+  font-weight: 600;
+  background-color: var(--card-bg) !important;
+  border: none !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+              0 8px 10px -6px rgba(0, 0, 0, 0.05),
+              0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+[data-theme="dark"] .custom_nav_tabs,
+[data-theme="dark"] .custom_nav_tabs.nav-tabs {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+[data-theme="dark"] .custom_nav_tabs.nav-tabs .nav-link {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .custom_nav_tabs.nav-tabs .nav-link:hover {
+  color: var(--text-main);
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .custom_nav_tabs.nav-tabs .nav-link.active,
+[data-theme="dark"] .custom_nav_tabs.nav-tabs .nav-link.active:hover {
+  color: var(--main-color) !important;
+  background-color: var(--card-bg) !important;
+  border: none !important;
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
+              0 6px 12px -2px rgba(0, 0, 0, 0.18),
+              0 0 0 1px rgba(255, 255, 255, 0.07) !important;
 }
 
 

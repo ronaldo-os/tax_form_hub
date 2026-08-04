@@ -6,10 +6,18 @@
 
 .visitor-note {
   background: #fffd9e;
-  padding: 10px 15px;
+  padding: 12px 15px;
   border-bottom: 1px solid #d4c65e;
   font-size: 14px;
   text-align: center;
+  position: relative;
+  z-index: 100001;
+}
+
+@media (max-width: 991.98px) {
+  .visitor-note {
+    margin-top: -11px;
+  }
 }
 
 .visitor-note p {
