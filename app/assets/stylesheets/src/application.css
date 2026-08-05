@@ -54,7 +54,12 @@ body {
   color: var(--text-main);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--text-main) !important;
 }
 
@@ -63,7 +68,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .bg-body-tertiary {
-  background-color: white!important;
+  background-color: white !important;
 }
 
 .bg-light {
@@ -190,10 +195,12 @@ input[type="radio"] {
   background-color: #ffffff;
   border: 2px solid #212529;
   accent-color: #212529;
-  appearance: auto !important; /* Force native checkbox to be clickable and visible */
+  appearance: auto !important;
+  /* Force native checkbox to be clickable and visible */
   cursor: pointer;
   position: relative;
-  z-index: 2; /* Ensure it is above any overlays */
+  z-index: 2;
+  /* Ensure it is above any overlays */
 }
 
 input[type="checkbox"]:checked,
@@ -401,8 +408,8 @@ input[type="radio"]:checked {
   background-color: var(--card-bg);
   color: var(--text-main);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-              0 8px 10px -6px rgba(0, 0, 0, 0.05),
-              0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+    0 8px 10px -6px rgba(0, 0, 0, 0.05),
+    0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -413,8 +420,8 @@ input[type="radio"]:checked {
   border: none !important;
   border-color: transparent !important;
   box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
-              0 6px 12px -2px rgba(0, 0, 0, 0.18),
-              0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+    0 6px 12px -2px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.07) !important;
 }
 
 /* Overview Stat Tiles & Mobile Adjustment Cards */
@@ -435,7 +442,7 @@ input[type="radio"]:checked {
 
 [data-theme="dark"] .mid-cycle-mobile-card {
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
 /* Modals */
@@ -568,8 +575,8 @@ input[type="radio"]:checked {
   background-color: var(--card-bg) !important;
   border: none !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-              0 8px 10px -6px rgba(0, 0, 0, 0.05),
-              0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+    0 8px 10px -6px rgba(0, 0, 0, 0.05),
+    0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
 }
 
 [data-theme="dark"] .custom_nav_tabs,
@@ -593,8 +600,8 @@ input[type="radio"]:checked {
   background-color: var(--card-bg) !important;
   border: none !important;
   box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
-              0 6px 12px -2px rgba(0, 0, 0, 0.18),
-              0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+    0 6px 12px -2px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.07) !important;
 }
 
 
@@ -912,25 +919,25 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 }
 
 /* Badge */
-.badge.badge_cn{
-    background-color: #032830 !important;
-    color: rgba(13, 202, 240, 1) !important;
-    --bs-text-opacity: 1;
+.badge.badge_cn {
+  background-color: #032830 !important;
+  color: rgba(13, 202, 240, 1) !important;
+  --bs-text-opacity: 1;
 }
 
-[data-theme="light"] .badge.badge_cn{
-    background-color: var(--bg-tertiary) !important;
-    color: var(--main-color) !important;
-    --bs-text-opacity: 1;
+[data-theme="light"] .badge.badge_cn {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--main-color) !important;
+  --bs-text-opacity: 1;
 }
 
-.badge.badge_has_cn{
+.badge.badge_has_cn {
   background-color: rgb(84, 64, 6) !important;
   opacity: 1;
   color: rgb(255, 193, 7) !important;
 }
 
-[data-theme="light"] .badge.badge_has_cn{
+[data-theme="light"] .badge.badge_has_cn {
   background-color: rgba(255, 193, 7, 0.2) !important;
   opacity: 1;
   color: rgb(255, 193, 7) !important;
@@ -938,88 +945,88 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 
 /* Enhanced Form Controls Theme Support */
 [data-theme="dark"] .form-control {
-    background-color: var(--input-bg) !important;
-    color: var(--input-text) !important;
-    border-color: var(--border-color) !important;
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .form-control:focus {
-    background-color: var(--input-bg) !important;
-    color: var(--input-text) !important;
-    border-color: var(--main-color) !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 174, 255, 0.25) !important;
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--main-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 174, 255, 0.25) !important;
 }
 
 [data-theme="dark"] .form-control::placeholder {
-    color: var(--text-muted) !important;
+  color: var(--text-muted) !important;
 }
 
 [data-theme="dark"] .form-select {
-    background-color: var(--input-bg) !important;
-    color: var(--input-text) !important;
-    border-color: var(--border-color) !important;
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .form-select:focus {
-    background-color: var(--input-bg) !important;
-    color: var(--input-text) !important;
-    border-color: var(--main-color) !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 174, 255, 0.25) !important;
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--main-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 174, 255, 0.25) !important;
 }
 
 [data-theme="dark"] .form-control[type="file"] {
-    background-color: var(--input-bg) !important;
-    color: var(--input-text) !important;
-    border-color: var(--border-color) !important;
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .form-control[type="file"]::file-selector-button {
-    background-color: var(--bg-secondary) !important;
-    color: var(--text-main) !important;
-    border-color: var(--border-color) !important;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .form-control[type="file"]::file-selector-button:hover {
-    background-color: var(--bg-tertiary) !important;
-    color: var(--text-main) !important;
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-main) !important;
 }
 
 /* Modal content theme support */
 [data-theme="dark"] .modal-content {
-    background-color: var(--modal-content-bg) !important;
-    color: var(--modal-content-color) !important;
-    border-color: var(--border-color) !important;
+  background-color: var(--modal-content-bg) !important;
+  color: var(--modal-content-color) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .modal-header {
-    border-color: var(--border-color) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .modal-footer {
-    border-color: var(--border-color) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .file-upload-input {
-    background-color: var(--input-bg) !important;
-    color: var(--input-text) !important;
-    border-color: var(--border-color) !important;
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--border-color) !important;
 }
 
 [data-theme="dark"] .file-upload-input:focus {
-    background-color: var(--input-bg) !important;
-    color: var(--input-text) !important;
-    border-color: var(--main-color) !important;
-    box-shadow: 0 0 0 0.2rem rgba(0, 174, 255, 0.25) !important;
+  background-color: var(--input-bg) !important;
+  color: var(--input-text) !important;
+  border-color: var(--main-color) !important;
+  box-shadow: 0 0 0 0.2rem rgba(0, 174, 255, 0.25) !important;
 }
 
 [data-theme="dark"] .file-upload-input::file-selector-button {
-    background-color: var(--bg-secondary) !important;
-    color: var(--text-main) !important;
-    border-color: var(--border-color) !important;
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-main) !important;
+  border-color: var(--border-color) !important;
 }
 
 
 [data-theme="dark"] .file-upload-input::file-selector-button:hover {
-    background-color: var(--bg-tertiary) !important;
-    color: var(--text-main) !important;
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-main) !important;
 }

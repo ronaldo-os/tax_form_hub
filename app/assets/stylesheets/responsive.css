@@ -68,7 +68,7 @@
     font-size: 0.85rem;
   }
 
-  /* Full screen width container on mobile - TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS & COMPANIES PAGES */
+  /* Full screen width container on mobile - TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS, COMPANIES, NETWORKS & INVOICES PAGES */
   .tax-submissions-page,
   .tax-submissions-page.container,
   .tax-submissions-page .container,
@@ -80,13 +80,61 @@
   .subscriptions-page .container,
   .companies-page,
   .companies-page.container,
-  .companies-page .container {
+  .companies-page .container,
+  .networks-page,
+  .networks-page.container,
+  .networks-page .container,
+  .invoices-page,
+  .invoices-page.container,
+  .invoices-page .container {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
     max-width: 100% !important;
     width: 100% !important;
     overflow-x: hidden !important;
     box-sizing: border-box !important;
+  }
+
+  /* Invoices page scrollable tab bar & header container for mobile/tablet */
+  .invoices-page .invoice-header-bar {
+    width: 100%;
+  }
+
+  .invoices-page .tabs-scroll-container {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 2px;
+  }
+
+  .invoices-page .tabs-scroll-container::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .invoices-page .custom_nav_tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    width: max-content;
+    min-width: 100%;
+    gap: 6px;
+  }
+
+  .invoices-page .custom_nav_tabs .nav-item {
+    flex: 1 0 auto;
+  }
+
+  .invoices-page .custom_nav_tabs .nav-link {
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .invoices-page .invoice-action-buttons {
+    width: 100%;
   }
 
   .companies-page .card {
@@ -125,22 +173,25 @@
 
   .tax-submissions-page .row,
   .locations-page .row,
-  .subscriptions-page .row {
+  .subscriptions-page .row,
+  .invoices-page .row {
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
 
   .tax-submissions-page > .d-flex:not(.custom_nav_tabs),
   .locations-page > .d-flex:not(.custom_nav_tabs),
-  .subscriptions-page > .d-flex:not(.custom_nav_tabs) {
+  .subscriptions-page > .d-flex:not(.custom_nav_tabs),
+  .invoices-page > .d-flex:not(.custom_nav_tabs) {
     padding-left: 0;
     padding-right: 0;
   }
 
-  /* Modern 3D Card Styling for Mobile & Tablets - TAX SUBMISSIONS, LOCATIONS & SUBSCRIPTIONS PAGES */
+  /* Modern 3D Card Styling for Mobile & Tablets - TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS & INVOICES PAGES */
   .tax-submissions-page .card,
   .locations-page .card,
-  .subscriptions-page .card {
+  .subscriptions-page .card,
+  .invoices-page .card {
     background: var(--card-bg) !important;
     border: none !important;
     border-radius: 12px !important;
@@ -152,7 +203,8 @@
 
   [data-theme="dark"] .tax-submissions-page .card,
   [data-theme="dark"] .locations-page .card,
-  [data-theme="dark"] .subscriptions-page .card {
+  [data-theme="dark"] .subscriptions-page .card,
+  [data-theme="dark"] .invoices-page .card {
     box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
                 0 6px 12px -2px rgba(0, 0, 0, 0.18),
                 0 0 0 1px rgba(255, 255, 255, 0.07) !important;
@@ -160,14 +212,16 @@
 
   .tax-submissions-page .card-body,
   .locations-page .card-body,
-  .subscriptions-page .card-body {
+  .subscriptions-page .card-body,
+  .invoices-page .card-body {
     padding: 0.75rem !important;
   }
 
   /* DataTables wrapper strictly confined to screen width */
   .tax-submissions-page div.dataTables_wrapper,
   .locations-page div.dataTables_wrapper,
-  .subscriptions-page div.dataTables_wrapper {
+  .subscriptions-page div.dataTables_wrapper,
+  .invoices-page div.dataTables_wrapper {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: hidden !important;
@@ -188,7 +242,11 @@
   .subscriptions-page div.dataTables_wrapper div.dataTables_filter,
   .subscriptions-page div.dataTables_wrapper div.dataTables_length,
   .subscriptions-page div.dataTables_wrapper div.dataTables_info,
-  .subscriptions-page div.dataTables_wrapper div.dataTables_paginate {
+  .subscriptions-page div.dataTables_wrapper div.dataTables_paginate,
+  .invoices-page div.dataTables_wrapper div.dataTables_filter,
+  .invoices-page div.dataTables_wrapper div.dataTables_length,
+  .invoices-page div.dataTables_wrapper div.dataTables_info,
+  .invoices-page div.dataTables_wrapper div.dataTables_paginate {
     padding-left: 0;
     padding-right: 0;
     box-sizing: border-box !important;
@@ -197,7 +255,8 @@
   /* Remove col-sm-12 padding on the datatable container */
   .tax-submissions-page div.dataTables_wrapper .col-sm-12,
   .locations-page div.dataTables_wrapper .col-sm-12,
-  .subscriptions-page div.dataTables_wrapper .col-sm-12 {
+  .subscriptions-page div.dataTables_wrapper .col-sm-12,
+  .invoices-page div.dataTables_wrapper .col-sm-12 {
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
@@ -208,7 +267,9 @@
   .locations-page div.dataTables_wrapper > .row:nth-child(2),
   .locations-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child),
   .subscriptions-page div.dataTables_wrapper > .row:nth-child(2),
-  .subscriptions-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child) {
+  .subscriptions-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child),
+  .invoices-page div.dataTables_wrapper > .row:nth-child(2),
+  .invoices-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child) {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: auto !important;
@@ -223,7 +284,8 @@
 
   .tax-submissions-page table.dataTable,
   .locations-page table.dataTable,
-  .subscriptions-page table.dataTable {
+  .subscriptions-page table.dataTable,
+  .invoices-page table.dataTable {
     display: table !important;
     width: 100% !important;
     max-width: none !important;
@@ -236,25 +298,29 @@
 
   .tax-submissions-page table.dataTable thead th:first-child,
   .locations-page table.dataTable thead th:first-child,
-  .subscriptions-page table.dataTable thead th:first-child {
+  .subscriptions-page table.dataTable thead th:first-child,
+  .invoices-page table.dataTable thead th:first-child {
     border-top-left-radius: 5px !important;
   }
 
   .tax-submissions-page table.dataTable thead th:last-child,
   .locations-page table.dataTable thead th:last-child,
-  .subscriptions-page table.dataTable thead th:last-child {
+  .subscriptions-page table.dataTable thead th:last-child,
+  .invoices-page table.dataTable thead th:last-child {
     border-top-right-radius: 5px !important;
   }
 
   .tax-submissions-page table.dataTable tbody tr:last-child td:first-child,
   .locations-page table.dataTable tbody tr:last-child td:first-child,
-  .subscriptions-page table.dataTable tbody tr:last-child td:first-child {
+  .subscriptions-page table.dataTable tbody tr:last-child td:first-child,
+  .invoices-page table.dataTable tbody tr:last-child td:first-child {
     border-bottom-left-radius: 5px !important;
   }
 
   .tax-submissions-page table.dataTable tbody tr:last-child td:last-child,
   .locations-page table.dataTable tbody tr:last-child td:last-child,
-  .subscriptions-page table.dataTable tbody tr:last-child td:last-child {
+  .subscriptions-page table.dataTable tbody tr:last-child td:last-child,
+  .invoices-page table.dataTable tbody tr:last-child td:last-child {
     border-bottom-right-radius: 5px !important;
   }
 
@@ -275,7 +341,13 @@
   .subscriptions-page .table th,
   .subscriptions-page .table td,
   .subscriptions-page table.dataTable th.dtr-hidden,
-  .subscriptions-page table.dataTable td.dtr-hidden {
+  .subscriptions-page table.dataTable td.dtr-hidden,
+  .invoices-page table.dataTable th,
+  .invoices-page table.dataTable td,
+  .invoices-page .table th,
+  .invoices-page .table td,
+  .invoices-page table.dataTable th.dtr-hidden,
+  .invoices-page table.dataTable td.dtr-hidden {
     display: table-cell !important;
     white-space: nowrap !important;
   }
@@ -285,21 +357,25 @@
   .locations-page table.dataTable td.dtr-control::before,
   .locations-page table.dataTable th.dtr-control::before,
   .subscriptions-page table.dataTable td.dtr-control::before,
-  .subscriptions-page table.dataTable th.dtr-control::before {
+  .subscriptions-page table.dataTable th.dtr-control::before,
+  .invoices-page table.dataTable td.dtr-control::before,
+  .invoices-page table.dataTable th.dtr-control::before {
     display: none !important;
   }
 
-  /* Tax Submissions, Locations & Subscriptions Pages DataTables Formatting (Mobile & Tablets Only) */
+  /* Tax Submissions, Locations, Subscriptions & Invoices Pages DataTables Formatting (Mobile & Tablets Only) */
   .tax-submissions-page .dataTables_wrapper,
   .locations-page .dataTables_wrapper,
-  .subscriptions-page .dataTables_wrapper {
+  .subscriptions-page .dataTables_wrapper,
+  .invoices-page .dataTables_wrapper {
     font-family: inherit;
     color: var(--text-main);
   }
 
   .tax-submissions-page .dataTables_wrapper > .row:first-child,
   .locations-page .dataTables_wrapper > .row:first-child,
-  .subscriptions-page .dataTables_wrapper > .row:first-child {
+  .subscriptions-page .dataTables_wrapper > .row:first-child,
+  .invoices-page .dataTables_wrapper > .row:first-child {
     display: flex !important;
     flex-direction: column-reverse !important;
     gap: 12px !important;
@@ -310,7 +386,8 @@
 
   .tax-submissions-page .dataTables_wrapper > .row:first-child > div,
   .locations-page .dataTables_wrapper > .row:first-child > div,
-  .subscriptions-page .dataTables_wrapper > .row:first-child > div {
+  .subscriptions-page .dataTables_wrapper > .row:first-child > div,
+  .invoices-page .dataTables_wrapper > .row:first-child > div {
     width: 100% !important;
     max-width: 100% !important;
     flex: 0 0 100% !important;
@@ -320,7 +397,8 @@
 
   .tax-submissions-page div.dataTables_filter,
   .locations-page div.dataTables_filter,
-  .subscriptions-page div.dataTables_filter {
+  .subscriptions-page div.dataTables_filter,
+  .invoices-page div.dataTables_filter {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -329,7 +407,8 @@
 
   .tax-submissions-page div.dataTables_filter label,
   .locations-page div.dataTables_filter label,
-  .subscriptions-page div.dataTables_filter label {
+  .subscriptions-page div.dataTables_filter label,
+  .invoices-page div.dataTables_filter label {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 !important;
@@ -339,7 +418,8 @@
   /* Search input with theme variables */
   .tax-submissions-page div.dataTables_filter input,
   .locations-page div.dataTables_filter input,
-  .subscriptions-page div.dataTables_filter input {
+  .subscriptions-page div.dataTables_filter input,
+  .invoices-page div.dataTables_filter input {
     width: 100% !important;
     max-width: 100% !important;
     margin-left: 0 !important;
@@ -361,7 +441,8 @@
 
   .tax-submissions-page div.dataTables_filter input:focus,
   .locations-page div.dataTables_filter input:focus,
-  .subscriptions-page div.dataTables_filter input:focus {
+  .subscriptions-page div.dataTables_filter input:focus,
+  .invoices-page div.dataTables_filter input:focus {
     border-color: var(--main-color) !important;
     background-color: var(--input-bg) !important;
     box-shadow: 0 0 0 3px rgba(0, 174, 255, 0.15) !important;
@@ -370,7 +451,8 @@
   /* Styled per-page, company, and type dropdowns in a single flex row */
   .tax-submissions-page div.dataTables_length,
   .locations-page div.dataTables_length,
-  .subscriptions-page div.dataTables_length {
+  .subscriptions-page div.dataTables_length,
+  .invoices-page div.dataTables_length {
     margin: 0 !important;
     width: 100% !important;
     display: flex !important;
@@ -389,7 +471,8 @@
   .locations-page .custom-type-filter,
   .subscriptions-page div.dataTables_length select,
   .subscriptions-page .custom-company-filter,
-  .subscriptions-page .custom-status-filter {
+  .subscriptions-page .custom-status-filter,
+  .invoices-page div.dataTables_length select {
     border-radius: 8px !important;
     border: 1px solid var(--border-color) !important;
     background-color: var(--input-bg) !important;
@@ -413,7 +496,8 @@
   /* Table Header & Cells with theme variables */
   .tax-submissions-page table.dataTable thead th,
   .locations-page table.dataTable thead th,
-  .subscriptions-page table.dataTable thead th {
+  .subscriptions-page table.dataTable thead th,
+  .invoices-page table.dataTable thead th {
     background-color: var(--bg-tertiary) !important;
     color: var(--text-muted) !important;
     font-size: 0.825rem !important;
@@ -426,7 +510,8 @@
 
   .tax-submissions-page table.dataTable tbody td,
   .locations-page table.dataTable tbody td,
-  .subscriptions-page table.dataTable tbody td {
+  .subscriptions-page table.dataTable tbody td,
+  .invoices-page table.dataTable tbody td {
     padding: 14px 16px !important;
     border-bottom: 1px solid var(--border-color) !important;
     color: var(--text-main) !important;
@@ -437,13 +522,15 @@
 
   .tax-submissions-page table.dataTable tbody tr:hover td,
   .locations-page table.dataTable tbody tr:hover td,
-  .subscriptions-page table.dataTable tbody tr:hover td {
+  .subscriptions-page table.dataTable tbody tr:hover td,
+  .invoices-page table.dataTable tbody tr:hover td {
     background-color: var(--bg-secondary) !important;
   }
 
   .tax-submissions-page table.dataTable tbody td.dataTables_empty,
   .locations-page table.dataTable tbody td.dataTables_empty,
-  .subscriptions-page table.dataTable tbody td.dataTables_empty {
+  .subscriptions-page table.dataTable tbody td.dataTables_empty,
+  .invoices-page table.dataTable tbody td.dataTables_empty {
     text-align: center !important;
     padding: 32px 16px !important;
     color: var(--text-muted) !important;
@@ -454,7 +541,8 @@
   /* Centered Info & Pagination controls with theme variables */
   .tax-submissions-page div.dataTables_wrapper > .row:last-child,
   .locations-page div.dataTables_wrapper > .row:last-child,
-  .subscriptions-page div.dataTables_wrapper > .row:last-child {
+  .subscriptions-page div.dataTables_wrapper > .row:last-child,
+  .invoices-page div.dataTables_wrapper > .row:last-child {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -467,7 +555,8 @@
 
   .tax-submissions-page div.dataTables_info,
   .locations-page div.dataTables_info,
-  .subscriptions-page div.dataTables_info {
+  .subscriptions-page div.dataTables_info,
+  .invoices-page div.dataTables_info {
     text-align: center !important;
     color: var(--text-muted) !important;
     font-size: 0.875rem !important;
@@ -478,7 +567,8 @@
 
   .tax-submissions-page div.dataTables_paginate,
   .locations-page div.dataTables_paginate,
-  .subscriptions-page div.dataTables_paginate {
+  .subscriptions-page div.dataTables_paginate,
+  .invoices-page div.dataTables_paginate {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -490,7 +580,8 @@
 
   .tax-submissions-page div.dataTables_paginate .pagination,
   .locations-page div.dataTables_paginate .pagination,
-  .subscriptions-page div.dataTables_paginate .pagination {
+  .subscriptions-page div.dataTables_paginate .pagination,
+  .invoices-page div.dataTables_paginate .pagination {
     display: flex !important;
     gap: 6px !important;
     margin: 0 !important;
@@ -500,7 +591,8 @@
 
   .tax-submissions-page div.dataTables_paginate .page-item .page-link,
   .locations-page div.dataTables_paginate .page-item .page-link,
-  .subscriptions-page div.dataTables_paginate .page-item .page-link {
+  .subscriptions-page div.dataTables_paginate .page-item .page-link,
+  .invoices-page div.dataTables_paginate .page-item .page-link {
     border: none !important;
     background: var(--bg-tertiary) !important;
     color: var(--text-main) !important;
@@ -519,14 +611,16 @@
 
   .tax-submissions-page div.dataTables_paginate .page-item:hover .page-link,
   .locations-page div.dataTables_paginate .page-item:hover .page-link,
-  .subscriptions-page div.dataTables_paginate .page-item:hover .page-link {
+  .subscriptions-page div.dataTables_paginate .page-item:hover .page-link,
+  .invoices-page div.dataTables_paginate .page-item:hover .page-link {
     background-color: var(--bg-secondary) !important;
     color: var(--text-main) !important;
   }
 
   .tax-submissions-page div.dataTables_paginate .page-item.active .page-link,
   .locations-page div.dataTables_paginate .page-item.active .page-link,
-  .subscriptions-page div.dataTables_paginate .page-item.active .page-link {
+  .subscriptions-page div.dataTables_paginate .page-item.active .page-link,
+  .invoices-page div.dataTables_paginate .page-item.active .page-link {
     background-color: var(--main-color) !important;
     color: #ffffff !important;
     font-weight: 600 !important;
@@ -535,7 +629,8 @@
 
   .tax-submissions-page div.dataTables_paginate .page-item.disabled .page-link,
   .locations-page div.dataTables_paginate .page-item.disabled .page-link,
-  .subscriptions-page div.dataTables_paginate .page-item.disabled .page-link {
+  .subscriptions-page div.dataTables_paginate .page-item.disabled .page-link,
+  .invoices-page div.dataTables_paginate .page-item.disabled .page-link {
     color: var(--text-muted) !important;
     background: var(--bg-secondary) !important;
     cursor: not-allowed !important;
@@ -942,5 +1037,221 @@
     align-items: flex-start !important;
     padding-top: 2rem !important;
     padding-bottom: 2rem !important;
+  }
+}
+
+/* ==========================================================================
+   NETWORKS PAGE: MODERN RESPONSIVE STYLES (PHONES & TABLETS)
+   ========================================================================== */
+
+.networks-page .fs-7 {
+  font-size: 0.85rem !important;
+}
+
+.networks-page .fs-8 {
+  font-size: 0.775rem !important;
+}
+
+.networks-page .company-avatar-box {
+  width: 50px;
+  height: 50px;
+  background-color: var(--bg-tertiary, #f8f9fa);
+}
+
+.networks-page .company-avatar-square {
+  width: 44px;
+  height: 44px;
+  background-color: var(--bg-tertiary, #f8f9fa);
+}
+
+.networks-page .avatar-initials-badge {
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+}
+
+.networks-page .btn-icon-touch {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: background-color 0.15s ease;
+}
+
+.networks-page .status-dot-active {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #198754;
+  display: inline-block;
+}
+
+.networks-page .meta-icon-wrapper {
+  width: 22px;
+}
+
+.networks-page .empty-network-illustration {
+  width: 72px;
+  height: 72px;
+}
+
+.networks-page .network-search-card {
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.networks-page .search-input-group {
+  display: flex !important;
+  align-items: center !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  background-color: var(--input-bg, var(--bg-secondary, #ffffff));
+  border: 1px solid var(--border-color, #dee2e6) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.networks-page .search-input-group .input-group-text {
+  border: none !important;
+  background: transparent !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin: 0 !important;
+  height: 100% !important;
+  color: var(--text-muted, #6c757d) !important;
+}
+
+.networks-page .search-input-group .form-control {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--input-text, inherit) !important;
+  display: flex !important;
+  align-items: center !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  height: 100% !important;
+}
+
+.networks-page .search-input-group:focus-within {
+  border-color: var(--main-color, #0d6efd) !important;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+}
+
+.networks-page .network-autocomplete-popover {
+  z-index: 1060;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.networks-page .company-title-link {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  transition: color 0.15s ease;
+}
+
+.networks-page .company-title-link:hover {
+  color: var(--main-color, #0d6efd) !important;
+}
+
+/* Modern Networks Card Design (Desktop, Tablet & Mobile) */
+.networks-page .network-company-card {
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+              0 8px 10px -6px rgba(0, 0, 0, 0.05),
+              0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.networks-page .network-company-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.12),
+              0 8px 12px -6px rgba(0, 0, 0, 0.08) !important;
+}
+
+.networks-page .network-company-card .card-title {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+[data-theme="dark"] .networks-page .network-company-card {
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.3),
+              0 6px 12px -2px rgba(0, 0, 0, 0.2),
+              0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .networks-page .network-company-card:hover {
+  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.45),
+              0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+}
+
+.networks-page .network-search-card {
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+              0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+[data-theme="dark"] .networks-page .network-search-card {
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+@media (max-width: 575.98px) {
+  .networks-page .company-avatar-box {
+    width: 44px;
+    height: 44px;
+  }
+
+  .networks-page .avatar-initials-badge {
+    font-size: 0.95rem;
+  }
+
+  .networks-page .network-autocomplete-popover {
+    position: fixed !important;
+    top: auto !important;
+    left: 12px !important;
+    right: 12px !important;
+    width: auto !important;
+    max-height: 60vh !important;
+  }
+
+  .networks-page .card-body {
+    padding: 1rem !important;
+  }
+}
+
+/* ==========================================================================
+   DESKTOP & IPAD PRO (>= 992px) SIDEBAR CLEARANCE & GRID FIX
+   ========================================================================== */
+@media (min-width: 992px) {
+  #main_content_div {
+    margin-left: 95px !important;
+    transition: margin-left 0.3s ease;
+  }
+
+  .app-sidebar.app-active ~ #main_content_div,
+  body:has(.app-sidebar.app-active) #main_content_div {
+    margin-left: 315px !important;
+  }
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .networks-page {
+    max-width: 100% !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
   }
 }

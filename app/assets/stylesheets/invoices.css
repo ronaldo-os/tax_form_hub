@@ -12,6 +12,21 @@
   overflow: hidden;
 }
 
+.extra-small {
+  font-size: 0.75rem;
+}
+
+@media (max-width: 575.98px) {
+  .chart-wrapper {
+    width: 60px;
+    height: 24px;
+  }
+
+  .stat-card-number {
+    font-size: 1.15rem !important;
+  }
+}
+
 #invoice-preview table td,
 #invoice-preview table th {
   vertical-align: middle;

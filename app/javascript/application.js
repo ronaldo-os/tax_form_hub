@@ -59,7 +59,7 @@ import Rails from "@rails/ujs";
 import "@hotwired/turbo-rails";
 import { Turbo } from "@hotwired/turbo-rails";
 
-window.showUnsavedChangesModal = function({
+window.showUnsavedChangesModal = function ({
   title = "Unsaved Changes",
   message = "You have unsaved changes. If you continue, your changes will be lost. Are you sure you want to proceed?",
   confirmText = "Continue"
@@ -107,7 +107,7 @@ window.showUnsavedChangesModal = function({
     let modal;
     try {
       modal = new bootstrap.Modal(modalElement);
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       const userConfirmed = window.confirm(message);
       if (userConfirmed) window.isInvoiceFormDirty = false;
@@ -152,14 +152,14 @@ Turbo.config.forms.confirm = (message, element) => {
 
   try {
     if (element) {
-      isLogout = element.id === 'logout-btn' || 
-                 (typeof element.closest === 'function' && element.closest('#logout-btn') !== null) ||
-                 message.toLowerCase().includes('log out');
+      isLogout = element.id === 'logout-btn' ||
+        (typeof element.closest === 'function' && element.closest('#logout-btn') !== null) ||
+        message.toLowerCase().includes('log out');
 
-      isDiscard = element.classList?.contains('discard-btn') || 
-                  element.classList?.contains('discard-form') || 
-                  (typeof element.closest === 'function' && (element.closest('.discard-btn') !== null || element.closest('.discard-form') !== null)) ||
-                  message.toLowerCase().includes('discard');
+      isDiscard = element.classList?.contains('discard-btn') ||
+        element.classList?.contains('discard-form') ||
+        (typeof element.closest === 'function' && (element.closest('.discard-btn') !== null || element.closest('.discard-form') !== null)) ||
+        message.toLowerCase().includes('discard');
     } else {
       isLogout = message.toLowerCase().includes('log out');
       isDiscard = message.toLowerCase().includes('discard');
@@ -268,329 +268,329 @@ stimulusApplication.register('sidebar', SidebarController);
 stimulusApplication.register('password-validation', PasswordValidationController);
 
 function updateThemeUI(theme) {
-    const btn = document.getElementById('theme_toggle_btn');
-    if (!btn) {
-        return;
-    }
-    
-    // Find the icon and text - they're inside the <a> tag
-    const icon = btn.querySelector('i');
-    const text = btn.querySelector('.app-text');
+  const btn = document.getElementById('theme_toggle_btn');
+  if (!btn) {
+    return;
+  }
 
-    if (theme === 'dark') {
-        if (icon) {
-            icon.classList.remove('fa-moon');
-            icon.classList.add('fa-sun');
-        }
-        if (text) text.textContent = 'Light Mode';
-    } else {
-        if (icon) {
-            icon.classList.remove('fa-sun');
-            icon.classList.add('fa-moon');
-        }
-        if (text) text.textContent = 'Dark Mode';
+  // Find the icon and text - they're inside the <a> tag
+  const icon = btn.querySelector('i');
+  const text = btn.querySelector('.app-text');
+
+  if (theme === 'dark') {
+    if (icon) {
+      icon.classList.remove('fa-moon');
+      icon.classList.add('fa-sun');
     }
+    if (text) text.textContent = 'Light Mode';
+  } else {
+    if (icon) {
+      icon.classList.remove('fa-sun');
+      icon.classList.add('fa-moon');
+    }
+    if (text) text.textContent = 'Dark Mode';
+  }
 }
 
 function handleThemeToggle(e) {
-    e.preventDefault();
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  e.preventDefault();
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
 
-    console.log('Theme toggle clicked. Current:', currentTheme, 'New:', newTheme);
-    
-    // Disable transitions temporarily
-    const css = document.createElement('style');
-    css.appendChild(
-        document.createTextNode(
-            `* {
+  console.log('Theme toggle clicked. Current:', currentTheme, 'New:', newTheme);
+
+  // Disable transitions temporarily
+  const css = document.createElement('style');
+  css.appendChild(
+    document.createTextNode(
+      `* {
                -webkit-transition: none !important;
                -moz-transition: none !important;
                -o-transition: none !important;
                -ms-transition: none !important;
                transition: none !important;
             }`
-        )
-    );
-    document.head.appendChild(css);
+    )
+  );
+  document.head.appendChild(css);
 
-    document.documentElement.setAttribute('data-theme', newTheme);
-    document.documentElement.setAttribute('data-bs-theme', newTheme);
-    
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    if (csrfToken) {
-        fetch('/profile/theme', {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': csrfToken
-            },
-            body: JSON.stringify({ theme: newTheme })
-        }).catch(err => console.error('Failed to save theme:', err));
-    }
-    
-    updateThemeUI(newTheme);
-    
-    // Update dynamic elements that don't automatically respond to theme changes
-    updateDynamicElementsForTheme(newTheme);
-    
-    // Dispatch custom event to notify components of theme change
-    const event = new CustomEvent('theme:changed', { detail: { theme: newTheme } });
-    document.dispatchEvent(event);
+  document.documentElement.setAttribute('data-theme', newTheme);
+  document.documentElement.setAttribute('data-bs-theme', newTheme);
 
-    // Force repaint before re-enabling transitions
-    const _ = window.getComputedStyle(css).opacity;
-    document.head.removeChild(css);
+  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+  if (csrfToken) {
+    fetch('/profile/theme', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
+      body: JSON.stringify({ theme: newTheme })
+    }).catch(err => console.error('Failed to save theme:', err));
+  }
+
+  updateThemeUI(newTheme);
+
+  // Update dynamic elements that don't automatically respond to theme changes
+  updateDynamicElementsForTheme(newTheme);
+
+  // Dispatch custom event to notify components of theme change
+  const event = new CustomEvent('theme:changed', { detail: { theme: newTheme } });
+  document.dispatchEvent(event);
+
+  // Force repaint before re-enabling transitions
+  const _ = window.getComputedStyle(css).opacity;
+  document.head.removeChild(css);
 }
 
 function updateDynamicElementsForTheme(theme) {
-    // Update all badges that use theme-dependent classes (both subtle and solid)
-    const allBadges = document.querySelectorAll('.badge.bg-primary-subtle, .badge.bg-primary, .badge.bg-success-subtle, .badge.bg-success, .badge.bg-danger-subtle, .badge.bg-danger, .badge.bg-info-subtle, .badge.bg-info');
-    allBadges.forEach(badge => {
-        if (theme === 'dark') {
-            // Convert to solid colors in dark mode
-            if (badge.classList.contains('bg-primary-subtle')) {
-                badge.classList.remove('bg-primary-subtle', 'text-primary');
-                badge.classList.add('bg-primary', 'text-white');
-            }
-            if (badge.classList.contains('bg-success-subtle')) {
-                badge.classList.remove('bg-success-subtle', 'text-success-emphasis', 'text-success');
-                badge.classList.add('bg-success', 'text-white');
-            }
-            if (badge.classList.contains('bg-danger-subtle')) {
-                badge.classList.remove('bg-danger-subtle', 'text-danger');
-                badge.classList.add('bg-danger', 'text-white');
-            }
-            if (badge.classList.contains('bg-info-subtle')) {
-                badge.classList.remove('bg-info-subtle', 'text-info');
-                badge.classList.add('bg-info', 'text-white');
-            }
-        } else {
-            // Convert back to subtle colors in light mode
-            if (badge.classList.contains('bg-primary')) {
-                badge.classList.remove('bg-primary', 'text-white');
-                badge.classList.add('bg-primary-subtle', 'text-primary');
-            }
-            if (badge.classList.contains('bg-success')) {
-                badge.classList.remove('bg-success', 'text-white');
-                badge.classList.add('bg-success-subtle', 'text-success-emphasis');
-            }
-            if (badge.classList.contains('bg-danger')) {
-                badge.classList.remove('bg-danger', 'text-white');
-                badge.classList.add('bg-danger-subtle', 'text-danger');
-            }
-            if (badge.classList.contains('bg-info')) {
-                badge.classList.remove('bg-info', 'text-white');
-                badge.classList.add('bg-info-subtle', 'text-info');
-            }
-        }
-    });
-    
-    // Update DataTables if they exist
-    if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        $('.dataTable').each(function() {
-            const dt = $(this).DataTable();
-            // Redraw without resetting paging to apply new theme styles
-            dt.draw(false);
-        });
-        
-        // Update DataTable pagination and info elements
-        $('.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate').each(function() {
-            this.style.color = 'var(--text-main)';
-        });
+  // Update all badges that use theme-dependent classes (both subtle and solid)
+  const allBadges = document.querySelectorAll('.badge.bg-primary-subtle, .badge.bg-primary, .badge.bg-success-subtle, .badge.bg-success, .badge.bg-danger-subtle, .badge.bg-danger, .badge.bg-info-subtle, .badge.bg-info');
+  allBadges.forEach(badge => {
+    if (theme === 'dark') {
+      // Convert to solid colors in dark mode
+      if (badge.classList.contains('bg-primary-subtle')) {
+        badge.classList.remove('bg-primary-subtle', 'text-primary');
+        badge.classList.add('bg-primary', 'text-white');
+      }
+      if (badge.classList.contains('bg-success-subtle')) {
+        badge.classList.remove('bg-success-subtle', 'text-success-emphasis', 'text-success');
+        badge.classList.add('bg-success', 'text-white');
+      }
+      if (badge.classList.contains('bg-danger-subtle')) {
+        badge.classList.remove('bg-danger-subtle', 'text-danger');
+        badge.classList.add('bg-danger', 'text-white');
+      }
+      if (badge.classList.contains('bg-info-subtle')) {
+        badge.classList.remove('bg-info-subtle', 'text-info');
+        badge.classList.add('bg-info', 'text-white');
+      }
+    } else {
+      // Convert back to subtle colors in light mode
+      if (badge.classList.contains('bg-primary')) {
+        badge.classList.remove('bg-primary', 'text-white');
+        badge.classList.add('bg-primary-subtle', 'text-primary');
+      }
+      if (badge.classList.contains('bg-success')) {
+        badge.classList.remove('bg-success', 'text-white');
+        badge.classList.add('bg-success-subtle', 'text-success-emphasis');
+      }
+      if (badge.classList.contains('bg-danger')) {
+        badge.classList.remove('bg-danger', 'text-white');
+        badge.classList.add('bg-danger-subtle', 'text-danger');
+      }
+      if (badge.classList.contains('bg-info')) {
+        badge.classList.remove('bg-info', 'text-white');
+        badge.classList.add('bg-info-subtle', 'text-info');
+      }
     }
-    
-    // Force form controls to recalculate their styles
-    const formControls = document.querySelectorAll('.form-control, .form-select');
-    formControls.forEach(control => {
-        // Temporarily remove and re-add the class to force style recalculation
-        const className = control.className;
-        control.className = '';
-        control.className = className;
+  });
+
+  // Update DataTables if they exist
+  if (typeof $ !== 'undefined' && $.fn.DataTable) {
+    $('.dataTable').each(function () {
+      const dt = $(this).DataTable();
+      // Redraw without resetting paging to apply new theme styles
+      dt.draw(false);
     });
-    
-    // Specifically handle file inputs in modals
-    const modalFileInputs = document.querySelectorAll('.modal .file-upload-input, .modal input[type="file"]');
-    modalFileInputs.forEach(input => {
-        // Force style recalculation for file inputs
-        const className = input.className;
-        input.className = '';
-        input.className = className;
-        
-        // Also update the file selector button style if it exists
-        if (input.style) {
-            input.style.backgroundColor = '';
-            input.style.color = '';
-            input.style.borderColor = '';
-        }
+
+    // Update DataTable pagination and info elements
+    $('.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate').each(function () {
+      this.style.color = 'var(--text-main)';
     });
+  }
+
+  // Force form controls to recalculate their styles
+  const formControls = document.querySelectorAll('.form-control, .form-select');
+  formControls.forEach(control => {
+    // Temporarily remove and re-add the class to force style recalculation
+    const className = control.className;
+    control.className = '';
+    control.className = className;
+  });
+
+  // Specifically handle file inputs in modals
+  const modalFileInputs = document.querySelectorAll('.modal .file-upload-input, .modal input[type="file"]');
+  modalFileInputs.forEach(input => {
+    // Force style recalculation for file inputs
+    const className = input.className;
+    input.className = '';
+    input.className = className;
+
+    // Also update the file selector button style if it exists
+    if (input.style) {
+      input.style.backgroundColor = '';
+      input.style.color = '';
+      input.style.borderColor = '';
+    }
+  });
 }
 
 // Event delegation handler for theme toggle clicks
 function handleThemeToggleEvent(e) {
-    const themeBtn = e.target.closest('#theme_toggle_btn');
-    if (themeBtn) {
-        handleThemeToggle(e);
-    }
+  const themeBtn = e.target.closest('#theme_toggle_btn');
+  if (themeBtn) {
+    handleThemeToggle(e);
+  }
 }
 
 function initApplication() {
-    // Theme Toggle Logic - Ensure theme is synced from server rendering
-    const metaTheme = document.querySelector('meta[name="user-theme"]')?.getAttribute('content');
-    const savedTheme = metaTheme || document.documentElement.getAttribute('data-theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    document.documentElement.setAttribute('data-bs-theme', savedTheme);
-    
-    // Initial UI update
-    updateThemeUI(savedTheme);
-    
-    // Initialize dynamic elements for current theme
-    updateDynamicElementsForTheme(savedTheme);
+  // Theme Toggle Logic - Ensure theme is synced from server rendering
+  const metaTheme = document.querySelector('meta[name="user-theme"]')?.getAttribute('content');
+  const savedTheme = metaTheme || document.documentElement.getAttribute('data-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  document.documentElement.setAttribute('data-bs-theme', savedTheme);
 
-    // Setup theme toggle button listener using vanilla JS event delegation
-    document.removeEventListener('click', handleThemeToggleEvent);
-    document.addEventListener('click', handleThemeToggleEvent);
+  // Initial UI update
+  updateThemeUI(savedTheme);
 
-    // password toggle handler - delegated event
-    $(document).off('click.pw-toggle').on('click.pw-toggle', '.toggle-password-icon', function (event) {
-        event.preventDefault();
+  // Initialize dynamic elements for current theme
+  updateDynamicElementsForTheme(savedTheme);
 
-        const $icon = $(this);
-        const $inputGroup = $icon.closest('.input-group');
-        const $input = $inputGroup.find('input');
+  // Setup theme toggle button listener using vanilla JS event delegation
+  document.removeEventListener('click', handleThemeToggleEvent);
+  document.addEventListener('click', handleThemeToggleEvent);
 
-        if ($input.length) {
-            if ($input.attr('type') === 'password') {
-                $input.attr('type', 'text');
-                $icon.removeClass('fa-eye').addClass('fa-eye-slash');
-            } else {
-                $input.attr('type', 'password');
-                $icon.removeClass('fa-eye-slash').addClass('fa-eye');
-            }
-        }
-    });
+  // password toggle handler - delegated event
+  $(document).off('click.pw-toggle').on('click.pw-toggle', '.toggle-password-icon', function (event) {
+    event.preventDefault();
 
-    // Sidenav toggle function 
-    const $menuToggle = $("#desktop_menu_toggle");
-    const $mobileToggle = $("#mobile_menu_toggle");
-    const $mobileClose = $("#mobile_menu_close");
-    const $sidebar = $(".app-sidebar");
-    const $body = $("body");
-    // Exclude the theme toggle button from the menu list items
-    const $menuListItems = $(".app-menu-list li").not("#theme_toggle_btn");
+    const $icon = $(this);
+    const $inputGroup = $icon.closest('.input-group');
+    const $input = $inputGroup.find('input');
 
-    // Remove existing handlers to prevent duplicate binding
-    $menuToggle.off("click");
-    $mobileToggle.off("click");
-    $mobileClose.off("click");
-    $menuListItems.off("click");
-    $(document).off("keyup.sidebar");
+    if ($input.length) {
+      if ($input.attr('type') === 'password') {
+        $input.attr('type', 'text');
+        $icon.removeClass('fa-eye').addClass('fa-eye-slash');
+      } else {
+        $input.attr('type', 'password');
+        $icon.removeClass('fa-eye-slash').addClass('fa-eye');
+      }
+    }
+  });
 
-    // === Desktop toggle ===
-    $menuToggle.on("click", function () {
-        $menuToggle.toggleClass("app-active");
-        $sidebar.toggleClass("app-active");
-    });
+  // Sidenav toggle function 
+  const $menuToggle = $("#desktop_menu_toggle");
+  const $mobileToggle = $("#mobile_menu_toggle");
+  const $mobileClose = $("#mobile_menu_close");
+  const $sidebar = $(".app-sidebar");
+  const $body = $("body");
+  // Exclude the theme toggle button from the menu list items
+  const $menuListItems = $(".app-menu-list li").not("#theme_toggle_btn");
 
-    // === Mobile toggle ===
-    $mobileToggle.on("click", function () {
-        $mobileToggle.toggleClass("app-active");
-        $sidebar.toggleClass("app-active");
-        $body.toggleClass("mobile-menu-open", $sidebar.hasClass("app-active"));
-    });
+  // Remove existing handlers to prevent duplicate binding
+  $menuToggle.off("click");
+  $mobileToggle.off("click");
+  $mobileClose.off("click");
+  $menuListItems.off("click");
+  $(document).off("keyup.sidebar");
 
-    // === Mobile close button ===
-    $mobileClose.on("click", function () {
-        $sidebar.removeClass("app-active");
-        $mobileToggle.removeClass("app-active");
-        $body.removeClass("mobile-menu-open");
-    });
+  // === Desktop toggle ===
+  $menuToggle.on("click", function () {
+    $menuToggle.toggleClass("app-active");
+    $sidebar.toggleClass("app-active");
+  });
 
-    // === Escape key to close mobile sidebar ===
-    $(document).on("keyup.sidebar", function(e) {
-        if (e.key === "Escape" && $sidebar.hasClass("app-active") && window.innerWidth <= 991.98) {
-            $sidebar.removeClass("app-active");
-            $mobileToggle.removeClass("app-active");
-            $body.removeClass("mobile-menu-open");
-        }
-    });
+  // === Mobile toggle ===
+  $mobileToggle.on("click", function () {
+    $mobileToggle.toggleClass("app-active");
+    $sidebar.toggleClass("app-active");
+    $body.toggleClass("mobile-menu-open", $sidebar.hasClass("app-active"));
+  });
 
-    $menuListItems.on("click", function () {
-        $menuListItems.removeClass("app-active");
-        $(this).addClass("app-active");
+  // === Mobile close button ===
+  $mobileClose.on("click", function () {
+    $sidebar.removeClass("app-active");
+    $mobileToggle.removeClass("app-active");
+    $body.removeClass("mobile-menu-open");
+  });
 
-        if (window.innerWidth <= 991.98) {
-            $sidebar.removeClass("app-active");
-            $mobileToggle.removeClass("app-active");
-            $body.removeClass("mobile-menu-open");
-        }
-    });
+  // === Escape key to close mobile sidebar ===
+  $(document).on("keyup.sidebar", function (e) {
+    if (e.key === "Escape" && $sidebar.hasClass("app-active") && window.innerWidth <= 991.98) {
+      $sidebar.removeClass("app-active");
+      $mobileToggle.removeClass("app-active");
+      $body.removeClass("mobile-menu-open");
+    }
+  });
 
-    $('[data-bs-toggle="tooltip"]').tooltip();
+  $menuListItems.on("click", function () {
+    $menuListItems.removeClass("app-active");
+    $(this).addClass("app-active");
 
-    // Alert auto-dismiss
-    function setupAlertDismissal() {
-        setTimeout(function () {
-            $('.custom_tfh_alert').fadeOut(500, function () {
-                $(this).remove();
-            });
-        }, 5000);
+    if (window.innerWidth <= 991.98) {
+      $sidebar.removeClass("app-active");
+      $mobileToggle.removeClass("app-active");
+      $body.removeClass("mobile-menu-open");
+    }
+  });
+
+  $('[data-bs-toggle="tooltip"]').tooltip();
+
+  // Alert auto-dismiss
+  function setupAlertDismissal() {
+    setTimeout(function () {
+      $('.custom_tfh_alert').fadeOut(500, function () {
+        $(this).remove();
+      });
+    }, 5000);
+  }
+
+  setupAlertDismissal();
+
+  // Zoom link
+  $('.zoom-link').off('click.zoom').on('click.zoom', function (e) {
+    e.preventDefault();
+    const imgUrl = $(this).data('img-url');
+    $('#modalImage').attr('src', imgUrl);
+
+    const myModal = new bootstrap.Modal(document.getElementById('imageModal'));
+    myModal.show();
+  });
+
+  // Currency formatting
+  const $inputs = $('[data-behavior="currency-format"]');
+
+  function formatWithCommas(value) {
+    if (!value) return "";
+
+    let parts = value.split(".");
+    let integerPart = parts[0];
+    let decimalPart = parts.length > 1 ? "." + parts[1] : "";
+
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return integerPart + decimalPart;
+  }
+
+  $inputs.off("input.currency").on("input.currency", function () {
+    let $this = $(this);
+    let val = $this.val().replace(/[^0-9.]/g, "");
+
+    let parts = val.split(".");
+    if (parts.length > 2) {
+      val = parts[0] + "." + parts[1];
+    }
+    $this.val(formatWithCommas(val));
+  });
+
+  $inputs.off("blur.currency").on("blur.currency", function () {
+    $(this).val(formatWithCommas($(this).val()));
+  });
+
+  window.showFlashMessage = function (message, type = "danger") {
+    $('.custom_tfh_alert').remove();
+
+    let messages = message.split(/<br\s*\/?>/i).map(m => m.trim()).filter(Boolean);
+    let messageHtml;
+
+    if (messages.length > 1) {
+      messageHtml = `<div class="mb-0">${messages.map(m => `<div>${m}</div>`).join("")}</div>`;
+    } else {
+      messageHtml = `<span>${messages[0]}</span>`;
     }
 
-    setupAlertDismissal();
-
-    // Zoom link
-    $('.zoom-link').off('click.zoom').on('click.zoom', function (e) {
-        e.preventDefault();
-        const imgUrl = $(this).data('img-url');
-        $('#modalImage').attr('src', imgUrl);
-
-        const myModal = new bootstrap.Modal(document.getElementById('imageModal'));
-        myModal.show();
-    });
-
-    // Currency formatting
-    const $inputs = $('[data-behavior="currency-format"]');
-
-    function formatWithCommas(value) {
-        if (!value) return "";
-
-        let parts = value.split(".");
-        let integerPart = parts[0];
-        let decimalPart = parts.length > 1 ? "." + parts[1] : "";
-
-        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        return integerPart + decimalPart;
-    }
-
-    $inputs.off("input.currency").on("input.currency", function () {
-        let $this = $(this);
-        let val = $this.val().replace(/[^0-9.]/g, "");
-
-        let parts = val.split(".");
-        if (parts.length > 2) {
-            val = parts[0] + "." + parts[1];
-        }
-        $this.val(formatWithCommas(val));
-    });
-
-    $inputs.off("blur.currency").on("blur.currency", function () {
-        $(this).val(formatWithCommas($(this).val()));
-    });
-
-    window.showFlashMessage = function (message, type = "danger") {
-        $('.custom_tfh_alert').remove();
-
-        let messages = message.split(/<br\s*\/?>/i).map(m => m.trim()).filter(Boolean);
-        let messageHtml;
-
-        if (messages.length > 1) {
-            messageHtml = `<div class="mb-0">${messages.map(m => `<div>${m}</div>`).join("")}</div>`;
-        } else {
-            messageHtml = `<span>${messages[0]}</span>`;
-        }
-
-        const flashHtml = `
+    const flashHtml = `
             <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start"
                 role="alert"
                 style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; word-wrap: break-word; overflow-wrap: break-word;">
@@ -600,43 +600,43 @@ function initApplication() {
                 </div>
             </div>
         `;
-        $('body').prepend(flashHtml);
+    $('body').prepend(flashHtml);
 
-        setTimeout(function () {
-            $('.custom_tfh_alert').fadeOut(500, function () {
-                $(this).remove();
-            });
-        }, 5000);
-    };
+    setTimeout(function () {
+      $('.custom_tfh_alert').fadeOut(500, function () {
+        $(this).remove();
+      });
+    }, 5000);
+  };
 
-    $('div.dataTables_filter input').attr('placeholder', 'Search...');
+  $('div.dataTables_filter input').attr('placeholder', 'Search...');
 
-    $('.dataTables_wrapper [class*="col-sm-"], .dataTables_wrapper [class*="col-md-"], .dataTables_wrapper [class*="col-12"]').each(function () {
-        let current = $(this).attr('class');
+  $('.dataTables_wrapper [class*="col-sm-"], .dataTables_wrapper [class*="col-md-"], .dataTables_wrapper [class*="col-12"]').each(function () {
+    let current = $(this).attr('class');
 
-        // Replace col-sm-* and col-md-* with col-*
-        current = current
-            .replace(/\bcol-sm-/g, 'col-')
-            .replace(/\bcol-md-/g, 'col-');
+    // Replace col-sm-* and col-md-* with col-*
+    current = current
+      .replace(/\bcol-sm-/g, 'col-')
+      .replace(/\bcol-md-/g, 'col-');
 
-        // If both col-6 and col-12 exist, remove col-12
-        if (/\bcol-6\b/.test(current) && /\bcol-12\b/.test(current)) {
-            current = current.replace(/\bcol-12\b/g, '');
-        }
+    // If both col-6 and col-12 exist, remove col-12
+    if (/\bcol-6\b/.test(current) && /\bcol-12\b/.test(current)) {
+      current = current.replace(/\bcol-12\b/g, '');
+    }
 
-        // Clean extra spaces
-        current = current.replace(/\s+/g, ' ').trim();
+    // Clean extra spaces
+    current = current.replace(/\s+/g, ' ').trim();
 
-        $(this).attr('class', current);
-    });
+    $(this).attr('class', current);
+  });
 
-    // When a tab becomes visible, recalc the datatable layout
-    $(document).off('shown.bs.tab.dt').on('shown.bs.tab.dt', '[data-bs-toggle="tab"]', function (e) {
-        $.fn.dataTable
-            .tables({ visible: true, api: true })
-            .columns.adjust()
-            .responsive.recalc();
-    });
+  // When a tab becomes visible, recalc the datatable layout
+  $(document).off('shown.bs.tab.dt').on('shown.bs.tab.dt', '[data-bs-toggle="tab"]', function (e) {
+    $.fn.dataTable
+      .tables({ visible: true, api: true })
+      .columns.adjust()
+      .responsive.recalc();
+  });
 }
 
 // Bind to Turbo Load
@@ -646,10 +646,10 @@ document.addEventListener("turbo:load", () => {
   if (input) {
     input.dataset.loadedDefault = "false";
   }
-  
+
   initApplication();
   loadPageSpecificModules();
-  
+
   // Force full reload for companies page to prevent cache issues
   if (window.location.pathname.includes("/companies")) {
     const companyForm = document.getElementById('company-form');
@@ -724,65 +724,65 @@ window.addEventListener('pageshow', function (event) {
 
 // Global Teardown for DataTables to fix Turbo Caching issues
 document.addEventListener("turbo:before-cache", function () {
-    if (typeof $ !== 'undefined' && $.fn.DataTable) {
-        $('.dataTable, .submissionsTable, #taxSubmissionsTableActive, #taxSubmissionsTableArchived').each(function () {
-            if ($.fn.DataTable.isDataTable(this)) {
-                const dt = $(this).DataTable();
-                if (dt) dt.destroy();
-            }
-        });
-    }
+  if (typeof $ !== 'undefined' && $.fn.DataTable) {
+    $('.dataTable, .submissionsTable, #taxSubmissionsTableActive, #taxSubmissionsTableArchived').each(function () {
+      if ($.fn.DataTable.isDataTable(this)) {
+        const dt = $(this).DataTable();
+        if (dt) dt.destroy();
+      }
+    });
+  }
 
-    const companyForm = document.getElementById('company-form');
-    if (companyForm) {
-        companyForm.reset();
-        const imagePreview = companyForm.querySelector('#image-preview');
-        if (imagePreview && imagePreview.dataset.defaultSrc) {
-            imagePreview.src = imagePreview.dataset.defaultSrc;
-        }
-        const fileInput = companyForm.querySelector('#profile_image_input');
-        if (fileInput) {
-            fileInput.value = '';
-        }
+  const companyForm = document.getElementById('company-form');
+  if (companyForm) {
+    companyForm.reset();
+    const imagePreview = companyForm.querySelector('#image-preview');
+    if (imagePreview && imagePreview.dataset.defaultSrc) {
+      imagePreview.src = imagePreview.dataset.defaultSrc;
     }
+    const fileInput = companyForm.querySelector('#profile_image_input');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
 });
 
 // Refresh form authenticity token when page is restored from cache
 document.addEventListener("turbo:load", function () {
-    const companyForm = document.getElementById('company-form');
-    if (companyForm) {
-        // Get a fresh CSRF token from meta tag
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (csrfToken) {
-            const tokenInput = companyForm.querySelector('input[name="authenticity_token"]');
-            if (tokenInput) {
-                tokenInput.value = csrfToken;
-            }
-        }
+  const companyForm = document.getElementById('company-form');
+  if (companyForm) {
+    // Get a fresh CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+      const tokenInput = companyForm.querySelector('input[name="authenticity_token"]');
+      if (tokenInput) {
+        tokenInput.value = csrfToken;
+      }
     }
+  }
 });
 
 // Prefetch page modules on link hover for faster navigation
 let prefetchTimeout;
-document.addEventListener('mouseover', function(e) {
-    const link = e.target.closest('a[href^="/"]');
-    if (!link || link.href.includes('#') || link.dataset.prefetched) return;
+document.addEventListener('mouseover', function (e) {
+  const link = e.target.closest('a[href^="/"]');
+  if (!link || link.href.includes('#') || link.dataset.prefetched) return;
 
-    clearTimeout(prefetchTimeout);
-    prefetchTimeout = setTimeout(() => {
-        // Don't prefetch external links or data: urls
-        if (link.origin !== window.location.origin) return;
+  clearTimeout(prefetchTimeout);
+  prefetchTimeout = setTimeout(() => {
+    // Don't prefetch external links or data: urls
+    if (link.origin !== window.location.origin) return;
 
-        // Mark as prefetched to avoid duplicate work
-        link.dataset.prefetched = 'true';
+    // Mark as prefetched to avoid duplicate work
+    link.dataset.prefetched = 'true';
 
-        // Prefetch the page module based on path
-        const path = new URL(link.href).pathname;
-        if (path.includes('/invoices/new') || path.includes('/invoices/') && path.includes('/edit')) {
-            // Prefetch invoice form module
-            import(/* webpackPrefetch: true */ './invoice');
-        }
-    }, 100);
+    // Prefetch the page module based on path
+    const path = new URL(link.href).pathname;
+    if (path.includes('/invoices/new') || path.includes('/invoices/') && path.includes('/edit')) {
+      // Prefetch invoice form module
+      import(/* webpackPrefetch: true */ './invoice');
+    }
+  }, 100);
 }, { passive: true });
 
 
