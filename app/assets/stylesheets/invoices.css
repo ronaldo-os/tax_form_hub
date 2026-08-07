@@ -1,8 +1,20 @@
 #form_actions_fixed_navbar {
+  background-color: var(--card-bg, #ffffff) !important;
+  border-top: none !important;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08) !important;
+  z-index: 10000 !important;
   float: right;
   width: calc(100% - 0px);
   margin-left: 59px;
   transition: all 0.3s ease-in-out;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] #form_actions_fixed_navbar {
+  background-color: var(--card-bg, #212529) !important;
+  border-top: none !important;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4) !important;
 }
 
 .chart-wrapper {
@@ -208,3 +220,172 @@
   break-inside: avoid !important;
   page-break-inside: avoid !important;
 }
+
+/* ==========================================================================
+   PDF PREVIEW FUNCTION (MOBILE & TABLET AUTO-FIT & ZOOM STYLES)
+   ========================================================================== */
+
+#invoicePreviewModal .modal-body {
+  background-color: var(--bs-tertiary-bg, #f4f6f9);
+  padding: 0 !important;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] #invoicePreviewModal .modal-body {
+  background-color: #121417;
+}
+
+.pdf-preview-container {
+  width: 100%;
+  height: calc(85vh - 70px);
+  max-height: calc(85vh - 70px);
+  flex: 1 1 auto;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  padding: 1rem 0.5rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-preview-scaler {
+  position: relative;
+  margin: auto;
+  transition: width 0.15s ease-out, height 0.15s ease-out;
+  box-sizing: border-box;
+}
+
+.pdf-preview-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 800px;
+  transform-origin: top left;
+  transition: transform 0.15s ease-out;
+}
+
+.pdf-preview-container.is-zoomed {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  padding: 0.5rem !important;
+}
+
+.pdf-preview-container.is-zoomed .pdf-preview-scaler {
+  margin: 0 !important;
+}
+
+@media (max-width: 991.98px) {
+  #invoicePreviewModal {
+    padding: 0 !important;
+  }
+
+  #invoicePreviewModal .modal-dialog {
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: 100% !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+  }
+
+  #invoicePreviewModal .modal-content {
+    height: 100% !important;
+    height: 100dvh !important;
+    border-radius: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border: none !important;
+  }
+
+  #invoicePreviewModal .modal-header {
+    flex-shrink: 0 !important;
+    padding: 10px 14px !important;
+  }
+
+  #invoicePreviewModal .modal-body {
+    flex: 1 1 auto !important;
+    height: calc(100% - 56px) !important;
+    max-height: none !important;
+    overflow: hidden !important;
+  }
+
+  #invoicePreviewModal .pdf-preview-container {
+    height: 100% !important;
+    max-height: 100% !important;
+    padding: 0.75rem 0.25rem !important;
+  }
+}
+
+/* Force PDF Canvas fixed standard paper sheet dimensions inside Preview Modal */
+#invoicePreviewModal #invoice_card {
+  width: 800px !important;
+  min-width: 800px !important;
+  max-width: 800px !important;
+  margin: 0 auto 1.5rem auto !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+[data-theme="dark"] #invoicePreviewModal #invoice_card {
+  background: var(--card-bg, #1e2227) !important;
+  color: var(--text-color, #f8f9fa) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Prevent Bootstrap responsive grid column collapsing inside Preview Sheet on Mobile/Tablet */
+#invoicePreviewModal #invoice_card .col-md-1 { flex: 0 0 auto !important; width: 8.33333333% !important; }
+#invoicePreviewModal #invoice_card .col-md-2 { flex: 0 0 auto !important; width: 16.66666667% !important; }
+#invoicePreviewModal #invoice_card .col-md-3 { flex: 0 0 auto !important; width: 25% !important; }
+#invoicePreviewModal #invoice_card .col-md-4 { flex: 0 0 auto !important; width: 33.33333333% !important; }
+#invoicePreviewModal #invoice_card .col-md-5 { flex: 0 0 auto !important; width: 41.66666667% !important; }
+#invoicePreviewModal #invoice_card .col-md-6 { flex: 0 0 auto !important; width: 50% !important; }
+#invoicePreviewModal #invoice_card .col-md-7 { flex: 0 0 auto !important; width: 58.33333333% !important; }
+#invoicePreviewModal #invoice_card .col-md-8 { flex: 0 0 auto !important; width: 66.66666667% !important; }
+#invoicePreviewModal #invoice_card .col-md-9 { flex: 0 0 auto !important; width: 75% !important; }
+#invoicePreviewModal #invoice_card .col-md-10 { flex: 0 0 auto !important; width: 83.33333333% !important; }
+#invoicePreviewModal #invoice_card .col-md-11 { flex: 0 0 auto !important; width: 91.66666667% !important; }
+#invoicePreviewModal #invoice_card .col-md-12 { flex: 0 0 auto !important; width: 100% !important; }
+
+#invoicePreviewModal #invoice_card .row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+}
+
+/* Table styling for fixed PDF sheet inside Preview Modal */
+#invoicePreviewModal #invoice_card .table-responsive {
+  overflow-x: visible !important;
+}
+
+#invoicePreviewModal #invoice_card table {
+  width: 100% !important;
+  table-layout: auto !important;
+}
+
+/* Zoom controls styling */
+.pdf-zoom-controls {
+  user-select: none;
+}
+
+.pdf-zoom-controls .btn {
+  padding: 0.2rem 0.45rem;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  line-height: 1.2;
+}
+
+.pdf-zoom-controls .pdf-zoom-level {
+  font-weight: 600;
+  display: inline-block;
+  min-width: 44px;
+  text-align: center;
+}
+

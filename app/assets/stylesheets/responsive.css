@@ -68,7 +68,7 @@
     font-size: 0.85rem;
   }
 
-  /* Full screen width container on mobile - TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS, COMPANIES, NETWORKS & INVOICES PAGES */
+  /* Full screen width container on mobile - TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS, COMPANIES, NETWORKS, INVOICES & INVOICE FORM PAGES */
   .tax-submissions-page,
   .tax-submissions-page.container,
   .tax-submissions-page .container,
@@ -86,7 +86,10 @@
   .networks-page .container,
   .invoices-page,
   .invoices-page.container,
-  .invoices-page .container {
+  .invoices-page .container,
+  .invoice-form-page,
+  .invoice-form-page.container,
+  .invoice-form-page .container {
     padding-left: 1rem !important;
     padding-right: 1rem !important;
     max-width: 100% !important;
@@ -135,6 +138,172 @@
 
   .invoices-page .invoice-action-buttons {
     width: 100%;
+  }
+
+  /* ==========================================================================
+     INVOICE FORM (CREATE INVOICE / QUOTE / CREDIT NOTE) RESPONSIVE STYLES
+     ========================================================================== */
+  .invoice-form-page {
+    padding-bottom: 125px !important;
+  }
+
+  @media (min-width: 576px) {
+    .invoice-form-page {
+      padding-bottom: 90px !important;
+    }
+  }
+
+  .invoice-form-page .card {
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
+                0 8px 10px -6px rgba(0, 0, 0, 0.05),
+                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+  }
+
+  [data-theme="dark"] .invoice-form-page .card {
+    box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
+                0 6px 12px -2px rgba(0, 0, 0, 0.18),
+                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+  }
+
+  .invoice-form-page .form-control,
+  .invoice-form-page .form-select {
+    min-height: 44px;
+    border-radius: 10px !important;
+    padding: 8px 12px !important;
+    font-size: 0.9rem !important;
+  }
+
+  .invoice-table-scroll-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 12px !important;
+    border: 1px solid var(--border-color) !important;
+  }
+
+  .invoice-table-scroll-container .table-responsive {
+    overflow-x: visible !important;
+  }
+
+  .invoice-table {
+    min-width: 760px !important;
+    width: 100% !important;
+  }
+
+  .invoice-table th {
+    background-color: var(--bg-tertiary) !important;
+    color: var(--text-muted) !important;
+    font-size: 0.825rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.02em !important;
+    padding: 10px 12px !important;
+  }
+
+  .invoice-table td {
+    padding: 8px 10px !important;
+    vertical-align: middle !important;
+  }
+
+  .invoice-totals-summary {
+    background-color: var(--bg-secondary, #f8f9fa) !important;
+    border-radius: 14px !important;
+  }
+
+  /* Fixed Bottom Action Navbar for Mobile & Tablet */
+  #form_actions_fixed_navbar {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    z-index: 10000 !important;
+    background-color: var(--card-bg, #ffffff) !important;
+    border-top: none !important;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.1) !important;
+    padding: 10px 16px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    float: none !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  [data-theme="dark"] #form_actions_fixed_navbar {
+    border-top: none !important;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4) !important;
+  }
+
+  #action_buttons_container {
+    left: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  .action-group-left,
+  .action-group-right {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .action-group-left .btn,
+  .action-group-left button,
+  .action-group-left a,
+  .action-group-right .btn,
+  .action-group-right button,
+  .action-group-right a {
+    flex: 1 1 0% !important;
+    width: 50% !important;
+    max-width: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+  }
+
+  @media (min-width: 576px) {
+    .action-group-left,
+    .action-group-right {
+      width: auto !important;
+    }
+
+    .action-group-left .btn,
+    .action-group-left button,
+    .action-group-left a,
+    .action-group-right .btn,
+    .action-group-right button,
+    .action-group-right a {
+      flex: 0 0 auto !important;
+      width: auto !important;
+      max-width: none !important;
+    }
+  }
+
+  #action_buttons_container .btn-md {
+    min-height: 42px;
+    padding: 8px 14px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: all 0.2s ease;
   }
 
   .companies-page .card {
@@ -883,9 +1052,9 @@
   }
 
   #form_actions_fixed_navbar {
-    float: right;
-    width: 100%;
-    margin-left: 0px;
+    float: none !important;
+    width: 100% !important;
+    margin-left: 0px !important;
     transition: all 0.3s ease-in-out;
   }
 }

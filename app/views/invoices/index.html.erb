@@ -205,12 +205,30 @@
 <div class="modal fade" id="invoicePreviewModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-xl modal-dialog-scrollable">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title fw-bold">Preview</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      <div class="modal-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <h5 class="modal-title fw-bold me-auto mb-0">Preview</h5>
+        <div class="d-flex align-items-center gap-1 pdf-zoom-controls ms-auto me-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary pdf-zoom-out" title="Zoom Out">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <span class="badge bg-secondary-subtle text-secondary px-2 py-1 pdf-zoom-level">Fit</span>
+          <button type="button" class="btn btn-sm btn-outline-secondary pdf-zoom-in" title="Zoom In">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+          <button type="button" class="btn btn-sm btn-outline-secondary pdf-zoom-fit" title="Fit to Screen">
+            <i class="fa-solid fa-expand"></i>
+          </button>
+        </div>
+        <button type="button" class="btn-close m-0" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div id="invoicePreviewCard"></div>
+        <div class="pdf-preview-container">
+          <div class="pdf-preview-scaler">
+            <div class="pdf-preview-wrapper">
+              <div id="invoicePreviewCard"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

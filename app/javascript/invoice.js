@@ -2482,6 +2482,7 @@ const initInvoiceForm = () => {
   });
 
   // Invoice Preview Modal
+  // Invoice Preview Modal
   (function () {
     const $previewBtn = $('#preview-invoice-btn');
     const modalEl = $('#invoicePreviewModal')[0];
@@ -2561,11 +2562,187 @@ const initInvoiceForm = () => {
               $modalNewAttachments.append(rowHtml);
             }
           }
+
+          if (window.updatePdfPreviewScale) {
+            window.updatePdfPreviewScale();
+          }
         },
         error: function () {
           $previewCard.html('<div class="alert alert-danger">Failed to load preview. Please ensure all required fields are filled.</div>');
         }
       });
+    });
+  })();
+
+  // PDF Preview Auto-fit & Zoom Manager
+  (function () {
+    let currentZoomMode = 'fit';
+    let userScaleFactor = 1.0;
+
+    function updateScale() {
+      const $modal = $('#invoicePreviewModal');
+      if (!$modal.length) return;
+
+      const $container = $modal.find('.pdf-preview-container');
+      let $scaler = $modal.find('.pdf-preview-scaler');
+      const $wrapper = $modal.find('.pdf-preview-wrapper');
+      const $card = $modal.find('#invoice_card');
+      const $zoomLevel = $modal.find('.pdf-zoom-level');
+
+      if (!$container.length || !$wrapper.length || !$card.length) return;
+
+      if (!$scaler.length && $wrapper.parent().hasClass('pdf-preview-container')) {
+        $wrapper.wrap('<div class="pdf-preview-scaler"></div>');
+        $scaler = $modal.find('.pdf-preview-scaler');
+      }
+
+      const containerWidth = $container.width() - 16;
+      const cardWidth = 800; // Fixed canvas width
+
+      if (containerWidth <= 0) return;
+
+      let baseScale = containerWidth / cardWidth;
+      if (baseScale > 1) baseScale = 1;
+
+      let finalScale = baseScale;
+      if (currentZoomMode === 'fit') {
+        finalScale = baseScale;
+        $zoomLevel.text(Math.round(baseScale * 100) + '% (Fit)');
+      } else {
+        finalScale = userScaleFactor;
+        $zoomLevel.text(Math.round(finalScale * 100) + '%');
+      }
+
+      const cardHeight = $card.outerHeight(true) || 1000;
+      const scaledWidth = cardWidth * finalScale;
+      const scaledHeight = cardHeight * finalScale;
+
+      $wrapper.css({
+        'transform': `scale(${finalScale})`,
+        'transform-origin': 'top left',
+        'width': cardWidth + 'px',
+        'height': cardHeight + 'px'
+      });
+
+      $scaler.css({
+        'width': scaledWidth + 'px',
+        'height': scaledHeight + 'px'
+      });
+
+      const isZoomedIn = finalScale > baseScale + 0.02;
+      if (isZoomedIn) {
+        $container.addClass('is-zoomed');
+      } else {
+        $container.removeClass('is-zoomed');
+      }
+    }
+
+    window.updatePdfPreviewScale = function () {
+      currentZoomMode = 'fit';
+      userScaleFactor = 1.0;
+      setTimeout(updateScale, 50);
+      setTimeout(updateScale, 200);
+    };
+
+    $(document).off('click.pdf_zoom_in', '#invoicePreviewModal .pdf-zoom-in').on('click.pdf_zoom_in', '#invoicePreviewModal .pdf-zoom-in', function (e) {
+      e.preventDefault();
+      const $container = $('#invoicePreviewModal .pdf-preview-container');
+      const containerWidth = ($container.width() || 360) - 24;
+      const baseScale = Math.min(1, containerWidth / 800);
+
+      if (currentZoomMode === 'fit') {
+        userScaleFactor = Math.min(2.0, parseFloat((baseScale + 0.2).toFixed(2)));
+      } else {
+        userScaleFactor = Math.min(2.0, parseFloat((userScaleFactor + 0.25).toFixed(2)));
+      }
+      currentZoomMode = 'custom';
+      updateScale();
+    });
+
+    $(document).off('click.pdf_zoom_out', '#invoicePreviewModal .pdf-zoom-out').on('click.pdf_zoom_out', '#invoicePreviewModal .pdf-zoom-out', function (e) {
+      e.preventDefault();
+      const $container = $('#invoicePreviewModal .pdf-preview-container');
+      const containerWidth = ($container.width() || 360) - 24;
+      const baseScale = Math.min(1, containerWidth / 800);
+
+      if (currentZoomMode === 'fit') {
+        userScaleFactor = Math.max(0.3, parseFloat((baseScale - 0.15).toFixed(2)));
+      } else {
+        userScaleFactor = Math.max(0.3, parseFloat((userScaleFactor - 0.25).toFixed(2)));
+      }
+      currentZoomMode = 'custom';
+      updateScale();
+    });
+
+    $(document).off('click.pdf_zoom_fit', '#invoicePreviewModal .pdf-zoom-fit').on('click.pdf_zoom_fit', '#invoicePreviewModal .pdf-zoom-fit', function (e) {
+      e.preventDefault();
+      currentZoomMode = 'fit';
+      userScaleFactor = 1.0;
+      updateScale();
+    });
+
+    $(window).off('resize.pdf_preview').on('resize.pdf_preview', function () {
+      updateScale();
+    });
+
+    $(document).off('shown.bs.modal.pdf_preview', '#invoicePreviewModal').on('shown.bs.modal.pdf_preview', '#invoicePreviewModal', function () {
+      window.updatePdfPreviewScale();
+    });
+
+    // -------------------------------------------------------------------------
+    // TWO-FINGER PINCH-TO-ZOOM GESTURE FOR MOBILE & TABLET TOUCH SCREENS
+    // -------------------------------------------------------------------------
+    let initialPinchDistance = 0;
+    let pinchStartScale = 1.0;
+    let isPinching = false;
+
+    function getTouchDistance(e) {
+      if (!e.touches || e.touches.length < 2) return 0;
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      return Math.hypot(dx, dy);
+    }
+
+    $(document).off('touchstart.pdf_pinch', '#invoicePreviewModal .pdf-preview-container')
+               .on('touchstart.pdf_pinch', '#invoicePreviewModal .pdf-preview-container', function (e) {
+      const touchEvent = e.originalEvent || e;
+      if (touchEvent.touches && touchEvent.touches.length === 2) {
+        isPinching = true;
+        initialPinchDistance = getTouchDistance(touchEvent);
+
+        const $container = $('#invoicePreviewModal .pdf-preview-container');
+        const containerWidth = ($container.width() || 360) - 16;
+        const baseScale = Math.min(1, containerWidth / 800);
+
+        pinchStartScale = (currentZoomMode === 'fit') ? baseScale : userScaleFactor;
+      }
+    });
+
+    $(document).off('touchmove.pdf_pinch', '#invoicePreviewModal .pdf-preview-container')
+               .on('touchmove.pdf_pinch', '#invoicePreviewModal .pdf-preview-container', function (e) {
+      const touchEvent = e.originalEvent || e;
+      if (isPinching && touchEvent.touches && touchEvent.touches.length === 2) {
+        touchEvent.preventDefault();
+
+        const currentDistance = getTouchDistance(touchEvent);
+        if (initialPinchDistance > 0 && currentDistance > 0) {
+          const pinchRatio = currentDistance / initialPinchDistance;
+          let calculatedScale = parseFloat((pinchStartScale * pinchRatio).toFixed(2));
+
+          userScaleFactor = Math.min(2.5, Math.max(0.3, calculatedScale));
+          currentZoomMode = 'custom';
+          updateScale();
+        }
+      }
+    });
+
+    $(document).off('touchend.pdf_pinch touchcancel.pdf_pinch', '#invoicePreviewModal .pdf-preview-container')
+               .on('touchend.pdf_pinch touchcancel.pdf_pinch', '#invoicePreviewModal .pdf-preview-container', function (e) {
+      const touchEvent = e.originalEvent || e;
+      if (!touchEvent.touches || touchEvent.touches.length < 2) {
+        isPinching = false;
+        initialPinchDistance = 0;
+      }
     });
   })();
 
