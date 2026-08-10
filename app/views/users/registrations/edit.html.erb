@@ -1,130 +1,183 @@
 <% content_for :page_title, "Edit Profile" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "profile", media: "all" %>
+<% end %>
 
-<div class="d-flex justify-content-center align-items-center min-vh-100 mt-5 mb-5">
-  <div class="container" style="max-width: 640px;">
-    <div class="card rounded-4 mb-5">
-      <div class="card-body p-5 mob-p-4">
-        <!-- Heading -->
-        <p class="text-center text-muted mb-5">Manage your personal information and security settings.</p>
+<div class="container py-4 py-md-5 profile-edit-container">
+  
+  <div class="profile-edit-card">
+    
+    <!-- Minimalist Page Title Header -->
+    <div class="text-center mb-4">
+      <h3 class="fw-bold mb-1">Edit Profile</h3>
+      <p class="text-muted small mb-0">Manage your account credentials and security settings.</p>
+    </div>
 
-        <%= form_for(resource,
-             as: resource_name,
-             url: profile_path,
-             html: { method: :put, multipart: true }) do |f| %>
+    <!-- Centered Avatar Section -->
+    <div class="text-center mb-4">
+      <div id="image-preview-wrapper" class="profile-avatar-wrapper" style="cursor: pointer;" title="Click photo to upload a new profile picture">
+        
+        <% has_attached_image = resource.profile_image.attached? && resource.profile_image.attachment&.persisted? %>
+        <% email_prefix = resource.email.to_s.split("@").first %>
+        <% initials = email_prefix.present? ? email_prefix.strip[0..1].upcase : "US" %>
 
-          <!-- Profile Image -->
-          <div class="mb-5 text-center">
-            <div id="image-preview-wrapper" 
-                 class="position-relative d-inline-block"
-                 style="cursor: pointer;">
-              <%= image_tag(
-                (resource.profile_image.attached? && resource.profile_image.attachment&.persisted?) ? url_for(resource.profile_image) : asset_path("user_avatar_default.png"),
-                id: "image-preview",
-                class: "rounded-circle border",
-                style: "width: 160px; height: 160px; object-fit: cover;"
-              ) %>
-
-              <!-- Overlay Pencil Icon -->
-              <label for="profile_image_input" 
-                     class="position-absolute d-flex align-items-center justify-content-center bg-white rounded-circle"
-                     style="bottom: 10px; right: 10px; width: 38px; height: 38px; cursor: pointer;">
-                <i class="fas fa-camera text-primary" style="font-size: 16px;"></i>
-              </label>
-
-              <%= f.file_field :profile_image,
-                accept: "image/*",
-                id: "profile_image_input",
-                style: "display: none;" %>
-            </div>
-            <div class="mt-3">
-              <small class="text-muted">
-                <%= resource.profile_image.attached? ? "Click your photo to upload a new one" : "No profile image yet. Click to upload." %>
-              </small>
-            </div>
+        <% if has_attached_image %>
+          <%= image_tag(
+            url_for(resource.profile_image),
+            id: "image-preview",
+            class: "profile-avatar-img",
+            alt: "Profile Avatar",
+            loading: "lazy"
+          ) %>
+          <div id="initials-preview" class="profile-avatar-initials d-flex align-items-center justify-content-center fw-bold text-white" style="display: none !important;">
+            <%= initials %>
           </div>
-
-          <!-- Email -->
-          <div class="mb-4">
-            <%= f.label :email, class: "form-label fw-semibold" %>
-            <%= f.email_field :email,
-                  autofocus: true,
-                  autocomplete: "email",
-                  required: true,
-                  class: "form-control rounded-3" %>
+        <% else %>
+          <%= image_tag(
+            "",
+            id: "image-preview",
+            class: "profile-avatar-img",
+            alt: "Profile Avatar",
+            style: "display: none !important;",
+            loading: "lazy"
+          ) %>
+          <div id="initials-preview" class="profile-avatar-initials d-flex align-items-center justify-content-center fw-bold text-white">
+            <%= initials %>
           </div>
+        <% end %>
 
-          <hr class="my-5">
+        <!-- Floating Camera Button -->
+        <label for="profile_image_input" class="profile-camera-btn" title="Upload new photo">
+          <i class="fa-solid fa-camera"></i>
+        </label>
+      </div>
 
-          <p class="text-muted small mb-4">Leave password fields blank if you don’t want to change them.</p>
+      <div class="fw-bold text-break text-main fs-6"><%= resource.email %></div>
+      <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
+        Click avatar to upload photo
+      </small>
+    </div>
 
-          <!-- Password -->
-          <div class="mb-4">
-            <%= f.label :password, class: "form-label fw-semibold" %>
+    <!-- Main Form -->
+    <%= form_for(resource,
+         as: resource_name,
+         url: profile_path,
+         html: { method: :put, multipart: true }) do |f| %>
+
+      <%= f.file_field :profile_image,
+        accept: "image/*",
+        id: "profile_image_input",
+        style: "display: none;" %>
+
+      <!-- Section 1: Account Email -->
+      <div class="mb-4">
+        <div class="form-section-label">Account Information</div>
+        <div class="mb-3">
+          <%= f.label :email, "Email Address", class: "form-label" %>
+          <%= f.email_field :email,
+                autofocus: true,
+                autocomplete: "email",
+                required: true,
+                class: "form-control #{'is-invalid' if resource.errors[:email].any?}" %>
+          <% if resource.errors[:email].any? %>
+            <div class="text-danger small mt-1">
+              <%= resource.errors[:email].first.capitalize %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <hr class="my-4 opacity-25">
+
+      <!-- Section 2: Password & Security -->
+      <div class="mb-4">
+        <div class="form-section-label">Password Settings</div>
+        
+        <!-- New Password -->
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <%= f.label :password, "New Password", class: "form-label mb-0" %>
             <% if @minimum_password_length %>
-              <small class="text-muted d-block mb-2">(<%= @minimum_password_length %> characters minimum)</small>
+              <span class="text-muted" style="font-size: 0.78rem;">(<%= @minimum_password_length %> chars min)</span>
             <% end %>
-            <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:password].any? %>">
-              <%= f.password_field :password,
-                    autocomplete: "new-password",
-                    class: "form-control toggle-password-input rounded-start-3 border-end-0 #{'is-invalid' if resource.errors[:password].any?}",
-                    id: "password" %>
-              <span class="input-group-text rounded-end-3 border-start-0 <%= 'border-danger' if resource.errors[:password].any? %>">
-                <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
-              </span>
+          </div>
+          <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:password].any? %>">
+            <%= f.password_field :password,
+                  autocomplete: "new-password",
+                  class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:password].any?}",
+                  id: "password",
+                  placeholder: "Leave blank to keep current" %>
+            <span class="input-group-text" style="cursor: pointer;" title="Toggle Password Visibility">
+              <i class="fa-solid fa-eye toggle-password-icon"></i>
+            </span>
+          </div>
+          <% if resource.errors[:password].any? %>
+            <div class="text-danger small mt-1">
+              <%= resource.errors[:password].first.capitalize %>
             </div>
-            <% if resource.errors[:password].any? %>
-              <div class="text-danger small mt-2">
-                <%= resource.errors[:password].first.capitalize %>
-              </div>
-            <% end %>
-          </div>
+          <% end %>
+        </div>
 
-          <!-- Password Confirmation -->
-          <div class="mb-4">
-            <%= f.label :password_confirmation, class: "form-label fw-semibold" %>
-            <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:password_confirmation].any? %>">
-              <%= f.password_field :password_confirmation,
-                    autocomplete: "new-password",
-                    class: "form-control toggle-password-input rounded-start-3 border-end-0 #{'is-invalid' if resource.errors[:password_confirmation].any?}",
-                    id: "password_confirmation" %>
-              <span class="input-group-text rounded-end-3 border-start-0 <%= 'border-danger' if resource.errors[:password_confirmation].any? %>">
-                <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
-              </span>
+        <!-- Confirm Password -->
+        <div class="mb-3">
+          <%= f.label :password_confirmation, "Confirm New Password", class: "form-label" %>
+          <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:password_confirmation].any? %>">
+            <%= f.password_field :password_confirmation,
+                  autocomplete: "new-password",
+                  class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:password_confirmation].any?}",
+                  id: "password_confirmation",
+                  placeholder: "Confirm new password" %>
+            <span class="input-group-text" style="cursor: pointer;" title="Toggle Password Visibility">
+              <i class="fa-solid fa-eye toggle-password-icon"></i>
+            </span>
+          </div>
+          <% if resource.errors[:password_confirmation].any? %>
+            <div class="text-danger small mt-1">
+              <%= resource.errors[:password_confirmation].first.capitalize %>
             </div>
-            <% if resource.errors[:password_confirmation].any? %>
-              <div class="text-danger small mt-2">
-                <%= resource.errors[:password_confirmation].first.capitalize %>
-              </div>
-            <% end %>
-          </div>
+          <% end %>
+        </div>
+      </div>
 
-          <!-- Current Password -->
-          <div class="mb-4">
-            <%= f.label :current_password, "Current Password", class: "form-label fw-semibold" %>
-            <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:current_password].any? %>">
-              <%= f.password_field :current_password,
-                    autocomplete: "current-password",
-                    class: "form-control toggle-password-input rounded-start-3 border-end-0 #{'is-invalid' if resource.errors[:current_password].any?}",
-                    id: "current_password" %>
-              <span class="input-group-text rounded-end-3 border-start-0 <%= 'border-danger' if resource.errors[:current_password].any? %>">
-                <i class="fa fa-eye toggle-password-icon text-secondary" style="cursor: pointer;"></i>
-              </span>
-            </div>
-            <% if resource.errors[:current_password].any? %>
-              <div class="text-danger small mt-2">
-                <%= resource.errors[:current_password].first.capitalize %>
-              </div>
-            <% end %>
+      <!-- Section 3: Current Password Requirement -->
+      <div class="security-note-box mb-4">
+        <div class="mb-2">
+          <%= f.label :current_password, "Current Password", class: "form-label fw-bold mb-1 text-main" %>
+          <small class="text-muted d-block mb-2" style="font-size: 0.8rem;">
+            Required to authorize profile changes.
+          </small>
+        </div>
+        <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:current_password].any? %>">
+          <%= f.password_field :current_password,
+                autocomplete: "current-password",
+                required: true,
+                class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:current_password].any?}",
+                id: "current_password",
+                placeholder: "Enter current password" %>
+          <span class="input-group-text" style="cursor: pointer;" title="Toggle Password Visibility">
+            <i class="fa-solid fa-eye toggle-password-icon"></i>
+          </span>
+        </div>
+        <% if resource.errors[:current_password].any? %>
+          <div class="text-danger small mt-2">
+            <%= resource.errors[:current_password].first.capitalize %>
           </div>
-
-          <!-- Actions -->
-          <div class="d-flex justify-content-between gap-3 mt-5">
-            <%= link_to "Back", session[:profile_back_url] || root_path, class: "btn btn-back" %>
-            <%= f.submit "Update Profile", class: "btn btn-primary", id: "update-profile-btn" %>
-          </div>
-
         <% end %>
       </div>
-    </div>
+
+      <!-- Action Buttons -->
+      <div class="d-flex justify-content-between align-items-center gap-3 mt-4 pt-1">
+        <%= link_to session[:profile_back_url] || root_path, class: "btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2" do %>
+          <i class="fa-solid fa-arrow-left"></i> Back
+        <% end %>
+        
+        <%= f.button type: "submit", class: "btn btn-primary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm", id: "update-profile-btn" do %>
+          <i class="fa-solid fa-check"></i> Save Changes
+        <% end %>
+      </div>
+
+    <% end %>
+
   </div>
+
 </div>

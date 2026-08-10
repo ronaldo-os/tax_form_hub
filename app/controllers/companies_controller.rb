@@ -26,6 +26,7 @@ class CompaniesController < ApplicationController
 
 
   def show
+    @recommendations = @company.recommendations.includes(:user).order(created_at: :desc)
   end
 
   def new

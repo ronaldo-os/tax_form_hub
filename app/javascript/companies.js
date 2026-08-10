@@ -4,9 +4,6 @@ function initCompanyPage() {
     }
 
     const $companyForm = $('form[action*="/companies"]');
-    if ($companyForm.length === 0 && !window.location.pathname.endsWith("/new")) {
-        return;
-    }
 
     // Ensure form action URL is correct (fix for Turbo cache issue)
     if ($companyForm.length > 0) {
@@ -23,13 +20,6 @@ function initCompanyPage() {
             // Allow the form to submit normally
             return true;
         });
-        
-        // Debug: Check form state
-        console.log('Company form found:', $companyForm.length > 0);
-        console.log('Form action:', $companyForm.attr('action'));
-        console.log('Form method:', $companyForm.attr('method'));
-        console.log('Submit button:', $('#update-company-btn').length > 0);
-        console.log('Submit button disabled:', $('#update-company-btn').prop('disabled'));
     }
 
     function updateLabel(selectId, labelId, defaultText) {
@@ -58,45 +48,74 @@ function initCompanyPage() {
     const defaultImageSrc = $imagePreview.attr('src');
     const $imagePreviewWrapper = $('#image-preview-wrapper');
 
-    $imagePreviewWrapper.off('click.companyImg').on('click.companyImg', function (e) {
-        if ($(e.target).is($fileInput) || $(e.target).closest('label').length > 0) {
-            return;
-        }
-        $fileInput.trigger('click');
-    });
+    if ($imagePreviewWrapper.length > 0) {
+        $imagePreviewWrapper.off('click.companyImg').on('click.companyImg', function (e) {
+            if ($(e.target).is($fileInput) || $(e.target).closest('label').length > 0) {
+                return;
+            }
+            $fileInput.trigger('click');
+        });
+    }
 
-    $fileInput.off('change.companyInput').on('change.companyInput', function (e) {
-        const file = e.target.files && e.target.files[0];
-        if (!file) {
-            return;
-        }
+    if ($fileInput.length > 0) {
+        $fileInput.off('change.companyInput').on('change.companyInput', function (e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) {
+                return;
+            }
 
-        if (!file.type.startsWith('image/')) {
-            alert('Please select a valid image file.');
-            $submitBtn.prop('disabled', true);
-            $imagePreview.css('border', '2px solid red');
-            e.target.value = '';
-            return;
-        }
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file.');
+                $submitBtn.prop('disabled', true);
+                $imagePreview.css('border', '2px solid red');
+                e.target.value = '';
+                return;
+            }
 
-        $submitBtn.prop('disabled', false);
-        $imagePreview.css('border', '');
+            $submitBtn.prop('disabled', false);
+            $imagePreview.css('border', '');
 
-        const reader = new FileReader();
-        reader.onload = function (loadEvent) {
-            $imagePreview.attr('src', loadEvent.target.result);
-        };
-        reader.onerror = function () {
-            alert('Failed to read the file. Please try another one.');
-            $imagePreview.attr('src', defaultImageSrc);
-            e.target.value = '';
-        };
-        reader.readAsDataURL(file);
-    });
+            const reader = new FileReader();
+            reader.onload = function (loadEvent) {
+                $imagePreview.attr('src', loadEvent.target.result).css('display', 'block').show();
+                $('#initials-preview').attr('style', 'display: none !important');
+            };
+            reader.onerror = function () {
+                alert('Failed to read the file. Please try another one.');
+                $imagePreview.attr('src', defaultImageSrc);
+                e.target.value = '';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 
     $("#recommend-btn").off("click.companyRec").on("click.companyRec", function (e) {
         e.preventDefault();
-        showFlashMessage("You are currently in visitor view and can't write a recommendation for your own company.", "danger");
+        if (typeof showFlashMessage === 'function') {
+            showFlashMessage("You are currently in visitor view and can't write a recommendation for your own company.", "danger");
+        } else {
+            alert("You are currently in visitor view and can't write a recommendation for your own company.");
+        }
+    });
+
+    // Share link handler
+    $("#share-company-btn").off("click.shareComp").on("click.shareComp", function (e) {
+        e.preventDefault();
+        const url = window.location.href;
+        if (navigator && navigator.clipboard) {
+            navigator.clipboard.writeText(url).then(function() {
+                const $btn = $("#share-company-btn");
+                const originalHtml = $btn.html();
+                $btn.html('<i class="fa-solid fa-check me-1"></i> Copied Link!');
+                setTimeout(function() {
+                    $btn.html(originalHtml);
+                }, 2000);
+            }).catch(function() {
+                prompt("Copy link to company profile:", url);
+            });
+        } else {
+            prompt("Copy link to company profile:", url);
+        }
     });
 
     // Map rendering logic

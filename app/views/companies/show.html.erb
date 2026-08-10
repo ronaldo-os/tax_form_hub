@@ -1,164 +1,395 @@
-<% content_for :page_title, "Company Profile" %>
+<% content_for :page_title, @company.name.presence || "Company Profile" %>
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "company", media: "all" %>
 <% end %>
 
 <% if current_user && current_user.company_id == @company.id %>
-<div id="visitor-note" class="visitor-note">
-  <p>
-    You are currently viewing your profile, as other people see it. 
-    <b>
-        <%= link_to "Exit Visitor Mode", companies_path, class: "view-as-me", id: "exit-visitor-mode" %>
-    </b>
-  </p>
-</div>
+  <div id="visitor-note" class="visitor-note shadow-sm">
+    <div class="container d-flex align-items-center justify-content-center gap-2">
+      <i class="fa-solid fa-eye me-1"></i>
+      <span>You are currently viewing your profile as visitors see it.</span>
+      <b>
+        <%= link_to companies_path(id: @company.slug), class: "view-as-me ms-1", id: "exit-visitor-mode" do %>
+          <i class="fa-solid fa-arrow-left me-1"></i>Exit Visitor Mode
+        <% end %>
+      </b>
+    </div>
+  </div>
 <% end %>
 
-
 <div class="container py-4 py-md-5">
-  <div class="row mt-4">
-    <!-- Sidebar -->
-    <div class="col-md-3">
-      <% cache ["company_sidebar", @company, @company.profile_image.blob&.key, @company.updated_at], expires_in: 30.minutes do %>
-      <div class="card shadow-sm rounded-3 border-0 mob-mb-4">
-        <div class="card-body p-4 text-center">
-
-          <!-- Profile Image -->
-          <div class="d-flex flex-column align-items-center mb-3">
-            <%= image_tag(
-              (@company.profile_image.attached? && @company.profile_image.attachment&.persisted?) ? url_for(@company.profile_image) : asset_path("user_avatar_default.png"),
-              class: "rounded-circle shadow-sm border",
-              style: "width: 160px; height: 160px; object-fit: cover;",
-              loading: "lazy"
-            ) %>
+  <!-- Hero Banner Header -->
+  <div class="company-hero-card mb-4">
+    <div class="company-hero-banner"></div>
+    <div class="company-hero-body">
+      <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end justify-content-between gap-3">
+        
+        <!-- Avatar & Main Title Info -->
+        <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-3 text-center text-md-start w-100 min-w-0">
+          <div class="company-avatar-wrapper flex-shrink-0">
+            <% if @company.profile_image.attached? && @company.profile_image.attachment&.persisted? %>
+              <%= image_tag(
+                url_for(@company.profile_image),
+                class: "company-hero-avatar",
+                alt: @company.name.presence || "Company Logo",
+                loading: "lazy"
+              ) %>
+            <% else %>
+              <% initials = @company.name.present? ? @company.name.strip[0..1].upcase : "CO" %>
+              <div class="company-hero-avatar company-hero-avatar-initials d-flex align-items-center justify-content-center fw-bold text-white shadow-sm" title="<%= @company.name %>">
+                <%= initials %>
+              </div>
+            <% end %>
+            <span class="company-verified-badge" title="Active Network Company">
+              <i class="fa-solid fa-check"></i>
+            </span>
           </div>
 
-          <!-- Company Name + Website -->
-          <h4 class="fw-bold mb-4"><%= @company.name.presence || "No company name" %></h4>
+          <div class="min-w-0 flex-grow-1 pb-1">
+            <h1 class="company-hero-title mb-2">
+              <%= @company.name.presence || "No Company Name" %>
+            </h1>
 
-          <% if @company.website.present? %>
-            <% full_url = @company.website =~ /\Ahttp(s)?:\/\// ? @company.website : "https://#{@company.website}" %>
-            <p class="mb-4">
-              <a href="<%= full_url %>" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-primary fw-semibold">
-                <%= @company.website %>
-              </a>
-            </p>
-          <% else %>
-            <p class="mb-4 text-muted">No website</p>
-          <% end %>
+            <!-- Stat Chips -->
+            <div class="d-flex flex-wrap align-items-center gap-2 company-stat-chips-group">
+              <% industry_label = Company::INDUSTRIES.find { |label, value, _| value == @company.industry }&.first %>
+              <% if industry_label.present? %>
+                <span class="company-stat-chip">
+                  <i class="fa-solid fa-laptop"></i>
+                  <%= industry_label %>
+                </span>
+              <% end %>
 
-          <!-- About -->
-          <div class="mb-4 text-start">
-            <small class="text-uppercase text-muted fw-semibold">About</small>
-            <ul class="list-unstyled mt-3 mb-0">
-              <li class="d-flex mb-2">
-                <i class="fa-solid fa-laptop text-secondary icon-fixed"></i>
-                <span><%= Company::INDUSTRIES.find { |label, value, _| value == @company.industry }&.first.presence || "None" %></span>
-              </li>
-              <li class="d-flex mb-2">
-                <i class="fa-solid fa-users text-secondary icon-fixed"></i>
-                <span><%= Company::SIZES.find { |label, value, _| value == @company.size }&.first.presence || "None" %></span>
-              </li>
-              <li class="d-flex mb-2">
-                <i class="fa-solid fa-briefcase text-secondary icon-fixed"></i>
-                <span><%= Company::OWNERSHIPS.find { |label, value, _| value == @company.ownership }&.first.presence || "None" %></span>
-              </li>
-              <li class="d-flex">
-                <i class="fa-solid fa-location-dot text-secondary icon-fixed"></i>
-                <span id="company_location_text"><%= [ @company.address, @company.country ].select(&:present?).join(", ").presence || "N/A" %></span>
-              </li>
-            </ul>
-          </div>
+              <% size_label = Company::SIZES.find { |label, value, _| value == @company.size }&.first %>
+              <% if size_label.present? %>
+                <span class="company-stat-chip">
+                  <i class="fa-solid fa-users"></i>
+                  <%= size_label %>
+                </span>
+              <% end %>
 
-          <!-- Contact -->
-          <div class="mb-4 text-start">
-            <small class="text-uppercase text-muted fw-semibold">Contact</small>
-            <ul class="list-unstyled mt-3 mb-0">
-              <li class="d-flex mb-2">
-                <i class="fa-solid fa-phone text-secondary icon-fixed"></i>
-                <span><%= @company.phone.presence || "None" %></span>
-              </li>
-              <li class="d-flex">
-                <i class="fa-solid fa-envelope text-secondary icon-fixed"></i>
-                <span><%= @company.email_address.presence || "None" %></span>
-              </li>
-            </ul>
-          </div>
+              <% ownership_label = Company::OWNERSHIPS.find { |label, value, _| value == @company.ownership }&.first %>
+              <% if ownership_label.present? %>
+                <span class="company-stat-chip">
+                  <i class="fa-solid fa-briefcase"></i>
+                  <%= ownership_label %>
+                </span>
+              <% end %>
 
-          <!-- Map -->
-          <div class="mt-3">
-            <iframe
-              id="map-frame"
-              width="100%"
-              height="150"
-              frameborder="0"
-              scrolling="no"
-              src=""
-              loading="lazy">
-            </iframe>
-
-            <small class="text-muted d-block mt-2" style="font-size: 11px;">
-              © OpenStreetMap contributors
-            </small>
-          </div>
-        </div>
-      </div>
-      <% end %>
-    </div>
-
-    <!-- Recommendations -->
-    <div class="col-md-9">
-      <!-- Section Header -->
-      <div class="card shadow-sm rounded-3 border-0 mb-4">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <h5 class="fw-bold text-primary mb-0">Recommendations</h5>
-        </div>
-      </div>
-
-      <!-- Recommendations List -->
-      <% if @company.recommendations.any? %>
-        <% @company.recommendations.each do |rec| %>
-          <div class="card shadow-sm rounded-3 border-0 mb-3">
-            <div class="card-body">
-              <p class="fw-bold mb-1"><%= rec.user.email %></p>
-              <p class="text-muted small mb-3"><%= rec.created_at.strftime("%B %d, %Y") %></p>
-              <p class="mb-0"><%= rec.text %></p>
+              <% if @company.country.present? %>
+                <span class="company-stat-chip">
+                  <i class="fa-solid fa-globe"></i>
+                  <%= @company.country %>
+                </span>
+              <% end %>
             </div>
           </div>
-        <% end %>
-      <% else %>
-        <p class="text-muted fst-italic">No recommendations yet.</p>
-      <% end %>
+        </div>
 
-      <!-- Add Recommendation -->
-      <% if user_signed_in? %>
-        <div class="card shadow-sm rounded-3 border-0 mt-4">
-          <div class="card-body">
+        <!-- Quick Action Buttons -->
+        <div class="d-flex flex-wrap align-items-center gap-2 company-actions-wrapper flex-shrink-0 pt-2 pt-md-0">
+          <% if @company.website.present? %>
+            <% full_url = @company.website =~ /\Ahttp(s)?:\/\// ? @company.website : "https://#{@company.website}" %>
+            <a href="<%= full_url %>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Website
+            </a>
+          <% end %>
+
+          <button id="share-company-btn" type="button" class="btn btn-light rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm">
+            <i class="fa-solid fa-share-nodes"></i> Share
+          </button>
+
+          <% if current_user && (current_user.companies.include?(@company) || current_user.superadmin?) %>
+            <%= link_to companies_path(id: @company.slug), class: "btn btn-primary rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2" do %>
+              <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+            <% end %>
+          <% end %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="row g-4">
+    
+    <!-- Left / Main Column (8 cols) -->
+    <div class="col-lg-8">
+      
+      <!-- Company Overview / Description Card -->
+      <div class="company-card mb-4">
+        <div class="company-card-header">
+          <h2 class="card-title">
+            <i class="fa-solid fa-building-user text-primary"></i>
+            Company Overview
+          </h2>
+        </div>
+        <div class="company-card-body">
+          <% if @company.description.present? %>
+            <p class="mb-0 text-secondary leading-relaxed" style="white-space: pre-wrap; font-size: 0.98rem;"><%= @company.description %></p>
+          <% else %>
+            <div class="text-muted text-center py-4">
+              <i class="fa-solid fa-align-left fs-3 mb-2 d-block opacity-50"></i>
+              <p class="mb-0 fst-italic">No detailed description provided for this company.</p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Business & Legal Identifiers Card -->
+      <div class="company-card mb-4">
+        <div class="company-card-header">
+          <h2 class="card-title">
+            <i class="fa-solid fa-id-card text-primary"></i>
+            Business & Legal Details
+          </h2>
+        </div>
+        <div class="company-card-body">
+          <div class="row g-3">
+            
+            <!-- Tax ID -->
+            <div class="col-sm-6 col-md-4">
+              <div class="legal-data-box">
+                <div class="label-text"><%= @company.tax_id_type.presence || "Tax ID" %></div>
+                <div class="value-text"><%= @company.tax_id_number.presence || "N/A" %></div>
+              </div>
+            </div>
+
+            <!-- Company ID -->
+            <div class="col-sm-6 col-md-4">
+              <div class="legal-data-box">
+                <div class="label-text"><%= @company.company_id_type.presence || "Company Registration ID" %></div>
+                <div class="value-text"><%= @company.company_id_number.presence || "N/A" %></div>
+              </div>
+            </div>
+
+            <!-- Share Capital -->
+            <div class="col-sm-6 col-md-4">
+              <div class="legal-data-box">
+                <div class="label-text">Share Capital</div>
+                <div class="value-text"><%= @company.share_capital.present? ? number_to_currency(@company.share_capital, unit: "") : "N/A" %></div>
+              </div>
+            </div>
+
+            <!-- GLN -->
+            <div class="col-sm-6 col-md-4">
+              <div class="legal-data-box">
+                <div class="label-text">Global Location Number (GLN)</div>
+                <div class="value-text"><%= @company.gln.presence || "N/A" %></div>
+              </div>
+            </div>
+
+            <!-- Internal Identifier -->
+            <div class="col-sm-6 col-md-4">
+              <div class="legal-data-box">
+                <div class="label-text">Internal Identifier</div>
+                <div class="value-text"><%= @company.internal_identifier.presence || "N/A" %></div>
+              </div>
+            </div>
+
+            <!-- Registration Address -->
+            <div class="col-12">
+              <div class="legal-data-box">
+                <div class="label-text">Official Registered Address</div>
+                <div class="value-text"><%= @company.registration_address.presence || "N/A" %></div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Recommendations Card -->
+      <div class="company-card mb-4" id="recommendations-section">
+        <div class="company-card-header">
+          <h2 class="card-title">
+            <i class="fa-solid fa-comments text-primary"></i>
+            Recommendations
+          </h2>
+          <span class="badge bg-primary rounded-pill px-3 py-2 fw-semibold">
+            <%= @recommendations ? @recommendations.size : @company.recommendations.size %>
+          </span>
+        </div>
+        <div class="company-card-body">
+          
+          <!-- Recommendations List -->
+          <% recommendations_list = @recommendations || @company.recommendations.includes(:user).order(created_at: :desc) %>
+          <% if recommendations_list.any? %>
+            <div class="d-flex flex-column gap-3 mb-4">
+              <% recommendations_list.each do |rec| %>
+                <div class="recommendation-item">
+                  <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                      <div class="recommendation-avatar d-flex align-items-center justify-content-center text-primary fw-bold fs-5 flex-shrink-0">
+                        <%= rec.user.email.first.upcase rescue "U" %>
+                      </div>
+                      <div class="min-w-0">
+                        <h6 class="fw-bold mb-0 text-truncate" style="font-size: 0.95rem;">
+                          <%= rec.user.email %>
+                        </h6>
+                        <small class="text-muted" style="font-size: 0.78rem;">
+                          <i class="fa-regular fa-clock me-1"></i><%= rec.created_at.strftime("%B %d, %Y") %>
+                        </small>
+                      </div>
+                    </div>
+                  </div>
+                  <p class="recommendation-quote"><%= rec.text %></p>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <div class="text-center py-4 mb-4 text-muted">
+              <i class="fa-regular fa-comment-dots fs-2 mb-2 d-block opacity-50"></i>
+              <p class="mb-0 fst-italic">No recommendations written yet for this company.</p>
+            </div>
+          <% end %>
+
+          <!-- Add Recommendation Form -->
+          <hr class="my-4 opacity-25">
+          <h6 class="fw-bold mb-3">Leave a Recommendation</h6>
+          
+          <% if user_signed_in? %>
             <%= form_with model: [@company, Recommendation.new], local: true do |f| %>
               <div class="mb-3">
-                <%= f.text_area :text, class: "form-control", rows: 4, placeholder: "Write your recommendation..." %>
+                <%= f.text_area :text, class: "form-control rounded-3 p-3", rows: 3, placeholder: "Write a genuine recommendation sharing your business experience working with #{@company.name.presence || 'this company'}..." %>
               </div>
+              
               <% if current_user && current_user.company_id == @company.id %>
-                <div class="d-flex justify-content-end align-items-end">
-                  <%= button_tag "Submit Recommendation",
-                      type: "button",
-                      id: "recommend-btn",
-                      class: "btn btn-primary btn-md px-4" %>
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted"><i class="fa-solid fa-circle-info me-1 text-warning"></i> Visitor view preview active</small>
+                  <%= button_tag type: "button", id: "recommend-btn", class: "btn btn-primary rounded-pill px-4 fw-semibold" do %>
+                    <i class="fa-solid fa-paper-plane me-1"></i> Submit Recommendation
+                  <% end %>
                 </div>
               <% else %>
-                <div class="d-flex justify-content-end align-items-end mb-3">
-                  <%= f.submit "Submit Recommendation", class: "btn btn-primary btn-md px-4" %>
+                <div class="d-flex justify-content-end">
+                  <%= f.button class: "btn btn-primary rounded-pill px-4 fw-semibold d-inline-flex align-items-center gap-2" do %>
+                    <i class="fa-solid fa-paper-plane"></i> Submit Recommendation
+                  <% end %>
                 </div>
               <% end %>
             <% end %>
+          <% else %>
+            <div class="p-3 guest-signin-box rounded-3 text-center">
+              <p class="mb-0 small" style="color: var(--text-muted);">
+                Please <%= link_to "sign in to your account", new_user_session_path, class: "fw-bold text-primary" %> to leave a recommendation.
+              </p>
+            </div>
+          <% end %>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Sidebar Column (4 cols) -->
+    <div class="col-lg-4">
+      
+      <!-- Contact Details Card -->
+      <div class="company-card mb-4">
+        <div class="company-card-header">
+          <h2 class="card-title">
+            <i class="fa-solid fa-address-book text-primary"></i>
+            Contact Information
+          </h2>
+        </div>
+        <div class="company-card-body">
+          <ul class="list-unstyled mb-0 d-flex flex-column gap-3">
+            
+            <!-- Phone -->
+            <li class="d-flex align-items-start gap-3">
+              <div class="info-icon-wrapper">
+                <i class="fa-solid fa-phone"></i>
+              </div>
+              <div class="min-w-0">
+                <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">Phone Number</small>
+                <% if @company.phone.present? %>
+                  <a href="tel:<%= @company.phone %>" class="text-decoration-none fw-semibold text-main text-break" style="font-size: 0.95rem;">
+                    <%= @company.phone %>
+                  </a>
+                <% else %>
+                  <span class="text-muted small fst-italic">Not provided</span>
+                <% end %>
+              </div>
+            </li>
+
+            <!-- Email -->
+            <li class="d-flex align-items-start gap-3">
+              <div class="info-icon-wrapper">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div class="min-w-0">
+                <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">Email Address</small>
+                <% if @company.email_address.present? %>
+                  <a href="mailto:<%= @company.email_address %>" class="text-decoration-none fw-semibold text-primary text-break" style="font-size: 0.95rem;">
+                    <%= @company.email_address %>
+                  </a>
+                <% else %>
+                  <span class="text-muted small fst-italic">Not provided</span>
+                <% end %>
+              </div>
+            </li>
+
+            <!-- Physical Location Address -->
+            <li class="d-flex align-items-start gap-3">
+              <div class="info-icon-wrapper">
+                <i class="fa-solid fa-location-dot"></i>
+              </div>
+              <div class="min-w-0">
+                <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.72rem; letter-spacing: 0.05em;">Location</small>
+                <span id="company_location_text" class="fw-semibold text-main d-block text-break" style="font-size: 0.92rem;">
+                  <%= [ @company.address, @company.country ].select(&:present?).join(", ").presence || "N/A" %>
+                </span>
+              </div>
+            </li>
+
+          </ul>
+        </div>
+      </div>
+
+      <!-- Interactive Map Card -->
+      <div class="company-card">
+        <div class="company-card-header">
+          <h2 class="card-title">
+            <i class="fa-solid fa-map-location-dot text-primary"></i>
+            Interactive Location Map
+          </h2>
+        </div>
+        <div class="company-card-body p-3">
+          <div class="company-map-container">
+            <iframe
+              id="map-frame"
+              title="Company Location Map"
+              width="100%"
+              height="220"
+              frameborder="0"
+              scrolling="no"
+              src=""
+              loading="lazy"
+              style="display: none;">
+            </iframe>
+
+            <div id="map-error" class="p-3 text-center text-muted small" style="display: none;">
+              <i class="fa-solid fa-map-pin text-secondary fs-3 mb-2 d-block opacity-50"></i>
+              <span>Address location map loading...</span>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-2 px-1">
+            <small class="text-muted" style="font-size: 11px;">
+              <i class="fa-solid fa-earth-americas me-1"></i> OpenStreetMap
+            </small>
+            <% if @company.address.present? || @company.country.present? %>
+              <% map_search_query = [ @company.address, @company.country ].select(&:present?).join(", ") %>
+              <a href="https://www.openstreetmap.org/search?query=<%= ERB::Util.url_encode(map_search_query) %>" target="_blank" rel="noopener noreferrer" class="text-decoration-none small text-primary fw-semibold" style="font-size: 11px;">
+                Open Full Map <i class="fa-solid fa-arrow-up-right-from-square ms-1"></i>
+              </a>
+            <% end %>
           </div>
         </div>
-      <% else %>
-        <p class="text-muted">
-          Please <%= link_to "sign in", new_user_session_path, class: "fw-semibold text-primary" %> to write a recommendation.
-        </p>
-      <% end %>
+      </div>
+
     </div>
+
   </div>
 </div>
-
