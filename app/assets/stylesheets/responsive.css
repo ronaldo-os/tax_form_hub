@@ -1,4 +1,5 @@
 @media (max-width: 991.98px) {
+
   /* ==========================================================================
      MOBILE & TABLETS: CONVERT CARD BORDERS INTO MODERN 3D SHADOW
      ========================================================================== */
@@ -9,8 +10,8 @@
     border: none !important;
     border-color: transparent !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-                0 8px 10px -6px rgba(0, 0, 0, 0.05),
-                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+      0 8px 10px -6px rgba(0, 0, 0, 0.05),
+      0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
     border-radius: 12px !important;
     transition: transform 0.2s ease, box-shadow 0.2s ease !important;
   }
@@ -22,20 +23,20 @@
     border: none !important;
     border-color: transparent !important;
     box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
-                0 6px 12px -2px rgba(0, 0, 0, 0.18),
-                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+      0 6px 12px -2px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .card-filter.active {
     border: none !important;
     box-shadow: 0 12px 28px -4px rgba(0, 174, 255, 0.35),
-                0 0 0 2px var(--main-color) !important;
+      0 0 0 2px var(--main-color) !important;
   }
 
   [data-theme="dark"] .card-filter.active {
     border: none !important;
     box-shadow: 0 14px 30px -4px rgba(0, 174, 255, 0.45),
-                0 0 0 2px var(--main-color) !important;
+      0 0 0 2px var(--main-color) !important;
   }
 
   .custom_nav_tabs {
@@ -157,14 +158,14 @@
     border: none !important;
     border-radius: 16px !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-                0 8px 10px -6px rgba(0, 0, 0, 0.05),
-                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+      0 8px 10px -6px rgba(0, 0, 0, 0.05),
+      0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
   }
 
   [data-theme="dark"] .invoice-form-page .card {
     box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
-                0 6px 12px -2px rgba(0, 0, 0, 0.18),
-                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+      0 6px 12px -2px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .invoice-form-page .form-control,
@@ -276,6 +277,7 @@
   }
 
   @media (min-width: 576px) {
+
     .action-group-left,
     .action-group-right {
       width: auto !important;
@@ -310,14 +312,14 @@
     border: none !important;
     border-radius: 16px !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-                0 8px 10px -6px rgba(0, 0, 0, 0.05),
-                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+      0 8px 10px -6px rgba(0, 0, 0, 0.05),
+      0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
   }
 
   [data-theme="dark"] .companies-page .card {
     box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
-                0 6px 12px -2px rgba(0, 0, 0, 0.18),
-                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+      0 6px 12px -2px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .companies-page .form-control,
@@ -348,10 +350,10 @@
     margin-right: 0 !important;
   }
 
-  .tax-submissions-page > .d-flex:not(.custom_nav_tabs),
-  .locations-page > .d-flex:not(.custom_nav_tabs),
-  .subscriptions-page > .d-flex:not(.custom_nav_tabs),
-  .invoices-page > .d-flex:not(.custom_nav_tabs) {
+  .tax-submissions-page>.d-flex:not(.custom_nav_tabs),
+  .locations-page>.d-flex:not(.custom_nav_tabs),
+  .subscriptions-page>.d-flex:not(.custom_nav_tabs),
+  .invoices-page>.d-flex:not(.custom_nav_tabs) {
     padding-left: 0;
     padding-right: 0;
   }
@@ -365,8 +367,8 @@
     border: none !important;
     border-radius: 12px !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-                0 8px 10px -6px rgba(0, 0, 0, 0.05),
-                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+      0 8px 10px -6px rgba(0, 0, 0, 0.05),
+      0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
     margin-bottom: 1.25rem !important;
   }
 
@@ -375,8 +377,8 @@
   [data-theme="dark"] .subscriptions-page .card,
   [data-theme="dark"] .invoices-page .card {
     box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
-                0 6px 12px -2px rgba(0, 0, 0, 0.18),
-                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+      0 6px 12px -2px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .tax-submissions-page .card-body,
@@ -431,14 +433,14 @@
   }
 
   /* Isolated horizontal scroll box ONLY for middle table row */
-  .tax-submissions-page div.dataTables_wrapper > .row:nth-child(2),
-  .tax-submissions-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child),
-  .locations-page div.dataTables_wrapper > .row:nth-child(2),
-  .locations-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child),
-  .subscriptions-page div.dataTables_wrapper > .row:nth-child(2),
-  .subscriptions-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child),
-  .invoices-page div.dataTables_wrapper > .row:nth-child(2),
-  .invoices-page div.dataTables_wrapper > .row:not(:first-child):not(:last-child) {
+  .tax-submissions-page div.dataTables_wrapper>.row:nth-child(2),
+  .tax-submissions-page div.dataTables_wrapper>.row:not(:first-child):not(:last-child),
+  .locations-page div.dataTables_wrapper>.row:nth-child(2),
+  .locations-page div.dataTables_wrapper>.row:not(:first-child):not(:last-child),
+  .subscriptions-page div.dataTables_wrapper>.row:nth-child(2),
+  .subscriptions-page div.dataTables_wrapper>.row:not(:first-child):not(:last-child),
+  .invoices-page div.dataTables_wrapper>.row:nth-child(2),
+  .invoices-page div.dataTables_wrapper>.row:not(:first-child):not(:last-child) {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: auto !important;
@@ -541,10 +543,10 @@
     color: var(--text-main);
   }
 
-  .tax-submissions-page .dataTables_wrapper > .row:first-child,
-  .locations-page .dataTables_wrapper > .row:first-child,
-  .subscriptions-page .dataTables_wrapper > .row:first-child,
-  .invoices-page .dataTables_wrapper > .row:first-child {
+  .tax-submissions-page .dataTables_wrapper>.row:first-child,
+  .locations-page .dataTables_wrapper>.row:first-child,
+  .subscriptions-page .dataTables_wrapper>.row:first-child,
+  .invoices-page .dataTables_wrapper>.row:first-child {
     display: flex !important;
     flex-direction: column-reverse !important;
     gap: 12px !important;
@@ -553,10 +555,10 @@
     width: 100% !important;
   }
 
-  .tax-submissions-page .dataTables_wrapper > .row:first-child > div,
-  .locations-page .dataTables_wrapper > .row:first-child > div,
-  .subscriptions-page .dataTables_wrapper > .row:first-child > div,
-  .invoices-page .dataTables_wrapper > .row:first-child > div {
+  .tax-submissions-page .dataTables_wrapper>.row:first-child>div,
+  .locations-page .dataTables_wrapper>.row:first-child>div,
+  .subscriptions-page .dataTables_wrapper>.row:first-child>div,
+  .invoices-page .dataTables_wrapper>.row:first-child>div {
     width: 100% !important;
     max-width: 100% !important;
     flex: 0 0 100% !important;
@@ -708,10 +710,10 @@
   }
 
   /* Centered Info & Pagination controls with theme variables */
-  .tax-submissions-page div.dataTables_wrapper > .row:last-child,
-  .locations-page div.dataTables_wrapper > .row:last-child,
-  .subscriptions-page div.dataTables_wrapper > .row:last-child,
-  .invoices-page div.dataTables_wrapper > .row:last-child {
+  .tax-submissions-page div.dataTables_wrapper>.row:last-child,
+  .locations-page div.dataTables_wrapper>.row:last-child,
+  .subscriptions-page div.dataTables_wrapper>.row:last-child,
+  .invoices-page div.dataTables_wrapper>.row:last-child {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -809,6 +811,7 @@
 
 /* Desktop layout overrides (leave desktop view completely original) */
 @media (min-width: 992px) {
+
   .custom-company-filter,
   .custom-status-filter,
   .custom-type-filter {
@@ -909,15 +912,15 @@
     z-index: 100002;
     padding: 0 16px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-                0 8px 10px -6px rgba(0, 0, 0, 0.05),
-                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+      0 8px 10px -6px rgba(0, 0, 0, 0.05),
+      0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
   }
 
   [data-theme="dark"] .app-header {
     border-bottom: none !important;
     box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
-                0 6px 12px -2px rgba(0, 0, 0, 0.18),
-                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+      0 6px 12px -2px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .mobile-page-title {
@@ -1099,8 +1102,8 @@
     border-style: none !important;
     border-color: transparent !important;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-                0 8px 10px -6px rgba(0, 0, 0, 0.05),
-                0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+      0 8px 10px -6px rgba(0, 0, 0, 0.05),
+      0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
     outline: none !important;
     border-radius: 16px !important;
     margin: 0 auto !important;
@@ -1110,8 +1113,8 @@
   [data-theme="dark"] .auth-page-container .card,
   [data-theme="dark"] .auth-page-wrapper .card {
     box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.25),
-                0 6px 12px -2px rgba(0, 0, 0, 0.18),
-                0 0 0 1px rgba(255, 255, 255, 0.07) !important;
+      0 6px 12px -2px rgba(0, 0, 0, 0.18),
+      0 0 0 1px rgba(255, 255, 255, 0.07) !important;
   }
 
   .auth-card .card-body,
@@ -1334,15 +1337,15 @@
   border: none !important;
   border-radius: 16px !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-              0 8px 10px -6px rgba(0, 0, 0, 0.05),
-              0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
+    0 8px 10px -6px rgba(0, 0, 0, 0.05),
+    0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .networks-page .network-company-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.12),
-              0 8px 12px -6px rgba(0, 0, 0, 0.08) !important;
+    0 8px 12px -6px rgba(0, 0, 0, 0.08) !important;
 }
 
 .networks-page .network-company-card .card-title {
@@ -1356,26 +1359,26 @@
 
 [data-theme="dark"] .networks-page .network-company-card {
   box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.3),
-              0 6px 12px -2px rgba(0, 0, 0, 0.2),
-              0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+    0 6px 12px -2px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 [data-theme="dark"] .networks-page .network-company-card:hover {
   box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.45),
-              0 0 0 1px rgba(255, 255, 255, 0.12) !important;
+    0 0 0 1px rgba(255, 255, 255, 0.12) !important;
 }
 
 .networks-page .network-search-card {
   border: none !important;
   border-radius: 16px !important;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
-              0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
+    0 8px 10px -6px rgba(0, 0, 0, 0.05) !important;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 [data-theme="dark"] .networks-page .network-search-card {
   box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+    0 0 0 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 @media (max-width: 575.98px) {
@@ -1411,7 +1414,7 @@
     transition: margin-left 0.3s ease;
   }
 
-  .app-sidebar.app-active ~ #main_content_div,
+  .app-sidebar.app-active~#main_content_div,
   body:has(.app-sidebar.app-active) #main_content_div {
     margin-left: 315px !important;
   }
@@ -1423,4 +1426,25 @@
     padding-left: 1.25rem !important;
     padding-right: 1.25rem !important;
   }
+}
+
+/* Command Palette Modal Styling */
+#commandPaletteModal .modal-content {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+}
+
+#commandPaletteModal .command-item {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+  transition: background-color 0.15s ease;
+}
+
+#commandPaletteModal .command-item:hover,
+#commandPaletteModal .command-item:focus {
+  background-color: var(--bg-secondary) !important;
+}
+
+#commandPaletteModal .command-item.active {
+  background-color: var(--bg-tertiary) !important;
 }

@@ -65,7 +65,7 @@
         <li class="app-logo" id="desktop_app_logo">
           <%= link_to root_path, class: "d-flex align-items-center" do %>
             <div class="app-icon text-primary">
-            <i class="fa-solid fa-cloud-arrow-up fa-fw"></i>
+              <i class="fa-solid fa-cloud-arrow-up fa-fw"></i>
             </div>
             <div class="app-text text-primary">Tax Form Hub</div>
           <% end %>
@@ -108,37 +108,105 @@
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?(edit_profile_path) %>">
+          <!-- Mobile-only account links (since desktop header dropdown is hidden on mobile) -->
+          <li class="d-lg-none <%= 'app-active' if request.path.starts_with?(edit_profile_path) %>">
             <%= link_to edit_profile_path do %>
               <div class="app-icon"><i class="fa-solid fa-user-gear fa-fw z-1"></i></div>
               <div class="app-text">User Profile</div>
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?(companies_path) %>">
+          <li class="d-lg-none <%= 'app-active' if request.path.starts_with?(companies_path) %>">
             <%= link_to companies_path, data: { turbo: false } do %>
               <div class="app-icon"><i class="fa-solid fa-building fa-fw z-1"></i></div>
               <div class="app-text">Company Profile</div>
             <% end %>
           </li>
 
-          <li id="theme_toggle_btn" style="cursor: pointer;">
-            <a>
-              <div class="app-icon"><i class="fa-solid fa-moon fa-fw z-1"></i></div>
-              <div class="app-text">Dark Mode</div>
-            </a>
-          </li>
-
-          <li>
+          <li class="d-lg-none">
             <%= link_to destroy_user_session_path,
                         data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to log out?" },
-                        id: "logout-btn" do %>
+                        id: "mobile-logout-btn" do %>
               <div class="app-icon"><i class="fa-solid fa-right-from-bracket fa-fw z-1"></i></div>
               <div class="app-text">Log out</div>
             <% end %>
           </li>
         </div>
       </ul>
+
+      <!-- Theme Toggle at Bottom of Left Sidebar -->
+      <div class="sidebar-theme-wrapper p-2" id="sidebar_theme_wrapper">
+        <li id="theme_toggle_btn" class="list-unstyled" style="cursor: pointer;">
+          <a class="d-flex align-items-center rounded-3 text-decoration-none">
+            <div class="app-icon d-flex align-items-center justify-content-center" style="min-width: 70px; width: 70px; height: 50px; font-size: 1.3em;">
+              <i class="fa-solid <%= (current_user&.theme || 'light') == 'dark' ? 'fa-sun' : 'fa-moon' %> fa-fw"></i>
+            </div>
+            <div class="app-text fw-medium">
+              <%= (current_user&.theme || 'light') == 'dark' ? 'Light Mode' : 'Dark Mode' %>
+            </div>
+          </a>
+        </li>
+      </div>
+    </div>
+
+    <!-- Desktop Page Title Header Bar -->
+    <div id="desktop_header_bar" class="page-header-bar d-none d-lg-flex align-items-center justify-content-between px-4 py-3 border-bottom bg-sidebar">
+      <div class="d-flex align-items-center gap-3">
+        <h1 class="desktop-page-title mb-0 fs-4 fw-bold text-main">
+          <%= content_for(:page_title) || content_for(:title) || "Tax Form Hub" %>
+        </h1>
+      </div>
+      <div class="d-flex align-items-center">
+        <!-- Minimalist User Profile Dropdown Menu -->
+        <div class="dropdown header-user-dropdown" id="header_user_dropdown_container">
+          <button class="btn btn-sm p-1 border-0 shadow-none text-main d-flex align-items-center gap-2" type="button" id="headerUserDropdown" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+            <% if current_user&.profile_image&.attached? && current_user.profile_image.attachment&.persisted? %>
+              <%= image_tag(url_for(current_user.profile_image), class: "rounded-circle", style: "width: 32px; height: 32px; object-fit: cover;", alt: "User Avatar") %>
+            <% else %>
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px; font-weight: 600; font-size: 0.85rem;">
+                <%= current_user&.email&.first(2)&.upcase || "TF" %>
+              </div>
+            <% end %>
+            <span class="fw-semibold fs-7 text-main me-1"><%= current_user&.email&.split('@')&.first&.capitalize || "Account" %></span>
+            <i class="fa-solid fa-chevron-down text-muted fs-8"></i>
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2 p-2 rounded-3 modern-user-dropdown-menu" aria-labelledby="headerUserDropdown" style="min-width: 220px;">
+            <!-- Header User Summary -->
+            <li class="px-3 py-2 border-bottom">
+              <div class="fw-bold fs-7 text-main text-truncate" title="<%= current_user&.email %>">
+                <%= current_user&.email&.split('@')&.first&.capitalize || "User" %>
+              </div>
+              <small class="text-muted fs-8 text-truncate d-block"><%= current_user&.email %></small>
+            </li>
+
+            <!-- Navigation Links -->
+            <li>
+              <%= link_to edit_profile_path, class: "dropdown-item d-flex align-items-center gap-2 py-2 fs-7 rounded-2" do %>
+                <div class="app-icon text-muted me-1"><i class="fa-solid fa-user-gear fa-fw"></i></div>
+                <div class="app-text text-main">User Profile</div>
+              <% end %>
+            </li>
+
+            <li>
+              <%= link_to companies_path, class: "dropdown-item d-flex align-items-center gap-2 py-2 fs-7 rounded-2", data: { turbo: false } do %>
+                <div class="app-icon text-muted me-1"><i class="fa-solid fa-building fa-fw"></i></div>
+                <div class="app-text text-main">Company Profile</div>
+              <% end %>
+            </li>
+
+            <li><hr class="dropdown-divider my-1 opacity-50"></li>
+
+            <!-- Logout Link -->
+            <li>
+              <%= link_to destroy_user_session_path, data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to log out?" }, class: "dropdown-item d-flex align-items-center gap-2 py-2 fs-7 rounded-2 text-danger", id: "header_logout_btn" do %>
+                <div class="app-icon me-1"><i class="fa-solid fa-right-from-bracket fa-fw"></i></div>
+                <div class="app-text">Log out</div>
+              <% end %>
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
 
     <div id="main_content_div">
@@ -169,6 +237,121 @@
       </div>
     </div>
   <% end %>
+
+  <!-- Global Command Palette Modal -->
+  <div class="modal fade" id="commandPaletteModal" tabindex="-1" aria-labelledby="commandPaletteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-top modal-lg mt-5">
+      <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
+        <div class="modal-header border-bottom px-3 py-2 bg-body">
+          <div class="input-group input-group-lg border-0 shadow-none">
+            <span class="input-group-text bg-transparent border-0 pe-2" id="cmd-search-icon">
+              <i class="fa-solid fa-magnifying-glass text-muted fs-5"></i>
+            </span>
+            <input type="text" class="form-control bg-transparent border-0 shadow-none ps-0 fs-6 text-main" id="command_palette_input" placeholder="Type to search page (Taxes, Invoices, Subscriptions, Locations...)" aria-label="Search" autocomplete="off">
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-0 max-vh-50 overflow-auto" id="command_palette_results">
+          <div class="list-group list-group-flush border-0">
+            <a href="<%= root_path %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item">
+              <div class="d-flex align-items-center gap-3">
+                <div class="icon-square bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                  <i class="fa-solid fa-file-invoice-dollar fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-main">Taxes Dashboard</div>
+                  <small class="text-muted">View tax submissions and forms</small>
+                </div>
+              </div>
+              <span class="badge bg-light text-muted border">Jump to</span>
+            </a>
+
+            <a href="<%= invoices_path %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item">
+              <div class="d-flex align-items-center gap-3">
+                <div class="icon-square bg-info-subtle text-info rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                  <i class="fa-solid fa-file-invoice fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-main">Invoices</div>
+                  <small class="text-muted">Manage sales, purchases, quotes & credit notes</small>
+                </div>
+              </div>
+              <span class="badge bg-light text-muted border">Jump to</span>
+            </a>
+
+            <a href="<%= subscriptions_path rescue '#' %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item">
+              <div class="d-flex align-items-center gap-3">
+                <div class="icon-square bg-warning-subtle text-warning rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                  <i class="fa-solid fa-repeat fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-main">Subscriptions</div>
+                  <small class="text-muted">Recurring billing and price adjustments</small>
+                </div>
+              </div>
+              <span class="badge bg-light text-muted border">Jump to</span>
+            </a>
+
+            <a href="<%= locations_path %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item">
+              <div class="d-flex align-items-center gap-3">
+                <div class="icon-square bg-success-subtle text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                  <i class="fa-solid fa-location-dot fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-main">Locations</div>
+                  <small class="text-muted">Manage business branch locations</small>
+                </div>
+              </div>
+              <span class="badge bg-light text-muted border">Jump to</span>
+            </a>
+
+            <a href="<%= networks_path %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item">
+              <div class="d-flex align-items-center gap-3">
+                <div class="icon-square bg-secondary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                  <i class="fa-solid fa-network-wired fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-main">Network Connections</div>
+                  <small class="text-muted">View network vendors and customers</small>
+                </div>
+              </div>
+              <span class="badge bg-light text-muted border">Jump to</span>
+            </a>
+
+            <a href="<%= edit_profile_path %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item">
+              <div class="d-flex align-items-center gap-3">
+                <div class="icon-square bg-secondary-subtle text-secondary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                  <i class="fa-solid fa-user-gear fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-main">User Profile</div>
+                  <small class="text-muted">User settings and account details</small>
+                </div>
+              </div>
+              <span class="badge bg-light text-muted border">Jump to</span>
+            </a>
+
+            <a href="<%= companies_path %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item" data-turbo="false">
+              <div class="d-flex align-items-center gap-3">
+                <div class="icon-square bg-dark-subtle text-dark rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                  <i class="fa-solid fa-building fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-main">Company Profile</div>
+                  <small class="text-muted">Manage company data and attachments</small>
+                </div>
+              </div>
+              <span class="badge bg-light text-muted border">Jump to</span>
+            </a>
+          </div>
+        </div>
+        <div class="modal-footer bg-light px-3 py-2 border-top d-flex justify-content-between align-items-center fs-8 text-muted">
+          <div>Navigate with <kbd class="bg-secondary-subtle text-body border px-1 rounded">↑</kbd> <kbd class="bg-secondary-subtle text-body border px-1 rounded">↓</kbd></div>
+          <div>Shortcut <kbd class="bg-secondary-subtle text-body border px-1 rounded">Ctrl + K</kbd></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   </body>
 </html>

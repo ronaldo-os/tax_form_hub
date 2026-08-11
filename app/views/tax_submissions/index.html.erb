@@ -6,24 +6,31 @@
 %>
 <% content_for :page_title, full_title_incoming %>
 
-<div class="tax-submissions-page container py-2 py-md-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h4 mb-0 d-none d-lg-block" title="<%= company_name %>"><%= display_title_incoming %></h2>
-    <%= link_to "Back to Dashboard", root_path, class: "btn btn-back btn-sm ms-auto" %>
-  </div>
+<div class="tax-submissions-page container py-2 py-md-3">
+  <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">
+    <!-- Tab Navigation Container -->
+    <div class="tabs-scroll-container">
+      <ul class="custom_nav_tabs nav nav-tabs mb-0 border-0" id="submissionTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#activeSubmissions" type="button" role="tab" aria-controls="activeSubmissions" aria-selected="true">
+            Active Submissions
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archivedSubmissions" type="button" role="tab" aria-controls="archivedSubmissions" aria-selected="false">
+            Archived Submissions
+          </button>
+        </li>
+      </ul>
+    </div>
 
-  <ul class="custom_nav_tabs nav nav-tabs mb-3" id="submissionTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#activeSubmissions" type="button" role="tab" aria-controls="activeSubmissions" aria-selected="true">
-        Active Submissions
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archivedSubmissions" type="button" role="tab" aria-controls="archivedSubmissions" aria-selected="false">
-        Archived Submissions
-      </button>
-    </li>
-  </ul>
+    <!-- Back button on the right -->
+    <div class="d-flex justify-content-end">
+      <%= link_to root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap" do %>
+        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+      <% end %>
+    </div>
+  </div>
 
   <div class="tab-content" id="submissionTabsContent">
     <!-- Active Tab -->

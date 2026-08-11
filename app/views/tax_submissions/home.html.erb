@@ -6,31 +6,34 @@
 %>
 <% content_for :page_title, full_title %>
 
-<div class="tax-submissions-page container py-2 py-md-5">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="h4 mb-0 d-none d-lg-block" title="<%= company_name %>"><%= display_title %></h2>
-    <div class="d-flex gap-2 ms-auto">
+<div class="tax-submissions-page container py-2 py-md-3">
+  <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">
+    <!-- Tab Navigation Container -->
+    <div class="tabs-scroll-container">
+      <ul class="custom_nav_tabs nav nav-tabs mb-0 border-0" id="submissionTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="unarchived-tab" data-bs-toggle="tab" data-bs-target="#unarchived" type="button" role="tab" aria-controls="unarchived" aria-selected="true">
+            Active Submissions
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archived" type="button" role="tab" aria-controls="archived" aria-selected="false">
+            Archived Submissions
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Action buttons aligned right / stacked/full-width on mobile -->
+    <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
       <% if current_user.company_id.present? %>
-        <%= link_to "Incoming Submissions", tax_submissions_path, class: "btn btn-outline-primary btn-sm" %>
+        <%= link_to "Incoming Submissions", tax_submissions_path, class: "btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" %>
       <% end %>
-      <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
+      <button class="btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
         Submit Documents
       </button>
     </div>
   </div>
-
-  <ul class="custom_nav_tabs nav nav-tabs mb-3" id="submissionTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="unarchived-tab" data-bs-toggle="tab" data-bs-target="#unarchived" type="button" role="tab" aria-controls="unarchived" aria-selected="true">
-        Active Submissions
-      </button>
-    </li>
-    <li class="nav-item" role="presentation">
-      <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archived" type="button" role="tab" aria-controls="archived" aria-selected="false">
-        Archived Submissions
-      </button>
-    </li>
-  </ul>
 
   <div class="tab-content">
     <div class="tab-pane fade show active" id="unarchived">

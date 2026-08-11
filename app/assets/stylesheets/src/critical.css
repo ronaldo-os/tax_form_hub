@@ -58,7 +58,12 @@ body {
   margin: 0;
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--text-main) !important;
 }
 
@@ -133,6 +138,83 @@ h1, h2, h3, h4, h5, h6 {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   transition: 0.5s;
+}
+
+/* Desktop Page Header Bar */
+@media (min-width: 992px) {
+  .page-header-bar {
+    margin-left: 95px !important;
+    transition: margin-left 0.3s ease;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .app-sidebar.app-active ~ .page-header-bar,
+  body:has(.app-sidebar.app-active) .page-header-bar {
+    margin-left: 315px !important;
+  }
+}
+
+/* Sidebar Theme Wrapper at Bottom */
+.sidebar-theme-wrapper {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--bg-sidebar);
+  padding: 6px 4px;
+  z-index: 10;
+}
+
+.sidebar-theme-wrapper #theme_toggle_btn a {
+  color: var(--text-sidebar) !important;
+  text-decoration: none !important;
+  transition: 0.3s ease;
+}
+
+.sidebar-theme-wrapper #theme_toggle_btn a .app-icon,
+.sidebar-theme-wrapper #theme_toggle_btn a .app-text {
+  color: var(--text-sidebar) !important;
+}
+
+.sidebar-theme-wrapper #theme_toggle_btn a:hover {
+  background: var(--bg-tertiary);
+}
+
+@media (min-width: 992px) {
+  .app-sidebar:not(.app-active) .sidebar-theme-wrapper .app-text {
+    display: none !important;
+  }
+
+  .app-sidebar.app-active .sidebar-theme-wrapper .app-text {
+    display: flex !important;
+  }
+}
+
+/* Modern Desktop User Dropdown */
+.header-user-dropdown button#headerUserDropdown {
+  color: var(--text-color) !important;
+}
+
+.header-user-dropdown button#headerUserDropdown:hover,
+.header-user-dropdown button#headerUserDropdown:focus {
+  color: var(--text-color) !important;
+  opacity: 0.85;
+}
+
+.modern-user-dropdown-menu {
+  background: var(--bg-sidebar) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.05) !important;
+  margin-top: 0.5rem !important;
+}
+
+.modern-user-dropdown-menu .dropdown-item {
+  color: var(--text-color) !important;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.modern-user-dropdown-menu .dropdown-item:hover {
+  background-color: var(--bg-tertiary) !important;
 }
 
 /* Main content area */

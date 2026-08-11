@@ -268,28 +268,30 @@ stimulusApplication.register('sidebar', SidebarController);
 stimulusApplication.register('password-validation', PasswordValidationController);
 
 function updateThemeUI(theme) {
-  const btn = document.getElementById('theme_toggle_btn');
-  if (!btn) {
-    return;
-  }
+  const btns = [
+    document.getElementById('theme_toggle_btn'),
+    document.getElementById('header_theme_toggle_btn')
+  ];
 
-  // Find the icon and text - they're inside the <a> tag
-  const icon = btn.querySelector('i');
-  const text = btn.querySelector('.app-text');
+  btns.forEach(btn => {
+    if (!btn) return;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('.app-text');
 
-  if (theme === 'dark') {
-    if (icon) {
-      icon.classList.remove('fa-moon');
-      icon.classList.add('fa-sun');
+    if (theme === 'dark') {
+      if (icon) {
+        icon.classList.remove('fa-moon');
+        icon.classList.add('fa-sun');
+      }
+      if (text) text.textContent = 'Light Mode';
+    } else {
+      if (icon) {
+        icon.classList.remove('fa-sun');
+        icon.classList.add('fa-moon');
+      }
+      if (text) text.textContent = 'Dark Mode';
     }
-    if (text) text.textContent = 'Light Mode';
-  } else {
-    if (icon) {
-      icon.classList.remove('fa-sun');
-      icon.classList.add('fa-moon');
-    }
-    if (text) text.textContent = 'Dark Mode';
-  }
+  });
 }
 
 function handleThemeToggle(e) {
@@ -428,7 +430,7 @@ function updateDynamicElementsForTheme(theme) {
 
 // Event delegation handler for theme toggle clicks
 function handleThemeToggleEvent(e) {
-  const themeBtn = e.target.closest('#theme_toggle_btn');
+  const themeBtn = e.target.closest('#theme_toggle_btn, #header_theme_toggle_btn');
   if (themeBtn) {
     handleThemeToggle(e);
   }
@@ -784,6 +786,92 @@ document.addEventListener('mouseover', function (e) {
     }
   }, 100);
 }, { passive: true });
+
+// ==========================================================================
+// INTEGRATED SIDEBAR HEADER: COMMAND PALETTE & THEME TOGGLE
+// ==========================================================================
+
+// 1. Command Palette Keyboard Shortcut (Ctrl+K / Cmd+K)
+document.addEventListener('keydown', function (e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    const modalEl = document.getElementById('commandPaletteModal');
+    if (modalEl && typeof bootstrap !== 'undefined') {
+      const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.toggle();
+    }
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  setupCommandPalette();
+  setupHeaderThemeToggle();
+});
+
+document.addEventListener('turbo:load', function () {
+  setupCommandPalette();
+  setupHeaderThemeToggle();
+});
+
+function setupHeaderThemeToggle() {
+  const headerThemeBtn = document.getElementById('header_theme_toggle');
+  if (!headerThemeBtn) return;
+
+  headerThemeBtn.addEventListener('click', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const mainToggle = document.getElementById('theme_toggle_btn');
+    if (mainToggle) {
+      mainToggle.click();
+    } else {
+      const htmlEl = document.documentElement;
+      const currentTheme = htmlEl.getAttribute('data-theme') || 'light';
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      htmlEl.setAttribute('data-theme', newTheme);
+      htmlEl.setAttribute('data-bs-theme', newTheme);
+    }
+
+    const themeStatus = document.getElementById('header_theme_status');
+    if (themeStatus) {
+      const activeTheme = document.documentElement.getAttribute('data-theme') || 'light';
+      themeStatus.textContent = activeTheme.charAt(0).toUpperCase() + activeTheme.slice(1) + ' Mode';
+    }
+  });
+}
+
+function setupCommandPalette() {
+  const modalEl = document.getElementById('commandPaletteModal');
+  const inputEl = document.getElementById('command_palette_input');
+  if (!modalEl || !inputEl) return;
+
+  modalEl.addEventListener('shown.bs.modal', function () {
+    inputEl.value = '';
+    inputEl.focus();
+    filterCommandItems('');
+  });
+
+  inputEl.removeEventListener('input', handleCommandInput);
+  inputEl.addEventListener('input', handleCommandInput);
+}
+
+function handleCommandInput(e) {
+  filterCommandItems(e.target.value);
+}
+
+function filterCommandItems(query) {
+  const items = document.querySelectorAll('#command_palette_results .command-item');
+  const q = query.toLowerCase().trim();
+
+  items.forEach(item => {
+    const text = item.textContent.toLowerCase();
+    if (!q || text.includes(q)) {
+      item.classList.remove('d-none');
+    } else {
+      item.classList.add('d-none');
+    }
+  });
+}
+
 
 
 
