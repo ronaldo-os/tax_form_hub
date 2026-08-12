@@ -50,6 +50,27 @@ class BaseDatatable
     params.dig(:search, :value)
   end
 
+  def column_search_value(key_or_index)
+    return nil if params[:columns].blank?
+
+    cols = params[:columns].respond_to?(:values) ? params[:columns].values : params[:columns]
+    return nil unless cols.respond_to?(:each)
+
+    cols.each do |col|
+      next unless col.is_a?(Hash) || col.is_a?(ActionController::Parameters)
+
+      col_data = col[:data] || col['data']
+      search_hash = col[:search] || col['search']
+      next unless search_hash
+
+      val = search_hash[:value] || search_hash['value']
+      if (col_data.to_s == key_or_index.to_s) && val.present?
+        return val
+      end
+    end
+    nil
+  end
+
   def order_params
     params[:order] || { '0' => { 'column' => '0', 'dir' => 'desc' } }
   end

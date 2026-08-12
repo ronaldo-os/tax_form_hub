@@ -1,4 +1,21 @@
 module InvoicesHelper
+  def format_invoice_date(value)
+    return '—' if value.blank?
+
+    date_obj = case value
+               when Date, Time, DateTime
+                 value
+               when String
+                 Date.parse(value) rescue nil
+               else
+                 nil
+               end
+
+    return value.to_s if date_obj.nil?
+
+    date_obj.strftime("%b %d, %Y")
+  end
+
   def invoice_display_quantity(item)
     subscription = item.dig("optional_fields", "subscription")
     quantity = extract_optional_subscription_field(subscription, "quantity")

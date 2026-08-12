@@ -55,4 +55,24 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_match /object-fit: contain/, attachment_html
     assert_match /max-height: 70vh/, attachment_html
   end
+
+  test "datatable filters records by status column parameter" do
+    Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", status: "draft")
+    Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", status: "paid")
+
+    get datatable_data_invoices_url, params: {
+      invoice_type: "sale",
+      columns: {
+        "5" => { "data" => "status", "search" => { "value" => "draft" } }
+      },
+      format: :json
+    }
+
+    assert_response :success
+    json = JSON.parse(response.body)
+    data = json["data"]
+
+    assert_equal 1, data.length
+    assert_equal "Draft", data.first["status"]
+  end
 end

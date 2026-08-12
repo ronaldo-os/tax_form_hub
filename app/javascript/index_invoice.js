@@ -286,21 +286,15 @@ function initInvoicePage() {
             invoice = content;
 
             // Apply page break rules
-            const tableRows = invoice.querySelectorAll('table tr');
-            tableRows.forEach(row => {
-                row.style.pageBreakInside = 'avoid';
-                row.style.breakInside = 'avoid';
+            const noBreakElements = invoice.querySelectorAll('table tr, .card, .pdf-no-break, .payment-terms-box, .message-box, .totals-section, .attachment-card, .line-item, .price-adjustment-row');
+            noBreakElements.forEach(el => {
+                el.style.pageBreakInside = 'avoid';
+                el.style.breakInside = 'avoid';
             });
 
             const tables = invoice.querySelectorAll('table');
             tables.forEach(table => {
                 table.style.pageBreakInside = 'auto';
-            });
-
-            const cards = invoice.querySelectorAll('.card');
-            cards.forEach(card => {
-                card.style.pageBreakInside = 'avoid';
-                card.style.breakInside = 'avoid';
             });
 
             // Specific styling for PDF: remove card borders and bg-light from attachment sections
@@ -366,7 +360,7 @@ function initInvoicePage() {
                     pagebreak: {
                         mode: ['css', 'legacy'],
                         after: '.page-break-after',
-                        avoid: ['tr', '.card', 'table', '.no-break']
+                        avoid: ['tr', '.card', 'table', '.no-break', '.pdf-no-break', '.payment-terms-box', '.message-box', '.totals-section', '.attachment-card', '.line-item', '.price-adjustment-row']
                     }
                 };
 
@@ -447,7 +441,7 @@ function initInvoicePage() {
     });
 
     // Card filter
-    $(".card-filter").off("click.filter").on("click.filter", function () {
+    $(document).off("click.filter", ".card-filter").on("click.filter", ".card-filter", function () {
         const $this = $(this);
         const tableSelector = $this.data("table");
         const status = $this.data("status");
@@ -455,10 +449,11 @@ function initInvoicePage() {
         $this.closest(".row").find(".card-filter").removeClass("active");
         $this.addClass("active");
 
-        if ($.fn.DataTable && tableSelector) {
+        if ($.fn.DataTable && tableSelector && $(tableSelector).length) {
             const table = $(tableSelector).DataTable();
             if (status) {
-                table.column(5).search(status, true, false).draw();
+                // Use exact regex with caseInsen = true (4th param) to match formatted status text (e.g. "Draft", "Sent", "Paid")
+                table.column(5).search('^' + status + '$', true, false, true).draw();
             } else {
                 table.column(5).search("").draw();
             }

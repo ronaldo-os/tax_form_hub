@@ -73,21 +73,15 @@ $(document).on('click', '#download_button', function () {
     invoice = content;
 
     // Add page break classes to prevent content from being cut off
-    const tableRows = invoice.querySelectorAll('table tr');
-    tableRows.forEach(row => {
-        row.style.pageBreakInside = 'avoid';
-        row.style.breakInside = 'avoid';
+    const noBreakElements = invoice.querySelectorAll('table tr, .card, .pdf-no-break, .payment-terms-box, .message-box, .totals-section, .attachment-card, .line-item, .price-adjustment-row');
+    noBreakElements.forEach(el => {
+        el.style.pageBreakInside = 'avoid';
+        el.style.breakInside = 'avoid';
     });
 
     const tables = invoice.querySelectorAll('table');
     tables.forEach(table => {
         table.style.pageBreakInside = 'auto';
-    });
-
-    const cards = invoice.querySelectorAll('.card');
-    cards.forEach(card => {
-        card.style.pageBreakInside = 'avoid';
-        card.style.breakInside = 'avoid';
     });
 
     // Specific styling for PDF: remove card borders and bg-light from attachment sections
@@ -155,7 +149,7 @@ $(document).on('click', '#download_button', function () {
             pagebreak: {
                 mode: ['css', 'legacy'],
                 after: '.page-break-after',
-                avoid: ['tr', '.card', 'table', '.no-break']
+                avoid: ['tr', '.card', 'table', '.no-break', '.pdf-no-break', '.payment-terms-box', '.message-box', '.totals-section', '.attachment-card', '.line-item', '.price-adjustment-row']
             }
         };
 

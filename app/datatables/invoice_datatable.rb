@@ -73,6 +73,13 @@ class InvoiceDatatable < BaseDatatable
   def filtered_scope
     scope = base_scope
 
+    # Apply column-specific status filter if present
+    status_filter = column_search_value('status') || column_search_value('5') || params[:status]
+    if status_filter.present?
+      clean_status = status_filter.to_s.gsub(/[\^\$]/, '').downcase
+      scope = scope.where(status: clean_status) if clean_status.present?
+    end
+
     # Apply search if provided
     if search_value.present?
       scope = scope.left_joins(:recipient_company, :sale_from)

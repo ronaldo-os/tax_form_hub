@@ -51,7 +51,7 @@
         <% ["total", "draft", "sent", "paid"].each do |status| %>
           <% totals = @invoice_totals_sale[status] %>
           <div class="col-6 col-md-3">
-            <div class="card card-filter shadow-sm h-100" 
+            <div class="card card-filter shadow-sm h-100 <%= 'active' if status == 'total' %>" 
                 data-table="#sales-table" 
                 data-status="<%= (status == "total" ? "" : status) %>">
               <div class="card-body d-flex flex-column justify-content-between p-3">
@@ -128,7 +128,7 @@
         <% ["total", "draft", "sent", "paid"].each do |status| %>
           <% totals = @invoice_totals_purchase[status] %>
           <div class="col-6 col-md-3">
-            <div class="card card-filter shadow-sm h-100" 
+            <div class="card card-filter shadow-sm h-100 <%= 'active' if status == 'total' %>" 
                 data-table="#purchases-table" 
                 data-status="<%= (status == "total" ? "" : status) %>">
               <div class="card-body d-flex flex-column justify-content-between p-3">
