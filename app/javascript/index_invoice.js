@@ -101,6 +101,10 @@ function initInvoicePage() {
             autoWidth: false,
             destroy: true, // Important for Turbo
             pageLength: 25,
+            order: [[3, 'desc']], // Default order by Issue Date DESC
+            columnDefs: [
+                { orderable: false, targets: [4, 6] } // Disable sorting on Attachments and Actions
+            ],
             deferRender: true, // Improves performance with large datasets
             initComplete: function () {
                 const api = this.api();

@@ -73,9 +73,9 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
     get tax_submissions_url
     assert_response :success
     assert_select "div#form2307Modal-#{tax_submission.id}" do
-      assert_select "span.text-break[title='very_long_form_2307_attachment_filename_spec_2026.pdf']",
+      assert_select "span.text-truncate[title='very_long_form_2307_attachment_filename_spec_2026.pdf']",
                     text: "very_long_form_2307_attachment_filename_spec_2026.pdf"
-      assert_select "a", text: "View PDF"
+      assert_select "embed[type='application/pdf']"
     end
   end
 end

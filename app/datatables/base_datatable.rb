@@ -93,12 +93,17 @@ class BaseDatatable
 
   # Apply ordering
   def apply_order(relation, sortable_columns)
+    has_custom_order = false
+
     order_params.each do |_, order|
       column_index = order['column'].to_i
-      direction = order['dir'] == 'asc' ? 'ASC' : 'DESC'
+      direction = order['dir'].to_s.downcase == 'asc' ? 'ASC' : 'DESC'
 
-      column = sortable_columns[column_index]
-      relation = relation.order(Arel.sql("#{column} #{direction}")) if column.present?
+      column = sortable_columns[column_index] || sortable_columns[column_index.to_s]
+      if column.present?
+        relation = has_custom_order ? relation.order(Arel.sql("#{column} #{direction}")) : relation.reorder(Arel.sql("#{column} #{direction}"))
+        has_custom_order = true
+      end
     end
 
     relation

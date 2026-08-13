@@ -505,6 +505,10 @@ class SubscriptionsController < ApplicationController
       }
     )
     new_invoice.save!
+    if new_invoice.attachments.attached?
+      ActiveStorage::Attachment.where(record_type: 'Invoice', record_id: new_invoice.id).delete_all
+      new_invoice.attachments.reset
+    end
   end
 
   def set_subscription_invoice

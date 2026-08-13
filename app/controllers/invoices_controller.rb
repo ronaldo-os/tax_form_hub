@@ -356,12 +356,14 @@ class InvoicesController < ApplicationController
           end
 
           if duplicated_invoice.save
-            @invoice.attachments.each do |attachment|
-              duplicated_invoice.attachments.attach(
-                io: StringIO.new(attachment.download),
-                filename: attachment.filename.to_s,
-                content_type: attachment.content_type
-              )
+            unless duplicated_invoice.recurring_sub_invoice?
+              @invoice.attachments.each do |attachment|
+                duplicated_invoice.attachments.attach(
+                  io: StringIO.new(attachment.download),
+                  filename: attachment.filename.to_s,
+                  content_type: attachment.content_type
+                )
+              end
             end
           end
 
@@ -455,12 +457,14 @@ class InvoicesController < ApplicationController
       end
 
       if duplicated_invoice.save
-        @invoice.attachments.each do |attachment|
-          duplicated_invoice.attachments.attach(
-            io: StringIO.new(attachment.download),
-            filename: attachment.filename.to_s,
-            content_type: attachment.content_type
-          )
+        unless duplicated_invoice.recurring_sub_invoice?
+          @invoice.attachments.each do |attachment|
+            duplicated_invoice.attachments.attach(
+              io: StringIO.new(attachment.download),
+              filename: attachment.filename.to_s,
+              content_type: attachment.content_type
+            )
+          end
         end
 
         if @invoice.credit_note?

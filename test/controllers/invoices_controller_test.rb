@@ -51,7 +51,9 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     
     # Check if the attachments column contains the new centered div HTML for images
     attachment_html = data.first["attachments"]
-    assert_match /d-flex align-items-center justify-content-center/, attachment_html
+    assert_match /d-flex flex-column align-items-center justify-content-center/, attachment_html
+    assert_match /text-truncate/, attachment_html
+    assert_match /test_image.png/, attachment_html
     assert_match /object-fit: contain/, attachment_html
     assert_match /max-height: 70vh/, attachment_html
   end
@@ -74,5 +76,58 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal 1, data.length
     assert_equal "Draft", data.first["status"]
+  end
+
+  test "datatable sorts by columns correctly" do
+    comp_a = Company.create!(name: "AAA Customer", user: @user)
+    comp_b = Company.create!(name: "ZZZ Customer", user: @user)
+
+    Invoice.create!(user: @user, recipient_company: comp_a, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-001", issue_date: Date.current - 10.days, total: { "grand_total" => "100.00" }, status: "draft")
+    Invoice.create!(user: @user, recipient_company: comp_b, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-002", issue_date: Date.current - 1.day, total: { "grand_total" => "500.00" }, status: "paid")
+
+    [0, 1, 2, 3, 5].each do |col_idx|
+      ["asc", "desc"].each do |dir|
+        get datatable_data_invoices_url, params: {
+          invoice_type: "sale",
+          order: { "0" => { "column" => col_idx.to_s, "dir" => dir } },
+          format: :json
+        }
+        assert_response :success
+        json = JSON.parse(response.body)
+        assert json.key?("data")
+      end
+    end
+  end
+
+  test "generated subscription sub-invoices do not have attachments" do
+    parent_invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "2026-00001-001",
+      line_items_data: [
+        {
+          "description" => "Monthly SaaS Subscription",
+          "quantity" => "1",
+          "price" => "100.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "subscription_start_date" => (Date.current - 1.month - 1.day).to_s,
+              "subscription_end_date" => (Date.current + 1.year).to_s,
+              "subscription_billing_cycle" => "monthly"
+            }
+          }
+        }
+      ]
+    )
+    file = fixture_file_upload(Rails.root.join('test', 'fixtures', 'files', 'test_image.png'), 'image/png')
+    parent_invoice.attachments.attach(file)
+
+    assert parent_invoice.attachments.attached?, "Parent invoice should have attachment"
+
+    sub_invoice = parent_invoice.generate_subscription_invoice(Date.current)
+    assert sub_invoice.recurring_sub_invoice?, "Generated invoice should be a recurring sub-invoice"
+    assert_not sub_invoice.attachments.attached?, "Generated recurring sub-invoice should NOT have attachments"
   end
 end

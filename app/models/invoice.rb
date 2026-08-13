@@ -799,6 +799,10 @@ class Invoice < ApplicationRecord
     )
 
     if new_invoice.save
+      if new_invoice.attachments.attached?
+        ActiveStorage::Attachment.where(record_type: 'Invoice', record_id: new_invoice.id).delete_all
+        new_invoice.attachments.reset
+      end
       if parent_changed
         self.update_column(:line_items_data, updated_parent_line_items)
       end
@@ -1022,6 +1026,7 @@ class Invoice < ApplicationRecord
   end
 
   def attachments_type_allowed
+    return if recurring_sub_invoice?
     return unless attachments.attached?
 
     allowed_types = [ "application/pdf", "image/jpeg", "image/png" ]

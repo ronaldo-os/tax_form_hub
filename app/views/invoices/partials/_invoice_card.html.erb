@@ -459,7 +459,7 @@
         <% end %>
 
         <!-- Attachments -->
-        <% persisted_attachments = invoice.attachments.select(&:persisted?) %>
+        <% persisted_attachments = invoice.recurring_sub_invoice? ? [] : invoice.attachments.select(&:persisted?) %>
         <div id="attachments-section" class="mt-3 pdf-no-break <%= 'd-none' if persisted_attachments.empty? %>">
           <p class="text-uppercase text-muted fw-bold extra-small tracking-wider mb-2">Attachments</p>
           <div id="persisted-attachments-container">

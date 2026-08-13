@@ -17,6 +17,7 @@ class InvoiceDatatable < BaseDatatable
   SEARCHABLE_COLUMNS = [
     'invoices.invoice_number',
     'companies.name',
+    'sale_froms_invoices.name',
     'invoices.status'
   ].freeze
 
@@ -28,11 +29,11 @@ class InvoiceDatatable < BaseDatatable
   end
 
   def records_total
-    base_scope.distinct.count(:id)
+    base_scope.count
   end
 
   def records_filtered
-    filtered_scope.distinct.count(:id)
+    filtered_scope.count
   end
 
   def data
@@ -52,9 +53,26 @@ class InvoiceDatatable < BaseDatatable
 
   private
 
+  def sortable_columns
+    counterparty_col = if @invoice_type == 'purchase' || is_purchase_table?
+      'COALESCE(sale_froms_invoices.name, companies.name)'
+    else
+      'COALESCE(companies.name, sale_froms_invoices.name)'
+    end
+
+    {
+      0 => 'invoices.invoice_number',
+      1 => counterparty_col,
+      2 => "COALESCE(NULLIF(invoices.total->>'grand_total', ''), '0')::numeric",
+      3 => 'invoices.issue_date',
+      5 => 'invoices.status'
+    }
+  end
+
   def base_scope
     scope = current_user.invoices
       .includes(:recipient_company, :sale_from)
+      .left_joins(:recipient_company, :sale_from)
       .with_attached_attachments
       .where(archived: @archived)
 
@@ -82,15 +100,11 @@ class InvoiceDatatable < BaseDatatable
 
     # Apply search if provided
     if search_value.present?
-      scope = scope.left_joins(:recipient_company, :sale_from)
       scope = apply_search(scope, SEARCHABLE_COLUMNS)
     end
 
     # Apply ordering - default to most recent first
-    scope = apply_order(scope, SORTABLE_COLUMNS)
-
-    # Ensure we get distinct invoices (avoid duplicates from joins)
-    scope.distinct
+    apply_order(scope, sortable_columns)
   end
 
   def invoice_link(invoice)
@@ -126,6 +140,7 @@ class InvoiceDatatable < BaseDatatable
   end
 
   def format_attachments(invoice)
+    return content_tag(:span, 'No File', class: 'text-muted') if invoice.recurring_sub_invoice?
     if invoice.attachments.attached?
       button = content_tag(:button, 'View Files',
         class: 'btn btn-sm btn-outline-primary',
@@ -139,26 +154,35 @@ class InvoiceDatatable < BaseDatatable
       # Use view's url_for which has access to the request host
       modal_content = invoice.attachments.map do |file|
         file_url = view.url_for(file)
+        filename = file.filename.to_s
         if file.content_type.to_s.start_with?("image/")
           content_tag(:div, class: 'col-12 mb-3') do
-            content_tag(:div, class: 'd-flex align-items-center justify-content-center bg-light border rounded p-2', style: 'min-height: 200px;') do
-              link_to(file_url, target: "_blank", class: 'd-block text-center') do
+            content_tag(:div, class: 'd-flex flex-column align-items-center justify-content-center bg-light border rounded p-2', style: 'min-height: 200px;') do
+              img_link = link_to(file_url, target: "_blank", class: 'd-block text-center w-100 mb-2') do
                 tag.img(src: file_url, class: 'img-fluid rounded shadow-sm', style: 'max-height: 70vh; object-fit: contain;', alt: 'Attachment', loading: 'lazy')
               end
+              info_box = content_tag(:div, class: 'w-100 d-flex align-items-center justify-content-between pt-2 border-top gap-2', style: 'min-width: 0;') do
+                name_span = content_tag(:span, filename, class: 'text-truncate small text-muted text-start flex-grow-1 me-2', style: 'min-width: 0;', title: filename)
+                view_link = link_to('View Image', file_url, target: '_blank', class: 'btn btn-sm btn-outline-secondary flex-shrink-0')
+                name_span + view_link
+              end
+              img_link + info_box
             end
           end
         elsif file.content_type.to_s == 'application/pdf'
           content_tag(:div, class: 'col-md-6 mb-3') do
-            content_tag(:div, class: 'd-flex align-items-center justify-content-between border p-2 rounded') do
-              content_tag(:span, file.filename.to_s) +
-              link_to('View PDF', view.url_for(file), target: '_blank', class: 'btn btn-sm btn-outline-secondary')
+            content_tag(:div, class: 'd-flex align-items-center justify-content-between border p-2 rounded gap-2', style: 'min-width: 0;') do
+              name_span = content_tag(:span, filename, class: 'text-truncate small me-2 flex-grow-1', style: 'min-width: 0;', title: filename)
+              view_link = link_to('View PDF', view.rails_blob_path(file, disposition: 'inline'), target: '_blank', class: 'btn btn-sm btn-outline-secondary flex-shrink-0')
+              name_span + view_link
             end
           end
         else
           content_tag(:div, class: 'col-md-6 mb-3') do
-            content_tag(:div, class: 'border p-2 rounded') do
-              content_tag(:span, file.filename.to_s) +
-              link_to('Download', file_url, class: 'btn btn-sm btn-outline-secondary', target: '_blank')
+            content_tag(:div, class: 'd-flex align-items-center justify-content-between border p-2 rounded gap-2', style: 'min-width: 0;') do
+              name_span = content_tag(:span, filename, class: 'text-truncate small me-2 flex-grow-1', style: 'min-width: 0;', title: filename)
+              view_link = link_to('Download', file_url, class: 'btn btn-sm btn-outline-secondary flex-shrink-0', target: '_blank')
+              name_span + view_link
             end
           end
         end

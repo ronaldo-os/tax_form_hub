@@ -148,6 +148,10 @@ class Subscription < ApplicationRecord
     )
 
     if invoice.save
+      if invoice.recurring_sub_invoice? && invoice.attachments.attached?
+        ActiveStorage::Attachment.where(record_type: 'Invoice', record_id: invoice.id).delete_all
+        invoice.attachments.reset
+      end
       # Update subscription for next cycle
       update_for_renewal(new_period_start, new_period_end)
       invoice

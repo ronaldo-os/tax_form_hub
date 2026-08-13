@@ -37,12 +37,12 @@
         </td>
         <td><%= invoice.issue_date&.strftime('%b %d, %Y') || '—' %></td>
         <td>
-        <% if invoice.attachments.attached? %>
+        <% if !invoice.recurring_sub_invoice? && invoice.attachments.attached? %>
         <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#attachmentModal-<%= invoice.id %>">View Files</button>
         <% else %>
         <span class="text-muted">No File</span>
         <% end %>
-        <% if invoice.attachments.attached? %>
+        <% if !invoice.recurring_sub_invoice? && invoice.attachments.attached? %>
             <div class="modal fade" id="attachmentModal-<%= invoice.id %>" tabindex="-1" aria-labelledby="attachmentModalLabel-<%= invoice.id %>" aria-hidden="true">
                 <div class="modal-dialog modal-md modal-dialog-scrollable">
                     <div class="modal-content">
@@ -53,26 +53,33 @@
                     <div class="modal-body">
                         <div class="row">
                         <% invoice.attachments.each do |file| %>
+                            <% filename = file.filename.to_s %>
                             <% if file.content_type.start_with?("image/") %>
                                 <div class="col-12 mb-3">
-                                  <div class="d-flex align-items-center justify-content-center bg-light border rounded p-2" style="min-height: 200px;">
-                                    <%= link_to url_for(file), target: "_blank", class: "d-block text-center" do %>
+                                  <div class="d-flex flex-column align-items-center justify-content-center bg-light border rounded p-2" style="min-height: 200px;">
+                                    <%= link_to url_for(file), target: "_blank", class: "d-block text-center w-100 mb-2" do %>
                                       <img src="<%= url_for(file) %>" class="img-fluid rounded shadow-sm" style="max-height: 70vh; object-fit: contain;" alt="Attachment" loading="lazy">
                                     <% end %>
+                                    <div class="w-100 d-flex align-items-center justify-content-between pt-2 border-top gap-2" style="min-width: 0;">
+                                      <span class="text-truncate small text-muted text-start flex-grow-1 me-2" style="min-width: 0;" title="<%= filename %>">
+                                        <%= filename %>
+                                      </span>
+                                      <%= link_to "View Image", url_for(file), target: "_blank", class: "btn btn-sm btn-outline-secondary flex-shrink-0" %>
+                                    </div>
                                   </div>
                                 </div>
                             <% elsif file.content_type == "application/pdf" %>
                                 <div class="col-md-6 mb-3">
-                                  <div class="d-flex align-items-center justify-content-between border p-2 rounded">
-                                  <span><%= file.filename.to_s %></span>
-                                  <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-secondary" %>
+                                  <div class="d-flex align-items-center justify-content-between border p-2 rounded gap-2" style="min-width: 0;">
+                                    <span class="text-truncate small me-2 flex-grow-1" style="min-width: 0;" title="<%= filename %>"><%= filename %></span>
+                                    <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-secondary flex-shrink-0" %>
                                   </div>
                                 </div>
                             <% else %>
                                 <div class="col-md-6 mb-3">
-                                  <div class="border p-2 rounded">
-                                  <span><%= file.filename.to_s %></span>
-                                  <%= link_to "Download", url_for(file), class: "btn btn-sm btn-outline-secondary", target: "_blank" %>
+                                  <div class="d-flex align-items-center justify-content-between border p-2 rounded gap-2" style="min-width: 0;">
+                                    <span class="text-truncate small me-2 flex-grow-1" style="min-width: 0;" title="<%= filename %>"><%= filename %></span>
+                                    <%= link_to "Download", url_for(file), class: "btn btn-sm btn-outline-secondary flex-shrink-0", target: "_blank" %>
                                   </div>
                                 </div>
                             <% end %>

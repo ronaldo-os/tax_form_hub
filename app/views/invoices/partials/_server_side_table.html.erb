@@ -11,9 +11,9 @@
       <th data-data="counterparty"><%= local_assigns[:invoice_type] == 'purchase' ? 'Supplier Name' : 'Customer Name' %></th>
       <th data-data="total">Total</th>
       <th data-data="issue_date">Issue Date</th>
-      <th data-data="attachments">Attachment</th>
+      <th data-data="attachments" data-orderable="false">Attachment</th>
       <th data-data="status">Status</th>
-      <th data-data="actions">Actions</th>
+      <th data-data="actions" data-orderable="false">Actions</th>
     </tr>
   </thead>
   <tbody>
