@@ -73,8 +73,15 @@
 
         <!-- Main Menu -->
         <div class="app-menu-list">
-          <li class="<%= 'app-active' if request.path == root_path || request.path.starts_with?('/admin') %>">
+          <li class="<%= 'app-active' if request.path == root_path || request.path == dashboard_path || request.path.starts_with?('/dashboard') %>">
             <%= link_to root_path do %>
+              <div class="app-icon"><i class="fa-solid fa-gauge-high fa-fw z-1"></i></div>
+              <div class="app-text">Dashboard</div>
+            <% end %>
+          </li>
+
+          <li class="<%= 'app-active' if request.path.starts_with?('/tax_submissions') || request.path.starts_with?('/admin') %>">
+            <%= link_to tax_submissions_home_path do %>
               <div class="app-icon"><i class="fa-solid fa-file-invoice-dollar fa-fw z-1"></i></div>
               <div class="app-text">Taxes</div>
             <% end %>
@@ -256,11 +263,24 @@
             <a href="<%= root_path %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item">
               <div class="d-flex align-items-center gap-3">
                 <div class="icon-square bg-primary-subtle text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
+                  <i class="fa-solid fa-gauge-high fs-5"></i>
+                </div>
+                <div>
+                  <div class="fw-semibold text-main">Analytics & KPI Dashboard</div>
+                  <small class="text-muted">Interactive business metrics, charts & KPIs</small>
+                </div>
+              </div>
+              <span class="badge bg-light text-muted border">Jump to</span>
+            </a>
+
+            <a href="<%= tax_submissions_home_path %>" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between px-4 py-3 border-bottom-0 command-item">
+              <div class="d-flex align-items-center gap-3">
+                <div class="icon-square bg-success-subtle text-success rounded-3 p-2 d-flex align-items-center justify-content-center" style="width:38px;height:38px;">
                   <i class="fa-solid fa-file-invoice-dollar fs-5"></i>
                 </div>
                 <div>
-                  <div class="fw-semibold text-main">Taxes Dashboard</div>
-                  <small class="text-muted">View tax submissions and forms</small>
+                  <div class="fw-semibold text-main">Taxes Hub & Submissions</div>
+                  <small class="text-muted">View and submit BIR Form 2307 and tax forms</small>
                 </div>
               </div>
               <span class="badge bg-light text-muted border">Jump to</span>

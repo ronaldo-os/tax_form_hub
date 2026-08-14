@@ -9,8 +9,7 @@ function fixEmptyRowColspan(tableApi) {
 
 function initClientSubmissionsPage() {
     // This script targets the home page where the user can submit documents
-    // The path is strictly "/" for now based on previous code, but let's check for home
-    if (window.location.pathname !== "/" && !window.location.pathname.includes("/tax_submissions/home")) {
+    if ($('.submissionsTable').length === 0 && !window.location.pathname.includes("/tax_submissions")) {
         return;
     }
 

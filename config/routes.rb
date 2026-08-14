@@ -18,8 +18,10 @@ Rails.application.routes.draw do
     patch 'profile/theme' => 'users/themes#update', as: :update_theme
   end
 
-  root "tax_submissions#home"
-  get "tax_submissions/home"
+  root "dashboards#index"
+  get "dashboard", to: "dashboards#index", as: :dashboard
+  get "dashboards/analytics_data", to: "dashboards#analytics_data", as: :dashboards_analytics_data
+  get "tax_submissions/home", to: "tax_submissions#home", as: :tax_submissions_home
   
   get "invoices/fetch_eligible", to: "invoices#eligible_invoices"
 

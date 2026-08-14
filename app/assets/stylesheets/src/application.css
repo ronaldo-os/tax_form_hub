@@ -1,4 +1,5 @@
 @import "../responsive.css";
+@import "../dashboard.css";
 
 :root,
 [data-theme="light"] {

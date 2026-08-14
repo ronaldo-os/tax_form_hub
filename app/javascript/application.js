@@ -14,7 +14,11 @@ function loadPageSpecificModules() {
     }
   }
 
-  if (path.includes('/tax_submissions') || path === '/') {
+  if (path === '/' || path.includes('/dashboard')) {
+    import(/* webpackChunkName: "dashboard" */ './dashboard');
+  }
+
+  if (path.includes('/tax_submissions')) {
     import(/* webpackChunkName: "client_submissions" */ './client_submissions');
     import(/* webpackChunkName: "admin_client_submissions" */ './admin_client_submissions');
   }
