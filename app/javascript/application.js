@@ -63,22 +63,35 @@ import Rails from "@rails/ujs";
 import "@hotwired/turbo-rails";
 import { Turbo } from "@hotwired/turbo-rails";
 
+window.isInvoiceFormDirty = false;
+window.isNavigatingConfirmed = false;
+
 window.showUnsavedChangesModal = function ({
   title = "Unsaved Changes",
   message = "You have unsaved changes. If you continue, your changes will be lost. Are you sure you want to proceed?",
   confirmText = "Continue"
 } = {}) {
   return new Promise((resolve) => {
+    // Remove any leftover modal elements or backdrops
+    const existingModal = document.getElementById('turboConfirmModal');
+    if (existingModal) {
+      existingModal.remove();
+    }
+    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+
     const modalHtml = `
       <div class="modal fade" id="turboConfirmModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-dialog-centered">
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title">${title}</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-              <p>${message}</p>
+              <p class="mb-0">${message}</p>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="turboConfirmCancel">Cancel</button>
@@ -89,21 +102,30 @@ window.showUnsavedChangesModal = function ({
       </div>
     `;
 
-    const existingModal = document.getElementById('turboConfirmModal');
-    if (existingModal) {
-      existingModal.remove();
-    }
-
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
     const modalElement = document.getElementById('turboConfirmModal');
     let resolved = false;
 
+    function cleanupModal() {
+      if (modalElement && modalElement.parentNode) {
+        modalElement.remove();
+      }
+      document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('overflow');
+      document.body.style.removeProperty('padding-right');
+    }
+
     // Fallback if bootstrap is undefined or missing
     if (typeof bootstrap === 'undefined' || !bootstrap.Modal) {
       console.warn("Bootstrap not found, falling back to native confirm");
       const userConfirmed = window.confirm(message);
-      if (userConfirmed) window.isInvoiceFormDirty = false;
+      if (userConfirmed) {
+        window.isInvoiceFormDirty = false;
+        window.isNavigatingConfirmed = true;
+      }
+      cleanupModal();
       resolve(userConfirmed);
       return;
     }
@@ -114,30 +136,47 @@ window.showUnsavedChangesModal = function ({
     } catch (e) {
       console.error(e);
       const userConfirmed = window.confirm(message);
-      if (userConfirmed) window.isInvoiceFormDirty = false;
+      if (userConfirmed) {
+        window.isInvoiceFormDirty = false;
+        window.isNavigatingConfirmed = true;
+      }
+      cleanupModal();
       resolve(userConfirmed);
       return;
     }
 
-    document.getElementById('turboConfirmAccept').addEventListener('click', () => {
-      resolved = true;
-      window.isInvoiceFormDirty = false;
-      modal.hide();
-      resolve(true);
-    });
+    const acceptBtn = document.getElementById('turboConfirmAccept');
+    if (acceptBtn) {
+      acceptBtn.addEventListener('click', () => {
+        if (!resolved) {
+          resolved = true;
+          window.isInvoiceFormDirty = false;
+          window.isNavigatingConfirmed = true;
+          try { modal.hide(); } catch (e) {}
+          cleanupModal();
+          resolve(true);
+        }
+      });
+    }
 
-    document.getElementById('turboConfirmCancel').addEventListener('click', () => {
-      if (!resolved) {
-        resolved = true;
-        modal.hide();
-        resolve(false);
-      }
-    });
+    const cancelBtn = document.getElementById('turboConfirmCancel');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        if (!resolved) {
+          resolved = true;
+          window.isNavigatingConfirmed = false;
+          try { modal.hide(); } catch (e) {}
+          cleanupModal();
+          resolve(false);
+        }
+      });
+    }
 
     modalElement.addEventListener('hidden.bs.modal', () => {
-      modalElement.remove();
+      cleanupModal();
       if (!resolved) {
         resolved = true;
+        window.isNavigatingConfirmed = false;
         resolve(false);
       }
     });
@@ -146,7 +185,7 @@ window.showUnsavedChangesModal = function ({
   });
 };
 
-Turbo.config.forms.confirm = (message, element) => {
+const handleCustomConfirm = (message, element) => {
   let finalMessage = message;
   let title = "Confirmation";
   let confirmText = "OK";
@@ -157,7 +196,8 @@ Turbo.config.forms.confirm = (message, element) => {
   try {
     if (element) {
       isLogout = element.id === 'logout-btn' ||
-        (typeof element.closest === 'function' && element.closest('#logout-btn') !== null) ||
+        element.id === 'mobile-logout-btn' ||
+        (typeof element.closest === 'function' && element.closest('#logout-btn, #mobile-logout-btn') !== null) ||
         message.toLowerCase().includes('log out');
 
       isDiscard = element.classList?.contains('discard-btn') ||
@@ -181,14 +221,19 @@ Turbo.config.forms.confirm = (message, element) => {
   return window.showUnsavedChangesModal({ title, message: finalMessage, confirmText });
 };
 
-let isNavigatingConfirmed = false;
+if (typeof Turbo !== "undefined" && Turbo.setConfirmMethod) {
+  Turbo.setConfirmMethod(handleCustomConfirm);
+}
+if (typeof Turbo !== "undefined" && Turbo.config && Turbo.config.forms) {
+  Turbo.config.forms.confirm = handleCustomConfirm;
+}
 
 // Intercept Turbo navigation when form contains unsaved changes
 document.addEventListener("turbo:before-visit", (event) => {
-  if (window.isInvoiceFormDirty && !isNavigatingConfirmed) {
+  if (window.isInvoiceFormDirty && !window.isNavigatingConfirmed) {
     event.preventDefault();
     const targetUrl = event.detail.url;
-    const action = event.detail.action;
+    const action = event.detail.action || "advance";
     const currentUrl = window.location.href;
 
     window.showUnsavedChangesModal({
@@ -198,10 +243,14 @@ document.addEventListener("turbo:before-visit", (event) => {
     }).then((confirmed) => {
       if (confirmed) {
         window.isInvoiceFormDirty = false;
-        isNavigatingConfirmed = true;
-        Turbo.visit(targetUrl, { action });
-        setTimeout(() => { isNavigatingConfirmed = false; }, 500);
+        window.isNavigatingConfirmed = true;
+        if (typeof Turbo !== "undefined" && Turbo.visit) {
+          Turbo.visit(targetUrl, { action });
+        } else {
+          window.location.href = (typeof targetUrl === "string") ? targetUrl : targetUrl.href;
+        }
       } else {
+        window.isNavigatingConfirmed = false;
         if (window.location.href !== currentUrl) {
           window.history.pushState(null, '', currentUrl);
         }
@@ -212,7 +261,7 @@ document.addEventListener("turbo:before-visit", (event) => {
 
 // Intercept non-Turbo internal link clicks when form is dirty
 document.addEventListener("click", (event) => {
-  if (!window.isInvoiceFormDirty) return;
+  if (!window.isInvoiceFormDirty || window.isNavigatingConfirmed) return;
 
   const link = event.target.closest("a[href]");
   if (!link) return;
@@ -233,7 +282,10 @@ document.addEventListener("click", (event) => {
     }).then((confirmed) => {
       if (confirmed) {
         window.isInvoiceFormDirty = false;
+        window.isNavigatingConfirmed = true;
         window.location.href = link.href;
+      } else {
+        window.isNavigatingConfirmed = false;
       }
     });
   }
@@ -241,7 +293,7 @@ document.addEventListener("click", (event) => {
 
 // Browser tab reload / close / external navigation alert
 window.addEventListener("beforeunload", (event) => {
-  if (window.isInvoiceFormDirty) {
+  if (window.isInvoiceFormDirty && !window.isNavigatingConfirmed) {
     event.preventDefault();
     event.returnValue = "";
     return "";
@@ -458,12 +510,20 @@ function initApplication() {
   document.addEventListener('click', handleThemeToggleEvent);
 
   // password toggle handler - delegated event
-  $(document).off('click.pw-toggle').on('click.pw-toggle', '.toggle-password-icon', function (event) {
+  $(document).off('click.pw-toggle').on('click.pw-toggle', '.toggle-password-icon, .input-group-text', function (event) {
+    const $wrapper = $(this);
+    const $icon = $wrapper.is('.toggle-password-icon') ? $wrapper : $wrapper.find('.toggle-password-icon');
+    if (!$icon.length) return;
+
+    // If the click originated from an icon inside an input-group-text, ignore the icon event and let the input-group-text handle it to prevent double-firing
+    if ($wrapper.is('.toggle-password-icon') && $wrapper.closest('.input-group-text').length) {
+      return;
+    }
+
     event.preventDefault();
 
-    const $icon = $(this);
-    const $inputGroup = $icon.closest('.input-group');
-    const $input = $inputGroup.find('input');
+    const $inputGroup = $wrapper.closest('.input-group');
+    const $input = $inputGroup.find('input[type="password"], input[type="text"].toggle-password-input, input[name*="password"]').first();
 
     if ($input.length) {
       if ($input.attr('type') === 'password') {
@@ -647,6 +707,7 @@ function initApplication() {
 
 // Bind to Turbo Load
 document.addEventListener("turbo:load", () => {
+  window.isNavigatingConfirmed = false;
   // Clear any cached company selector state on page load to ensure fresh data
   const input = document.getElementById('company_search_input');
   if (input) {
@@ -671,9 +732,13 @@ document.addEventListener("turbo:load", () => {
   }
 });
 // Specifically handle the 422 error re-render
-document.addEventListener("turbo:render", initApplication);
+document.addEventListener("turbo:render", () => {
+  window.isNavigatingConfirmed = false;
+  initApplication();
+});
 // Also bind to DOMContentLoaded for initial non-Turbo load if any
 document.addEventListener("DOMContentLoaded", () => {
+  window.isNavigatingConfirmed = false;
   initApplication();
   loadPageSpecificModules();
 });
@@ -728,8 +793,18 @@ window.addEventListener('pageshow', function (event) {
   });
 });
 
-// Global Teardown for DataTables to fix Turbo Caching issues
+// Global Teardown for DataTables and Modals to fix Turbo Caching issues
 document.addEventListener("turbo:before-cache", function () {
+  window.isNavigatingConfirmed = false;
+  const confirmModal = document.getElementById('turboConfirmModal');
+  if (confirmModal) {
+    confirmModal.remove();
+  }
+  document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+  document.body.classList.remove('modal-open');
+  document.body.style.removeProperty('overflow');
+  document.body.style.removeProperty('padding-right');
+
   if (typeof $ !== 'undefined' && $.fn.DataTable) {
     $('.dataTable, .submissionsTable, #taxSubmissionsTableActive, #taxSubmissionsTableArchived').each(function () {
       if ($.fn.DataTable.isDataTable(this)) {

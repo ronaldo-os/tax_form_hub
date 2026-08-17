@@ -32,6 +32,37 @@ module InvoicesHelper
     company&.tax_id_number.presence || company&.gln.presence || '-'
   end
 
+  def invoice_form_page_title(invoice)
+    if invoice&.quote?
+      "Create New Quote"
+    elsif invoice&.credit_note?
+      "Create New Credit Note"
+    else
+      "Create New Invoice"
+    end
+  end
+
+  def edit_invoice_page_title(invoice)
+    if invoice&.quote?
+      "Edit Quote"
+    elsif invoice&.credit_note?
+      "Edit Credit Note"
+    else
+      "Edit Invoice"
+    end
+  end
+
+  def show_invoice_page_title(invoice)
+    prefix = if invoice&.quote?
+               "Quote: "
+             elsif invoice&.credit_note?
+               "Credit Note: "
+             else
+               "Invoice: "
+             end
+    "#{prefix}#{invoice&.invoice_number}"
+  end
+
   private
 
   def extract_optional_subscription_field(subscription, field_name)

@@ -18,6 +18,7 @@ const initInvoiceForm = () => {
 
   window.isInvoiceFormDirty = false;
   $(document).on("input change click keyup", "#invoice-form input, #invoice-form select, #invoice-form textarea, #invoice-form .nested-fields, .add_fields", function(e) {
+    if (window.isNavigatingConfirmed) return;
     if (e.type === 'click' && $(this).is('.discard-btn, .btn-back, input[type="submit"]')) return;
     window.isInvoiceFormDirty = true;
   });

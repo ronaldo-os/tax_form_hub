@@ -26,19 +26,6 @@
     function initDelegatedListeners() {
         const doc = $(document);
 
-        // Password visibility toggle
-        doc.off('click.profileEye', '.toggle-password-icon').on('click.profileEye', '.toggle-password-icon', function() {
-            const $icon = $(this);
-            const $input = $icon.closest('.input-group').find('.toggle-password-input');
-            if ($input.attr('type') === 'password') {
-                $input.attr('type', 'text');
-                $icon.removeClass('fa-eye').addClass('fa-eye-slash');
-            } else {
-                $input.attr('type', 'password');
-                $icon.removeClass('fa-eye-slash').addClass('fa-eye');
-            }
-        });
-
         // Click wrapper to trigger file input (if not clicking the input/label themselves)
         doc.off('click.profile', '#image-preview-wrapper').on('click.profile', '#image-preview-wrapper', function (e) {
             const $fileInput = $('#profile_image_input');

@@ -130,4 +130,22 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert sub_invoice.recurring_sub_invoice?, "Generated invoice should be a recurring sub-invoice"
     assert_not sub_invoice.attachments.attached?, "Generated recurring sub-invoice should NOT have attachments"
   end
+
+  test "new action displays Create New Quote title when category is quote" do
+    get new_invoice_url, params: { category: "quote" }
+    assert_response :success
+    assert_includes response.body, "Create New Quote"
+  end
+
+  test "new action displays Create New Credit Note title when category is credit_note" do
+    get new_invoice_url, params: { category: "credit_note" }
+    assert_response :success
+    assert_includes response.body, "Create New Credit Note"
+  end
+
+  test "new action displays Create New Invoice title by default" do
+    get new_invoice_url
+    assert_response :success
+    assert_includes response.body, "Create New Invoice"
+  end
 end

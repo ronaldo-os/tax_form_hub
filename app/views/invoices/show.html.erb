@@ -1,4 +1,4 @@
-<% content_for :page_title, "Invoice: " + @invoice.invoice_number %>
+<% content_for :page_title, show_invoice_page_title(@invoice) %>
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "invoices", media: "all" %>
 <% end %>
