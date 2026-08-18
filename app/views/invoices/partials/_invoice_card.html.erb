@@ -270,7 +270,10 @@
                  freq = adjustment["frequency"].presence || adjustment[:frequency].presence || ((adjustment["type"] == "monthly_charge" || adjustment["unit"] == "monthly_charge") ? "monthly" : nil)
                  start_d = adjustment["charge_start_date"].presence || adjustment[:charge_start_date].presence || adjustment["start_date"].presence || adjustment[:start_date].presence
                  end_d = adjustment["charge_end_date"].presence || adjustment[:charge_end_date].presence || adjustment["end_date"].presence || adjustment[:end_date].presence
+                 overall_end_d = adjustment["overall_end_date"].presence || adjustment[:overall_end_date].presence
                  is_recurring_adj = freq.present? && %w[monthly annually yearly].include?(freq.to_s.downcase) || adjustment["type"] == "monthly_charge" || start_d.present?
+                 
+                 desc_text = adjustment["description_edit"].presence || adjustment["description"].presence || "Adjustment"
               %>
               <tr class="price-adjustment-row border-bottom border-light pdf-no-break">
                 <td class="py-3 align-middle">
@@ -278,7 +281,7 @@
                 </td>
                 <td colspan="4" class="py-3 align-middle">
                   <div class="fw-medium text-body small">
-                    <%= adjustment["description_edit"].presence || adjustment["description"].presence || "Adjustment" %>
+                    <%= safe_join(desc_text.to_s.split("\n"), tag.br) %>
                   </div>
                   <% if is_recurring_adj %>
                     <div class="extra-small text-muted mt-1">
@@ -296,6 +299,11 @@
                           <% if end_d.present? %>
                             <span>End: <strong class="text-body"><%= format_invoice_date(end_d) %></strong></span>
                           <% end %>
+                        </div>
+                      <% end %>
+                      <% if overall_end_d.present? %>
+                        <div class="mt-1">
+                          <span>Overall End Date: <strong class="text-body"><%= format_invoice_date(overall_end_d) %></strong></span>
                         </div>
                       <% end %>
                     </div>

@@ -288,22 +288,28 @@
                 freq = adjustment["frequency"].presence || adjustment[:frequency].presence || ((adjustment["type"] == "monthly_charge" || adjustment["unit"] == "monthly_charge") ? "monthly" : nil)
                 start_d = adjustment["charge_start_date"].presence || adjustment[:charge_start_date].presence || adjustment["start_date"].presence || adjustment[:start_date].presence
                 end_d = adjustment["charge_end_date"].presence || adjustment[:charge_end_date].presence || adjustment["end_date"].presence || adjustment[:end_date].presence
+                overall_end_d = adjustment["overall_end_date"].presence || adjustment[:overall_end_date].presence
                 is_recurring_adj = freq.present? && %w[monthly annually yearly].include?(freq.to_s.downcase) || adjustment["type"] == "monthly_charge" || start_d.present?
               %>
               <% if is_recurring_adj %>
                 <tr class="bg-light">
                   <td colspan="7">
                     <span class="me-3">
-                      <strong>Billing Cycle:</strong> <%= (freq.presence || "monthly").to_s.capitalize %>
+                      <strong>Billing:</strong> <%= (freq.presence || "monthly").to_s.capitalize %>
                     </span>
                     <% if start_d.present? %>
                       <span class="me-3">
-                        <strong>Start Date:</strong> <%= (Date.parse(start_d.to_s).strftime("%b %d, %Y") rescue start_d) %>
+                        <strong>Start:</strong> <%= (Date.parse(start_d.to_s).strftime("%b %d, %Y") rescue start_d) %>
                       </span>
                     <% end %>
                     <% if end_d.present? %>
                       <span class="me-3">
-                        <strong>End Date:</strong> <%= (Date.parse(end_d.to_s).strftime("%b %d, %Y") rescue end_d) %>
+                        <strong>End:</strong> <%= (Date.parse(end_d.to_s).strftime("%b %d, %Y") rescue end_d) %>
+                      </span>
+                    <% end %>
+                    <% if overall_end_d.present? %>
+                      <span class="me-3">
+                        <strong>Overall End Date:</strong> <%= (Date.parse(overall_end_d.to_s).strftime("%b %d, %Y") rescue overall_end_d) %>
                       </span>
                     <% end %>
                   </td>

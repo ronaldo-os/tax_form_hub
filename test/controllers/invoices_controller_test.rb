@@ -148,4 +148,48 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Create New Invoice"
   end
+
+  test "generated recurring price adjustments format description consistently with line items" do
+    parent_invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "2026-00001-002",
+      line_items_data: [
+        {
+          "description" => "Core Platform",
+          "quantity" => "1",
+          "price" => "500.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "subscription_start_date" => (Date.current - 1.month - 1.day).to_s,
+              "subscription_end_date" => (Date.current + 1.year).to_s,
+              "subscription_billing_cycle" => "monthly"
+            }
+          }
+        }
+      ],
+      price_adjustments: [
+        {
+          "type" => "charge",
+          "description" => "Support Fee",
+          "description_edit" => "Support Fee",
+          "amount" => "50.00",
+          "unit" => "USD",
+          "frequency" => "monthly",
+          "charge_start_date" => (Date.current - 1.month - 1.day).to_s,
+          "charge_end_date" => (Date.current + 1.year).to_s
+        }
+      ]
+    )
+
+    sub_invoice = parent_invoice.generate_subscription_invoice(Date.current)
+    adj = sub_invoice.price_adjustments.first
+
+    assert_includes adj["description"], "Support Fee"
+    assert_includes adj["description"], "Monthly Payment for Invoice #2026-00001-002"
+    assert_equal adj["description"], adj["description_edit"]
+    assert adj["overall_end_date"].present?
+  end
 end

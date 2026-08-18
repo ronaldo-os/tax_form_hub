@@ -588,12 +588,13 @@ class Invoice < ApplicationRecord
           
           new_adj['charge_start_date'] = child_start_d.to_s
           new_adj['charge_end_date'] = child_end_d.to_s
+          new_adj['overall_end_date'] = item_end_d_str if item_end_d_str.present?
           
           payment_type = case billing_cycle
-                         when 'monthly' then 'Monthly Charge'
-                         when 'quarterly' then 'Quarterly Charge'
-                         when 'annual' then 'Annual Charge'
-                         else 'Recurring Charge'
+                         when 'monthly' then 'Monthly Payment'
+                         when 'quarterly' then 'Quarterly Payment'
+                         when 'annual' then 'Annual Payment'
+                         else 'Payment'
                          end
           first_billed_seq = 1
           temp_start = primary_parent_start_d || Date.current
@@ -631,21 +632,14 @@ class Invoice < ApplicationRecord
           
           new_desc = "#{payment_type} for Invoice ##{self.invoice_number} (#{current_str}/#{total_str})"
           
-          if new_adj['description_edit'].present?
-            if new_adj['description_edit'].include?("for Invoice ##{self.invoice_number}")
-              new_adj['description_edit'] = new_adj['description_edit'].sub(/\s*(- |\n)?.*for Invoice ##{self.invoice_number}.*$/, "").strip
-            end
+          base_desc = new_adj['description_edit'].presence || new_adj['description'].presence || ""
+          if base_desc.include?("for Invoice ##{self.invoice_number}")
+            base_desc = base_desc.sub(/\s*(- |\n)?.*for Invoice ##{self.invoice_number}.*$/, "").strip
           end
 
-          if new_adj['description'].present?
-            original_desc = new_adj['description']
-            if original_desc.include?("for Invoice ##{self.invoice_number}")
-              original_desc = original_desc.sub(/\s*(- |\n)?.*for Invoice ##{self.invoice_number}.*$/, "")
-            end
-            new_adj['description'] = "#{original_desc}\n#{new_desc}".strip
-          else
-            new_adj['description'] = new_desc
-          end
+          formatted_desc = base_desc.present? ? "#{base_desc}\n#{new_desc}".strip : new_desc
+          new_adj['description_edit'] = formatted_desc
+          new_adj['description'] = formatted_desc
         end
         new_adj
       else
