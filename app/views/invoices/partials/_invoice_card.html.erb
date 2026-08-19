@@ -193,13 +193,15 @@
                         <% 
                           billing_key = visible_fields.keys.find { |k| k.to_s.include?('billing_cycle') }
                           start_key   = visible_fields.keys.find { |k| k.to_s.include?('start_date') }
-                          end_key     = visible_fields.keys.find { |k| k.to_s.include?('end_date') || k.to_s.include?('overall_end_date') }
+                          end_key     = visible_fields.keys.find { |k| k.to_s.include?('end_date') && !k.to_s.include?('overall') }
+                          overall_end_key = visible_fields.keys.find { |k| k.to_s.include?('overall_end_date') }
 
                           billing_val = visible_fields[billing_key] if billing_key
                           start_val   = visible_fields[start_key] if start_key
                           end_val     = visible_fields[end_key] if end_key
+                          overall_end_val = visible_fields[overall_end_key] if overall_end_key
 
-                          handled_keys = [billing_key, start_key, end_key].compact
+                          handled_keys = [billing_key, start_key, end_key, overall_end_key].compact
                           extra_fields = visible_fields.except(*handled_keys)
                         %>
                         <% if billing_val.present? %>
@@ -218,6 +220,11 @@
                             <% if end_val.present? %>
                               <span>End: <strong class="text-body"><%= format_invoice_date(end_val) %></strong></span>
                             <% end %>
+                          </div>
+                        <% end %>
+                        <% if overall_end_val.present? %>
+                          <div class="mt-1">
+                            <span>Overall End Date: <strong class="text-body"><%= format_invoice_date(overall_end_val) %></strong></span>
                           </div>
                         <% end %>
                         <% if extra_fields.present? %>

@@ -192,4 +192,117 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_equal adj["description"], adj["description_edit"]
     assert adj["overall_end_date"].present?
   end
+
+  test "GenerateRecurringInvoicesJob generates all due sub-invoices when running with future on_date" do
+    parent_invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "2026-00001-003",
+      line_items_data: [
+        {
+          "description" => "Annual Plan Monthly Billing",
+          "quantity" => "1",
+          "price" => "100.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "subscription_start_date" => Date.current.to_s,
+              "subscription_end_date" => (Date.current + 1.year).to_s,
+              "subscription_billing_cycle" => "monthly"
+            }
+          }
+        }
+      ]
+    )
+
+    results = GenerateRecurringInvoicesJob.perform_now(on_date: 12.months.from_now.to_date)
+    assert_equal 1, results[:successful]
+    assert_equal 11, results[:invoices_generated]
+    assert_equal 11, parent_invoice.reload.recurring_sub_invoices.count
+
+    sub_invoices = parent_invoice.recurring_sub_invoices.order(:recurring_sequence_number)
+    first_sub = sub_invoices.first
+    final_sub = sub_invoices.last
+
+    first_item = first_sub.line_items_data.first
+    assert_includes first_item["description"], "(02/12)"
+    first_sub_opt = first_item["optional_fields"]["subscription"]
+    assert_equal (Date.current + 1.month).to_s, first_sub_opt["subscription_start_date"]
+    assert_equal (Date.current + 2.months).to_s, first_sub_opt["subscription_end_date"]
+    assert_equal (Date.current + 1.year).to_s, first_sub_opt["overall_end_date"]
+
+    final_item = final_sub.line_items_data.first
+    assert_includes final_item["description"], "(12/12)"
+    final_sub_opt = final_item["optional_fields"]["subscription"]
+    assert_equal (Date.current + 11.months).to_s, final_sub_opt["subscription_start_date"]
+    assert_equal (Date.current + 1.year).to_s, final_sub_opt["subscription_end_date"]
+    assert_equal (Date.current + 1.year).to_s, final_sub_opt["overall_end_date"]
+  end
+
+  test "mid-cycle subscription items format correct sequence count through to final invoice" do
+    start_d = Date.new(2026, 1, 1)
+    end_d = Date.new(2027, 1, 1)
+    mid_start_d = Date.new(2026, 3, 1)
+
+    parent_invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "2026-00001-004",
+      line_items_data: [
+        {
+          "description" => "Primary Plan",
+          "quantity" => "1",
+          "price" => "100.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "subscription_start_date" => start_d.to_s,
+              "subscription_end_date" => end_d.to_s,
+              "subscription_billing_cycle" => "monthly"
+            }
+          }
+        },
+        {
+          "description" => "Add-on Seat",
+          "quantity" => "1",
+          "price" => "20.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "hidden_on_parent" => true,
+            "subscription" => {
+              "subscription_start_date" => mid_start_d.to_s,
+              "subscription_end_date" => end_d.to_s,
+              "subscription_billing_cycle" => "monthly"
+            }
+          }
+        }
+      ]
+    )
+
+    results = GenerateRecurringInvoicesJob.perform_now(on_date: Date.new(2027, 1, 1))
+    assert_equal 11, results[:invoices_generated]
+
+    sub_invoices = parent_invoice.reload.recurring_sub_invoices.order(:recurring_sequence_number)
+
+    # Sub-invoice 1 (Feb 2026): Add-on Seat not included yet
+    sub1_items = sub_invoices[0].line_items_data
+    assert_equal 1, sub1_items.size
+    assert_includes sub1_items[0]["description"], "(02/12)"
+
+    # Sub-invoice 2 (Mar 2026): Add-on Seat first payment (01/10)
+    sub2_items = sub_invoices[1].line_items_data
+    assert_equal 2, sub2_items.size
+    assert_includes sub2_items[0]["description"], "(03/12)"
+    assert_includes sub2_items[1]["description"], "(01/10)"
+
+    # Sub-invoice 11 (Dec 2026, final invoice): Primary is (12/12), Add-on is (10/10)
+    final_items = sub_invoices[10].line_items_data
+    assert_equal 2, final_items.size
+    assert_includes final_items[0]["description"], "(12/12)"
+    assert_includes final_items[1]["description"], "(10/10)"
+    assert_equal "2027-01-01", final_items[1]["optional_fields"]["subscription"]["overall_end_date"]
+    assert_equal "2027-01-01", final_items[1]["optional_fields"]["subscription"]["subscription_end_date"]
+  end
 end

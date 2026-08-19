@@ -840,7 +840,7 @@ class InvoicesController < ApplicationController
     expected_end_date = calculate_expected_end_date(start_date, billing_cycle)
     return line_item unless expected_end_date
 
-    end_date_key = subscription.keys.find { |k| k.to_s.include?('end_date') } || 'end_date'
+    end_date_key = subscription.keys.find { |k| k.to_s.include?('end_date') && !k.to_s.include?('overall') } || 'end_date'
     current_end_date = subscription[end_date_key]
 
     if current_end_date.blank?

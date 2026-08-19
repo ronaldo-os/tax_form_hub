@@ -67,7 +67,8 @@ class SubscriptionItemWrapper
       return 'cancelled'
     end
 
-    end_date_str = sub_fields.keys.find { |k| k.to_s.include?('end_date') }
+    end_date_str = sub_fields.keys.find { |k| k.to_s.include?('overall_end_date') } ||
+                   sub_fields.keys.find { |k| k.to_s.include?('end_date') }
     end_date_val = sub_fields[end_date_str] if end_date_str
 
     if end_date_val.present?

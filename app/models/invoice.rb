@@ -152,37 +152,28 @@ class Invoice < ApplicationRecord
   end
 
   # Check if subscription is active (not archived, has subscription line items or recurring discounts)
-  def subscription_active?(on_date = Date.current)
+  def subscription_active?(on_date = nil)
     return false unless subscription_contract?
     return false if archived?
     return false if subscription_cancelled?
 
-    active_sub = subscription_line_items.any? do |item|
-      end_d_str = extract_subscription_field(item, 'end_date')
-      end_d = Date.parse(end_d_str.to_s) rescue nil if end_d_str.present?
-      next false if end_d && on_date > end_d
+    total_expected = calculate_total_expected_child_invoices
+    if total_expected && total_expected > 0
+      return false if recurring_sub_invoices.count >= (total_expected - 1)
+    end
 
+    active_sub = subscription_line_items.any? do |item|
       start_d_str = extract_subscription_field(item, 'start_date')
+      end_d_str = extract_subscription_field(item, 'end_date')
       start_d_str.present? || end_d_str.present?
     end
     
     active_discount = recurring_price_adjustments.any? do |adj|
-      end_d_str = adj['charge_end_date'] || adj[:charge_end_date]
-      end_d = Date.parse(end_d_str.to_s) rescue nil if end_d_str.present?
-      next false if end_d && on_date > end_d
-
       freq = adj['frequency'] || adj[:frequency]
       freq.present? && %w[monthly annually yearly].include?(freq.to_s)
     end
 
-    return false unless (active_sub || active_discount)
-    
-    total_expected = calculate_total_expected_child_invoices
-    if total_expected && total_expected > 1
-      return false if recurring_sub_invoices.count >= (total_expected - 1)
-    end
-    
-    true
+    active_sub || active_discount
   rescue
     false
   end
@@ -429,18 +420,18 @@ class Invoice < ApplicationRecord
           
           subscription = new_item['optional_fields']['subscription']
           if subscription.is_a?(Hash)
-            end_key = subscription.keys.find { |k| k.to_s.include?('end_date') } || 'end_date'
+            end_key = subscription.keys.find { |k| k.to_s.include?('end_date') && !k.to_s.include?('overall') } || 'end_date'
             start_key = subscription.keys.find { |k| k.to_s.include?('start_date') } || 'start_date'
             
             # The child's line item reflects its specific billing period
             subscription[start_key] = child_start_d.to_s
-            subscription['overall_end_date'] = child_end_d.to_s
+            subscription[end_key] = child_end_d.to_s
             
             # Retain the overall end date from the most parent invoice
             if item_end_d_str.present?
-              subscription[end_key] = item_end_d_str
+              subscription['overall_end_date'] = item_end_d_str
             else
-              subscription.delete(end_key)
+              subscription.delete('overall_end_date')
             end
           end
         end
@@ -453,37 +444,29 @@ class Invoice < ApplicationRecord
                        end
         
         if parent_start_d
-          first_billed_seq = 1
-          temp_start = primary_parent_start_d || Date.current
-          temp_start = calculate_next_period_date(temp_start, primary_cycle)
-          
-          while temp_start < parent_start_d
-            temp_start = calculate_next_period_date(temp_start, primary_cycle)
-            first_billed_seq += 1
+          item_start_d = parent_start_d
+          item_end_d = item_end_d_str.present? ? (Date.parse(item_end_d_str) rescue nil) : nil
+
+          display_current_sequence = 1
+          temp_d = item_start_d
+          while temp_d < child_start_d
+            temp_d = calculate_next_period_date(temp_d, billing_cycle)
+            display_current_sequence += 1
           end
-          
-          actual_payment_sequence = current_sequence_number + 1
-          display_current_sequence = actual_payment_sequence - first_billed_seq + 1
-          display_current_sequence = 1 if display_current_sequence < 1
-          
-          display_total_payments = calculate_total_expected_child_invoices || actual_payment_sequence
-          
-          if item_end_d_str.present?
-            item_end_d = Date.parse(item_end_d_str) rescue nil
-            if item_end_d
-              last_seq = 0
-              temp_date = primary_parent_start_d || Date.current
-              while temp_date < item_end_d
-                last_seq += 1
-                temp_date = calculate_next_period_date(temp_date, primary_cycle)
-              end
-              display_total_payments = last_seq if last_seq > 0 && last_seq < display_total_payments
+
+          if item_end_d
+            display_total_payments = 0
+            temp_d = item_start_d
+            while temp_d < item_end_d
+              temp_d = calculate_next_period_date(temp_d, billing_cycle)
+              display_total_payments += 1
             end
+          else
+            display_total_payments = calculate_total_expected_child_invoices || display_current_sequence
           end
-          
-          display_total_payments = display_total_payments - first_billed_seq + 1
-          display_total_payments = display_total_payments > display_current_sequence ? display_total_payments : display_current_sequence
-          
+
+          display_total_payments = [display_total_payments, display_current_sequence].max
+
           current_str = display_current_sequence.to_s.rjust(2, '0')
           total_str = display_total_payments.to_s.rjust(2, '0')
         else
@@ -596,36 +579,28 @@ class Invoice < ApplicationRecord
                          when 'annual' then 'Annual Payment'
                          else 'Payment'
                          end
-          first_billed_seq = 1
-          temp_start = primary_parent_start_d || Date.current
-          temp_start = calculate_next_period_date(temp_start, primary_cycle)
           
-          while temp_start < parent_start_d
-            temp_start = calculate_next_period_date(temp_start, primary_cycle)
-            first_billed_seq += 1
+          item_start_d = parent_start_d
+
+          display_current_sequence = 1
+          temp_d = item_start_d
+          while temp_d < child_start_d
+            temp_d = calculate_next_period_date(temp_d, billing_cycle)
+            display_current_sequence += 1
           end
-          
-          actual_payment_sequence = current_sequence_number + 1
-          display_current_sequence = actual_payment_sequence - first_billed_seq + 1
-          display_current_sequence = 1 if display_current_sequence < 1
-          
-          display_total_payments = calculate_total_expected_child_invoices || actual_payment_sequence
-          
-          if item_end_d_str.present?
-            item_end_d = Date.parse(item_end_d_str) rescue nil
-            if item_end_d
-              last_seq = 0
-              temp_date = primary_parent_start_d || Date.current
-              while temp_date < item_end_d
-                last_seq += 1
-                temp_date = calculate_next_period_date(temp_date, primary_cycle)
-              end
-              display_total_payments = last_seq if last_seq > 0 && last_seq < display_total_payments
+
+          if item_end_d
+            display_total_payments = 0
+            temp_d = item_start_d
+            while temp_d < item_end_d
+              temp_d = calculate_next_period_date(temp_d, billing_cycle)
+              display_total_payments += 1
             end
+          else
+            display_total_payments = calculate_total_expected_child_invoices || display_current_sequence
           end
-          
-          display_total_payments = display_total_payments - first_billed_seq + 1
-          display_total_payments = display_total_payments > display_current_sequence ? display_total_payments : display_current_sequence
+
+          display_total_payments = [display_total_payments, display_current_sequence].max
           
           current_str = display_current_sequence.to_s.rjust(2, '0')
           total_str = display_total_payments.to_s.rjust(2, '0')
@@ -827,9 +802,17 @@ class Invoice < ApplicationRecord
     subscription = line_item['optional_fields']['subscription']
     return nil unless subscription.is_a?(Hash)
     
-    subscription.find do |key, value|
-      key.to_s.include?(field_name)
-    end&.last
+    field_name_str = field_name.to_s
+    if field_name_str.include?('overall')
+      subscription.find { |k, _| k.to_s.include?('overall') }&.last
+    elsif field_name_str.include?('end_date') || field_name_str == 'end'
+      subscription.find { |k, _| k.to_s.include?('end_date') && !k.to_s.include?('overall') }&.last ||
+        subscription.find { |k, _| k.to_s.include?('overall_end_date') }&.last
+    else
+      subscription.find do |key, _|
+        key.to_s.include?(field_name_str)
+      end&.last
+    end
   end
 
   # Scope for finding subscription invoices due for billing
@@ -908,7 +891,7 @@ class Invoice < ApplicationRecord
       expected_end_date = expected_end_date_for(start_date, billing_cycle)
       next unless expected_end_date
 
-      end_date_key = subscription.keys.find { |k| k.to_s.include?('end_date') } || 'end_date'
+      end_date_key = subscription.keys.find { |k| k.to_s.include?('end_date') && !k.to_s.include?('overall') } || 'end_date'
       current_end_date = subscription[end_date_key]
 
       if current_end_date.blank?

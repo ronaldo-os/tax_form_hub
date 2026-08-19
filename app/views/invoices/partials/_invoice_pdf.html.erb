@@ -211,7 +211,7 @@
                     <td colspan="7">
                       <% 
                         orig_keys = fields.keys
-                        desired_order = ['billing_cycle', 'start_date', 'overall_end_date', 'end_date']
+                        desired_order = ['billing_cycle', 'start_date', 'end_date', 'overall_end_date']
                         keys = orig_keys.sort_by do |k|
                           base = k.split('.').first
                           idx = desired_order.index(base)
