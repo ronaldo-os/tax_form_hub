@@ -30,7 +30,7 @@
           </span>
         </div>
         <p class="text-muted fs-8 mb-0">
-          Modular KPI summary, cash flow trajectory, tax compliance, and settlements.
+          Executive financial metrics, sales realization, expense tracking, tax compliance, and cash flow.
         </p>
       </div>
 
@@ -54,11 +54,11 @@
             <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-2 px-2.5 py-1 fs-8 fw-medium" type="button" id="dashboardCurrencyDropdown" data-bs-toggle="dropdown" aria-expanded="false">
               <span id="selected_currency_label"><%= @currency.upcase %></span>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm border p-1 rounded-2 fs-8" aria-labelledby="dashboardCurrencyDropdown">
-              <li><a class="dropdown-item currency-select-item rounded-1 <%= 'active fw-bold' if @currency == 'all' %>" href="#" data-currency="all">All Currencies</a></li>
-              <li><hr class="dropdown-divider my-1"></li>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1 rounded-3 fs-8" aria-labelledby="dashboardCurrencyDropdown">
+              <li><a class="dropdown-item currency-select-item rounded-2 <%= 'active fw-bold' if @currency == 'all' %>" href="#" data-currency="all">All Currencies</a></li>
+              <li><hr class="dropdown-divider my-1 opacity-25"></li>
               <% @dashboard_data[:available_currencies].each do |curr| %>
-                <li><a class="dropdown-item currency-select-item rounded-1 <%= 'active fw-bold' if @currency == curr %>" href="#" data-currency="<%= curr %>"><%= curr %></a></li>
+                <li><a class="dropdown-item currency-select-item rounded-2 <%= 'active fw-bold' if @currency == curr %>" href="#" data-currency="<%= curr %>"><%= curr %></a></li>
               <% end %>
             </ul>
           </div>
@@ -74,19 +74,19 @@
             <button class="btn btn-outline-secondary btn-sm rounded-2 px-2 py-1 fs-8" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Navigation">
               <i class="fa-solid fa-ellipsis"></i>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm border p-1 rounded-2 fs-8">
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1.5 rounded-3 fs-8">
               <li>
-                <%= link_to tax_submissions_home_path, class: "dropdown-item rounded-1 d-flex align-items-center gap-2 py-1.5" do %>
+                <%= link_to tax_submissions_home_path, class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
                   <i class="fa-solid fa-file-invoice-dollar text-muted"></i> Taxes Hub
                 <% end %>
               </li>
               <li>
-                <%= link_to invoices_path, class: "dropdown-item rounded-1 d-flex align-items-center gap-2 py-1.5" do %>
+                <%= link_to invoices_path, class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
                   <i class="fa-solid fa-file-invoice text-muted"></i> Invoices & Bills
                 <% end %>
               </li>
               <li>
-                <%= link_to subscriptions_path, class: "dropdown-item rounded-1 d-flex align-items-center gap-2 py-1.5" do %>
+                <%= link_to subscriptions_path, class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
                   <i class="fa-solid fa-repeat text-muted"></i> Subscriptions
                 <% end %>
               </li>
@@ -103,9 +103,9 @@
     <div class="zero-state-banner mb-3">
       <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div>
-          <h6 class="fw-bold text-main mb-0.5">Welcome to your Bento Dashboard</h6>
+          <h6 class="fw-bold text-main mb-0.5">Welcome to your Financial Intelligence Hub</h6>
           <p class="text-muted fs-8 mb-0">
-            Create sales invoices or submit your BIR Form 2307 documents to unlock real-time financial tracking.
+            Create sales invoices or submit your BIR Form 2307 documents to unlock real-time financial tracking and calculations.
           </p>
         </div>
         <div class="d-flex gap-2">
@@ -120,7 +120,192 @@
     </div>
   <% end %>
 
-  <!-- Top Hero Bento Grid (6-Tile Modular Record Counts) -->
+  <!-- Primary Executive Financial Bento Grid (4-Tile Core Metrics) -->
+  <div class="row g-2.5 mb-3" id="financial_kpi_grid">
+    
+    <!-- 1. Total Sales Revenue -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="bento-card">
+        <div class="bento-card-header">
+          <span class="bento-card-title">Total Sales Revenue</span>
+          <span class="bento-trend <%= kpis[:sales_revenue_growth] >= 0 ? 'bento-trend-up' : 'bento-trend-down' %>" id="kpi_sales_growth_tag">
+            <i class="fa-solid <%= kpis[:sales_revenue_growth] >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' %> fs-10"></i>
+            <%= kpis[:sales_revenue_growth].abs %>%
+          </span>
+        </div>
+        <div class="mb-2.5">
+          <div class="bento-value bento-financial-value tabular-nums text-truncate" id="kpi_sales_revenue_val">
+            <%= number_to_currency(kpis[:total_sales_revenue], unit: currency_symbol) %>
+          </div>
+          <div class="d-flex align-items-center justify-content-between mt-1.5">
+            <small class="text-muted fs-9">Collection Rate</small>
+            <small class="fw-semibold text-main fs-9 tabular-nums" id="kpi_sales_coll_rate"><%= kpis[:sales_collection_rate] %>%</small>
+          </div>
+          <div class="partner-progress-bar mt-1">
+            <div class="partner-progress-fill bg-success" id="kpi_sales_coll_bar" style="width: <%= [kpis[:sales_collection_rate], 100].min %>%;"></div>
+          </div>
+        </div>
+        <div class="bento-substats-row mt-auto">
+          <div class="substat-item">
+            <span class="substat-label">Collected</span>
+            <span class="substat-value text-success tabular-nums" id="kpi_paid_sales_rev">
+              <%= number_to_currency(kpis[:paid_sales_revenue], unit: currency_symbol) %>
+            </span>
+          </div>
+          <div class="substat-item">
+            <span class="substat-label">Receivables</span>
+            <span class="substat-value text-warning tabular-nums" id="kpi_sales_receivables">
+              <%= number_to_currency(kpis[:total_receivables], unit: currency_symbol) %>
+            </span>
+          </div>
+          <div class="substat-item">
+            <span class="substat-label">Avg / Sale</span>
+            <span class="substat-value text-main tabular-nums" id="kpi_avg_sale_val">
+              <%= number_to_currency(kpis[:avg_sale_invoice_value], unit: currency_symbol) %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Total Purchases / Spend -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="bento-card">
+        <div class="bento-card-header">
+          <span class="bento-card-title">Total Purchases / Spend</span>
+          <span class="bento-trend <%= kpis[:purchases_growth] <= 0 ? 'bento-trend-up' : 'bento-trend-down' %>" id="kpi_purchases_growth_tag">
+            <i class="fa-solid <%= kpis[:purchases_growth] >= 0 ? 'fa-arrow-up' : 'fa-arrow-down' %> fs-10"></i>
+            <%= kpis[:purchases_growth].abs %>%
+          </span>
+        </div>
+        <div class="mb-2.5">
+          <div class="bento-value bento-financial-value tabular-nums text-truncate" id="kpi_purchases_expense_val">
+            <%= number_to_currency(kpis[:total_purchases_expense], unit: currency_symbol) %>
+          </div>
+          <div class="d-flex align-items-center justify-content-between mt-1.5">
+            <small class="text-muted fs-9">Settlement Rate</small>
+            <small class="fw-semibold text-main fs-9 tabular-nums" id="kpi_purch_settle_rate"><%= kpis[:purchases_settlement_rate] %>%</small>
+          </div>
+          <div class="partner-progress-bar mt-1">
+            <div class="partner-progress-fill bg-info" id="kpi_purch_settle_bar" style="width: <%= [kpis[:purchases_settlement_rate], 100].min %>%;"></div>
+          </div>
+        </div>
+        <div class="bento-substats-row mt-auto">
+          <div class="substat-item">
+            <span class="substat-label">Settled</span>
+            <span class="substat-value text-info tabular-nums" id="kpi_paid_purch_exp">
+              <%= number_to_currency(kpis[:paid_purchases_expense], unit: currency_symbol) %>
+            </span>
+          </div>
+          <div class="substat-item">
+            <span class="substat-label">Payables</span>
+            <span class="substat-value text-danger tabular-nums" id="kpi_purch_payables">
+              <%= number_to_currency(kpis[:total_payables], unit: currency_symbol) %>
+            </span>
+          </div>
+          <div class="substat-item">
+            <span class="substat-label">Avg / Bill</span>
+            <span class="substat-value text-main tabular-nums" id="kpi_avg_purch_val">
+              <%= number_to_currency(kpis[:avg_purchase_bill_value], unit: currency_symbol) %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Net Operating Profit & Margin -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="bento-card">
+        <div class="bento-card-header">
+          <span class="bento-card-title">Net Operating Profit</span>
+          <span class="bento-chip <%= kpis[:profit_margin] >= 0 ? 'bento-chip-paid' : 'bento-chip-rejected' %> fs-10" id="kpi_profit_margin_tag">
+            <%= kpis[:profit_margin] %>% Margin
+          </span>
+        </div>
+        <div class="mb-2.5">
+          <div class="bento-value bento-financial-value tabular-nums text-truncate <%= kpis[:net_operating_income] >= 0 ? 'text-success' : 'text-danger' %>" id="kpi_net_income_val">
+            <%= number_to_currency(kpis[:net_operating_income], unit: currency_symbol) %>
+          </div>
+          <div class="d-flex align-items-center justify-content-between mt-1.5">
+            <small class="text-muted fs-9">Period Cash Realized</small>
+            <small class="fw-semibold <%= kpis[:net_cash_flow] >= 0 ? 'text-success' : 'text-danger' %> fs-9 tabular-nums" id="kpi_net_cash_flow">
+              <%= number_to_currency(kpis[:net_cash_flow], unit: currency_symbol) %>
+            </small>
+          </div>
+          <div class="partner-progress-bar mt-1">
+            <div class="partner-progress-fill <%= kpis[:profit_margin] >= 0 ? 'bg-success' : 'bg-danger' %>" id="kpi_profit_margin_bar" style="width: <%= [[kpis[:profit_margin].abs, 0].max, 100].min %>%;"></div>
+          </div>
+        </div>
+        <div class="bento-substats-row mt-auto">
+          <div class="substat-item">
+            <span class="substat-label">Net Flow</span>
+            <span class="substat-value <%= kpis[:net_cash_flow] >= 0 ? 'text-success' : 'text-danger' %> tabular-nums" id="kpi_net_cash_flow_sub">
+              <%= number_to_currency(kpis[:net_cash_flow], unit: currency_symbol) %>
+            </span>
+          </div>
+          <div class="substat-item">
+            <span class="substat-label">Working Cap</span>
+            <span class="substat-value text-main tabular-nums" id="kpi_working_capital">
+              <%= number_to_currency(kpis[:net_working_capital], unit: currency_symbol) %>
+            </span>
+          </div>
+          <div class="substat-item">
+            <span class="substat-label">Growth</span>
+            <span class="substat-value <%= kpis[:net_income_growth] >= 0 ? 'text-success' : 'text-danger' %> tabular-nums" id="kpi_net_growth">
+              <%= kpis[:net_income_growth] >= 0 ? "+#{kpis[:net_income_growth]}%" : "#{kpis[:net_income_growth]}%" %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Subscriptions & Recurring Revenue (MRR/ARR) -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="bento-card">
+        <div class="bento-card-header">
+          <span class="bento-card-title">Recurring Revenue (MRR)</span>
+          <span class="bento-chip bento-chip-sent fs-10" id="kpi_arr_tag">
+            ARR <%= number_to_currency(kpis[:total_arr], unit: currency_symbol) %>
+          </span>
+        </div>
+        <div class="mb-2.5">
+          <div class="bento-value bento-financial-value tabular-nums text-truncate" id="kpi_mrr_val">
+            <%= number_to_currency(kpis[:total_mrr], unit: currency_symbol) %><span class="fs-9 text-muted fw-normal ms-1">/mo</span>
+          </div>
+          <div class="d-flex align-items-center justify-content-between mt-1.5">
+            <small class="text-muted fs-9">Active Recurring Contracts</small>
+            <small class="fw-semibold text-main fs-9 tabular-nums" id="kpi_active_subs_count"><%= kpis[:active_subscriptions_count] %> active</small>
+          </div>
+          <div class="partner-progress-bar mt-1">
+            <div class="partner-progress-fill" style="background-color: #6366f1; width: <%= kpis[:active_subscriptions_count] > 0 ? 100 : 0 %>%;"></div>
+          </div>
+        </div>
+        <div class="bento-substats-row mt-auto">
+          <div class="substat-item">
+            <span class="substat-label">ARPU (Avg)</span>
+            <span class="substat-value text-main tabular-nums" id="kpi_arpu_val">
+              <%= number_to_currency(kpis[:avg_mrr_per_subscription], unit: currency_symbol) %>
+            </span>
+          </div>
+          <div class="substat-item">
+            <span class="substat-label">Tax Base</span>
+            <span class="substat-value text-muted tabular-nums" id="kpi_tax_sales_val">
+              <%= number_to_currency(kpis[:total_tax_sales], unit: currency_symbol) %>
+            </span>
+          </div>
+          <div class="substat-item">
+            <span class="substat-label">Credit Notes</span>
+            <span class="substat-value text-muted tabular-nums" id="kpi_credit_notes_total">
+              <%= number_to_currency(kpis[:credit_notes_total], unit: currency_symbol) %>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Secondary Modular Operational Ribbon (6-Tile Modular Record Counts) -->
   <div class="row g-2.5 mb-3" id="kpi_cards_ribbon">
     
     <!-- Tile 1: Sales Invoices -->
@@ -137,7 +322,7 @@
             <%= kpis[:total_sales_count] %>
           </div>
         </div>
-        <div class="d-flex align-items-center justify-content-between pt-1 border-top">
+        <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
           <small class="text-muted fs-9" id="kpi_pending_sales"><%= kpis[:pending_sales_count] %> pending / sent</small>
           <%= link_to "View", invoices_path(tab: "sales-invoices"), class: "text-decoration-none fs-9 text-primary fw-medium" %>
         </div>
@@ -158,7 +343,7 @@
             <%= kpis[:total_purchases_count] %>
           </div>
         </div>
-        <div class="d-flex align-items-center justify-content-between pt-1 border-top">
+        <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
           <small class="text-muted fs-9" id="kpi_unsettled_purchases"><%= [kpis[:total_purchases_count] - kpis[:paid_purchases_count], 0].max %> unsettled</small>
           <%= link_to "View", invoices_path(tab: "purchase-invoices"), class: "text-decoration-none fs-9 text-primary fw-medium" %>
         </div>
@@ -179,30 +364,30 @@
             <%= kpis[:tax_total_count] %>
           </div>
         </div>
-        <div class="d-flex align-items-center justify-content-between pt-1 border-top">
-          <small class="text-muted fs-9" id="kpi_tax_processed_sub"><%= kpis[:tax_processed_count] %> processed</small>
+        <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
+          <small class="text-muted fs-9" id="kpi_tax_processed_sub"><%= kpis[:tax_processed_count] %> processed (<%= kpis[:tax_compliance_rate] %>%)</small>
           <%= link_to "Taxes", tax_submissions_home_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
         </div>
       </div>
     </div>
 
-    <!-- Tile 4: Active Subscriptions -->
+    <!-- Tile 4: Credit Notes & Adjustments -->
     <div class="col-12 col-sm-6 col-xl-4 col-xxl-2">
       <div class="bento-card">
         <div class="bento-card-header">
-          <span class="bento-card-title">Subscriptions</span>
-          <span class="bento-chip bento-chip-sent fs-10">
-            Recurring
+          <span class="bento-card-title">Credit Notes</span>
+          <span class="bento-chip bento-chip-draft fs-10" id="kpi_credit_notes_chip">
+            <%= kpis[:credit_notes_count] %> Notes
           </span>
         </div>
         <div class="mb-1.5">
-          <div class="bento-value tabular-nums text-truncate" id="kpi_subs_count_val">
-            <%= kpis[:active_subscriptions_count] %>
+          <div class="bento-value tabular-nums text-truncate" id="kpi_credit_notes_count_val">
+            <%= kpis[:credit_notes_count] %>
           </div>
         </div>
-        <div class="d-flex align-items-center justify-content-between pt-1 border-top">
-          <small class="text-muted fs-9">Active contracts</small>
-          <%= link_to "Manage", subscriptions_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
+        <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
+          <small class="text-muted fs-9" id="kpi_credit_notes_sub"><%= number_to_currency(kpis[:credit_notes_total], unit: currency_symbol) %> adjusted</small>
+          <%= link_to "Invoices", invoices_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
         </div>
       </div>
     </div>
@@ -221,7 +406,7 @@
             <%= kpis[:locations_count] %>
           </div>
         </div>
-        <div class="d-flex align-items-center justify-content-between pt-1 border-top">
+        <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
           <small class="text-muted fs-9">Branch locations</small>
           <%= link_to "View", locations_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
         </div>
@@ -242,7 +427,7 @@
             <%= kpis[:networks_count] %>
           </div>
         </div>
-        <div class="d-flex align-items-center justify-content-between pt-1 border-top">
+        <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
           <small class="text-muted fs-9">Connected companies</small>
           <%= link_to "Network", networks_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
         </div>
@@ -280,27 +465,45 @@
       </div>
     </div>
 
-    <!-- Bento Settlements & Tax Summary Stack (4-Col) -->
+    <!-- Bento Settlements & Operational Health Stack (4-Col) -->
     <div class="col-12 col-xl-4">
       <div class="bento-card">
         <div class="bento-card-header">
           <div>
-            <h6 class="fw-bold text-main mb-0 fs-7">Settlements & Tax</h6>
-            <small class="text-muted fs-8">Status breakdown</small>
+            <h6 class="fw-bold text-main mb-0 fs-7">Settlements & Status</h6>
+            <small class="text-muted fs-8">Invoice status distribution</small>
           </div>
           <div class="dropdown">
             <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-2 px-2 py-0.5 fs-9" type="button" id="statusChartTypeDropdown" data-bs-toggle="dropdown">
               <span id="status_chart_view_label">Sales Invoices</span>
             </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-sm border p-1 rounded-2 fs-8">
-              <li><a class="dropdown-item status-chart-type-item rounded-1 active" href="#" data-type="sales">Sales Invoices</a></li>
-              <li><a class="dropdown-item status-chart-type-item rounded-1" href="#" data-type="purchases">Purchase Bills</a></li>
+            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1 rounded-3 fs-8">
+              <li><a class="dropdown-item status-chart-type-item rounded-2 active" href="#" data-type="sales">Sales Invoices</a></li>
+              <li><a class="dropdown-item status-chart-type-item rounded-2" href="#" data-type="purchases">Purchase Bills</a></li>
             </ul>
           </div>
         </div>
 
-        <div class="chart-container-wrapper d-flex align-items-center justify-content-center" style="height: 275px;">
+        <div class="chart-container-wrapper d-flex align-items-center justify-content-center" style="height: 195px;">
           <canvas id="statusDonutChart"></canvas>
+        </div>
+
+        <!-- Quick Efficiency Metrics Meter -->
+        <div class="pt-2 mt-2">
+          <div class="row g-2 text-center">
+            <div class="col-4">
+              <span class="text-muted fs-10 d-block">Collection</span>
+              <span class="fw-bold text-success fs-8 tabular-nums" id="health_collection_rate"><%= kpis[:sales_collection_rate] %>%</span>
+            </div>
+            <div class="col-4">
+              <span class="text-muted fs-10 d-block">Settlement</span>
+              <span class="fw-bold text-info fs-8 tabular-nums" id="health_settlement_rate"><%= kpis[:purchases_settlement_rate] %>%</span>
+            </div>
+            <div class="col-4">
+              <span class="text-muted fs-10 d-block">Compliance</span>
+              <span class="fw-bold text-primary fs-8 tabular-nums" id="health_tax_rate"><%= kpis[:tax_compliance_rate] %>%</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -356,37 +559,98 @@
       <div class="bento-card">
         <div class="bento-card-header">
           <div>
-            <h6 class="fw-bold text-main mb-0 fs-7">Tax Form 2307 Compliance</h6>
-            <small class="text-muted fs-8">Verification and processing health</small>
+            <div class="d-flex align-items-center gap-2 mb-0.5">
+              <h6 class="fw-bold text-main mb-0 fs-7">Tax Form 2307 Compliance</h6>
+              <span class="bento-chip <%= kpis[:tax_pending_count] > 0 ? 'bento-chip-pending' : 'bento-chip-paid' %> fs-10" id="tax_status_chip">
+                <i class="fa-solid <%= kpis[:tax_pending_count] > 0 ? 'fa-triangle-exclamation' : 'fa-check' %> fs-11"></i>
+                <%= kpis[:tax_pending_count] > 0 ? "#{kpis[:tax_pending_count]} Pending" : "100% Compliant" %>
+              </span>
+            </div>
+            <small class="text-muted fs-8">BIR certificate verification & processing health</small>
           </div>
-          <%= link_to tax_submissions_home_path, class: "btn btn-sm btn-outline-secondary rounded-2 px-2.5 py-0.5 fs-9 fw-medium" do %>
-            Taxes Hub <i class="fa-solid fa-chevron-right ms-1 fs-10"></i>
+          <%= link_to tax_submissions_home_path, class: "btn btn-sm btn-outline-secondary rounded-2 px-2.5 py-0.5 fs-9 fw-medium d-inline-flex align-items-center gap-1.5" do %>
+            Taxes Hub <i class="fa-solid fa-chevron-right fs-11"></i>
           <% end %>
         </div>
 
-        <div class="row align-items-center g-2.5 mt-0.5">
-          <div class="col-12 col-sm-6">
-            <div class="chart-container-wrapper" style="height: 175px;">
-              <canvas id="taxComplianceChart"></canvas>
+        <div class="row align-items-center g-3 my-auto py-1">
+          <!-- Donut Ring with Centered Compliance Rate -->
+          <div class="col-12 col-sm-5">
+            <div class="tax-donut-wrapper">
+              <div class="chart-container-wrapper" style="height: 155px; min-height: 155px;">
+                <canvas id="taxComplianceChart"></canvas>
+              </div>
+              <div class="tax-donut-center">
+                <div class="tax-donut-pct tabular-nums" id="tax_donut_score"><%= kpis[:tax_compliance_rate] %>%</div>
+                <div class="tax-donut-sub" id="tax_donut_sub_label">Score</div>
+              </div>
             </div>
           </div>
-          <div class="col-12 col-sm-6">
-            <div class="d-flex flex-column gap-1.5">
-              <div class="d-flex align-items-center justify-content-between p-2 rounded-2 bg-secondary-subtle border">
-                <span class="bento-chip bento-chip-processed">Processed</span>
-                <span class="fw-semibold fs-8 tabular-nums" id="tax_badge_processed"><%= kpis[:tax_processed_count] %></span>
+
+          <!-- Minimalist Status Metric Rows -->
+          <div class="col-12 col-sm-7">
+            <div class="d-flex flex-column gap-2">
+              
+              <!-- 1. Processed -->
+              <div class="tax-status-item">
+                <div class="tax-status-header">
+                  <div class="tax-status-label-group">
+                    <span class="status-indicator-dot bg-success"></span>
+                    <span class="fw-medium text-main fs-8">Processed & Filed</span>
+                  </div>
+                  <div class="text-end">
+                    <span class="fw-bold text-main fs-8 tabular-nums" id="tax_badge_processed"><%= kpis[:tax_processed_count] %></span>
+                    <small class="text-muted ms-1 fs-9 tabular-nums" id="tax_badge_processed_pct">(<%= kpis[:tax_total_count].positive? ? ((kpis[:tax_processed_count].to_f / kpis[:tax_total_count]) * 100).round : 100 %>%)</small>
+                  </div>
+                </div>
+                <div class="partner-progress-bar">
+                  <div class="partner-progress-fill bg-success" id="tax_bar_processed" style="width: <%= kpis[:tax_total_count].positive? ? ((kpis[:tax_processed_count].to_f / kpis[:tax_total_count]) * 100).round : 100 %>%;"></div>
+                </div>
               </div>
 
-              <div class="d-flex align-items-center justify-content-between p-2 rounded-2 bg-secondary-subtle border">
-                <span class="bento-chip bento-chip-reviewed">Reviewed</span>
-                <span class="fw-semibold fs-8 tabular-nums" id="tax_badge_reviewed"><%= [kpis[:tax_reviewed_count] - kpis[:tax_processed_count], 0].max %></span>
+              <!-- 2. Reviewed -->
+              <div class="tax-status-item">
+                <div class="tax-status-header">
+                  <div class="tax-status-label-group">
+                    <span class="status-indicator-dot bg-info"></span>
+                    <span class="fw-medium text-main fs-8">Reviewed</span>
+                  </div>
+                  <div class="text-end">
+                    <span class="fw-bold text-main fs-8 tabular-nums" id="tax_badge_reviewed"><%= [kpis[:tax_reviewed_count] - kpis[:tax_processed_count], 0].max %></span>
+                    <small class="text-muted ms-1 fs-9 tabular-nums" id="tax_badge_reviewed_pct">(<%= kpis[:tax_total_count].positive? ? (([kpis[:tax_reviewed_count] - kpis[:tax_processed_count], 0].max.to_f / kpis[:tax_total_count]) * 100).round : 0 %>%)</small>
+                  </div>
+                </div>
+                <div class="partner-progress-bar">
+                  <div class="partner-progress-fill bg-info" id="tax_bar_reviewed" style="width: <%= kpis[:tax_total_count].positive? ? (([kpis[:tax_reviewed_count] - kpis[:tax_processed_count], 0].max.to_f / kpis[:tax_total_count]) * 100).round : 0 %>%;"></div>
+                </div>
               </div>
 
-              <div class="d-flex align-items-center justify-content-between p-2 rounded-2 bg-secondary-subtle border">
-                <span class="bento-chip bento-chip-pending">Pending Review</span>
-                <span class="fw-semibold fs-8 tabular-nums" id="tax_badge_pending"><%= kpis[:tax_pending_count] %></span>
+              <!-- 3. Pending -->
+              <div class="tax-status-item">
+                <div class="tax-status-header">
+                  <div class="tax-status-label-group">
+                    <span class="status-indicator-dot bg-warning"></span>
+                    <span class="fw-medium text-main fs-8">Pending Review</span>
+                  </div>
+                  <div class="text-end">
+                    <span class="fw-bold text-main fs-8 tabular-nums <%= 'text-danger' if kpis[:tax_pending_count] > 0 %>" id="tax_badge_pending"><%= kpis[:tax_pending_count] %></span>
+                    <small class="text-muted ms-1 fs-9 tabular-nums" id="tax_badge_pending_pct">(<%= kpis[:tax_total_count].positive? ? ((kpis[:tax_pending_count].to_f / kpis[:tax_total_count]) * 100).round : 0 %>%)</small>
+                  </div>
+                </div>
+                <div class="partner-progress-bar">
+                  <div class="partner-progress-fill <%= kpis[:tax_pending_count] > 0 ? 'bg-warning' : 'bg-secondary' %>" id="tax_bar_pending" style="width: <%= kpis[:tax_total_count].positive? ? ((kpis[:tax_pending_count].to_f / kpis[:tax_total_count]) * 100).round : 0 %>%;"></div>
+                </div>
               </div>
+
             </div>
+          </div>
+        </div>
+
+        <!-- Footer Metric Strip -->
+        <div class="tax-footer-strip mt-auto pt-2">
+          <div class="d-flex align-items-center justify-content-between text-muted fs-9 px-1">
+            <span>Total Submissions: <strong class="text-main tabular-nums" id="tax_total_footer_val"><%= kpis[:tax_total_count] %></strong></span>
+            <span>Tax Withheld: <strong class="text-main tabular-nums" id="tax_withheld_footer_val"><%= number_to_currency(kpis[:total_tax_sales], unit: currency_symbol) %></strong></span>
           </div>
         </div>
       </div>
@@ -521,7 +785,7 @@
         </div>
 
         <!-- Shortcuts -->
-        <hr class="my-2.5 opacity-40">
+        <hr class="my-2.5 opacity-25">
         <div>
           <span class="fs-9 fw-semibold text-muted text-uppercase tracking-wider d-block mb-1.5">Shortcuts</span>
           <div class="d-flex flex-wrap gap-1.5">

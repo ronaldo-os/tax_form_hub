@@ -15,7 +15,11 @@ function loadPageSpecificModules() {
   }
 
   if (path === '/' || path.includes('/dashboard')) {
-    import(/* webpackChunkName: "dashboard" */ './dashboard');
+    import(/* webpackChunkName: "dashboard" */ './dashboard').then(module => {
+      if (module && typeof module.initAnalyticsDashboard === 'function') {
+        module.initAnalyticsDashboard();
+      }
+    }).catch(err => console.error('[Dashboard] Failed to load module:', err));
   }
 
   if (path.includes('/tax_submissions')) {
@@ -735,6 +739,7 @@ document.addEventListener("turbo:load", () => {
 document.addEventListener("turbo:render", () => {
   window.isNavigatingConfirmed = false;
   initApplication();
+  loadPageSpecificModules();
 });
 // Also bind to DOMContentLoaded for initial non-Turbo load if any
 document.addEventListener("DOMContentLoaded", () => {

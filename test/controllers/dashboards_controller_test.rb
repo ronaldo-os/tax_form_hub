@@ -77,8 +77,19 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
 
     kpis = json["kpis"]
     assert_equal 5000.0, kpis["total_sales_revenue"]
+    assert_equal 5000.0, kpis["paid_sales_revenue"]
     assert_equal 2000.0, kpis["total_purchases_expense"]
+    assert_equal 0.0, kpis["paid_purchases_expense"] # purchase was 'approved', not 'paid'
+    assert_equal 2000.0, kpis["total_payables"]
     assert_equal 3000.0, kpis["net_operating_income"]
+    assert_equal 5000.0, kpis["net_cash_flow"] # 5000 paid sales - 0 paid purchases
+    assert_equal 60.0, kpis["profit_margin"] # (3000 / 5000) * 100
+    assert_equal 5000.0, kpis["avg_sale_invoice_value"]
+    assert_equal 2000.0, kpis["avg_purchase_bill_value"]
+    assert_equal 100.0, kpis["sales_collection_rate"]
+    assert_equal 0.0, kpis["purchases_settlement_rate"]
+    assert_equal 500.0, kpis["total_tax_sales"]
+    assert_equal 200.0, kpis["total_tax_purchases"]
     assert_equal 1, kpis["total_sales_count"]
     assert_equal 1, kpis["total_purchases_count"]
   end

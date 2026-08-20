@@ -47,12 +47,16 @@ class DashboardsController < ApplicationController
     sales_current = current_invoices.where(invoice_type: "sale")
     sales_prev = prev_invoices.where(invoice_type: "sale")
 
-    total_sales_revenue = sum_invoice_totals(sales_current.where(status: ["approved", "paid"]))
+    sales_approved_or_paid = sales_current.where(status: ["approved", "paid"])
+    total_sales_revenue = sum_invoice_totals(sales_approved_or_paid)
     prev_sales_revenue = sum_invoice_totals(sales_prev.where(status: ["approved", "paid"]))
     sales_revenue_growth = calculate_percentage_change(total_sales_revenue, prev_sales_revenue)
 
+    paid_sales_scope = sales_current.where(status: "paid")
+    paid_sales_revenue = sum_invoice_totals(paid_sales_scope)
+    paid_sales_count = paid_sales_scope.count
+    approved_sales_count = sales_current.where(status: "approved").count
     total_sales_count = sales_current.count
-    paid_sales_count = sales_current.where(status: "paid").count
     pending_sales_count = sales_current.where(status: ["sent", "pending", "draft"]).count
 
     # Receivables (Outstanding unpaid sales)
@@ -60,27 +64,40 @@ class DashboardsController < ApplicationController
     total_receivables = sum_invoice_totals(unpaid_sales_scope)
     receivables_count = unpaid_sales_scope.count
 
+    avg_sale_invoice_value = (paid_sales_count + approved_sales_count).positive? ? (total_sales_revenue / (paid_sales_count + approved_sales_count)).round(2) : 0.0
+    sales_collection_rate = (paid_sales_revenue + total_receivables).positive? ? ((paid_sales_revenue / (paid_sales_revenue + total_receivables)) * 100).round(1) : 100.0
+
     # 2. PURCHASES / EXPENSES METRICS
     purchases_current = current_invoices.where(invoice_type: "purchase")
     purchases_prev = prev_invoices.where(invoice_type: "purchase")
 
-    total_purchases_expense = sum_invoice_totals(purchases_current.where(status: ["approved", "paid"]))
+    purchases_approved_or_paid = purchases_current.where(status: ["approved", "paid"])
+    total_purchases_expense = sum_invoice_totals(purchases_approved_or_paid)
     prev_purchases_expense = sum_invoice_totals(purchases_prev.where(status: ["approved", "paid"]))
     purchases_growth = calculate_percentage_change(total_purchases_expense, prev_purchases_expense)
 
+    paid_purchases_scope = purchases_current.where(status: "paid")
+    paid_purchases_expense = sum_invoice_totals(paid_purchases_scope)
+    paid_purchases_count = paid_purchases_scope.count
+    approved_purchases_count = purchases_current.where(status: "approved").count
     total_purchases_count = purchases_current.count
-    paid_purchases_count = purchases_current.where(status: "paid").count
+    pending_purchases_count = purchases_current.where(status: ["sent", "pending", "draft"]).count
 
     # Payables (Outstanding unpaid purchases)
     unpaid_purchases_scope = base_invoices.where(invoice_type: "purchase", status: ["sent", "pending", "approved"])
     total_payables = sum_invoice_totals(unpaid_purchases_scope)
     payables_count = unpaid_purchases_scope.count
 
+    avg_purchase_bill_value = (paid_purchases_count + approved_purchases_count).positive? ? (total_purchases_expense / (paid_purchases_count + approved_purchases_count)).round(2) : 0.0
+    purchases_settlement_rate = (paid_purchases_expense + total_payables).positive? ? ((paid_purchases_expense / (paid_purchases_expense + total_payables)) * 100).round(1) : 100.0
+
     # 3. NET OPERATING CASH FLOW & MARGIN
-    net_operating_income = total_sales_revenue - total_purchases_expense
-    prev_net_income = prev_sales_revenue - prev_purchases_expense
+    net_operating_income = (total_sales_revenue - total_purchases_expense).round(2)
+    prev_net_income = (prev_sales_revenue - prev_purchases_expense).round(2)
     net_income_growth = calculate_percentage_change(net_operating_income, prev_net_income)
+    net_cash_flow = (paid_sales_revenue - paid_purchases_expense).round(2)
     profit_margin = total_sales_revenue.positive? ? ((net_operating_income / total_sales_revenue) * 100).round(1) : 0.0
+    net_working_capital = (total_receivables - total_payables).round(2)
 
     # 4. SUBSCRIPTIONS & RECURRING REVENUE (MRR / ARR)
     all_parents = current_user.invoices.where(recurring_parent_invoice_id: nil)
@@ -112,7 +129,8 @@ class DashboardsController < ApplicationController
       end
     end
 
-    total_arr = total_mrr * 12.0
+    total_arr = (total_mrr * 12.0).round(2)
+    avg_mrr_per_subscription = active_subscriptions_count.positive? ? (total_mrr / active_subscriptions_count).round(2) : 0.0
 
     # 5. TAX SUBMISSIONS & FORM 2307 COMPLIANCE METRICS
     tax_scope = TaxSubmission.where(company_id: my_company_ids)
@@ -123,7 +141,18 @@ class DashboardsController < ApplicationController
     tax_pending_count = tax_scope.where(reviewed: [false, nil], processed: [false, nil], archived: [false, nil]).count
     tax_compliance_rate = tax_total_count.positive? ? ((tax_processed_count.to_f / tax_total_count) * 100).round(1) : 100.0
 
-    # 6. CHART DATASETS
+    total_tax_sales = sum_invoice_taxes(sales_approved_or_paid).round(2)
+    total_tax_purchases = sum_invoice_taxes(purchases_approved_or_paid).round(2)
+
+    # 6. CREDIT NOTES & ADJUSTMENTS
+    credit_notes_scope = current_user.invoices.where(invoice_category: "credit_note", archived: [false, nil]).where(issue_date: range)
+    if selected_currency.present? && selected_currency != "all"
+      credit_notes_scope = credit_notes_scope.where(currency: selected_currency)
+    end
+    credit_notes_total = sum_invoice_totals(credit_notes_scope).round(2)
+    credit_notes_count = credit_notes_scope.count
+
+    # 7. CHART DATASETS
     trend_data = build_revenue_expense_trends(base_invoices, time_frame)
 
     sales_status_counts = aggregate_status_counts(sales_current)
@@ -132,7 +161,7 @@ class DashboardsController < ApplicationController
     top_customers = calculate_top_partners(sales_current, :recipient_company)
     top_vendors = calculate_top_partners(purchases_current, :sale_from)
 
-    # 7. RECENT ACTIVITIES & URGENT ACTION ITEMS
+    # 8. RECENT ACTIVITIES & URGENT ACTION ITEMS
     recent_invoices = current_user.invoices
                                   .includes(:recipient_company, :sale_from)
                                   .order(created_at: :desc)
@@ -155,35 +184,54 @@ class DashboardsController < ApplicationController
       available_currencies: available_currencies,
       kpis: {
         total_sales_revenue: total_sales_revenue.round(2),
+        paid_sales_revenue: paid_sales_revenue.round(2),
         sales_revenue_growth: sales_revenue_growth,
         total_sales_count: total_sales_count,
         paid_sales_count: paid_sales_count,
+        approved_sales_count: approved_sales_count,
         pending_sales_count: pending_sales_count,
         total_receivables: total_receivables.round(2),
         receivables_count: receivables_count,
+        avg_sale_invoice_value: avg_sale_invoice_value,
+        sales_collection_rate: sales_collection_rate,
 
         total_purchases_expense: total_purchases_expense.round(2),
+        paid_purchases_expense: paid_purchases_expense.round(2),
         purchases_growth: purchases_growth,
         total_purchases_count: total_purchases_count,
         paid_purchases_count: paid_purchases_count,
+        approved_purchases_count: approved_purchases_count,
+        pending_purchases_count: pending_purchases_count,
         total_payables: total_payables.round(2),
         payables_count: payables_count,
+        avg_purchase_bill_value: avg_purchase_bill_value,
+        purchases_settlement_rate: purchases_settlement_rate,
 
-        net_operating_income: net_operating_income.round(2),
+        net_operating_income: net_operating_income,
+        net_cash_flow: net_cash_flow,
         net_income_growth: net_income_growth,
         profit_margin: profit_margin,
+        net_working_capital: net_working_capital,
 
         active_subscriptions_count: active_subscriptions_count,
         total_mrr: total_mrr.round(2),
-        total_arr: total_arr.round(2),
+        total_arr: total_arr,
+        avg_mrr_per_subscription: avg_mrr_per_subscription,
 
         tax_total_count: tax_total_count,
         tax_reviewed_count: tax_reviewed_count,
         tax_processed_count: tax_processed_count,
         tax_pending_count: tax_pending_count,
         tax_compliance_rate: tax_compliance_rate,
+        total_tax_sales: total_tax_sales,
+        total_tax_purchases: total_tax_purchases,
+
+        credit_notes_total: credit_notes_total,
+        credit_notes_count: credit_notes_count,
+
         locations_count: current_user.locations.count,
-        networks_count: current_user.networks.count
+        networks_count: current_user.networks.count,
+        total_counterparties_count: (top_customers.size + top_vendors.size)
       },
       charts: {
         trends: trend_data,
@@ -258,6 +306,13 @@ class DashboardsController < ApplicationController
 
   def sum_invoice_totals(invoices_relation)
     invoices_relation.to_a.sum(&:grand_total)
+  end
+
+  def sum_invoice_taxes(invoices_relation)
+    invoices_relation.to_a.sum do |inv|
+      tax = inv.total.is_a?(Hash) ? (inv.total["tax_amount"].presence || inv.total["tax"].presence || 0) : 0
+      tax.to_s.delete(',').to_f
+    end
   end
 
   def calculate_percentage_change(current_val, previous_val)

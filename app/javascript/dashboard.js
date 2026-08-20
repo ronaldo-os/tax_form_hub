@@ -45,15 +45,28 @@ export function initAnalyticsDashboard() {
     renderDashboardCharts(currentDashboardData);
   }
 
-  setupDashboardEventListeners();
+  if (!container.dataset.eventsAttached) {
+    setupDashboardEventListeners();
+    container.dataset.eventsAttached = 'true';
+  }
 }
 
+let chartRenderAttempts = 0;
 function renderDashboardCharts(data) {
-  if (typeof Chart === 'undefined') {
-    setTimeout(() => renderDashboardCharts(data), 100);
+  if (!data || !data.charts) return;
+
+  const trendCanvas = document.getElementById('performanceTrendChart');
+  const donutCanvas = document.getElementById('statusDonutChart');
+
+  if (typeof Chart === 'undefined' || !trendCanvas || !donutCanvas) {
+    if (chartRenderAttempts < 50) {
+      chartRenderAttempts++;
+      setTimeout(() => renderDashboardCharts(data), 60);
+    }
     return;
   }
 
+  chartRenderAttempts = 0;
   renderPerformanceTrendChart(data.charts.trends, data.currency);
   renderStatusDonutChart(data.charts[currentStatusType === 'sales' ? 'sales_status' : 'purchases_status']);
   renderTaxComplianceChart(data.charts.tax_compliance);
@@ -275,19 +288,20 @@ function renderTaxComplianceChart(taxData) {
   taxComplianceChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
-      labels: ['Processed', 'Reviewed', 'Pending'],
+      labels: ['Processed & Filed', 'Reviewed', 'Pending Review'],
       datasets: [{
         data: total === 0 ? [1] : [d.processed || 0, d.reviewed || 0, d.pending || 0],
-        backgroundColor: total === 0 ? ['#e2e8f0'] : ['#10b981', '#0ea5e9', '#ef4444'],
-        borderWidth: 1.5,
-        borderColor: colors.cardBg,
+        backgroundColor: total === 0
+          ? [colors.isDark ? '#374151' : '#e2e8f0']
+          : ['#10b981', '#0ea5e9', '#f59e0b'],
+        borderWidth: 0,
         hoverOffset: 3
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '72%',
+      cutout: '78%',
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -295,7 +309,7 @@ function renderTaxComplianceChart(taxData) {
           titleColor: '#ffffff',
           bodyColor: '#e2e8f0',
           borderColor: colors.borderColor,
-          borderWidth: 1,
+          borderWidth: 0,
           cornerRadius: 6,
           padding: 8,
           callbacks: {
@@ -452,7 +466,118 @@ function fetchUpdatedAnalyticsData(timeFrame, currency) {
 function updateKPICardsUI(kpis, currency) {
   if (!kpis) return;
 
-  // 1. Sales Invoices
+  // 1. Total Sales Revenue & Sub-metrics
+  const salesRevVal = document.getElementById('kpi_sales_revenue_val');
+  if (salesRevVal) salesRevVal.textContent = formatCurrency(kpis.total_sales_revenue, currency);
+
+  const salesGrowthTag = document.getElementById('kpi_sales_growth_tag');
+  if (salesGrowthTag) {
+    salesGrowthTag.className = `bento-trend ${kpis.sales_revenue_growth >= 0 ? 'bento-trend-up' : 'bento-trend-down'}`;
+    salesGrowthTag.innerHTML = `<i class="fa-solid ${kpis.sales_revenue_growth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} fs-10"></i> ${Math.abs(kpis.sales_revenue_growth)}%`;
+  }
+
+  const salesCollRate = document.getElementById('kpi_sales_coll_rate');
+  if (salesCollRate) salesCollRate.textContent = `${kpis.sales_collection_rate}%`;
+
+  const salesCollBar = document.getElementById('kpi_sales_coll_bar');
+  if (salesCollBar) salesCollBar.style.width = `${Math.min(kpis.sales_collection_rate, 100)}%`;
+
+  const paidSalesRev = document.getElementById('kpi_paid_sales_rev');
+  if (paidSalesRev) paidSalesRev.textContent = formatCurrency(kpis.paid_sales_revenue, currency);
+
+  const salesReceivables = document.getElementById('kpi_sales_receivables');
+  if (salesReceivables) salesReceivables.textContent = formatCurrency(kpis.total_receivables, currency);
+
+  const avgSaleVal = document.getElementById('kpi_avg_sale_val');
+  if (avgSaleVal) avgSaleVal.textContent = formatCurrency(kpis.avg_sale_invoice_value, currency);
+
+  // 2. Total Purchases / Spend & Sub-metrics
+  const purchExpVal = document.getElementById('kpi_purchases_expense_val');
+  if (purchExpVal) purchExpVal.textContent = formatCurrency(kpis.total_purchases_expense, currency);
+
+  const purchGrowthTag = document.getElementById('kpi_purchases_growth_tag');
+  if (purchGrowthTag) {
+    purchGrowthTag.className = `bento-trend ${kpis.purchases_growth <= 0 ? 'bento-trend-up' : 'bento-trend-down'}`;
+    purchGrowthTag.innerHTML = `<i class="fa-solid ${kpis.purchases_growth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'} fs-10"></i> ${Math.abs(kpis.purchases_growth)}%`;
+  }
+
+  const purchSettleRate = document.getElementById('kpi_purch_settle_rate');
+  if (purchSettleRate) purchSettleRate.textContent = `${kpis.purchases_settlement_rate}%`;
+
+  const purchSettleBar = document.getElementById('kpi_purch_settle_bar');
+  if (purchSettleBar) purchSettleBar.style.width = `${Math.min(kpis.purchases_settlement_rate, 100)}%`;
+
+  const paidPurchExp = document.getElementById('kpi_paid_purch_exp');
+  if (paidPurchExp) paidPurchExp.textContent = formatCurrency(kpis.paid_purchases_expense, currency);
+
+  const purchPayables = document.getElementById('kpi_purch_payables');
+  if (purchPayables) purchPayables.textContent = formatCurrency(kpis.total_payables, currency);
+
+  const avgPurchVal = document.getElementById('kpi_avg_purch_val');
+  if (avgPurchVal) avgPurchVal.textContent = formatCurrency(kpis.avg_purchase_bill_value, currency);
+
+  // 3. Net Operating Profit & Margin
+  const netIncomeVal = document.getElementById('kpi_net_income_val');
+  if (netIncomeVal) {
+    netIncomeVal.textContent = formatCurrency(kpis.net_operating_income, currency);
+    netIncomeVal.className = `bento-value bento-financial-value tabular-nums text-truncate ${kpis.net_operating_income >= 0 ? 'text-success' : 'text-danger'}`;
+  }
+
+  const profitMarginTag = document.getElementById('kpi_profit_margin_tag');
+  if (profitMarginTag) {
+    profitMarginTag.className = `bento-chip ${kpis.profit_margin >= 0 ? 'bento-chip-paid' : 'bento-chip-rejected'} fs-10`;
+    profitMarginTag.textContent = `${kpis.profit_margin}% Margin`;
+  }
+
+  const profitMarginBar = document.getElementById('kpi_profit_margin_bar');
+  if (profitMarginBar) {
+    profitMarginBar.className = `partner-progress-fill ${kpis.profit_margin >= 0 ? 'bg-success' : 'bg-danger'}`;
+    profitMarginBar.style.width = `${Math.min(Math.max(Math.abs(kpis.profit_margin), 0), 100)}%`;
+  }
+
+  const netCashFlow = document.getElementById('kpi_net_cash_flow');
+  if (netCashFlow) {
+    netCashFlow.textContent = formatCurrency(kpis.net_cash_flow, currency);
+    netCashFlow.className = `fw-semibold ${kpis.net_cash_flow >= 0 ? 'text-success' : 'text-danger'} fs-9 tabular-nums`;
+  }
+
+  const netCashFlowSub = document.getElementById('kpi_net_cash_flow_sub');
+  if (netCashFlowSub) {
+    netCashFlowSub.textContent = formatCurrency(kpis.net_cash_flow, currency);
+    netCashFlowSub.className = `substat-value ${kpis.net_cash_flow >= 0 ? 'text-success' : 'text-danger'} tabular-nums`;
+  }
+
+  const workingCap = document.getElementById('kpi_working_capital');
+  if (workingCap) workingCap.textContent = formatCurrency(kpis.net_working_capital, currency);
+
+  const netGrowth = document.getElementById('kpi_net_growth');
+  if (netGrowth) {
+    netGrowth.textContent = `${kpis.net_income_growth >= 0 ? '+' : ''}${kpis.net_income_growth}%`;
+    netGrowth.className = `substat-value ${kpis.net_income_growth >= 0 ? 'text-success' : 'text-danger'} tabular-nums`;
+  }
+
+  // 4. Subscriptions & Recurring Revenue (MRR/ARR)
+  const mrrVal = document.getElementById('kpi_mrr_val');
+  if (mrrVal) {
+    mrrVal.innerHTML = `${formatCurrency(kpis.total_mrr, currency)}<span class="fs-9 text-muted fw-normal ms-1">/mo</span>`;
+  }
+
+  const arrTag = document.getElementById('kpi_arr_tag');
+  if (arrTag) arrTag.textContent = `ARR ${formatCurrency(kpis.total_arr, currency)}`;
+
+  const activeSubsCount = document.getElementById('kpi_active_subs_count');
+  if (activeSubsCount) activeSubsCount.textContent = `${kpis.active_subscriptions_count} active`;
+
+  const arpuVal = document.getElementById('kpi_arpu_val');
+  if (arpuVal) arpuVal.textContent = formatCurrency(kpis.avg_mrr_per_subscription, currency);
+
+  const taxSalesVal = document.getElementById('kpi_tax_sales_val');
+  if (taxSalesVal) taxSalesVal.textContent = formatCurrency(kpis.total_tax_sales, currency);
+
+  const creditNotesTotal = document.getElementById('kpi_credit_notes_total');
+  if (creditNotesTotal) creditNotesTotal.textContent = formatCurrency(kpis.credit_notes_total, currency);
+
+  // Operational Ribbon Tiles
   const salesVal = document.getElementById('kpi_sales_count_val');
   if (salesVal) salesVal.textContent = kpis.total_sales_count;
 
@@ -462,7 +587,6 @@ function updateKPICardsUI(kpis, currency) {
   const pendingSales = document.getElementById('kpi_pending_sales');
   if (pendingSales) pendingSales.textContent = `${kpis.pending_sales_count} pending / sent`;
 
-  // 2. Purchase Bills
   const purchVal = document.getElementById('kpi_purchases_count_val');
   if (purchVal) purchVal.textContent = kpis.total_purchases_count;
 
@@ -472,7 +596,6 @@ function updateKPICardsUI(kpis, currency) {
   const unsettledPurch = document.getElementById('kpi_unsettled_purchases');
   if (unsettledPurch) unsettledPurch.textContent = `${Math.max(kpis.total_purchases_count - kpis.paid_purchases_count, 0)} unsettled`;
 
-  // 3. Tax Submissions
   const taxVal = document.getElementById('kpi_tax_count_val');
   if (taxVal) taxVal.textContent = kpis.tax_total_count;
 
@@ -483,29 +606,86 @@ function updateKPICardsUI(kpis, currency) {
   }
 
   const taxProcSub = document.getElementById('kpi_tax_processed_sub');
-  if (taxProcSub) taxProcSub.textContent = `${kpis.tax_processed_count} processed`;
+  if (taxProcSub) taxProcSub.textContent = `${kpis.tax_processed_count} processed (${kpis.tax_compliance_rate}%)`;
 
-  // 4. Subscriptions
-  const subsVal = document.getElementById('kpi_subs_count_val');
-  if (subsVal) subsVal.textContent = kpis.active_subscriptions_count;
+  const creditNotesChip = document.getElementById('kpi_credit_notes_chip');
+  if (creditNotesChip) creditNotesChip.textContent = `${kpis.credit_notes_count || 0} Notes`;
 
-  // 5. Locations
+  const creditNotesVal = document.getElementById('kpi_credit_notes_count_val');
+  if (creditNotesVal) creditNotesVal.textContent = kpis.credit_notes_count || 0;
+
+  const creditNotesSub = document.getElementById('kpi_credit_notes_sub');
+  if (creditNotesSub) creditNotesSub.textContent = `${formatCurrency(kpis.credit_notes_total || 0, currency)} adjusted`;
+
   const locVal = document.getElementById('kpi_locations_count_val');
   if (locVal) locVal.textContent = kpis.locations_count || 0;
 
-  // 6. Networks
   const netVal = document.getElementById('kpi_networks_count_val');
   if (netVal) netVal.textContent = kpis.networks_count || 0;
 
-  // Tax Checklist Badges in Breakdown Card
+  // Efficiency Health Summary Badges
+  const healthColl = document.getElementById('health_collection_rate');
+  if (healthColl) healthColl.textContent = `${kpis.sales_collection_rate}%`;
+
+  const healthSettle = document.getElementById('health_settlement_rate');
+  if (healthSettle) healthSettle.textContent = `${kpis.purchases_settlement_rate}%`;
+
+  const healthTax = document.getElementById('health_tax_rate');
+  if (healthTax) healthTax.textContent = `${kpis.tax_compliance_rate}%`;
+
+  // Tax Compliance Donut Score & Status Chip
+  const taxScore = document.getElementById('tax_donut_score');
+  if (taxScore) taxScore.textContent = `${kpis.tax_compliance_rate}%`;
+
+  const taxStatusChip = document.getElementById('tax_status_chip');
+  if (taxStatusChip) {
+    const isPending = kpis.tax_pending_count > 0;
+    taxStatusChip.className = `bento-chip ${isPending ? 'bento-chip-pending' : 'bento-chip-paid'} fs-10`;
+    taxStatusChip.innerHTML = `<i class="fa-solid ${isPending ? 'fa-triangle-exclamation' : 'fa-check'} fs-11"></i> ${isPending ? `${kpis.tax_pending_count} Pending` : '100% Compliant'}`;
+  }
+
+  // Tax Checklist Badges & Progress in Breakdown Card
+  const totalTaxSubs = kpis.tax_total_count || 0;
+  const procCount = kpis.tax_processed_count || 0;
+  const revCount = Math.max((kpis.tax_reviewed_count || 0) - procCount, 0);
+  const pendCount = kpis.tax_pending_count || 0;
+
+  const procPct = totalTaxSubs > 0 ? Math.round((procCount / totalTaxSubs) * 100) : 100;
+  const revPct = totalTaxSubs > 0 ? Math.round((revCount / totalTaxSubs) * 100) : 0;
+  const pendPct = totalTaxSubs > 0 ? Math.round((pendCount / totalTaxSubs) * 100) : 0;
+
   const badgeProc = document.getElementById('tax_badge_processed');
-  if (badgeProc) badgeProc.textContent = kpis.tax_processed_count;
+  if (badgeProc) badgeProc.textContent = procCount;
+  const badgeProcPct = document.getElementById('tax_badge_processed_pct');
+  if (badgeProcPct) badgeProcPct.textContent = `(${procPct}%)`;
+  const barProc = document.getElementById('tax_bar_processed');
+  if (barProc) barProc.style.width = `${procPct}%`;
 
   const badgeRev = document.getElementById('tax_badge_reviewed');
-  if (badgeRev) badgeRev.textContent = Math.max(kpis.tax_reviewed_count - kpis.tax_processed_count, 0);
+  if (badgeRev) badgeRev.textContent = revCount;
+  const badgeRevPct = document.getElementById('tax_badge_reviewed_pct');
+  if (badgeRevPct) badgeRevPct.textContent = `(${revPct}%)`;
+  const barRev = document.getElementById('tax_bar_reviewed');
+  if (barRev) barRev.style.width = `${revPct}%`;
 
   const badgePend = document.getElementById('tax_badge_pending');
-  if (badgePend) badgePend.textContent = kpis.tax_pending_count;
+  if (badgePend) {
+    badgePend.textContent = pendCount;
+    badgePend.className = `fw-bold text-main fs-8 tabular-nums ${pendCount > 0 ? 'text-danger' : ''}`;
+  }
+  const badgePendPct = document.getElementById('tax_badge_pending_pct');
+  if (badgePendPct) badgePendPct.textContent = `(${pendPct}%)`;
+  const barPend = document.getElementById('tax_bar_pending');
+  if (barPend) {
+    barPend.className = `partner-progress-fill ${pendCount > 0 ? 'bg-warning' : 'bg-secondary'}`;
+    barPend.style.width = `${pendPct}%`;
+  }
+
+  const taxTotalFooter = document.getElementById('tax_total_footer_val');
+  if (taxTotalFooter) taxTotalFooter.textContent = totalTaxSubs;
+
+  const taxWithheldFooter = document.getElementById('tax_withheld_footer_val');
+  if (taxWithheldFooter) taxWithheldFooter.textContent = formatCurrency(kpis.total_tax_sales || 0, currency);
 }
 
 function updatePartnerRankingsUI(partners, currency) {
@@ -734,3 +914,9 @@ function updateUrgentActionsUI(actions) {
 
 document.addEventListener('DOMContentLoaded', initAnalyticsDashboard);
 document.addEventListener('turbo:load', initAnalyticsDashboard);
+document.addEventListener('turbo:render', initAnalyticsDashboard);
+
+// Auto-execute immediately to catch asynchronous dynamic imports
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  initAnalyticsDashboard();
+}
