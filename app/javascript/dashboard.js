@@ -94,6 +94,7 @@ function renderPerformanceTrendChart(trends, currency) {
       tension: 0.3,
       pointRadius: 2.5,
       pointHoverRadius: 4.5,
+      pointHitRadius: 15,
       pointBackgroundColor: '#10b981'
     });
   }
@@ -109,6 +110,7 @@ function renderPerformanceTrendChart(trends, currency) {
       tension: 0.3,
       pointRadius: 2.5,
       pointHoverRadius: 4.5,
+      pointHitRadius: 15,
       pointBackgroundColor: colors.isDark ? '#94a3b8' : '#64748b'
     });
   }
@@ -125,9 +127,12 @@ function renderPerformanceTrendChart(trends, currency) {
       tension: 0.3,
       pointRadius: 2,
       pointHoverRadius: 4,
+      pointHitRadius: 15,
       pointBackgroundColor: '#0ea5e9'
     });
   }
+
+  const isMobile = window.innerWidth < 768;
 
   performanceTrendChart = new Chart(ctx, {
     type: 'line',
@@ -146,13 +151,13 @@ function renderPerformanceTrendChart(trends, currency) {
         legend: {
           display: true,
           position: 'top',
-          align: 'end',
+          align: isMobile ? 'center' : 'end',
           labels: {
             color: colors.mutedColor,
-            font: { family: 'Roboto, sans-serif', size: 10.5 },
+            font: { family: 'Roboto, sans-serif', size: isMobile ? 9.5 : 10.5 },
             usePointStyle: true,
             boxWidth: 6,
-            padding: 10
+            padding: isMobile ? 6 : 10
           }
         },
         tooltip: {
@@ -175,13 +180,19 @@ function renderPerformanceTrendChart(trends, currency) {
       scales: {
         x: {
           grid: { color: colors.gridColor, drawBorder: false },
-          ticks: { color: colors.mutedColor, font: { size: 10 } }
+          ticks: {
+            color: colors.mutedColor,
+            font: { size: isMobile ? 9 : 10 },
+            maxTicksLimit: isMobile ? 5 : 8,
+            maxRotation: 0,
+            autoSkip: true
+          }
         },
         y: {
           grid: { color: colors.gridColor, drawBorder: false },
           ticks: {
             color: colors.mutedColor,
-            font: { size: 10 },
+            font: { size: isMobile ? 9 : 10 },
             callback: function (val) {
               return formatCurrency(val, currency);
             }
@@ -407,7 +418,18 @@ function setupDashboardEventListeners() {
     });
   }
 
-  // 6. Theme Change Listener
+  // 6. Manual Refresh Button Listener
+  const refreshBtn = document.getElementById('btn_refresh_dashboard');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', function (e) {
+      e.preventDefault();
+      const icon = document.getElementById('btn_refresh_icon');
+      if (icon) icon.classList.add('fa-spin');
+      fetchUpdatedAnalyticsData(currentTimeFrame, currentCurrency);
+    });
+  }
+
+  // 7. Theme Change Listener
   window.addEventListener('themeChanged', function () {
     if (currentDashboardData) {
       renderDashboardCharts(currentDashboardData);
@@ -454,12 +476,29 @@ function fetchUpdatedAnalyticsData(timeFrame, currency) {
       if (subtitle && data.range_label) {
         subtitle.textContent = data.range_label;
       }
+
+      const headerRange = document.getElementById('header_date_range_text');
+      if (headerRange && data.range_label) {
+        headerRange.textContent = data.range_label;
+      }
+
+      const syncTime = document.getElementById('dashboard_sync_time');
+      if (syncTime) {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        syncTime.replaceChildren();
+        const clockIcon = document.createElement('i');
+        clockIcon.className = 'fa-regular fa-clock me-1 opacity-75';
+        syncTime.appendChild(clockIcon);
+        syncTime.appendChild(document.createTextNode(`Updated ${timeStr}`));
+      }
     })
     .catch(error => {
       console.error('Error fetching analytics data:', error);
     })
     .finally(() => {
       if (loader) loader.classList.remove('active');
+      const icon = document.getElementById('btn_refresh_icon');
+      if (icon) icon.classList.remove('fa-spin');
     });
 }
 
@@ -713,23 +752,22 @@ function updatePartnerRankingsUI(partners, currency) {
     header.className = 'd-flex align-items-center justify-content-between mb-0.5';
 
     const left = document.createElement('div');
-    left.className = 'd-flex align-items-center gap-2';
+    left.className = 'd-flex align-items-center gap-2 min-w-0 flex-grow-1 me-2';
 
     const numSpan = document.createElement('span');
-    numSpan.className = 'text-muted fs-9 fw-semibold tabular-nums';
+    numSpan.className = 'text-muted fs-9 fw-semibold tabular-nums flex-shrink-0';
     numSpan.style.width = '14px';
     numSpan.textContent = idx + 1;
 
     const name = document.createElement('span');
-    name.className = 'fw-medium text-main fs-8 text-truncate';
-    name.style.maxWidth = '220px';
+    name.className = 'fw-medium text-main fs-8 partner-name-truncate';
     name.textContent = partner.name;
 
     left.appendChild(numSpan);
     left.appendChild(name);
 
     const right = document.createElement('div');
-    right.className = 'text-end';
+    right.className = 'text-end flex-shrink-0';
 
     const amount = document.createElement('span');
     amount.className = 'fw-semibold text-main fs-8 tabular-nums';
@@ -761,7 +799,107 @@ function updatePartnerRankingsUI(partners, currency) {
   });
 }
 
+function updateRecentTransactionsMobile(invoices, currency) {
+  const container = document.getElementById('recent_transactions_mobile_list');
+  if (!container) return;
+
+  container.replaceChildren();
+
+  if (!invoices || invoices.length === 0) {
+    const emptyDiv = document.createElement('div');
+    emptyDiv.className = 'text-center py-3 text-muted fs-8';
+    emptyDiv.textContent = 'No recent invoices recorded yet.';
+    container.appendChild(emptyDiv);
+    return;
+  }
+
+  invoices.forEach(inv => {
+    const item = document.createElement('a');
+    item.href = `/invoices/${inv.id}`;
+    item.className = 'mobile-tx-item';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'mobile-tx-header';
+
+    const left = document.createElement('div');
+    left.className = 'd-flex align-items-center gap-1.5 min-w-0';
+
+    const numSpan = document.createElement('span');
+    numSpan.className = 'fw-semibold text-main fs-8 text-truncate';
+    numSpan.textContent = inv.invoice_number;
+
+    const typeSpan = document.createElement('span');
+    typeSpan.className = 'text-muted text-uppercase fs-10 fw-medium';
+    typeSpan.textContent = `(${inv.invoice_type})`;
+
+    left.appendChild(numSpan);
+    left.appendChild(typeSpan);
+
+    const chip = document.createElement('span');
+    let chipClass = 'bento-chip-draft';
+    if (inv.status === 'paid') chipClass = 'bento-chip-paid';
+    else if (inv.status === 'approved') chipClass = 'bento-chip-approved';
+    else if (inv.status === 'sent') chipClass = 'bento-chip-sent';
+    else if (inv.status === 'pending') chipClass = 'bento-chip-pending';
+    else if (inv.status === 'rejected') chipClass = 'bento-chip-rejected';
+
+    chip.className = `bento-chip ${chipClass} text-capitalize fs-10`;
+    chip.textContent = inv.status;
+
+    header.appendChild(left);
+    header.appendChild(chip);
+
+    // Meta (Party + Date)
+    const meta = document.createElement('div');
+    meta.className = 'mobile-tx-meta';
+
+    const partyName = inv.invoice_type === 'sale'
+      ? (inv.recipient_company?.name || 'Direct Customer')
+      : (inv.sale_from?.name || 'Direct Vendor');
+
+    const partySpan = document.createElement('span');
+    partySpan.className = 'partner-name-truncate me-2';
+    partySpan.textContent = partyName;
+
+    const dateSpan = document.createElement('span');
+    dateSpan.className = 'tabular-nums';
+    try {
+      const d = new Date(inv.issue_date || inv.created_at);
+      dateSpan.textContent = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    } catch {
+      dateSpan.textContent = '—';
+    }
+
+    meta.appendChild(partySpan);
+    meta.appendChild(dateSpan);
+
+    // Amount Footer
+    const footer = document.createElement('div');
+    footer.className = 'd-flex align-items-center justify-content-between mt-1 pt-1 border-top border-opacity-10';
+
+    const lblSpan = document.createElement('span');
+    lblSpan.className = 'text-muted fs-10';
+    lblSpan.textContent = 'Total Amount';
+
+    const amtSpan = document.createElement('span');
+    amtSpan.className = 'mobile-tx-amount tabular-nums';
+    amtSpan.textContent = formatCurrency(inv.grand_total, inv.currency || currency);
+
+    footer.appendChild(lblSpan);
+    footer.appendChild(amtSpan);
+
+    item.appendChild(header);
+    item.appendChild(meta);
+    item.appendChild(footer);
+
+    container.appendChild(item);
+  });
+}
+
 function updateRecentTransactionsTable(invoices, currency) {
+  updateRecentTransactionsMobile(invoices, currency);
+
   const tbody = document.getElementById('recent_transactions_table_body');
   if (!tbody) return;
 

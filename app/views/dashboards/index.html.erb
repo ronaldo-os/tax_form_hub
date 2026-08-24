@@ -13,81 +13,98 @@
 <% content_for :page_title, "Dashboard & Analytics" %>
 <% content_for :title, "Dashboard — Tax Form Hub" %>
 
-<div class="analytics-dashboard-page container-fluid px-3 px-md-4 py-3" id="analytics_dashboard_container" data-initial-data="<%= html_escape(@dashboard_data.to_json) %>">
+<div class="analytics-dashboard-page container-fluid px-2 px-sm-3 px-md-4 py-3" id="analytics_dashboard_container" data-initial-data="<%= html_escape(@dashboard_data.to_json) %>">
   
   <!-- Bento Control Bar -->
-  <div class="dashboard-header-card mb-3">
+  <div class="dashboard-header-card mb-3 mb-md-3.5">
     <div class="d-flex flex-column flex-xl-row align-items-stretch align-items-xl-center justify-content-between gap-2.5">
       
       <!-- Greeting & Scope -->
-      <div>
-        <div class="d-flex align-items-center gap-2 mb-0.5">
-          <h2 class="h5 mb-0 fw-bold text-main">
-            <%= company_name.present? ? company_name : "Financial Intelligence" %>
-          </h2>
-          <span class="bento-chip bento-chip-paid fs-10">
-            Active
-          </span>
-        </div>
-        <p class="text-muted fs-8 mb-0">
-          Executive financial metrics, sales realization, expense tracking, tax compliance, and cash flow.
+      <div class="min-w-0">
+        <h2 class="h5 mb-0.5 fw-bold text-main text-truncate">
+          <%= company_name.present? ? company_name : "Financial Intelligence" %>
+        </h2>
+        <p class="text-muted fs-8 mb-0" id="header_date_range_text">
+          <%= @dashboard_data[:range_label] || "Executive financial metrics, sales realization, and cash flow." %>
         </p>
       </div>
 
       <!-- Segmented Controls & Quick Action Buttons -->
-      <div class="d-flex flex-wrap align-items-center justify-content-start justify-content-xl-end gap-2">
+      <div class="d-flex flex-wrap align-items-center justify-content-between justify-content-xl-end gap-2">
         
-        <!-- Segmented Timeframe Switcher -->
-        <div class="dashboard-filter-btn-group" role="group" aria-label="Timeframe selector" id="dashboard_timeframe_group">
-          <button type="button" class="btn <%= 'active' if @time_frame == '7d' %>" data-time-frame="7d">7D</button>
-          <button type="button" class="btn <%= 'active' if @time_frame == '30d' %>" data-time-frame="30d">30D</button>
-          <button type="button" class="btn <%= 'active' if @time_frame == 'this_month' %>" data-time-frame="this_month">This Month</button>
-          <button type="button" class="btn <%= 'active' if @time_frame == 'last_month' %>" data-time-frame="last_month">Last Month</button>
-          <button type="button" class="btn <%= 'active' if @time_frame == 'this_quarter' %>" data-time-frame="this_quarter">Quarter</button>
-          <button type="button" class="btn <%= 'active' if @time_frame == 'ytd' %>" data-time-frame="ytd">YTD</button>
-          <button type="button" class="btn <%= 'active' if @time_frame == 'all_time' %>" data-time-frame="all_time">All Time</button>
+        <!-- Segmented Timeframe Switcher (Scrollable on phones & tablets) -->
+        <div class="dashboard-filter-scroll-wrapper">
+          <div class="dashboard-filter-btn-group" role="group" aria-label="Timeframe selector" id="dashboard_timeframe_group">
+            <button type="button" class="btn <%= 'active' if @time_frame == '7d' %>" data-time-frame="7d">7D</button>
+            <button type="button" class="btn <%= 'active' if @time_frame == '30d' %>" data-time-frame="30d">30D</button>
+            <button type="button" class="btn <%= 'active' if @time_frame == 'this_month' %>" data-time-frame="this_month">This Month</button>
+            <button type="button" class="btn <%= 'active' if @time_frame == 'last_month' %>" data-time-frame="last_month">Last Month</button>
+            <button type="button" class="btn <%= 'active' if @time_frame == 'this_quarter' %>" data-time-frame="this_quarter">Quarter</button>
+            <button type="button" class="btn <%= 'active' if @time_frame == 'ytd' %>" data-time-frame="ytd">YTD</button>
+            <button type="button" class="btn <%= 'active' if @time_frame == 'all_time' %>" data-time-frame="all_time">All Time</button>
+          </div>
         </div>
 
-        <!-- Currency Selector -->
-        <% if @dashboard_data[:available_currencies].size > 1 %>
-          <div class="dropdown">
-            <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-2 px-2.5 py-1 fs-8 fw-medium" type="button" id="dashboardCurrencyDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-              <span id="selected_currency_label"><%= @currency.upcase %></span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1 rounded-3 fs-8" aria-labelledby="dashboardCurrencyDropdown">
-              <li><a class="dropdown-item currency-select-item rounded-2 <%= 'active fw-bold' if @currency == 'all' %>" href="#" data-currency="all">All Currencies</a></li>
-              <li><hr class="dropdown-divider my-1 opacity-25"></li>
-              <% @dashboard_data[:available_currencies].each do |curr| %>
-                <li><a class="dropdown-item currency-select-item rounded-2 <%= 'active fw-bold' if @currency == curr %>" href="#" data-currency="<%= curr %>"><%= curr %></a></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
+        <!-- Action Cluster: Refresh + Currency + Seamless Split Action Button -->
+        <div class="d-flex align-items-center gap-1.5 ms-auto ms-xl-0">
+          
+          <!-- Instant Refresh Button -->
+          <button type="button" class="btn btn-outline-secondary btn-sm header-action-btn px-2 me-2" id="btn_refresh_dashboard" title="Refresh Live Data" aria-label="Refresh Dashboard Data">
+            <i class="fa-solid fa-rotate fs-9" id="btn_refresh_icon"></i>
+          </button>
 
-        <!-- Primary Action Dropdown / Buttons -->
-        <div class="d-flex align-items-center gap-1.5">
-          <%= link_to new_invoice_path, class: "btn btn-primary btn-sm rounded-2 px-2.5 py-1 fs-8 fw-semibold d-inline-flex align-items-center gap-1.5 text-nowrap" do %>
-            <i class="fa-solid fa-plus fs-9"></i> New Invoice
+          <!-- Currency Selector -->
+          <% if @dashboard_data[:available_currencies].size > 1 %>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle header-action-btn px-2.5 py-1 fs-8 fw-medium" type="button" id="dashboardCurrencyDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <span id="selected_currency_label"><%= @currency.upcase %></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1.5 rounded-3 fs-8" aria-labelledby="dashboardCurrencyDropdown">
+                <li class="dropdown-header text-uppercase fs-10 fw-semibold text-muted px-2.5 py-1">Currency</li>
+                <li><a class="dropdown-item currency-select-item rounded-2 <%= 'active fw-bold' if @currency == 'all' %>" href="#" data-currency="all">All Currencies</a></li>
+                <li><hr class="dropdown-divider my-1 opacity-25"></li>
+                <% @dashboard_data[:available_currencies].each do |curr| %>
+                  <li><a class="dropdown-item currency-select-item rounded-2 <%= 'active fw-bold' if @currency == curr %>" href="#" data-currency="<%= curr %>"><%= curr %></a></li>
+                <% end %>
+              </ul>
+            </div>
           <% end %>
 
-          <div class="dropdown">
-            <button class="btn btn-outline-secondary btn-sm rounded-2 px-2 py-1 fs-8" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Quick Navigation">
-              <i class="fa-solid fa-ellipsis"></i>
+          <!-- Primary Action: Seamless Split Dropdown -->
+          <div class="btn-group header-split-btn-group">
+            <%= link_to new_invoice_path, class: "btn btn-primary btn-sm d-inline-flex align-items-center gap-1.5 text-nowrap" do %>
+              <i class="fa-solid fa-plus fs-9"></i> New Invoice
+            <% end %>
+            <button type="button" class="btn btn-primary btn-sm dropdown-toggle dropdown-toggle-split px-2" data-bs-toggle="dropdown" aria-expanded="false" title="More Actions">
+              <span class="visually-hidden">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1.5 rounded-3 fs-8">
+              <li class="dropdown-header text-uppercase fs-10 fw-semibold text-muted px-2.5 py-1">Create Records</li>
+              <li>
+                <%= link_to new_invoice_path(invoice_type: 'sale'), class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
+                  <i class="fa-solid fa-file-invoice text-success"></i> Sales Invoice
+                <% end %>
+              </li>
+              <li>
+                <%= link_to new_invoice_path(invoice_type: 'purchase'), class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
+                  <i class="fa-solid fa-file-lines text-info"></i> Purchase Bill
+                <% end %>
+              </li>
+              <li><hr class="dropdown-divider my-1 opacity-25"></li>
+              <li class="dropdown-header text-uppercase fs-10 fw-semibold text-muted px-2.5 py-1">Quick Navigation</li>
               <li>
                 <%= link_to tax_submissions_home_path, class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
-                  <i class="fa-solid fa-file-invoice-dollar text-muted"></i> Taxes Hub
+                  <i class="fa-solid fa-file-invoice-dollar text-primary"></i> Taxes Hub
                 <% end %>
               </li>
               <li>
                 <%= link_to invoices_path, class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
-                  <i class="fa-solid fa-file-invoice text-muted"></i> Invoices & Bills
+                  <i class="fa-solid fa-list-check text-muted"></i> All Invoices & Bills
                 <% end %>
               </li>
               <li>
                 <%= link_to subscriptions_path, class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
-                  <i class="fa-solid fa-repeat text-muted"></i> Subscriptions
+                  <i class="fa-solid fa-repeat text-warning"></i> Subscriptions
                 <% end %>
               </li>
             </ul>
@@ -100,7 +117,7 @@
 
   <!-- Zero-State Onboarding Banner (When no data exists) -->
   <% if kpis[:total_sales_count] == 0 && kpis[:total_purchases_count] == 0 %>
-    <div class="zero-state-banner mb-3">
+    <div class="zero-state-banner mb-3 mb-md-3.5">
       <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div>
           <h6 class="fw-bold text-main mb-0.5">Welcome to your Financial Intelligence Hub</h6>
@@ -121,7 +138,7 @@
   <% end %>
 
   <!-- Primary Executive Financial Bento Grid (4-Tile Core Metrics) -->
-  <div class="row g-2.5 mb-3" id="financial_kpi_grid">
+  <div class="row g-3 g-md-3.5 mb-3 mb-md-3.5" id="financial_kpi_grid">
     
     <!-- 1. Total Sales Revenue -->
     <div class="col-12 col-sm-6 col-xl-3">
@@ -305,11 +322,11 @@
 
   </div>
 
-  <!-- Secondary Modular Operational Ribbon (6-Tile Modular Record Counts) -->
-  <div class="row g-2.5 mb-3" id="kpi_cards_ribbon">
+  <!-- Secondary Modular Operational Ribbon (6-Tile Modular Record Counts: 2-Col on Phones, 3-Col on Tablets, 6-Col on Desktop) -->
+  <div class="row g-3 g-md-3.5 mb-3 mb-md-3.5" id="kpi_cards_ribbon">
     
     <!-- Tile 1: Sales Invoices -->
-    <div class="col-12 col-sm-6 col-xl-4 col-xxl-2">
+    <div class="col-6 col-md-4 col-xl-4 col-xxl-2">
       <div class="bento-card">
         <div class="bento-card-header">
           <span class="bento-card-title">Sales Invoices</span>
@@ -323,14 +340,14 @@
           </div>
         </div>
         <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
-          <small class="text-muted fs-9" id="kpi_pending_sales"><%= kpis[:pending_sales_count] %> pending / sent</small>
-          <%= link_to "View", invoices_path(tab: "sales-invoices"), class: "text-decoration-none fs-9 text-primary fw-medium" %>
+          <small class="text-muted fs-9 text-truncate me-1" id="kpi_pending_sales"><%= kpis[:pending_sales_count] %> pending</small>
+          <%= link_to "View", invoices_path(tab: "sales-invoices"), class: "text-decoration-none fs-9 text-primary fw-medium flex-shrink-0" %>
         </div>
       </div>
     </div>
 
     <!-- Tile 2: Purchase Bills -->
-    <div class="col-12 col-sm-6 col-xl-4 col-xxl-2">
+    <div class="col-6 col-md-4 col-xl-4 col-xxl-2">
       <div class="bento-card">
         <div class="bento-card-header">
           <span class="bento-card-title">Purchase Bills</span>
@@ -344,19 +361,19 @@
           </div>
         </div>
         <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
-          <small class="text-muted fs-9" id="kpi_unsettled_purchases"><%= [kpis[:total_purchases_count] - kpis[:paid_purchases_count], 0].max %> unsettled</small>
-          <%= link_to "View", invoices_path(tab: "purchase-invoices"), class: "text-decoration-none fs-9 text-primary fw-medium" %>
+          <small class="text-muted fs-9 text-truncate me-1" id="kpi_unsettled_purchases"><%= [kpis[:total_purchases_count] - kpis[:paid_purchases_count], 0].max %> unsettled</small>
+          <%= link_to "View", invoices_path(tab: "purchase-invoices"), class: "text-decoration-none fs-9 text-primary fw-medium flex-shrink-0" %>
         </div>
       </div>
     </div>
 
     <!-- Tile 3: Tax Submissions -->
-    <div class="col-12 col-sm-6 col-xl-4 col-xxl-2">
+    <div class="col-6 col-md-4 col-xl-4 col-xxl-2">
       <div class="bento-card">
         <div class="bento-card-header">
-          <span class="bento-card-title">Tax Submissions</span>
+          <span class="bento-card-title">Tax 2307</span>
           <span class="bento-chip <%= kpis[:tax_pending_count] > 0 ? 'bento-chip-pending' : 'bento-chip-processed' %> fs-10" id="kpi_tax_chip">
-            <%= kpis[:tax_pending_count] > 0 ? "#{kpis[:tax_pending_count]} Pending" : 'Up to Date' %>
+            <%= kpis[:tax_pending_count] > 0 ? "#{kpis[:tax_pending_count]} P" : 'Clean' %>
           </span>
         </div>
         <div class="mb-1.5">
@@ -365,14 +382,14 @@
           </div>
         </div>
         <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
-          <small class="text-muted fs-9" id="kpi_tax_processed_sub"><%= kpis[:tax_processed_count] %> processed (<%= kpis[:tax_compliance_rate] %>%)</small>
-          <%= link_to "Taxes", tax_submissions_home_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
+          <small class="text-muted fs-9 text-truncate me-1" id="kpi_tax_processed_sub"><%= kpis[:tax_processed_count] %> proc (<%= kpis[:tax_compliance_rate] %>%)</small>
+          <%= link_to "Taxes", tax_submissions_home_path, class: "text-decoration-none fs-9 text-primary fw-medium flex-shrink-0" %>
         </div>
       </div>
     </div>
 
     <!-- Tile 4: Credit Notes & Adjustments -->
-    <div class="col-12 col-sm-6 col-xl-4 col-xxl-2">
+    <div class="col-6 col-md-4 col-xl-4 col-xxl-2">
       <div class="bento-card">
         <div class="bento-card-header">
           <span class="bento-card-title">Credit Notes</span>
@@ -386,14 +403,14 @@
           </div>
         </div>
         <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
-          <small class="text-muted fs-9" id="kpi_credit_notes_sub"><%= number_to_currency(kpis[:credit_notes_total], unit: currency_symbol) %> adjusted</small>
-          <%= link_to "Invoices", invoices_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
+          <small class="text-muted fs-9 text-truncate me-1" id="kpi_credit_notes_sub"><%= number_to_currency(kpis[:credit_notes_total], unit: currency_symbol) %> adj</small>
+          <%= link_to "Invoices", invoices_path, class: "text-decoration-none fs-9 text-primary fw-medium flex-shrink-0" %>
         </div>
       </div>
     </div>
 
     <!-- Tile 5: Business Locations -->
-    <div class="col-12 col-sm-6 col-xl-4 col-xxl-2">
+    <div class="col-6 col-md-4 col-xl-4 col-xxl-2">
       <div class="bento-card">
         <div class="bento-card-header">
           <span class="bento-card-title">Locations</span>
@@ -407,17 +424,17 @@
           </div>
         </div>
         <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
-          <small class="text-muted fs-9">Branch locations</small>
-          <%= link_to "View", locations_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
+          <small class="text-muted fs-9 text-truncate me-1">Branch sites</small>
+          <%= link_to "View", locations_path, class: "text-decoration-none fs-9 text-primary fw-medium flex-shrink-0" %>
         </div>
       </div>
     </div>
 
     <!-- Tile 6: Network Partners -->
-    <div class="col-12 col-sm-6 col-xl-4 col-xxl-2">
+    <div class="col-6 col-md-4 col-xl-4 col-xxl-2">
       <div class="bento-card">
         <div class="bento-card-header">
-          <span class="bento-card-title">Network Partners</span>
+          <span class="bento-card-title">Network</span>
           <span class="bento-chip bento-chip-approved fs-10">
             Connected
           </span>
@@ -428,8 +445,8 @@
           </div>
         </div>
         <div class="d-flex align-items-center justify-content-between pt-1 mt-auto">
-          <small class="text-muted fs-9">Connected companies</small>
-          <%= link_to "Network", networks_path, class: "text-decoration-none fs-9 text-primary fw-medium" %>
+          <small class="text-muted fs-9 text-truncate me-1">Partners</small>
+          <%= link_to "Network", networks_path, class: "text-decoration-none fs-9 text-primary fw-medium flex-shrink-0" %>
         </div>
       </div>
     </div>
@@ -437,7 +454,7 @@
   </div>
 
   <!-- Central Bento Analytics Section (8-Col Chart + 4-Col Side Stack) -->
-  <div class="row g-2.5 mb-3">
+  <div class="row g-3 g-md-3.5 mb-3 mb-md-3.5">
     
     <!-- Bento Chart (8-Col) -->
     <div class="col-12 col-xl-8">
@@ -446,20 +463,22 @@
           <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
         </div>
 
-        <div class="bento-card-header">
+        <div class="bento-card-header flex-wrap">
           <div>
             <h6 class="fw-bold text-main mb-0 fs-7">Financial Trajectory</h6>
             <small class="text-muted fs-8" id="trend_chart_subtitle"><%= @dashboard_data[:range_label] %></small>
           </div>
-          <div class="dashboard-filter-btn-group" role="group" id="trend_series_toggle">
-            <button type="button" class="btn active" data-series="all">Combined</button>
-            <button type="button" class="btn" data-series="revenue">Sales</button>
-            <button type="button" class="btn" data-series="expenses">Purchases</button>
-            <button type="button" class="btn" data-series="net">Net Flow</button>
+          <div class="dashboard-filter-scroll-wrapper">
+            <div class="dashboard-filter-btn-group" role="group" id="trend_series_toggle">
+              <button type="button" class="btn active" data-series="all">Combined</button>
+              <button type="button" class="btn" data-series="revenue">Sales</button>
+              <button type="button" class="btn" data-series="expenses">Purchases</button>
+              <button type="button" class="btn" data-series="net">Net Flow</button>
+            </div>
           </div>
         </div>
 
-        <div class="chart-container-wrapper" style="height: 275px;">
+        <div class="chart-container-wrapper">
           <canvas id="performanceTrendChart"></canvas>
         </div>
       </div>
@@ -484,7 +503,7 @@
           </div>
         </div>
 
-        <div class="chart-container-wrapper d-flex align-items-center justify-content-center" style="height: 195px;">
+        <div class="chart-container-wrapper chart-container-donut d-flex align-items-center justify-content-center">
           <canvas id="statusDonutChart"></canvas>
         </div>
 
@@ -511,7 +530,7 @@
   </div>
 
   <!-- Lower Bento Section: Partners & Tax Compliance Grid -->
-  <div class="row g-2.5 mb-3">
+  <div class="row g-3 g-md-3.5 mb-3 mb-md-3.5">
     
     <!-- Top Partners Bento (Col-6) -->
     <div class="col-12 col-lg-6">
@@ -529,13 +548,13 @@
             <% @dashboard_data[:charts][:top_customers].each_with_index do |partner, idx| %>
               <div class="partner-rank-item">
                 <div class="d-flex align-items-center justify-content-between mb-0.5">
-                  <div class="d-flex align-items-center gap-2">
-                    <span class="text-muted fs-9 fw-semibold tabular-nums" style="width: 14px;">
+                  <div class="d-flex align-items-center gap-2 min-w-0 flex-grow-1 me-2">
+                    <span class="text-muted fs-9 fw-semibold tabular-nums flex-shrink-0" style="width: 14px;">
                       <%= idx + 1 %>
                     </span>
-                    <span class="fw-medium text-main fs-8 text-truncate" style="max-width: 220px;"><%= partner[:name] %></span>
+                    <span class="fw-medium text-main fs-8 partner-name-truncate"><%= partner[:name] %></span>
                   </div>
-                  <div class="text-end">
+                  <div class="text-end flex-shrink-0">
                     <span class="fw-semibold text-main fs-8 tabular-nums"><%= number_to_currency(partner[:amount], unit: currency_symbol) %></span>
                     <small class="text-muted ms-1 fs-9">(<%= partner[:percentage] %>%)</small>
                   </div>
@@ -577,7 +596,7 @@
           <!-- Donut Ring with Centered Compliance Rate -->
           <div class="col-12 col-sm-5">
             <div class="tax-donut-wrapper">
-              <div class="chart-container-wrapper" style="height: 155px; min-height: 155px;">
+              <div class="chart-container-wrapper chart-container-tax-donut">
                 <canvas id="taxComplianceChart"></canvas>
               </div>
               <div class="tax-donut-center">
@@ -659,9 +678,9 @@
   </div>
 
   <!-- Bottom Bento: Recent Transactions & Tasks -->
-  <div class="row g-2.5">
+  <div class="row g-3 g-md-3.5">
     
-    <!-- Recent Transactions Table (Col-8) -->
+    <!-- Recent Transactions Table & Mobile Stream (Col-8) -->
     <div class="col-12 col-xl-8">
       <div class="bento-card">
         <div class="bento-card-header">
@@ -674,7 +693,8 @@
           <% end %>
         </div>
 
-        <div class="table-responsive mt-1">
+        <!-- Desktop & Tablet Data Table (>= 768px) -->
+        <div class="table-responsive d-none d-md-block mt-1">
           <table class="table dashboard-activity-table align-middle mb-0">
             <thead>
               <tr>
@@ -747,6 +767,54 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Mobile-Native Transaction Cards (< 768px) -->
+        <div class="dashboard-mobile-tx-list d-md-none mt-2" id="recent_transactions_mobile_list">
+          <% if @dashboard_data[:recent_invoices].any? %>
+            <% @dashboard_data[:recent_invoices].each do |inv| %>
+              <% 
+                partner_name = if inv["invoice_type"] == "sale"
+                                 inv.dig("recipient_company", "name") || "Direct Customer"
+                               else
+                                 inv.dig("sale_from", "name") || "Direct Vendor"
+                               end
+                chip_class = case inv["status"]
+                             when "paid" then "bento-chip-paid"
+                             when "approved" then "bento-chip-approved"
+                             when "sent" then "bento-chip-sent"
+                             when "pending" then "bento-chip-pending"
+                             when "rejected" then "bento-chip-rejected"
+                             else "bento-chip-draft"
+                             end
+                formatted_date = Date.parse(inv["issue_date"]).strftime("%b %d, %Y") rescue (Date.parse(inv["created_at"]).strftime("%b %d, %Y") rescue "—")
+              %>
+              <%= link_to invoice_path(inv["id"]), class: "mobile-tx-item" do %>
+                <div class="mobile-tx-header">
+                  <div class="d-flex align-items-center gap-1.5 min-w-0">
+                    <span class="fw-semibold text-main fs-8 text-truncate"><%= inv["invoice_number"] %></span>
+                    <span class="text-muted text-uppercase fs-10 fw-medium">(<%= inv["invoice_type"] %>)</span>
+                  </div>
+                  <span class="bento-chip <%= chip_class %> text-capitalize fs-10">
+                    <%= inv["status"] %>
+                  </span>
+                </div>
+                <div class="mobile-tx-meta">
+                  <span class="partner-name-truncate me-2"><%= partner_name %></span>
+                  <span class="tabular-nums"><%= formatted_date %></span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mt-1 pt-1 border-top border-opacity-10">
+                  <span class="text-muted fs-10">Total Amount</span>
+                  <span class="mobile-tx-amount tabular-nums"><%= number_to_currency(inv["grand_total"], unit: inv["currency"] || currency_symbol) %></span>
+                </div>
+              <% end %>
+            <% end %>
+          <% else %>
+            <div class="text-center py-3 text-muted fs-8">
+              No recent invoices recorded yet.
+            </div>
+          <% end %>
+        </div>
+
       </div>
     </div>
 
@@ -785,10 +853,10 @@
         </div>
 
         <!-- Shortcuts -->
-        <hr class="my-2.5 opacity-25">
-        <div>
-          <span class="fs-9 fw-semibold text-muted text-uppercase tracking-wider d-block mb-1.5">Shortcuts</span>
-          <div class="d-flex flex-wrap gap-1.5">
+        <hr class="dashboard-shortcuts-divider my-3 opacity-25">
+        <div class="dashboard-shortcuts-wrapper">
+          <span class="fs-9 fw-semibold text-muted text-uppercase tracking-wider d-block mb-2">Shortcuts</span>
+          <div class="dashboard-shortcuts-container d-flex flex-wrap gap-2">
             <%= link_to tax_submissions_home_path, class: "quick-action-pill" do %>
               <i class="fa-solid fa-file-invoice-dollar fs-9 text-muted"></i> Tax 2307
             <% end %>

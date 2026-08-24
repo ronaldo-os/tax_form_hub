@@ -69,7 +69,10 @@
     font-size: 0.85rem;
   }
 
-  /* Full screen width container on mobile - TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS, COMPANIES, NETWORKS, INVOICES & INVOICE FORM PAGES */
+  /* Full screen width container on mobile - DASHBOARD, TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS, COMPANIES, NETWORKS, INVOICES & INVOICE FORM PAGES */
+  .analytics-dashboard-page,
+  .analytics-dashboard-page.container,
+  .analytics-dashboard-page.container-fluid,
   .tax-submissions-page,
   .tax-submissions-page.container,
   .tax-submissions-page .container,
