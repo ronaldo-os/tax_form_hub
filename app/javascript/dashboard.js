@@ -759,9 +759,17 @@ function updatePartnerRankingsUI(partners, currency) {
     numSpan.style.width = '14px';
     numSpan.textContent = idx + 1;
 
-    const name = document.createElement('span');
-    name.className = 'fw-medium text-main fs-8 partner-name-truncate';
-    name.textContent = partner.name;
+    let name;
+    if (partner.slug || partner.id) {
+      name = document.createElement('a');
+      name.href = `/companies/${encodeURIComponent(partner.slug || partner.id)}`;
+      name.className = 'fw-medium text-main fs-8 partner-name-truncate partner-name-link text-decoration-none';
+      name.textContent = partner.name;
+    } else {
+      name = document.createElement('span');
+      name.className = 'fw-medium text-main fs-8 partner-name-truncate';
+      name.textContent = partner.name;
+    }
 
     left.appendChild(numSpan);
     left.appendChild(name);

@@ -79,15 +79,25 @@
               <span class="visually-hidden">Toggle Dropdown</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1.5 rounded-3 fs-8">
-              <li class="dropdown-header text-uppercase fs-10 fw-semibold text-muted px-2.5 py-1">Create Records</li>
+              <li class="dropdown-header text-uppercase fs-10 fw-semibold text-muted px-2.5 py-1">Create</li>
               <li>
-                <%= link_to new_invoice_path(invoice_type: 'sale'), class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
-                  <i class="fa-solid fa-file-invoice text-success"></i> Sales Invoice
+                <%= link_to tax_submissions_home_path(open_modal: true), class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
+                  <i class="fa-solid fa-file-shield text-primary"></i> Submit Tax Documents
                 <% end %>
               </li>
               <li>
-                <%= link_to new_invoice_path(invoice_type: 'purchase'), class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
-                  <i class="fa-solid fa-file-lines text-info"></i> Purchase Bill
+                <%= link_to new_invoice_path, class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
+                  <i class="fa-solid fa-file-invoice text-success"></i> Create Invoice
+                <% end %>
+              </li>
+              <li>
+                <%= link_to new_invoice_path(category: 'credit_note'), class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
+                  <i class="fa-solid fa-file-circle-minus text-warning"></i> Create Credit Note
+                <% end %>
+              </li>
+              <li>
+                <%= link_to new_invoice_path(category: 'quote'), class: "dropdown-item rounded-2 d-flex align-items-center gap-2 py-1.5" do %>
+                  <i class="fa-solid fa-file-lines text-info"></i> Create Quote
                 <% end %>
               </li>
               <li><hr class="dropdown-divider my-1 opacity-25"></li>
@@ -552,7 +562,11 @@
                     <span class="text-muted fs-9 fw-semibold tabular-nums flex-shrink-0" style="width: 14px;">
                       <%= idx + 1 %>
                     </span>
-                    <span class="fw-medium text-main fs-8 partner-name-truncate"><%= partner[:name] %></span>
+                    <% if partner[:slug].present? %>
+                      <%= link_to partner[:name], company_path(partner[:slug]), class: "fw-medium text-main fs-8 partner-name-truncate partner-name-link text-decoration-none" %>
+                    <% else %>
+                      <span class="fw-medium text-main fs-8 partner-name-truncate"><%= partner[:name] %></span>
+                    <% end %>
                   </div>
                   <div class="text-end flex-shrink-0">
                     <span class="fw-semibold text-main fs-8 tabular-nums"><%= number_to_currency(partner[:amount], unit: currency_symbol) %></span>

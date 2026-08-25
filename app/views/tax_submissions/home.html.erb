@@ -94,6 +94,9 @@
               <input type="hidden" id="prefill_invoice_id" value="<%= @tax_submission.invoice_id %>">
               <input type="hidden" id="prefill_company_id" value="<%= @tax_submission.company_id %>">
             <% end %>
+            <% if params[:open_modal] == "true" %>
+              <input type="hidden" id="open_submit_modal" value="true">
+            <% end %>
 
             <div class="col-12">
               <%= f.label :form_2307, "Form 2307", class: "form-label fw-semibold small text-muted" %>

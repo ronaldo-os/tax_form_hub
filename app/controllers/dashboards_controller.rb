@@ -100,7 +100,18 @@ class DashboardsController < ApplicationController
     net_working_capital = (total_receivables - total_payables).round(2)
 
     # 4. SUBSCRIPTIONS & RECURRING REVENUE (MRR / ARR)
-    all_parents = current_user.invoices.where(recurring_parent_invoice_id: nil)
+    # Only add recurring invoices calculation if the recurring invoices are sent to them (received/purchase recurring invoices),
+    # not when they are the one who send it (outgoing sales).
+    all_parents = current_user.invoices
+                              .where(recurring_parent_invoice_id: nil)
+                              .where(archived: [false, nil])
+                              .where(invoice_type: "purchase")
+                              .where(status: ["sent", "pending", "approved", "paid"])
+
+    if selected_currency.present? && selected_currency != "all"
+      all_parents = all_parents.where(currency: selected_currency)
+    end
+
     subscription_contracts = all_parents.select(&:subscription_contract?)
     
     active_subscriptions_count = 0
@@ -397,19 +408,26 @@ class DashboardsController < ApplicationController
     grouped = {}
     relation.includes(association_name).where(status: ["approved", "paid"]).find_each do |invoice|
       partner = invoice.send(association_name)
-      partner_name = partner&.name || "Direct Client / Non-Network"
-      grouped[partner_name] ||= 0.0
-      grouped[partner_name] += invoice.grand_total
+      partner_key = partner ? partner.id : "direct"
+      grouped[partner_key] ||= {
+        id: partner&.id,
+        slug: (partner.is_a?(Company) ? partner.slug.presence || partner.id.to_s : nil),
+        name: partner&.name || "Direct Client / Non-Network",
+        amount: 0.0
+      }
+      grouped[partner_key][:amount] += invoice.grand_total
     end
 
-    top = grouped.sort_by { |_k, v| -v }.first(5)
-    total_amount = top.sum { |_k, v| v }
+    top = grouped.values.sort_by { |v| -v[:amount] }.first(5)
+    total_amount = top.sum { |v| v[:amount] }
 
-    top.map do |name, amount|
+    top.map do |partner_info|
       {
-        name: name,
-        amount: amount.round(2),
-        percentage: total_amount.positive? ? ((amount / total_amount) * 100).round(1) : 0.0
+        id: partner_info[:id],
+        slug: partner_info[:slug],
+        name: partner_info[:name],
+        amount: partner_info[:amount].round(2),
+        percentage: total_amount.positive? ? ((partner_info[:amount] / total_amount) * 100).round(1) : 0.0
       }
     end
   end

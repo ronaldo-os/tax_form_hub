@@ -292,8 +292,20 @@ function initClientSubmissionsPage() {
     if ($("#has_submission_errors").val() === "true") {
         const modalEl = document.getElementById("submitDocsModal");
         if (modalEl) {
-            const submitModal = new bootstrap.Modal(modalEl);
+            const submitModal = (typeof bootstrap !== 'undefined' && bootstrap.Modal) ? bootstrap.Modal.getOrCreateInstance(modalEl) : new bootstrap.Modal(modalEl);
             submitModal.show();
+        }
+    }
+
+    // Automatically open submit tax documents modal if requested via URL query param or anchor
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("open_modal") === "true" || $("#open_submit_modal").val() === "true" || window.location.hash === "#submitDocsModal" || window.location.hash === "#submit-tax-documents") {
+        const modalEl = document.getElementById("submitDocsModal");
+        if (modalEl) {
+            setTimeout(function () {
+                const submitModal = (typeof bootstrap !== 'undefined' && bootstrap.Modal) ? bootstrap.Modal.getOrCreateInstance(modalEl) : new bootstrap.Modal(modalEl);
+                submitModal.show();
+            }, 100);
         }
     }
 

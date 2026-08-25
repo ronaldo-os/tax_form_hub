@@ -130,4 +130,82 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 5000.0, json["kpis"]["total_sales_revenue"]
     assert_no_match(/SECRET-001/, response.body)
   end
+
+  test "recurring invoices calculation is only added when recurring invoices are sent to the account (purchase/received) and not when they are the sender" do
+    # 1. User sends an outgoing recurring sales contract (they are the sender)
+    Invoice.create!(
+      user: @user,
+      recipient_company: @partner_company,
+      invoice_number: "REC-SALE-001",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "sent",
+      currency: "USD",
+      issue_date: Date.current,
+      recurring_parent_invoice_id: nil,
+      line_items_data: [
+        {
+          "description" => "Monthly Retainer",
+          "quantity" => "1",
+          "price" => "1000.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "billing_cycle" => "monthly",
+              "start_date" => Date.current.to_s
+            }
+          }
+        }
+      ],
+      total: { "grand_total" => "1000.00", "subtotal" => "1000.00" }
+    )
+
+    sign_in @user
+    get dashboards_analytics_data_url(time_frame: "this_month", currency: "USD", format: :json)
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    # The outgoing recurring sales contract sent by @user is NOT added to recurring subscription count / MRR
+    assert_equal 0, json["kpis"]["active_subscriptions_count"]
+    assert_equal 0.0, json["kpis"]["total_mrr"]
+    assert_equal 0.0, json["kpis"]["total_arr"]
+
+    # 2. An incoming recurring contract is sent to @user (purchase recurring invoice sent to them)
+    Invoice.create!(
+      user: @user,
+      sale_from: @partner_company,
+      invoice_number: "REC-PURCH-001",
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      status: "pending",
+      currency: "USD",
+      issue_date: Date.current,
+      recurring_parent_invoice_id: nil,
+      line_items_data: [
+        {
+          "description" => "Software Subscription",
+          "quantity" => "1",
+          "price" => "500.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "billing_cycle" => "monthly",
+              "start_date" => Date.current.to_s
+            }
+          }
+        }
+      ],
+      total: { "grand_total" => "500.00", "subtotal" => "500.00" }
+    )
+
+    get dashboards_analytics_data_url(time_frame: "this_month", currency: "USD", format: :json)
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    # Now the recurring invoice sent to them is included
+    assert_equal 1, json["kpis"]["active_subscriptions_count"]
+    assert_equal 500.0, json["kpis"]["total_mrr"]
+    assert_equal 6000.0, json["kpis"]["total_arr"]
+    assert_equal 500.0, json["kpis"]["avg_mrr_per_subscription"]
+  end
 end
