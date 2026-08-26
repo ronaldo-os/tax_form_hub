@@ -2,106 +2,246 @@
 
 <div class="subscriptions-page container py-2 py-md-3">
 
-  <div class="d-flex align-items-center mb-3">
-    <!-- Tab Navigation -->
-    <ul class="custom_nav_tabs nav nav-tabs border-0" id="subscriptionTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active fw-semibold" id="active-tab" data-bs-toggle="tab" data-bs-target="#active" type="button" role="tab" aria-controls="active" aria-selected="true">
-          <span class="d-none d-lg-inline">Active Subscriptions</span>
-          <span class="d-lg-none">Active</span>
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link fw-semibold" id="finished-tab" data-bs-toggle="tab" data-bs-target="#finished" type="button" role="tab" aria-controls="finished" aria-selected="false">
-          <span class="d-none d-lg-inline">Finished Subscriptions</span>
-          <span class="d-lg-none">Finished</span>
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link fw-semibold" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled" type="button" role="tab" aria-controls="cancelled" aria-selected="false">
-          <span class="d-none d-lg-inline">Cancelled Subscriptions</span>
-          <span class="d-lg-none">Cancelled</span>
-        </button>
-      </li>
-    </ul>
+  <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3 invoice-header-bar">
+    <!-- Top-Level Tab Navigation: Sales vs Purchases -->
+    <div class="tabs-scroll-container">
+      <ul class="custom_nav_tabs nav nav-tabs border-0" id="subscriptionTypeTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link <%= 'active' if @active_tab == 'sales' %> fw-semibold" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales-pane" type="button" role="tab" aria-controls="sales-pane" aria-selected="<%= @active_tab == 'sales' %>">
+            <i class="fa-solid fa-arrow-trend-up me-2 text-success"></i>
+            <span>Sales</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link <%= 'active' if @active_tab == 'purchases' %> fw-semibold" id="purchases-tab" data-bs-toggle="tab" data-bs-target="#purchases-pane" type="button" role="tab" aria-controls="purchases-pane" aria-selected="<%= @active_tab == 'purchases' %>">
+            <i class="fa-solid fa-cart-shopping me-2 text-info"></i>
+            <span>Purchases</span>
+          </button>
+        </li>
+      </ul>
+    </div>
   </div>
 
-  <div class="tab-content" id="subscriptionTabsContent">
-    <div class="tab-pane fade show active" id="active" role="tabpanel" aria-labelledby="active-tab">
-      <div class="card mb-4">
-        <div class="card-body p-3">
-          <%= render "subscriptions_table", subscriptions: @active_subscriptions %>
-        </div>
-      </div>
-    </div>
-    
-    <div class="tab-pane fade" id="finished" role="tabpanel" aria-labelledby="finished-tab">
-      <div class="card mb-4">
-        <div class="card-body p-3">
-          <%= render "subscriptions_table", subscriptions: @finished_subscriptions %>
-        </div>
-      </div>
-    </div>
-    
-    <div class="tab-pane fade" id="cancelled" role="tabpanel" aria-labelledby="cancelled-tab">
-      <div class="card">
-        <div class="card-body p-3">
-          <%= render "subscriptions_table", subscriptions: @cancelled_subscriptions %>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="mt-5 mb-3">
-    <h4>Price Adjustments</h4>
-  </div>
+  <!-- Top-Level Tab Content -->
+  <div class="tab-content" id="subscriptionTypeTabsContent">
 
-  <div class="d-flex align-items-center mb-3">
-    <!-- Tab Navigation for Price Adjustments -->
-    <ul class="custom_nav_tabs nav nav-tabs border-0" id="priceAdjustmentTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active fw-semibold" id="active-pa-tab" data-bs-toggle="tab" data-bs-target="#active-pa" type="button" role="tab" aria-controls="active-pa" aria-selected="true">
-          <span class="d-none d-lg-inline">Active Adjustments</span>
-          <span class="d-lg-none">Active</span>
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link fw-semibold" id="finished-pa-tab" data-bs-toggle="tab" data-bs-target="#finished-pa" type="button" role="tab" aria-controls="finished-pa" aria-selected="false">
-          <span class="d-none d-lg-inline">Finished Adjustments</span>
-          <span class="d-lg-none">Finished</span>
-        </button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link fw-semibold" id="cancelled-pa-tab" data-bs-toggle="tab" data-bs-target="#cancelled-pa" type="button" role="tab" aria-controls="cancelled-pa" aria-selected="false">
-          <span class="d-none d-lg-inline">Cancelled Adjustments</span>
-          <span class="d-lg-none">Cancelled</span>
-        </button>
-      </li>
-    </ul>
-  </div>
+    <!-- ==================== SALES PANE ==================== -->
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'sales' %>" id="sales-pane" role="tabpanel" aria-labelledby="sales-tab">
+      
+      <!-- Sub-Navigation for Sales Subscriptions -->
+      <div class="d-flex align-items-center mb-3">
+        <ul class="custom_nav_tabs nav nav-tabs border-0" id="salesSubscriptionTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold" id="sales-active-tab" data-bs-toggle="tab" data-bs-target="#sales-active" type="button" role="tab" aria-controls="sales-active" aria-selected="true">
+              <span class="d-none d-lg-inline">Active Subscriptions</span>
+              <span class="d-lg-none">Active</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="sales-finished-tab" data-bs-toggle="tab" data-bs-target="#sales-finished" type="button" role="tab" aria-controls="sales-finished" aria-selected="false">
+              <span class="d-none d-lg-inline">Finished Subscriptions</span>
+              <span class="d-lg-none">Finished</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="sales-cancelled-tab" data-bs-toggle="tab" data-bs-target="#sales-cancelled" type="button" role="tab" aria-controls="sales-cancelled" aria-selected="false">
+              <span class="d-none d-lg-inline">Cancelled Subscriptions</span>
+              <span class="d-lg-none">Cancelled</span>
+            </button>
+          </li>
+        </ul>
+      </div>
 
-  <div class="tab-content" id="priceAdjustmentTabsContent">
-    <div class="tab-pane fade show active" id="active-pa" role="tabpanel" aria-labelledby="active-pa-tab">
-      <div class="card mb-4">
-        <div class="card-body p-3">
-          <%= render "price_adjustments_table", subscriptions: @active_price_adjustments %>
+      <div class="tab-content" id="salesSubscriptionTabsContent">
+        <div class="tab-pane fade show active" id="sales-active" role="tabpanel" aria-labelledby="sales-active-tab">
+          <div class="card mb-4">
+            <div class="card-body p-3">
+              <%= render "subscriptions_table", subscriptions: @active_sales_subscriptions, is_purchase: false %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="sales-finished" role="tabpanel" aria-labelledby="sales-finished-tab">
+          <div class="card mb-4">
+            <div class="card-body p-3">
+              <%= render "subscriptions_table", subscriptions: @finished_sales_subscriptions, is_purchase: false %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="sales-cancelled" role="tabpanel" aria-labelledby="sales-cancelled-tab">
+          <div class="card">
+            <div class="card-body p-3">
+              <%= render "subscriptions_table", subscriptions: @cancelled_sales_subscriptions, is_purchase: false %>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    
-    <div class="tab-pane fade" id="finished-pa" role="tabpanel" aria-labelledby="finished-pa-tab">
-      <div class="card mb-4">
-        <div class="card-body p-3">
-          <%= render "price_adjustments_table", subscriptions: @finished_price_adjustments %>
+
+      <!-- Sales Price Adjustments Section -->
+      <div class="mt-5 mb-3">
+        <h4>Sales Price Adjustments</h4>
+      </div>
+
+      <div class="d-flex align-items-center mb-3">
+        <ul class="custom_nav_tabs nav nav-tabs border-0" id="salesPriceAdjustmentTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold" id="sales-active-pa-tab" data-bs-toggle="tab" data-bs-target="#sales-active-pa" type="button" role="tab" aria-controls="sales-active-pa" aria-selected="true">
+              <span class="d-none d-lg-inline">Active Adjustments</span>
+              <span class="d-lg-none">Active</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="sales-finished-pa-tab" data-bs-toggle="tab" data-bs-target="#sales-finished-pa" type="button" role="tab" aria-controls="sales-finished-pa" aria-selected="false">
+              <span class="d-none d-lg-inline">Finished Adjustments</span>
+              <span class="d-lg-none">Finished</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="sales-cancelled-pa-tab" data-bs-toggle="tab" data-bs-target="#sales-cancelled-pa" type="button" role="tab" aria-controls="sales-cancelled-pa" aria-selected="false">
+              <span class="d-none d-lg-inline">Cancelled Adjustments</span>
+              <span class="d-lg-none">Cancelled</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tab-content" id="salesPriceAdjustmentTabsContent">
+        <div class="tab-pane fade show active" id="sales-active-pa" role="tabpanel" aria-labelledby="sales-active-pa-tab">
+          <div class="card mb-4">
+            <div class="card-body p-3">
+              <%= render "price_adjustments_table", subscriptions: @active_sales_price_adjustments, is_purchase: false %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="sales-finished-pa" role="tabpanel" aria-labelledby="sales-finished-pa-tab">
+          <div class="card mb-4">
+            <div class="card-body p-3">
+              <%= render "price_adjustments_table", subscriptions: @finished_sales_price_adjustments, is_purchase: false %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="sales-cancelled-pa" role="tabpanel" aria-labelledby="sales-cancelled-pa-tab">
+          <div class="card">
+            <div class="card-body p-3">
+              <%= render "price_adjustments_table", subscriptions: @cancelled_sales_price_adjustments, is_purchase: false %>
+            </div>
+          </div>
         </div>
       </div>
+
     </div>
-    
-    <div class="tab-pane fade" id="cancelled-pa" role="tabpanel" aria-labelledby="cancelled-pa-tab">
-      <div class="card">
-        <div class="card-body p-3">
-          <%= render "price_adjustments_table", subscriptions: @cancelled_price_adjustments %>
+
+    <!-- ==================== PURCHASES PANE ==================== -->
+    <div class="tab-pane fade <%= 'show active' if @active_tab == 'purchases' %>" id="purchases-pane" role="tabpanel" aria-labelledby="purchases-tab">
+      
+      <!-- Sub-Navigation for Purchase Subscriptions -->
+      <div class="d-flex align-items-center mb-3">
+        <ul class="custom_nav_tabs nav nav-tabs border-0" id="purchasesSubscriptionTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold" id="purchases-active-tab" data-bs-toggle="tab" data-bs-target="#purchases-active" type="button" role="tab" aria-controls="purchases-active" aria-selected="true">
+              <span class="d-none d-lg-inline">Active Subscriptions</span>
+              <span class="d-lg-none">Active</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="purchases-finished-tab" data-bs-toggle="tab" data-bs-target="#purchases-finished" type="button" role="tab" aria-controls="purchases-finished" aria-selected="false">
+              <span class="d-none d-lg-inline">Finished Subscriptions</span>
+              <span class="d-lg-none">Finished</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="purchases-cancelled-tab" data-bs-toggle="tab" data-bs-target="#purchases-cancelled" type="button" role="tab" aria-controls="purchases-cancelled" aria-selected="false">
+              <span class="d-none d-lg-inline">Cancelled Subscriptions</span>
+              <span class="d-lg-none">Cancelled</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tab-content" id="purchasesSubscriptionTabsContent">
+        <div class="tab-pane fade show active" id="purchases-active" role="tabpanel" aria-labelledby="purchases-active-tab">
+          <div class="card mb-4">
+            <div class="card-body p-3">
+              <%= render "subscriptions_table", subscriptions: @active_purchase_subscriptions, is_purchase: true %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="purchases-finished" role="tabpanel" aria-labelledby="purchases-finished-tab">
+          <div class="card mb-4">
+            <div class="card-body p-3">
+              <%= render "subscriptions_table", subscriptions: @finished_purchase_subscriptions, is_purchase: true %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="purchases-cancelled" role="tabpanel" aria-labelledby="purchases-cancelled-tab">
+          <div class="card">
+            <div class="card-body p-3">
+              <%= render "subscriptions_table", subscriptions: @cancelled_purchase_subscriptions, is_purchase: true %>
+            </div>
+          </div>
         </div>
       </div>
+
+      <!-- Purchases Price Adjustments Section -->
+      <div class="mt-5 mb-3">
+        <h4>Purchases Price Adjustments</h4>
+      </div>
+
+      <div class="d-flex align-items-center mb-3">
+        <ul class="custom_nav_tabs nav nav-tabs border-0" id="purchasesPriceAdjustmentTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-semibold" id="purchases-active-pa-tab" data-bs-toggle="tab" data-bs-target="#purchases-active-pa" type="button" role="tab" aria-controls="purchases-active-pa" aria-selected="true">
+              <span class="d-none d-lg-inline">Active Adjustments</span>
+              <span class="d-lg-none">Active</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="purchases-finished-pa-tab" data-bs-toggle="tab" data-bs-target="#purchases-finished-pa" type="button" role="tab" aria-controls="purchases-finished-pa" aria-selected="false">
+              <span class="d-none d-lg-inline">Finished Adjustments</span>
+              <span class="d-lg-none">Finished</span>
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link fw-semibold" id="purchases-cancelled-pa-tab" data-bs-toggle="tab" data-bs-target="#purchases-cancelled-pa" type="button" role="tab" aria-controls="purchases-cancelled-pa" aria-selected="false">
+              <span class="d-none d-lg-inline">Cancelled Adjustments</span>
+              <span class="d-lg-none">Cancelled</span>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="tab-content" id="purchasesPriceAdjustmentTabsContent">
+        <div class="tab-pane fade show active" id="purchases-active-pa" role="tabpanel" aria-labelledby="purchases-active-pa-tab">
+          <div class="card mb-4">
+            <div class="card-body p-3">
+              <%= render "price_adjustments_table", subscriptions: @active_purchase_price_adjustments, is_purchase: true %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="purchases-finished-pa" role="tabpanel" aria-labelledby="purchases-finished-pa-tab">
+          <div class="card mb-4">
+            <div class="card-body p-3">
+              <%= render "price_adjustments_table", subscriptions: @finished_purchase_price_adjustments, is_purchase: true %>
+            </div>
+          </div>
+        </div>
+        
+        <div class="tab-pane fade" id="purchases-cancelled-pa" role="tabpanel" aria-labelledby="purchases-cancelled-pa-tab">
+          <div class="card">
+            <div class="card-body p-3">
+              <%= render "price_adjustments_table", subscriptions: @cancelled_purchase_price_adjustments, is_purchase: true %>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
+
   </div>
 </div>

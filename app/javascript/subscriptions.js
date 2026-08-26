@@ -61,6 +61,31 @@ function initSubscriptionsPage() {
             }
         });
     });
+
+    // Handle top-level tab switch (Sales vs Purchases)
+    $('#subscriptionTypeTabs button[data-bs-toggle="tab"]').off('shown.bs.tab.subs').on('shown.bs.tab.subs', function (e) {
+        const tabId = $(e.target).attr('id').replace('-tab', '');
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabId);
+        window.history.replaceState({}, '', url);
+
+        setTimeout(function () {
+            $.fn.dataTable
+                .tables({ visible: true, api: true })
+                .columns.adjust()
+                .responsive.recalc();
+        }, 150);
+    });
+
+    // Also recalculate when inner status tabs are clicked
+    $('.subscriptions-page button[data-bs-toggle="tab"]').off('shown.bs.tab.subs_inner').on('shown.bs.tab.subs_inner', function () {
+        setTimeout(function () {
+            $.fn.dataTable
+                .tables({ visible: true, api: true })
+                .columns.adjust()
+                .responsive.recalc();
+        }, 100);
+    });
 }
 
 document.addEventListener("turbo:load", initSubscriptionsPage);

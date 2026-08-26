@@ -13,32 +13,50 @@ class SubscriptionsController < ApplicationController
     # We load all invoices that could be parents and filter in ruby since 
     # the recurring elements logic relies on JSON/Ruby parsing.
     all_parent_invoices = current_user.invoices
-                                      .includes(:recipient_company)
+                                      .includes(:recipient_company, :sale_from)
                                       .where(recurring_parent_invoice_id: nil)
                                       .order(created_at: :desc)
     
-    all_subscription_contracts = all_parent_invoices.select(&:subscription_contract?)
-    
-    @subscriptions = []
-    
-    all_subscription_contracts.each do |invoice|
-      if invoice.line_items_data.is_a?(Array)
-        invoice.line_items_data.each_with_index do |item, idx|
-          if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
-            @subscriptions << SubscriptionItemWrapper.new(invoice, item, idx)
-          end
-        end
-      end
-    end
-    
-    @active_subscriptions = @subscriptions.select { |wrapper| wrapper.subscription_active? }
-    @cancelled_subscriptions = @subscriptions.select { |wrapper| wrapper.subscription_cancelled? }
-    @finished_subscriptions = @subscriptions.select { |wrapper| wrapper.subscription_finished? }
+    # Partition parent invoices by invoice_type
+    sales_parent_invoices = all_parent_invoices.select { |inv| inv.invoice_type == 'sale' }
+    purchase_parent_invoices = all_parent_invoices.select { |inv| inv.invoice_type == 'purchase' }
 
-    @price_adjustments = all_parent_invoices.select(&:has_recurring_price_adjustments?)
-    @active_price_adjustments = @price_adjustments.select { |inv| inv.subscription_active? }
-    @cancelled_price_adjustments = @price_adjustments.select { |inv| inv.subscription_cancelled? }
-    @finished_price_adjustments = @price_adjustments.select { |inv| inv.subscription_finished? }
+    # Extract subscription items for sales
+    @sales_subscriptions = extract_subscription_wrappers(sales_parent_invoices.select(&:subscription_contract?))
+    @active_sales_subscriptions = @sales_subscriptions.select(&:subscription_active?)
+    @finished_sales_subscriptions = @sales_subscriptions.select(&:subscription_finished?)
+    @cancelled_sales_subscriptions = @sales_subscriptions.select(&:subscription_cancelled?)
+
+    # Extract subscription items for purchases
+    @purchase_subscriptions = extract_subscription_wrappers(purchase_parent_invoices.select(&:subscription_contract?))
+    @active_purchase_subscriptions = @purchase_subscriptions.select(&:subscription_active?)
+    @finished_purchase_subscriptions = @purchase_subscriptions.select(&:subscription_finished?)
+    @cancelled_purchase_subscriptions = @purchase_subscriptions.select(&:subscription_cancelled?)
+
+    # Extract price adjustments for sales
+    @sales_price_adjustments = sales_parent_invoices.select(&:has_recurring_price_adjustments?)
+    @active_sales_price_adjustments = @sales_price_adjustments.select(&:subscription_active?)
+    @finished_sales_price_adjustments = @sales_price_adjustments.select(&:subscription_finished?)
+    @cancelled_sales_price_adjustments = @sales_price_adjustments.select(&:subscription_cancelled?)
+
+    # Extract price adjustments for purchases
+    @purchase_price_adjustments = purchase_parent_invoices.select(&:has_recurring_price_adjustments?)
+    @active_purchase_price_adjustments = @purchase_price_adjustments.select(&:subscription_active?)
+    @finished_purchase_price_adjustments = @purchase_price_adjustments.select(&:subscription_finished?)
+    @cancelled_purchase_price_adjustments = @purchase_price_adjustments.select(&:subscription_cancelled?)
+
+    # Active tab parameter (defaults to 'sales', or 'purchases')
+    @active_tab = %w[sales purchases].include?(params[:tab]) ? params[:tab] : 'sales'
+
+    # Backward compatibility
+    @subscriptions = @sales_subscriptions + @purchase_subscriptions
+    @active_subscriptions = @active_sales_subscriptions + @active_purchase_subscriptions
+    @finished_subscriptions = @finished_sales_subscriptions + @finished_purchase_subscriptions
+    @cancelled_subscriptions = @cancelled_sales_subscriptions + @cancelled_purchase_subscriptions
+    @price_adjustments = @sales_price_adjustments + @purchase_price_adjustments
+    @active_price_adjustments = @active_sales_price_adjustments + @active_purchase_price_adjustments
+    @finished_price_adjustments = @finished_sales_price_adjustments + @finished_purchase_price_adjustments
+    @cancelled_price_adjustments = @cancelled_sales_price_adjustments + @cancelled_purchase_price_adjustments
   end
 
   # GET /subscriptions/:id
@@ -185,7 +203,7 @@ class SubscriptionsController < ApplicationController
     effective_date = Date.parse(effective_date_str) rescue Date.current
     primary_item = @subscription.primary_recurring_item
     
-    if ['prorate', 'full'].include?(billing_option) && primary_item
+    if ['prorate', 'full'].include?(billing_option) && primary_item && @subscription.sale?
       billing_cycle = primary_item[:cycle] || 'monthly'
       start_d = Date.parse(primary_item[:start_date]) rescue Date.current
       
@@ -292,7 +310,7 @@ class SubscriptionsController < ApplicationController
     start_d_str = @subscription.extract_subscription_field(item, 'start_date')
     start_d = start_d_str.present? ? (Date.parse(start_d_str) rescue Date.current) : Date.current
     
-    if ['prorate', 'full'].include?(billing_option)
+    if ['prorate', 'full'].include?(billing_option) && @subscription.sale?
       current_sequence = @subscription.recurring_sub_invoices.count + 1
       next_date = start_d
       current_sequence.times do
@@ -359,6 +377,11 @@ class SubscriptionsController < ApplicationController
 
   # POST /subscriptions/:id/add_mid_cycle_item
   def add_mid_cycle_item
+    if @subscription.purchase?
+      redirect_to subscription_path(@subscription), alert: 'Mid-cycle items can only be added to sales subscriptions.'
+      return
+    end
+
     item_name = params[:item_name]
     item_type = params[:item_type] || 'charge'
     quantity = params[:quantity].to_s.delete(',').to_f
@@ -472,6 +495,20 @@ class SubscriptionsController < ApplicationController
   end
 
   private
+
+  def extract_subscription_wrappers(invoices)
+    wrappers = []
+    invoices.each do |invoice|
+      if invoice.line_items_data.is_a?(Array)
+        invoice.line_items_data.each_with_index do |item, idx|
+          if item.is_a?(Hash) && item['optional_fields'].is_a?(Hash) && item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
+            wrappers << SubscriptionItemWrapper.new(invoice, item, idx)
+          end
+        end
+      end
+    end
+    wrappers
+  end
 
   def generate_immediate_invoice(item_name, quantity, amount_to_charge, memo)
     sub_invoice_number = Invoice.next_recurring_sub_invoice_number(@subscription) + "-mid"

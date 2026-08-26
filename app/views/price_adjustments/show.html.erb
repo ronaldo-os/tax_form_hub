@@ -1,7 +1,7 @@
 <div class="container mt-5">
   <div class="d-flex justify-content-between mt-5 mb-3">
     <div>
-      <%= link_to "Back", subscriptions_path, class: "btn btn-back btn-md" %>
+      <%= link_to "Back", subscriptions_path(tab: @price_adjustment.purchase? ? 'purchases' : 'sales'), class: "btn btn-back btn-md" %>
     </div>
   </div>
 
@@ -11,6 +11,8 @@
     amount_val = @adj['amount'].to_f
     unit_val = @adj['unit'] == '%' ? '%' : (@price_adjustment.currency + ' ')
     amount_display = @adj['unit'] == '%' ? "#{amount_val}%" : number_to_currency(amount_val, unit: unit_val)
+    counterparty_name = @price_adjustment.purchase? ? (@price_adjustment.sale_from&.name || "Unknown Supplier") : (@price_adjustment.recipient_company&.name || "Unknown Company")
+    counterparty_prefix = @price_adjustment.purchase? ? "From" : "For"
   %>
 
   <div class="row">
@@ -18,7 +20,7 @@
       <div class="card shadow-sm border-0 rounded-3 mb-4">
         <div class="card-header border-bottom-0 pt-4 pb-3 px-4">
           <h5 class="mb-0 fw-bold">Price Adjustment Overview</h5>
-          <p class="text-muted mt-2 mb-0">For <%= @price_adjustment.recipient_company&.name || "Unknown Company" %></p>
+          <p class="text-muted mt-2 mb-0"><%= counterparty_prefix %> <%= counterparty_name %></p>
         </div>
         <div class="card-body px-4 py-4">
           <div class="row g-4">

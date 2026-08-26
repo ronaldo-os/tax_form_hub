@@ -1,8 +1,9 @@
+<% is_purchase = local_assigns.fetch(:is_purchase, false) %>
 <div class="table-responsive overflow-visible">
     <table class="table table-hover align-middle mb-0 subscription-table w-100">
       <thead class="table-light">
         <tr>
-          <th class="ps-4">Recipient</th>
+          <th class="ps-4"><%= is_purchase ? "Supplier" : "Recipient" %></th>
           <th>Description</th>
           <th>Type</th>
           <th>Billing Cycle</th>
@@ -27,10 +28,11 @@
             amount_val = adj['amount'].to_f
             unit_val = adj['unit'] == '%' ? '%' : ((invoice.currency.presence || 'PHP') + ' ')
             amount_display = adj['unit'] == '%' ? "#{amount_val}%" : number_to_currency(amount_val, unit: unit_val)
+            counterparty_name = is_purchase ? (invoice.sale_from&.name || "Unknown Supplier") : (invoice.recipient_company&.name || "Unknown Company")
           %>
           <tr>
             <td class="ps-4 fw-medium">
-              <%= link_to invoice.recipient_company&.name || "Unknown Company", price_adjustment_path(invoice), class: "text-decoration-none" %>
+              <%= link_to counterparty_name, price_adjustment_path(invoice), class: "text-decoration-none" %>
             </td>
             <td>
               <span class="text-truncate d-inline-block" style="max-width: 200px;">

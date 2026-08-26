@@ -1,8 +1,9 @@
+<% is_purchase = local_assigns.fetch(:is_purchase, false) %>
 <div class="table-responsive overflow-visible">
     <table class="table table-hover align-middle mb-0 subscription-table w-100">
       <thead class="table-light">
         <tr>
-          <th class="ps-4">Recipient</th>
+          <th class="ps-4"><%= is_purchase ? "Supplier" : "Recipient" %></th>
           <th>Description</th>
           <th>Billing Cycle</th>
           <th>Status</th>
@@ -18,10 +19,11 @@
           <% item_index = wrapper.index %>
           <% cycle = invoice.extract_subscription_field(item, 'billing_cycle') || 'monthly' %>
           <% start_date_str = invoice.extract_subscription_field(item, 'start_date') %>
+          <% counterparty_name = is_purchase ? (invoice.sale_from&.name || "Unknown Supplier") : (invoice.recipient_company&.name || "Unknown Company") %>
           
           <tr>
             <td class="ps-4 fw-medium">
-              <%= link_to invoice.recipient_company&.name || "Unknown Company", subscription_path(invoice, item_index: item_index), class: "text-decoration-none" %>
+              <%= link_to counterparty_name, subscription_path(invoice, item_index: item_index), class: "text-decoration-none" %>
             </td>
             <td>
               <span class="text-truncate d-inline-block" style="max-width: 200px;">
@@ -83,12 +85,16 @@
                     <%= link_to "View Details", subscription_path(invoice, item_index: item_index), class: "dropdown-item" %>
                   </li>
                   <% if wrapper.subscription_active? %>
-                    <li>
-                      <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#midCycleModal-<%= invoice.id %>-<%= item_index %>">
-                        Add Mid-cycle Subscription
-                      </button>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
+                    <% unless is_purchase %>
+                      <li>
+                        <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#midCycleModal-<%= invoice.id %>-<%= item_index %>">
+                          Add Mid-cycle Subscription
+                        </button>
+                      </li>
+                      <li><hr class="dropdown-divider"></li>
+                    <% else %>
+                      <li><hr class="dropdown-divider"></li>
+                    <% end %>
                     <li>
                       <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-<%= invoice.id %>-<%= item_index %>">
                         Cancel Subscription
@@ -114,7 +120,9 @@
   <% subscriptions.each do |wrapper| %>
     <% invoice = wrapper.invoice %>
     <% item_index = wrapper.index %>
-    <%= render "mid_cycle_modal", invoice: invoice, item_index: item_index %>
+    <% unless is_purchase %>
+      <%= render "mid_cycle_modal", invoice: invoice, item_index: item_index %>
+    <% end %>
     <% if wrapper.subscription_active? %>
       <%= render "cancel_subscription_modal", subscription: invoice, item_index: item_index %>
     <% end %>

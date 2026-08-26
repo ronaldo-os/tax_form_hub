@@ -1,7 +1,7 @@
 <div class="container py-2 py-md-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <%= link_to subscriptions_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2" do %>
+      <%= link_to subscriptions_path(tab: @subscription.purchase? ? 'purchases' : 'sales'), class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2" do %>
         <i class="fa-solid fa-arrow-left"></i> Back to Subscriptions
       <% end %>
     </div>
@@ -16,7 +16,11 @@
           <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
             <div>
               <h5 class="mb-1 fw-bold">Subscription Overview</h5>
-              <p class="text-muted small mb-0">For <span class="fw-semibold text-main"><%= @subscription.recipient_company&.name || "Unknown Company" %></span></p>
+              <% if @subscription.purchase? %>
+                <p class="text-muted small mb-0">From <span class="fw-semibold text-main"><%= @subscription.sale_from&.name || "Unknown Supplier" %></span></p>
+              <% else %>
+                <p class="text-muted small mb-0">For <span class="fw-semibold text-main"><%= @subscription.recipient_company&.name || "Unknown Company" %></span></p>
+              <% end %>
             </div>
             <% is_active = @wrapper ? @wrapper.subscription_active? : @subscription.subscription_active? %>
             <% is_cancelled = @wrapper ? @wrapper.subscription_cancelled? : @subscription.subscription_cancelled? %>
