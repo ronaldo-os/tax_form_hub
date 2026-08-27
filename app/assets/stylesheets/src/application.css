@@ -1,5 +1,6 @@
 @import "../responsive.css";
 @import "../dashboard.css";
+@import "../notifications.css";
 
 :root,
 [data-theme="light"] {

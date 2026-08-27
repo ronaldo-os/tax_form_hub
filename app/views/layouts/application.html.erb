@@ -163,7 +163,10 @@
           <%= content_for(:page_title) || content_for(:title) || "Tax Form Hub" %>
         </h1>
       </div>
-      <div class="d-flex align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <!-- Modern Notification Dropdown Menu -->
+        <%= render "layouts/notification_dropdown" %>
+
         <!-- Minimalist User Profile Dropdown Menu -->
         <div class="dropdown header-user-dropdown" id="header_user_dropdown_container">
           <button class="btn btn-sm p-1 border-0 shadow-none text-main d-flex align-items-center gap-2" type="button" id="headerUserDropdown" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">

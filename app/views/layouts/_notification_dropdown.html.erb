@@ -1,0 +1,330 @@
+<!-- Modern Notification Dropdown -->
+<div class="dropdown header-notification-dropdown" id="header_notification_dropdown_container">
+  <button class="btn btn-sm p-0 border-0 shadow-none text-main position-relative d-flex align-items-center justify-content-center notification-bell-btn"
+          type="button"
+          id="headerNotificationDropdown"
+          data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          data-bs-display="static"
+          aria-expanded="false"
+          aria-label="Notifications"
+          title="Notifications">
+    <i class="fa-regular fa-bell bell-icon"></i>
+    <span class="notification-badge-pulse"></span>
+    <span class="notification-badge-count">3</span>
+  </button>
+
+  <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 p-0 rounded-4 modern-notification-dropdown-menu"
+       aria-labelledby="headerNotificationDropdown">
+    <!-- Header Section -->
+    <div class="px-3 py-3 border-bottom d-flex align-items-center justify-content-between bg-sidebar">
+      <div class="d-flex align-items-center gap-2">
+        <h6 class="mb-0 fw-bold fs-7 text-main">Notifications</h6>
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fs-9 fw-semibold border border-primary-subtle">
+          3 New
+        </span>
+      </div>
+      <button type="button" class="btn btn-link btn-sm text-decoration-none p-0 text-muted fs-8 fw-medium d-flex align-items-center gap-1 mark-all-read-btn" title="Mark all as read">
+        <i class="fa-solid fa-check-double text-primary fs-8"></i>
+        <span>Mark all read</span>
+      </button>
+    </div>
+
+    <!-- Category Filter Tabs (Bootstrap Nav Pills) -->
+    <div class="px-3 py-2 border-bottom bg-secondary-subtle">
+      <ul class="nav nav-pills notification-filter-tabs d-flex" id="notificationTabs" role="tablist">
+        <li class="nav-item flex-fill text-center" role="presentation">
+          <button class="nav-link w-100 active py-1 px-2 fs-8" id="notif-all-tab" data-bs-toggle="pill" data-bs-target="#notif-all-pane" type="button" role="tab" aria-controls="notif-all-pane" aria-selected="true">
+            All <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9">5</span>
+          </button>
+        </li>
+        <li class="nav-item flex-fill text-center" role="presentation">
+          <button class="nav-link w-100 py-1 px-2 fs-8" id="notif-unread-tab" data-bs-toggle="pill" data-bs-target="#notif-unread-pane" type="button" role="tab" aria-controls="notif-unread-pane" aria-selected="false">
+            Unread <span class="badge rounded-pill bg-primary text-white ms-1 fs-9">3</span>
+          </button>
+        </li>
+        <li class="nav-item flex-fill text-center" role="presentation">
+          <button class="nav-link w-100 py-1 px-2 fs-8" id="notif-taxes-tab" data-bs-toggle="pill" data-bs-target="#notif-taxes-pane" type="button" role="tab" aria-controls="notif-taxes-pane" aria-selected="false">
+            Taxes
+          </button>
+        </li>
+        <li class="nav-item flex-fill text-center" role="presentation">
+          <button class="nav-link w-100 py-1 px-2 fs-8" id="notif-invoices-tab" data-bs-toggle="pill" data-bs-target="#notif-invoices-pane" type="button" role="tab" aria-controls="notif-invoices-pane" aria-selected="false">
+            Invoices
+          </button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Notification Tab Panes Content -->
+    <div class="tab-content" id="notificationTabsContent">
+      <!-- "All" Tab Pane -->
+      <div class="tab-pane fade show active" id="notif-all-pane" role="tabpanel" aria-labelledby="notif-all-tab" tabindex="0">
+        <div class="notification-list-scroll">
+          <!-- Notification 1 (Unread - BIR Tax Form) -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-success-subtle text-success">
+              <i class="fa-solid fa-file-circle-check"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">BIR Form 2307 Approved</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">10m ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Q3 Creditable Withholding Tax certificate for Manila Tech Hub has been approved.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle py-0.5 px-1.5 rounded">Taxes</span>
+                <span class="fs-9 text-muted">• BIR Submission #2307-881</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+
+          <!-- Notification 2 (Unread - Invoice Pending) -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-primary-subtle text-primary">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">New Invoice #INV-2026-089</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">45m ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Acme Corporation submitted a purchase invoice for ₱45,200.00 awaiting your review.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-primary-subtle text-primary fs-9 border border-primary-subtle py-0.5 px-1.5 rounded">Invoices</span>
+                <span class="fs-9 text-muted">• Pending Review</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+
+          <!-- Notification 3 (Unread - Filing Deadline) -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-warning-subtle text-warning">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">Filing Deadline Reminder</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">2h ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Monthly Withholding Tax remittance deadline is due in 3 calendar days.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-warning-subtle text-warning fs-9 border border-warning-subtle py-0.5 px-1.5 rounded">Reminder</span>
+                <span class="fs-9 text-muted">• Action Needed</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+
+          <!-- Notification 4 (Read - Network Connection) -->
+          <a href="#" class="notification-item">
+            <div class="notification-item-icon bg-info-subtle text-info">
+              <i class="fa-solid fa-network-wired"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">Network Connected</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">Yesterday</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Global Logistics Inc. accepted your vendor connection invite.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-info-subtle text-info fs-9 border border-info-subtle py-0.5 px-1.5 rounded">Network</span>
+              </div>
+            </div>
+          </a>
+
+          <!-- Notification 5 (Read - Payment Received) -->
+          <a href="#" class="notification-item">
+            <div class="notification-item-icon bg-secondary-subtle text-secondary">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">Payment Confirmed</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">2d ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Invoice #INV-2026-074 was marked as paid (₱128,500.00).
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-secondary-subtle text-secondary fs-9 border border-secondary-subtle py-0.5 px-1.5 rounded">Paid</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- "Unread" Tab Pane -->
+      <div class="tab-pane fade" id="notif-unread-pane" role="tabpanel" aria-labelledby="notif-unread-tab" tabindex="0">
+        <div class="notification-list-scroll">
+          <!-- Notification 1 -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-success-subtle text-success">
+              <i class="fa-solid fa-file-circle-check"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">BIR Form 2307 Approved</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">10m ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Q3 Creditable Withholding Tax certificate for Manila Tech Hub has been approved.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle py-0.5 px-1.5 rounded">Taxes</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+
+          <!-- Notification 2 -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-primary-subtle text-primary">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">New Invoice #INV-2026-089</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">45m ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Acme Corporation submitted a purchase invoice for ₱45,200.00 awaiting your review.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-primary-subtle text-primary fs-9 border border-primary-subtle py-0.5 px-1.5 rounded">Invoices</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+
+          <!-- Notification 3 -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-warning-subtle text-warning">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">Filing Deadline Reminder</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">2h ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Monthly Withholding Tax remittance deadline is due in 3 calendar days.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-warning-subtle text-warning fs-9 border border-warning-subtle py-0.5 px-1.5 rounded">Reminder</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- "Taxes" Tab Pane -->
+      <div class="tab-pane fade" id="notif-taxes-pane" role="tabpanel" aria-labelledby="notif-taxes-tab" tabindex="0">
+        <div class="notification-list-scroll">
+          <!-- Notification 1 -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-success-subtle text-success">
+              <i class="fa-solid fa-file-circle-check"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">BIR Form 2307 Approved</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">10m ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Q3 Creditable Withholding Tax certificate for Manila Tech Hub has been approved.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle py-0.5 px-1.5 rounded">Taxes</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+
+          <!-- Notification 3 -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-warning-subtle text-warning">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">Filing Deadline Reminder</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">2h ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Monthly Withholding Tax remittance deadline is due in 3 calendar days.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-warning-subtle text-warning fs-9 border border-warning-subtle py-0.5 px-1.5 rounded">Reminder</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+        </div>
+      </div>
+
+      <!-- "Invoices" Tab Pane -->
+      <div class="tab-pane fade" id="notif-invoices-pane" role="tabpanel" aria-labelledby="notif-invoices-tab" tabindex="0">
+        <div class="notification-list-scroll">
+          <!-- Notification 2 -->
+          <a href="#" class="notification-item unread">
+            <div class="notification-item-icon bg-primary-subtle text-primary">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">New Invoice #INV-2026-089</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">45m ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Acme Corporation submitted a purchase invoice for ₱45,200.00 awaiting your review.
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-primary-subtle text-primary fs-9 border border-primary-subtle py-0.5 px-1.5 rounded">Invoices</span>
+              </div>
+            </div>
+            <span class="notification-unread-dot" title="Unread"></span>
+          </a>
+
+          <!-- Notification 5 -->
+          <a href="#" class="notification-item">
+            <div class="notification-item-icon bg-secondary-subtle text-secondary">
+              <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="notification-item-content flex-grow-1 min-w-0">
+              <div class="d-flex align-items-center justify-content-between mb-0.5">
+                <span class="notification-title fw-semibold fs-7 text-main text-truncate">Payment Confirmed</span>
+                <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">2d ago</span>
+              </div>
+              <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
+                Invoice #INV-2026-074 was marked as paid (₱128,500.00).
+              </p>
+              <div class="d-flex align-items-center gap-1.5">
+                <span class="badge bg-secondary-subtle text-secondary fs-9 border border-secondary-subtle py-0.5 px-1.5 rounded">Paid</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown Footer -->
+    <div class="p-2 border-top bg-sidebar text-center">
+      <a href="#" class="btn btn-sm btn-light w-100 text-main fw-medium fs-8 d-flex align-items-center justify-content-center gap-2 rounded-2 py-1.5 shadow-none">
+        <span>View all notifications</span>
+        <i class="fa-solid fa-arrow-right fs-9 text-muted"></i>
+      </a>
+    </div>
+  </div>
+</div>
