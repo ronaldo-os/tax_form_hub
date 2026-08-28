@@ -22,6 +22,8 @@ class User < ApplicationRecord
   has_many :invoices
   has_many :subscriptions, dependent: :destroy
   has_many :locations, dependent: :destroy
+  has_many :notifications, foreign_key: :recipient_id, dependent: :destroy
+  has_many :unread_notifications, -> { where(read_at: nil) }, class_name: "Notification", foreign_key: :recipient_id
   has_one_attached :profile_image
 
   # Enums

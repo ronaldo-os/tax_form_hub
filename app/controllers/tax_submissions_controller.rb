@@ -71,12 +71,9 @@ class TaxSubmissionsController < ApplicationController
         begin
           TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later
           TaxSubmissionMailer.notify_invoice_sender(@tax_submission)&.deliver_later
+          NotificationService.notify_tax_submitted(@tax_submission, current_user)
         rescue StandardError => e
-          Rails.logger.error "Mailer Error in TaxSubmissionsController#create: #{e.message}"
-          # We might not want to rollback the whole submission just because a notification failed,
-          # but the user requested: "Ensure ... does not create inconsistent records if mail sending fails."
-          # If we want to be strict:
-          # raise ActiveRecord::Rollback
+          Rails.logger.error "Notification/Mailer Error in TaxSubmissionsController#create: #{e.message}"
         end
         redirect_to params[:redirect_url].presence || root_path, status: :see_other, notice: "Tax documents submitted successfully."
       else
@@ -96,6 +93,7 @@ class TaxSubmissionsController < ApplicationController
   def update
     if @tax_submission.update(tax_submission_params)
       notice = "Submission updated."
+      NotificationService.notify_tax_status_updated(@tax_submission, notice, current_user)
       redirect_back fallback_location: root_path, status: :see_other, notice: notice
     else
       alert = "Failed to update."

@@ -59,6 +59,18 @@ Rails.application.routes.draw do
 
 
 
+  resources :notifications, only: [] do
+    collection do
+      post :mark_all_as_read
+      get :dropdown
+    end
+    member do
+      patch :mark_as_read
+      patch :mark_as_unread
+      get :click
+    end
+  end
+
   get "up" => "rails/health#show", as: :rails_health_check
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 

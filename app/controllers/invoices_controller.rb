@@ -370,10 +370,13 @@ class InvoicesController < ApplicationController
           if @invoice.credit_note?
             original_invoice = @invoice.original_invoice
             InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
+            NotificationService.notify_credit_note_created(@invoice, original_invoice, recipient_user, current_user)
           elsif @invoice.quote?
             InvoiceMailer.quote_sent(duplicated_invoice, recipient_user).deliver_later
+            NotificationService.notify_invoice_sent(duplicated_invoice, recipient_user, current_user)
           else
             InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
+            NotificationService.notify_invoice_sent(duplicated_invoice, recipient_user, current_user)
           end
         end
 
@@ -470,10 +473,13 @@ class InvoicesController < ApplicationController
         if @invoice.credit_note?
           original_invoice = @invoice.original_invoice
           InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
+          NotificationService.notify_credit_note_created(@invoice, original_invoice, recipient_user, current_user)
         elsif @invoice.quote?
           InvoiceMailer.quote_sent(duplicated_invoice, recipient_user).deliver_later
+          NotificationService.notify_invoice_sent(duplicated_invoice, recipient_user, current_user)
         else
           InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
+          NotificationService.notify_invoice_sent(duplicated_invoice, recipient_user, current_user)
         end
 
         category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
@@ -628,8 +634,10 @@ class InvoicesController < ApplicationController
       sender_user = invoice.invoice_type == "purchase" && invoice.sale_from ? invoice.sale_from.user : invoice.user
       if invoice.quote?
         InvoiceMailer.quote_approved(invoice, sender_user, current_user).deliver_later
+        NotificationService.notify_invoice_approved(invoice, sender_user, current_user)
       else
         InvoiceMailer.invoice_approved(invoice, sender_user, current_user).deliver_later
+        NotificationService.notify_invoice_approved(invoice, sender_user, current_user)
       end
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), status: :see_other, notice: "Invoice approved."
     else
@@ -651,8 +659,10 @@ class InvoicesController < ApplicationController
       sender_user = invoice.invoice_type == "purchase" && invoice.sale_from ? invoice.sale_from.user : invoice.user
       if invoice.quote?
         InvoiceMailer.quote_rejected(invoice, sender_user, current_user).deliver_later
+        NotificationService.notify_invoice_rejected(invoice, sender_user, current_user)
       else
         InvoiceMailer.invoice_rejected(invoice, sender_user, current_user).deliver_later
+        NotificationService.notify_invoice_rejected(invoice, sender_user, current_user)
       end
       redirect_to invoices_path(tab: params[:tab] || "purchase-invoices"), status: :see_other, notice: "Invoice rejected."
     else
@@ -706,6 +716,15 @@ class InvoicesController < ApplicationController
       else
         update_original_sale_status(invoice, "paid")
       end
+
+      # Notify counterparty of payment
+      counterparty = if invoice.invoice_type == "sale"
+                       invoice.recipient_company&.user
+                     else
+                       invoice.sale_from&.user || invoice.user
+                     end
+      NotificationService.notify_invoice_paid(invoice, counterparty, current_user) if counterparty
+
       tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
       category_name = invoice.standard? ? "Invoice" : invoice.invoice_category.humanize
       redirect_to invoices_path(tab: tab), status: :see_other, notice: "#{category_name} marked as paid."

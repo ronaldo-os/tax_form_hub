@@ -230,3 +230,48 @@
   text-overflow: ellipsis;
   line-height: 1.35;
 }
+
+/* ==========================================================================
+   Notifications Center Page Styles & Live Toasts
+   ========================================================================== */
+
+.notification-page-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  border: 1px solid var(--border-color) !important;
+}
+
+.notification-page-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="dark"] .notification-page-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
+}
+
+.notification-page-card.unread-card {
+  background-color: rgba(0, 174, 255, 0.03) !important;
+  border-left: 4px solid var(--main-color) !important;
+}
+
+[data-theme="dark"] .notification-page-card.unread-card {
+  background-color: rgba(0, 174, 255, 0.07) !important;
+}
+
+.live-notification-toast {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: slideInToast 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInToast {
+  from {
+    opacity: 0;
+    transform: translateX(50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+

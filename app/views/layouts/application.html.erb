@@ -30,6 +30,11 @@
   </head>
   <body data-devise="<%= devise_controller? %>" class="bg-light">
 
+  <% if user_signed_in? %>
+    <%= turbo_stream_from "user_#{current_user.id}_notifications" %>
+  <% end %>
+
+  <div id="live_notification_toasts" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090;"></div>
 
   <% unless devise_controller? && !(controller_name == "registrations" && (action_name == "edit" || action_name == "update")) %>
     <div class="app-menu-toggle" id="desktop_menu_toggle">

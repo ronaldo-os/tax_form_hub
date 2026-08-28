@@ -319,6 +319,7 @@ import LazyLoaderController from './controllers/lazy_loader_controller';
 import PasswordToggleController from './controllers/password_toggle_controller';
 import SidebarController from './controllers/sidebar_controller';
 import PasswordValidationController from './controllers/password_validation_controller';
+import NotificationsController from './controllers/notifications_controller';
 
 // Register all controllers
 stimulusApplication.register('email-validation', EmailValidationController);
@@ -326,6 +327,31 @@ stimulusApplication.register('lazy-loader', LazyLoaderController);
 stimulusApplication.register('password-toggle', PasswordToggleController);
 stimulusApplication.register('sidebar', SidebarController);
 stimulusApplication.register('password-validation', PasswordValidationController);
+stimulusApplication.register('notifications', NotificationsController);
+
+// Observer for live toast notifications inserted via Turbo Streams
+function observeLiveToasts() {
+  const container = document.getElementById('live_notification_toasts');
+  if (!container) return;
+
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeType === 1 && node.classList.contains('live-notification-toast')) {
+          if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            const bsToast = new bootstrap.Toast(node, { delay: 7000, autohide: true });
+            bsToast.show();
+          }
+        }
+      });
+    });
+  });
+
+  observer.observe(container, { childList: true });
+}
+
+document.addEventListener('DOMContentLoaded', observeLiveToasts);
+document.addEventListener('turbo:load', observeLiveToasts);
 
 function updateThemeUI(theme) {
   const btns = [

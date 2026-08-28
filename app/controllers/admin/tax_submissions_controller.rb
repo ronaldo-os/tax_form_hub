@@ -51,6 +51,7 @@ class Admin::TaxSubmissionsController < ApplicationController
         end
 
       TaxSubmissionMailer.status_updated(@tax_submission, message).deliver_later
+      NotificationService.notify_tax_status_updated(@tax_submission, message, current_user)
       redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, notice: message
     else
       redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, alert: "Failed to update."
