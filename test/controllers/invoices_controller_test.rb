@@ -305,4 +305,96 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "2027-01-01", final_items[1]["optional_fields"]["subscription"]["overall_end_date"]
     assert_equal "2027-01-01", final_items[1]["optional_fields"]["subscription"]["subscription_end_date"]
   end
+
+  test "mark_as_paid marks invoice as paid and redirects to index" do
+    company = Company.create!(name: "Client Inc", user: @user)
+    invoice = Invoice.create!(
+      user: @user,
+      recipient_company: company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-PAID-001",
+      status: "sent"
+    )
+
+    patch mark_as_paid_invoice_url(invoice, tab: "sales-invoices")
+    assert_redirected_to invoices_url(tab: "sales-invoices")
+    assert_equal "paid", invoice.reload.status
+  end
+
+  test "invoices index loads successfully with all server_side_table partials" do
+    get invoices_url
+    assert_response :success
+    assert_includes response.body, 'data-server-side="true"'
+    assert_includes response.body, 'id="sales-table"'
+    assert_includes response.body, 'id="purchases-table"'
+  end
+
+  test "datatable preloads credit note existence without errors" do
+    Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-PRELOAD-001",
+      status: "sent"
+    )
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", format: :json }
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    assert_not_empty data
+  end
+
+  test "receiver cannot mark purchase invoice as paid" do
+    company = Company.create!(name: "Supplier Inc", user: @user)
+    purchase_invoice = Invoice.create!(
+      user: @user,
+      sale_from: company,
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      invoice_number: "PURCH-PAID-001",
+      status: "approved"
+    )
+
+    patch mark_as_paid_invoice_url(purchase_invoice, tab: "purchase-invoices")
+    assert_redirected_to invoices_url(tab: "purchase-invoices")
+    assert_equal "approved", purchase_invoice.reload.status
+    assert_equal "Receiver of invoice cannot mark invoice as paid. Only the issuer can mark it as paid.", flash[:alert]
+  end
+
+  test "datatable does not include Mark as Paid for purchase invoices" do
+    company = Company.create!(name: "Supplier Inc", user: @user)
+    Invoice.create!(
+      user: @user,
+      sale_from: company,
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      invoice_number: "PURCH-DT-001",
+      status: "approved"
+    )
+
+    get datatable_data_invoices_url, params: { invoice_type: "purchase", tab: "purchase-invoices", format: :json }
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    assert_not_empty data
+    assert_no_match /Mark as Paid/, data.first["actions"]
+  end
+
+  test "datatable includes Mark as Paid for sale invoices" do
+    company = Company.create!(name: "Client Inc", user: @user)
+    Invoice.create!(
+      user: @user,
+      recipient_company: company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "SALE-DT-001",
+      status: "approved"
+    )
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", tab: "sales-invoices", format: :json }
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    assert_not_empty data
+    assert_match /Mark as Paid/, data.first["actions"]
+  end
 end

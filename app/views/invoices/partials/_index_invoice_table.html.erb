@@ -131,7 +131,7 @@
                 </li>
               <% end %>
 
-              <% if (invoice.status == "approved" || invoice.status == "sent") && !["received-quotes-table", "received-quotes-archived-table"].include?(table_id) && !invoice.has_associated_credit_note? %>
+              <% if invoice.invoice_type == "sale" && (invoice.status == "approved" || invoice.status == "sent") && !["purchases-table", "purchases-archived-table", "received-quotes-table", "received-quotes-archived-table"].include?(table_id) && !invoice.has_associated_credit_note? %>
                 <li>
                   <%= link_to "Mark as Paid", mark_as_paid_invoice_path(invoice, tab: local_assigns[:active_tab]),
                       data: { turbo_method: :patch, turbo_confirm: "Mark this invoice as paid?" },

@@ -37,7 +37,10 @@ class InvoiceDatatable < BaseDatatable
   end
 
   def data
-    paginate(filtered_scope).map do |invoice|
+    records = paginate(filtered_scope).to_a
+    preload_associated_credit_notes(records)
+
+    records.map do |invoice|
       {
         'DT_RowId' => "invoice_#{invoice.id}",
         'invoice_number' => invoice_link(invoice),
@@ -52,6 +55,25 @@ class InvoiceDatatable < BaseDatatable
   end
 
   private
+
+  def preload_associated_credit_notes(records)
+    standard_invoices = records.select(&:standard?)
+    return if standard_invoices.empty?
+
+    standard_numbers = standard_invoices.map(&:invoice_number).compact.uniq
+    return if standard_numbers.empty?
+
+    existing_credit_notes = current_user.invoices
+      .where(invoice_category: "credit_note", invoice_number: standard_numbers)
+      .pluck(:invoice_number, :invoice_type, :sale_from_id)
+      .map { |num, type, sf_id| "#{num}_#{type}_#{sf_id}" }
+      .to_set
+
+    standard_invoices.each do |inv|
+      key = "#{inv.invoice_number}_#{inv.invoice_type}_#{inv.sale_from_id}"
+      inv.instance_variable_set(:@has_associated_credit_note, existing_credit_notes.include?(key))
+    end
+  end
 
   def sortable_columns
     counterparty_col = if @invoice_type == 'purchase' || is_purchase_table?
@@ -221,7 +243,7 @@ class InvoiceDatatable < BaseDatatable
   end
 
   def format_actions(invoice)
-    content_tag(:div, class: 'dropdown text-center') do
+    dropdown = content_tag(:div, class: 'dropdown text-center') do
       button = content_tag(:button, '&#8942;'.html_safe,
         class: 'btn btn-link text-muted p-0 text-decoration-none fs-3',
         type: 'button',
@@ -235,6 +257,14 @@ class InvoiceDatatable < BaseDatatable
 
       button + menu
     end
+
+    modal = if is_purchase_table? && invoice.status == 'approved' && !invoice.has_associated_credit_note? && !invoice.quote?
+      view.render(partial: 'invoices/partials/submit_tax_documents_modal', formats: [:html], locals: { invoice: invoice })
+    else
+      ''
+    end
+
+    dropdown + modal
   end
 
   def build_action_items(invoice)
@@ -269,8 +299,8 @@ class InvoiceDatatable < BaseDatatable
       end
     end
 
-    # Mark as Paid
-    if %w[approved sent].include?(invoice.status) && !is_received_quotes_table?
+    # Mark as Paid (only seller/issuer of sale invoice can mark as paid)
+    if invoice.invoice_type == 'sale' && %w[approved sent].include?(invoice.status) && !is_purchase_table? && !is_received_quotes_table?
       items << content_tag(:li) do
         link_to('Mark as Paid',
           url_helpers.mark_as_paid_invoice_path(invoice, tab: active_tab),
@@ -285,6 +315,31 @@ class InvoiceDatatable < BaseDatatable
         link_to('Create Credit Note',
           url_helpers.new_invoice_path(original_invoice_id: invoice.id, category: 'credit_note', tab: active_tab),
           class: 'dropdown-item')
+      end
+    end
+
+    # Approve / Reject (purchase pending)
+    if invoice.invoice_type == 'purchase' && invoice.status == 'pending' && !invoice.has_associated_credit_note?
+      items << content_tag(:li) do
+        link_to('Approve',
+          url_helpers.approve_invoice_path(invoice, tab: active_tab),
+          data: { turbo_method: :patch, turbo_confirm: 'Approve this purchase invoice?' },
+          class: 'dropdown-item')
+      end
+      items << content_tag(:li) do
+        link_to('Reject',
+          url_helpers.reject_invoice_path(invoice, tab: active_tab),
+          data: { turbo_method: :patch, turbo_confirm: 'Reject this purchase invoice?' },
+          class: 'dropdown-item')
+      end
+    end
+
+    # Submit Tax Documents (purchase approved, not quote)
+    if is_purchase_table? && invoice.status == 'approved' && !invoice.has_associated_credit_note? && !invoice.quote?
+      items << content_tag(:li) do
+        link_to('Submit Tax Documents', '#',
+          class: 'dropdown-item',
+          data: { 'bs-toggle' => 'modal', 'bs-target' => "#submitTaxModal-#{invoice.id}" })
       end
     end
 

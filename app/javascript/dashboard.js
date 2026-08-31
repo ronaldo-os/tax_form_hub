@@ -227,12 +227,12 @@ function renderStatusDonutChart(statusCounts) {
   const totalCount = values.reduce((a, b) => a + b, 0);
 
   const backgroundColors = [
-    '#10b981', // Paid
-    '#00aeff', // Approved
-    '#38bdf8', // Sent
-    '#f59e0b', // Pending
-    '#94a3b8', // Draft
-    '#ef4444'  // Rejected
+    '#10b981', // Paid (Emerald Green)
+    '#0ea5e9', // Approved (Sky Blue)
+    '#6366f1', // Sent (Indigo Purple)
+    '#f59e0b', // Pending (Amber)
+    '#94a3b8', // Draft (Slate Gray)
+    '#ef4444'  // Rejected (Red)
   ];
 
   statusDonutChart = new Chart(ctx, {

@@ -842,8 +842,9 @@ class Invoice < ApplicationRecord
 
   def has_associated_credit_note?
     return false unless standard?
+    return @has_associated_credit_note if defined?(@has_associated_credit_note)
 
-    Invoice.exists?(
+    @has_associated_credit_note = Invoice.exists?(
       user_id: user_id,
       invoice_number: invoice_number,
       invoice_type: invoice_type,

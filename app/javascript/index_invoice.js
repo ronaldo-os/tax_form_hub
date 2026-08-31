@@ -77,15 +77,12 @@ function initInvoicePage() {
         renderMiniCharts("chart-purchase", purchaseTrendsData, "#00aeff");
     }
 
-    // Initialize DataTables - Support both client-side and server-side processing
-    const tableSelectors = '#sales-table, #purchases-table, #sales-archived-table, #purchases-archived-table, #sent-quotes-table, #sent-quotes-archived-table, #received-quotes-table, #received-quotes-archived-table';
+    // Initialize DataTables - Lazy load per tab for instant initial rendering
+    function initSingleDataTable($table) {
+        if (!$table.length || $.fn.DataTable.isDataTable($table[0])) return;
 
-    $(tableSelectors).each(function() {
-        const $table = $(this);
-        // Data attributes are strings, not booleans - check for "true" string
         const isServerSide = $table.attr('data-server-side') === 'true';
         const ajaxUrl = $table.data('ajax-url');
-        // Parse the JSON data attribute
         let ajaxData = {};
         try {
             const ajaxDataAttr = $table.attr('data-ajax-data');
@@ -143,21 +140,32 @@ function initInvoicePage() {
         }
 
         $table.DataTable(tableConfig);
+    }
+
+    // Initialize tables in the currently active tab immediately
+    $('.tab-pane.active table[data-server-side="true"], .tab-pane.show.active table[data-server-side="true"]').each(function() {
+        initSingleDataTable($(this));
     });
 
-    // Handle tab switch - Unbind first to prevent duplicates
+    // Handle tab switch - initialize tables for newly activated tab on demand
     $('button[data-bs-toggle="tab"]').off('shown.bs.tab.invoice').on('shown.bs.tab.invoice', function (e) {
         const tabId = $(e.target).attr('id').replace('-tab', '');
+        const targetPaneSelector = $(e.target).data('bs-target') || `#${tabId}`;
         const url = new URL(window.location);
         url.searchParams.set('tab', tabId);
         window.history.replaceState({}, '', url);
+
+        // Initialize any uninitialized tables in this pane
+        $(targetPaneSelector).find('table[data-server-side="true"]').each(function() {
+            initSingleDataTable($(this));
+        });
 
         setTimeout(function () {
             $.fn.dataTable
                 .tables({ visible: true, api: true })
                 .columns.adjust()
                 .responsive.recalc();
-        }, 200);
+        }, 150);
     });
 
     // Window resize

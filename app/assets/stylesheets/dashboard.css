@@ -226,18 +226,25 @@
 }
 
 .bento-value {
-  font-size: clamp(1.25rem, 3.5vw, 1.45rem);
-  font-weight: 700;
-  line-height: 1.15;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(1.2rem, 3vw, 1.4rem);
+  font-weight: 600;
+  line-height: 1.25;
   color: var(--text-main);
-  letter-spacing: -0.025em;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 .bento-financial-value {
-  font-size: clamp(1.35rem, 4vw, 1.65rem);
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
   color: var(--text-main);
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
 }
 
 /* Sub-metrics Grid Row */
@@ -270,6 +277,9 @@
   font-size: 0.775rem;
   font-weight: 600;
   line-height: 1.35;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -13,52 +13,32 @@ class InvoicesController < ApplicationController
   end
 
   def index
-    # Cache expensive queries and computations, invalidating when invoice data changes
+    # Cache expensive computations, invalidating when invoice data changes
     last_updated_at = current_user.invoices.maximum(:updated_at)
     cache_key = [
-      "invoices_index",
+      "invoices_index_stats",
       current_user.id,
       current_user.invoices.count,
       last_updated_at&.utc&.to_fs(:usec)
     ]
 
     @invoices_data = Rails.cache.fetch(cache_key, expires_in: 15.minutes) do
-      # Eager load associations to prevent N+1 queries
-      base_scope = current_user.invoices
-        .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
-      
-      # Limit results to most recent 100 per category to prevent loading thousands of records
-      invoices_sale = base_scope.where(invoice_type: "sale", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
-      invoices_sale_archived = base_scope.where(invoice_type: "sale", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
-      invoices_purchase = base_scope.where(invoice_type: "purchase", archived: false).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
-      invoices_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true).where.not(invoice_category: "quote").order(issue_date: :desc).limit(100)
-
-      quotes_sale = base_scope.where(invoice_type: "sale", archived: false, invoice_category: "quote").order(issue_date: :desc).limit(100)
-      quotes_sale_archived = base_scope.where(invoice_type: "sale", archived: true, invoice_category: "quote").order(issue_date: :desc).limit(100)
-      quotes_purchase = base_scope.where(invoice_type: "purchase", archived: false, invoice_category: "quote").order(issue_date: :desc).limit(100)
-      quotes_purchase_archived = base_scope.where(invoice_type: "purchase", archived: true, invoice_category: "quote").order(issue_date: :desc).limit(100)
-
-      # month ranges (use Time.current so it respects time zone)
+      # Month ranges (use Time.current so it respects time zone)
       current_month_range = Time.current.beginning_of_month..Time.current.end_of_month
       last_month_range    = 1.month.ago.beginning_of_month..1.month.ago.end_of_month
 
+      sales_scope = current_user.invoices.where(invoice_type: "sale", archived: false).where.not(invoice_category: "quote")
+      purchase_scope = current_user.invoices.where(invoice_type: "purchase", archived: false).where.not(invoice_category: "quote")
+
       # Summary stats
-      invoice_totals_sale     = build_invoice_stats(invoices_sale, current_month_range, last_month_range)
-      invoice_totals_purchase = build_invoice_stats(invoices_purchase, current_month_range, last_month_range)
+      invoice_totals_sale     = build_invoice_stats(sales_scope, current_month_range, last_month_range)
+      invoice_totals_purchase = build_invoice_stats(purchase_scope, current_month_range, last_month_range)
 
       # Trend graph data (last 6 months)
-      invoice_trends_sale     = build_invoice_trends(invoices_sale)
-      invoice_trends_purchase = build_invoice_trends(invoices_purchase)
+      invoice_trends_sale     = build_invoice_trends(sales_scope)
+      invoice_trends_purchase = build_invoice_trends(purchase_scope)
 
       {
-        invoices_sale: invoices_sale,
-        invoices_sale_archived: invoices_sale_archived,
-        invoices_purchase: invoices_purchase,
-        invoices_purchase_archived: invoices_purchase_archived,
-        quotes_sale: quotes_sale,
-        quotes_sale_archived: quotes_sale_archived,
-        quotes_purchase: quotes_purchase,
-        quotes_purchase_archived: quotes_purchase_archived,
         invoice_totals_sale: invoice_totals_sale,
         invoice_totals_purchase: invoice_totals_purchase,
         invoice_trends_sale: invoice_trends_sale,
@@ -67,22 +47,12 @@ class InvoicesController < ApplicationController
     end
 
     # Assign cached data to instance variables
-    @invoices_sale = @invoices_data[:invoices_sale]
-    @invoices_sale_archived = @invoices_data[:invoices_sale_archived]
-    @invoices_purchase = @invoices_data[:invoices_purchase]
-    @invoices_purchase_archived = @invoices_data[:invoices_purchase_archived]
-    @quotes_sale = @invoices_data[:quotes_sale]
-    @quotes_sale_archived = @invoices_data[:quotes_sale_archived]
-    @quotes_purchase = @invoices_data[:quotes_purchase]
-    @quotes_purchase_archived = @invoices_data[:quotes_purchase_archived]
     @invoice_totals_sale = @invoices_data[:invoice_totals_sale]
     @invoice_totals_purchase = @invoices_data[:invoice_totals_purchase]
     @invoice_trends_sale = @invoices_data[:invoice_trends_sale]
     @invoice_trends_purchase = @invoices_data[:invoice_trends_purchase]
 
     @active_tab = params[:tab] || 'sales-invoices'
-
-
   end
 
 
@@ -696,40 +666,38 @@ class InvoicesController < ApplicationController
 
   def mark_as_paid
     invoice = current_user.invoices.find(params[:id])
-    if invoice.has_associated_credit_note?
+    if invoice.invoice_type != "sale"
       tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+      redirect_to invoices_path(tab: tab), status: :see_other, alert: "Receiver of invoice cannot mark invoice as paid. Only the issuer can mark it as paid."
+      return
+    end
+
+    if invoice.has_associated_credit_note?
+      tab = params[:tab] || "sales-invoices"
       redirect_to invoices_path(tab: tab), status: :see_other, alert: "Cannot mark as paid an invoice with an associated credit note."
       return
     end
 
     if invoice.update(status: "paid")
-      if invoice.invoice_type == "sale"
-        sale_company_id = invoice.user.company&.id || invoice.user.companies.first&.id
-        purchase_invoice = Invoice.find_by(
-          invoice_number: invoice.invoice_number,
-          invoice_type: "purchase",
-          invoice_category: invoice.invoice_category,
-          sale_from_id: sale_company_id,
-          recipient_company_id: invoice.recipient_company_id
-        )
-        purchase_invoice&.update(status: "paid")
-      else
-        update_original_sale_status(invoice, "paid")
-      end
+      sale_company_id = invoice.user.company&.id || invoice.user.companies.first&.id
+      purchase_invoice = Invoice.find_by(
+        invoice_number: invoice.invoice_number,
+        invoice_type: "purchase",
+        invoice_category: invoice.invoice_category,
+        sale_from_id: sale_company_id,
+        recipient_company_id: invoice.recipient_company_id
+      )
+      purchase_invoice&.update(status: "paid")
 
       # Notify counterparty of payment
-      counterparty = if invoice.invoice_type == "sale"
-                       invoice.recipient_company&.user
-                     else
-                       invoice.sale_from&.user || invoice.user
-                     end
+      counterparty = invoice.recipient_company&.user
       NotificationService.notify_invoice_paid(invoice, counterparty, current_user) if counterparty
 
-      tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+      tab = params[:tab] || "sales-invoices"
       category_name = invoice.standard? ? "Invoice" : invoice.invoice_category.humanize
       redirect_to invoices_path(tab: tab), status: :see_other, notice: "#{category_name} marked as paid."
     else
-      tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+      tab = params[:tab] || "sales-invoices"
       redirect_to invoices_path(tab: tab), status: :see_other, alert: "Failed to update invoice."
     end
   end
@@ -755,17 +723,29 @@ class InvoicesController < ApplicationController
     statuses = %w[total draft sent paid pending]
     trends = {}
 
-    6.times.reverse_each do |i|
-      month_start = i.months.ago.beginning_of_month
-      month_end   = i.months.ago.end_of_month
-      label       = month_start.strftime("%b")
+    six_months_ago = 5.months.ago.beginning_of_month.to_date
+    month_counts = relation.unscope(:order)
+      .where("issue_date >= ?", six_months_ago)
+      .group(Arel.sql("DATE_TRUNC('month', issue_date)"), :status)
+      .count
 
-      month_scope = relation.where(issue_date: month_start..month_end)
-      counts_by_status = month_scope.unscope(:order).group(:status).count
-      total_count = counts_by_status.values.sum
+    6.times.reverse_each do |i|
+      month_date  = i.months.ago.beginning_of_month.to_date
+      label       = month_date.strftime("%b")
+
+      month_status_counts = {}
+      total_count = 0
+
+      month_counts.each do |(trunc_date, status), count|
+        parsed_date = trunc_date.is_a?(Date) ? trunc_date : (trunc_date.is_a?(Time) ? trunc_date.to_date : Date.parse(trunc_date.to_s))
+        if parsed_date.year == month_date.year && parsed_date.month == month_date.month
+          month_status_counts[status.to_s] = (month_status_counts[status.to_s] || 0) + count
+          total_count += count
+        end
+      end
 
       statuses.each do |status|
-        count = (status == "total") ? total_count : (counts_by_status[status] || 0)
+        count = (status == "total") ? total_count : (month_status_counts[status] || 0)
         trends[status] ||= []
         trends[status] << { month: label, count: count }
       end
