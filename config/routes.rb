@@ -59,14 +59,16 @@ Rails.application.routes.draw do
 
 
 
-  resources :notifications, only: [] do
+  resources :notifications, only: [:index] do
     collection do
       post :mark_all_as_read
+      post :bulk_action
       get :dropdown
     end
     member do
       patch :mark_as_read
       patch :mark_as_unread
+      delete :destroy
       get :click
     end
   end

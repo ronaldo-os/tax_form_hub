@@ -120,6 +120,20 @@
             <% end %>
           </li>
 
+          <li class="<%= 'app-active' if request.path.starts_with?(notifications_path) %>">
+            <%= link_to notifications_path do %>
+              <div class="app-icon position-relative">
+                <i class="fa-solid fa-bell fa-fw z-1"></i>
+              </div>
+              <div class="app-text d-flex align-items-center justify-content-between flex-grow-1">
+                <span>Notifications</span>
+                <% if (cnt = current_user&.notifications&.unread&.count.to_i) > 0 %>
+                  <span class="badge bg-primary rounded-pill fs-9 ms-auto me-2"><%= cnt > 99 ? '99+' : cnt %></span>
+                <% end %>
+              </div>
+            <% end %>
+          </li>
+
           <!-- Mobile-only account links (since desktop header dropdown is hidden on mobile) -->
           <li class="d-lg-none <%= 'app-active' if request.path.starts_with?(edit_profile_path) %>">
             <%= link_to edit_profile_path do %>

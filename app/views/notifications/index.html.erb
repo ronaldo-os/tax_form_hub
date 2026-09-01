@@ -1,0 +1,277 @@
+<% content_for :page_title, "Notifications" %>
+
+<div class="notifications-center-page container-fluid px-3 px-md-4 py-3" data-controller="notifications">
+  
+  <!-- Page Header Bar -->
+  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+          <i class="fa-solid fa-bell fs-5"></i>
+        </div>
+        <h2 class="h4 mb-0 fw-bold text-main">Notifications Center</h2>
+      </div>
+      <p class="text-muted fs-7 mb-0">Stay updated on your tax submissions, invoices, credit notes, and account activities.</p>
+    </div>
+
+    <!-- Quick Global Actions -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <% if @unread_count > 0 %>
+        <%= button_to mark_all_as_read_notifications_path(category: @tab),
+                      method: :post,
+                      class: "btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5 px-3 py-2 text-white shadow-sm rounded-3",
+                      form: { data: { turbo: true } },
+                      id: "page_mark_all_read_btn" do %>
+          <i class="fa-solid fa-check-double"></i>
+          <span>Mark All Read</span>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Metric Overview Cards -->
+  <div class="row g-3 mb-4" id="notifications_stat_cards">
+    <!-- Total Active -->
+    <div class="col-6 col-md-3 col-lg-3 flex-fill">
+      <%= link_to notifications_path(tab: "all"), class: "text-decoration-none" do %>
+        <div class="card stat-widget-card border-0 rounded-3 p-3 h-100 <%= 'shadow-sm active-stat-card' if @tab == 'all' && @status == 'all' %>">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fs-8 fw-semibold text-muted text-uppercase">All Notifications</span>
+            <div class="stat-widget-icon bg-primary-subtle text-primary rounded-circle">
+              <i class="fa-solid fa-layer-group"></i>
+            </div>
+          </div>
+          <h3 class="fs-4 fw-bold text-main mb-0" id="stat_total_count"><%= @total_count %></h3>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Unread -->
+    <div class="col-6 col-md-3 col-lg-3 flex-fill">
+      <%= link_to notifications_path(tab: @tab, status: "unread"), class: "text-decoration-none" do %>
+        <div class="card stat-widget-card border-0 rounded-3 p-3 h-100 <%= 'shadow-sm active-stat-card' if @status == 'unread' %>">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fs-8 fw-semibold text-muted text-uppercase">Unread</span>
+            <div class="stat-widget-icon bg-info-subtle text-info rounded-circle">
+              <i class="fa-solid fa-envelope-open-text"></i>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <h3 class="fs-4 fw-bold text-main mb-0" id="stat_unread_count"><%= @unread_count %></h3>
+            <% if @unread_count > 0 %>
+              <span class="badge bg-primary text-white rounded-pill px-2 py-0.5 fs-9 fw-semibold">New</span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Invoices & Quotes -->
+    <div class="col-6 col-md-3 col-lg-3 flex-fill">
+      <%= link_to notifications_path(tab: "invoices"), class: "text-decoration-none" do %>
+        <div class="card stat-widget-card border-0 rounded-3 p-3 h-100 <%= 'shadow-sm active-stat-card' if @tab == 'invoices' %>">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fs-8 fw-semibold text-muted text-uppercase">Invoices & Quotes</span>
+            <div class="stat-widget-icon bg-primary-subtle text-primary rounded-circle">
+              <i class="fa-solid fa-file-invoice"></i>
+            </div>
+          </div>
+          <h3 class="fs-4 fw-bold text-main mb-0" id="stat_invoices_count"><%= @invoices_count %></h3>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Taxes (BIR Form 2307) -->
+    <div class="col-6 col-md-3 col-lg-3 flex-fill">
+      <%= link_to notifications_path(tab: "taxes"), class: "text-decoration-none" do %>
+        <div class="card stat-widget-card border-0 rounded-3 p-3 h-100 <%= 'shadow-sm active-stat-card' if @tab == 'taxes' %>">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="fs-8 fw-semibold text-muted text-uppercase">Taxes (2307)</span>
+            <div class="stat-widget-icon bg-success-subtle text-success rounded-circle">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+            </div>
+          </div>
+          <h3 class="fs-4 fw-bold text-main mb-0" id="stat_taxes_count"><%= @taxes_count %></h3>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs, Filter Controls & Search Bar -->
+  <div class="card border-0 rounded-3 mb-3">
+    <div class="card-body p-3">
+      <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-3">
+        
+        <!-- Category Segmented Tabs -->
+        <ul class="nav nav-pills custom_nav_tabs border-0 flex-wrap gap-1" id="notificationsCategoryTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <%= link_to notifications_path(tab: "all", status: @status == 'all' ? nil : @status, q: @query.presence),
+                        class: "nav-link #{'active' if @tab == 'all'} fw-semibold fs-7 px-3 py-2 rounded-2" do %>
+              <i class="fa-solid fa-border-all me-1.5"></i>
+              <span>All</span>
+              <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9" id="tab_all_badge"><%= @total_count %></span>
+            <% end %>
+          </li>
+          <li class="nav-item" role="presentation">
+            <%= link_to notifications_path(tab: "invoices", status: @status == 'all' ? nil : @status, q: @query.presence),
+                        class: "nav-link #{'active' if @tab == 'invoices'} fw-semibold fs-7 px-3 py-2 rounded-2" do %>
+              <i class="fa-solid fa-file-invoice me-1.5 text-primary"></i>
+              <span>Invoices & Quotes</span>
+              <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9" id="tab_invoices_badge"><%= @invoices_count %></span>
+            <% end %>
+          </li>
+          <li class="nav-item" role="presentation">
+            <%= link_to notifications_path(tab: "taxes", status: @status == 'all' ? nil : @status, q: @query.presence),
+                        class: "nav-link #{'active' if @tab == 'taxes'} fw-semibold fs-7 px-3 py-2 rounded-2" do %>
+              <i class="fa-solid fa-file-invoice-dollar me-1.5 text-success"></i>
+              <span>Taxes</span>
+              <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9" id="tab_taxes_badge"><%= @taxes_count %></span>
+            <% end %>
+          </li>
+          <li class="nav-item" role="presentation">
+            <%= link_to notifications_path(tab: "system", status: @status == 'all' ? nil : @status, q: @query.presence),
+                        class: "nav-link #{'active' if @tab == 'system'} fw-semibold fs-7 px-3 py-2 rounded-2" do %>
+              <i class="fa-solid fa-gear me-1.5 text-secondary"></i>
+              <span>System</span>
+              <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9" id="tab_system_badge"><%= @system_count %></span>
+            <% end %>
+          </li>
+        </ul>
+
+        <!-- Right Side: Status Filter & Search Form -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <!-- Modern Status Filter Segmented Switcher -->
+          <div class="notification-status-filter-group" role="group" aria-label="Status filter">
+            <%= link_to "All", notifications_path(tab: @tab, status: "all", q: @query.presence),
+                        class: "btn #{'active' if @status == 'all'}" %>
+            <%= link_to "Unread", notifications_path(tab: @tab, status: "unread", q: @query.presence),
+                        class: "btn #{'active' if @status == 'unread'}" %>
+            <%= link_to "Read", notifications_path(tab: @tab, status: "read", q: @query.presence),
+                        class: "btn #{'active' if @status == 'read'}" %>
+          </div>
+
+          <!-- Search Form -->
+          <%= form_with url: notifications_path, method: :get, local: true, class: "d-flex align-items-center position-relative" do |f| %>
+            <%= f.hidden_field :tab, value: @tab %>
+            <%= f.hidden_field :status, value: @status %>
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-sidebar border-end-0 text-muted">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </span>
+              <%= f.text_field :q, value: @query, placeholder: "Search notifications...",
+                               class: "form-control form-control-sm border-start-0 ps-0 text-main bg-sidebar",
+                               style: "min-width: 170px;" %>
+              <% if @query.present? %>
+                <%= link_to notifications_path(tab: @tab, status: @status), class: "btn btn-sm btn-light border-start-0 border text-muted", title: "Clear search" do %>
+                  <i class="fa-solid fa-xmark"></i>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Action Bar (Hidden by default, shown when checkboxes are selected) -->
+  <div class="card border-0 rounded-3 mb-3 d-none bg-primary-subtle" id="notifications_bulk_action_bar">
+    <div class="card-body py-2 px-3">
+      <%= form_with url: bulk_action_notifications_path, method: :post, id: "bulk_actions_form", data: { turbo: true } do %>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="d-flex align-items-center gap-3">
+            <div class="form-check mb-0">
+              <input class="form-check-input" type="checkbox" id="master_select_all" data-action="change->notifications#toggleSelectAll">
+              <label class="form-check-label fw-semibold fs-7 text-main" for="master_select_all">
+                Select All
+              </label>
+            </div>
+            <span class="fs-7 fw-medium text-main" id="selected_count_badge">0 selected</span>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <button type="submit" name="bulk_action" value="mark_read" class="btn btn-sm btn-light border fs-8 text-main d-inline-flex align-items-center gap-1">
+              <i class="fa-solid fa-check text-primary"></i> Mark Read
+            </button>
+            <button type="submit" name="bulk_action" value="mark_unread" class="btn btn-sm btn-light border fs-8 text-main d-inline-flex align-items-center gap-1">
+              <i class="fa-regular fa-envelope"></i> Mark Unread
+            </button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Notification Feed Container -->
+  <div id="notifications_feed_container">
+    <% if @notifications.any? %>
+      <div id="notifications_feed">
+        <% @notifications.each do |notification| %>
+          <%= render "notifications/notification_row", notification: notification %>
+        <% end %>
+      </div>
+    <% else %>
+      <!-- Empty State -->
+      <div class="card border-0 rounded-3 p-5 text-center my-4 bg-sidebar">
+        <div class="py-4">
+          <div class="mb-3">
+            <% if @query.present? %>
+              <div class="rounded-circle bg-secondary-subtle text-muted d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                <i class="fa-solid fa-magnifying-glass fs-3 opacity-50"></i>
+              </div>
+            <% elsif @tab == "taxes" %>
+              <div class="rounded-circle bg-success-subtle text-success d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                <i class="fa-solid fa-file-invoice-dollar fs-3"></i>
+              </div>
+            <% elsif @tab == "invoices" %>
+              <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                <i class="fa-solid fa-file-invoice fs-3"></i>
+              </div>
+            <% elsif @status == "unread" %>
+              <div class="rounded-circle bg-success-subtle text-success d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                <i class="fa-solid fa-circle-check fs-3"></i>
+              </div>
+            <% else %>
+              <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                <i class="fa-regular fa-bell-slash fs-3"></i>
+              </div>
+            <% end %>
+          </div>
+
+          <h5 class="fw-bold text-main mb-1">
+            <% if @query.present? %>
+              No matching notifications found
+            <% elsif @tab == "taxes" %>
+              No tax notifications
+            <% elsif @tab == "invoices" %>
+              No invoice or quote notifications
+            <% elsif @status == "unread" %>
+              All caught up!
+            <% else %>
+              No notifications yet
+            <% end %>
+          </h5>
+
+          <p class="text-muted fs-7 mb-3 mx-auto" style="max-width: 420px;">
+            <% if @query.present? %>
+              We couldn't find any notifications matching "<%= @query %>". Try adjusting your search or filters.
+            <% elsif @tab == "taxes" %>
+              Updates for BIR Form 2307 documents and tax submissions will be organized here.
+            <% elsif @tab == "invoices" %>
+              Alerts for new invoices, approvals, rejections, and payment confirmations will appear here.
+            <% elsif @status == "unread" %>
+              You have read all your notifications in this category.
+            <% else %>
+              New notifications and system alerts will automatically show up in real-time.
+            <% end %>
+          </p>
+
+          <% if @query.present? || @status != 'all' || @tab != 'all' %>
+            <%= link_to "Reset Filters", notifications_path, class: "btn btn-sm btn-light border px-3 py-1.5 rounded-2 fs-8 text-main" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+</div>

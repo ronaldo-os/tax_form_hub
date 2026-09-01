@@ -14,9 +14,11 @@ class Notification < ApplicationRecord
   scope :unread, -> { where(read_at: nil) }
   scope :read, -> { where.not(read_at: nil) }
   scope :recent, -> { order(created_at: :desc) }
-  scope :for_category, ->(cat) { where(category: cat) if cat.present? && cat != "all" && cat != "unread" }
+  scope :for_category, ->(cat) { where(category: cat) if cat.present? && !%w[all unread read].include?(cat.to_s) }
 
   after_create_commit :broadcast_creation
+  after_update_commit :broadcast_update
+  after_destroy_commit :broadcast_destruction
 
   def read?
     read_at.present?

@@ -2,8 +2,8 @@ require "test_helper"
 
 class NotificationTest < ActiveSupport::TestCase
   setup do
-    @user = User.first || User.create!(email: "test_notif@example.com", password: "Password123!")
-    @actor = User.second || User.create!(email: "actor_notif@example.com", password: "Password123!")
+    @user = User.find_by(email: "test_notif@example.com") || User.create!(email: "test_notif@example.com", password: "SecurePass#2026!xyz")
+    @actor = User.find_by(email: "actor_notif@example.com") || User.create!(email: "actor_notif@example.com", password: "SecurePass#2026!xyz")
   end
 
   test "can create notification and query unread" do
@@ -25,6 +25,10 @@ class NotificationTest < ActiveSupport::TestCase
     notif.mark_as_read!
     assert notif.read?
     assert_not_includes @user.notifications.unread, notif
+
+    notif.mark_as_unread!
+    assert notif.unread?
+    assert_not notif.read?
   end
 
   test "notification service creates notifications correctly" do

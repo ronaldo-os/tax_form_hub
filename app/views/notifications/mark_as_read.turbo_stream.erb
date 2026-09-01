@@ -1,0 +1,10 @@
+<%= turbo_stream.replace "notification_row_#{@notification.id}" do %>
+  <%= render "notifications/notification_row", notification: @notification %>
+<% end %>
+
+<%= turbo_stream.replace "header_notification_dropdown_container" do %>
+  <%= render "layouts/notification_dropdown", user: current_user %>
+<% end %>
+
+<%= turbo_stream.update "stat_unread_count", @unread_count %>
+<%= turbo_stream.update "tab_all_badge", @total_count %>

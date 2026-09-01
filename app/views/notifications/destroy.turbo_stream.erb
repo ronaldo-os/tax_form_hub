@@ -1,0 +1,15 @@
+<%= turbo_stream.remove "notification_row_#{@notification.id}" %>
+
+<%= turbo_stream.replace "header_notification_dropdown_container" do %>
+  <%= render "layouts/notification_dropdown", user: current_user %>
+<% end %>
+
+<%= turbo_stream.update "stat_total_count", @total_count %>
+<%= turbo_stream.update "stat_unread_count", @unread_count %>
+<%= turbo_stream.update "stat_invoices_count", @invoices_count %>
+<%= turbo_stream.update "stat_taxes_count", @taxes_count %>
+<%= turbo_stream.update "stat_system_count", @system_count %>
+<%= turbo_stream.update "tab_all_badge", @total_count %>
+<%= turbo_stream.update "tab_invoices_badge", @invoices_count %>
+<%= turbo_stream.update "tab_taxes_badge", @taxes_count %>
+<%= turbo_stream.update "tab_system_badge", @system_count %>

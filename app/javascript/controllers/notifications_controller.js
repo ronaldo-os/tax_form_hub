@@ -3,6 +3,7 @@ import { Controller } from "@hotwired/stimulus";
 export default class extends Controller {
   connect() {
     this.initLiveToasts();
+    this.setupBulkForm();
   }
 
   initLiveToasts() {
@@ -19,6 +20,76 @@ export default class extends Controller {
     });
   }
 
+  setupBulkForm() {
+    const bulkForm = document.getElementById("bulk_actions_form");
+    if (bulkForm && !bulkForm.dataset.bulkFormBound) {
+      bulkForm.dataset.bulkFormBound = "true";
+      bulkForm.addEventListener("submit", (e) => this.handleBulkSubmit(e));
+    }
+  }
+
+  toggleSelectAll(event) {
+    const isChecked = event.target.checked;
+    const checkboxes = document.querySelectorAll(".notification-select-checkbox");
+    checkboxes.forEach(cb => {
+      cb.checked = isChecked;
+    });
+    this.updateBulkActionBar();
+  }
+
+  onItemSelect() {
+    this.updateBulkActionBar();
+  }
+
+  updateBulkActionBar() {
+    const bulkBar = document.getElementById("notifications_bulk_action_bar");
+    const countBadge = document.getElementById("selected_count_badge");
+    const masterCheckbox = document.getElementById("master_select_all");
+    const selectedCheckboxes = document.querySelectorAll(".notification-select-checkbox:checked");
+    const allCheckboxes = document.querySelectorAll(".notification-select-checkbox");
+
+    const count = selectedCheckboxes.length;
+
+    if (countBadge) {
+      countBadge.textContent = `${count} selected`;
+    }
+
+    if (masterCheckbox && allCheckboxes.length > 0) {
+      masterCheckbox.checked = count === allCheckboxes.length;
+      masterCheckbox.indeterminate = count > 0 && count < allCheckboxes.length;
+    }
+
+    if (bulkBar) {
+      if (count > 0) {
+        bulkBar.classList.remove("d-none");
+      } else {
+        bulkBar.classList.add("d-none");
+      }
+    }
+  }
+
+  handleBulkSubmit(event) {
+    const bulkForm = document.getElementById("bulk_actions_form");
+    if (!bulkForm) return;
+
+    // Remove any previously appended hidden id inputs
+    bulkForm.querySelectorAll('input[name="notification_ids[]"]').forEach(el => el.remove());
+
+    const selectedCheckboxes = document.querySelectorAll(".notification-select-checkbox:checked");
+    if (selectedCheckboxes.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    selectedCheckboxes.forEach(cb => {
+      const hiddenInput = document.createElement("input");
+      hiddenInput.setAttribute("type", "hidden");
+      hiddenInput.setAttribute("name", "notification_ids[]");
+      hiddenInput.setAttribute("value", cb.value);
+      bulkForm.appendChild(hiddenInput);
+    });
+  }
+
   async markAllRead(event) {
     if (event) {
       event.preventDefault();
@@ -27,15 +98,15 @@ export default class extends Controller {
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    // Optimistic UI updates
-    this.element.querySelectorAll(".notification-item.unread").forEach(item => {
+    // Optimistic UI updates in dropdown
+    document.querySelectorAll(".notification-item.unread").forEach(item => {
       item.classList.remove("unread");
       const dot = item.querySelector(".notification-unread-dot");
       if (dot) dot.remove();
     });
 
-    const badgePulse = this.element.querySelector(".notification-badge-pulse");
-    const badgeCount = this.element.querySelector(".notification-badge-count");
+    const badgePulse = document.querySelector(".notification-badge-pulse");
+    const badgeCount = document.querySelector(".notification-badge-count");
     if (badgePulse) badgePulse.classList.add("d-none");
     if (badgeCount) {
       badgeCount.classList.add("d-none");
@@ -53,7 +124,7 @@ export default class extends Controller {
       unreadTabBadge.textContent = "0";
     }
 
-    const markAllBtn = this.element.querySelector(".mark-all-read-btn");
+    const markAllBtn = document.querySelector(".mark-all-read-btn");
     if (markAllBtn) markAllBtn.remove();
 
     try {

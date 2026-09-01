@@ -63,7 +63,7 @@
     </div>
 
     <!-- Category Filter Tabs (Bootstrap Nav Pills) -->
-    <div class="px-3 py-2 border-bottom bg-secondary-subtle">
+    <div class="px-3 py-2 border-bottom">
       <ul class="nav nav-pills notification-filter-tabs d-flex" id="notificationTabs" role="tablist">
         <li class="nav-item flex-fill text-center" role="presentation">
           <button class="nav-link w-100 active py-1 px-2 fs-8" id="notif-all-tab" data-bs-toggle="pill" data-bs-target="#notif-all-pane" type="button" role="tab" aria-controls="notif-all-pane" aria-selected="true">
@@ -157,6 +157,14 @@
           <% end %>
         </div>
       </div>
+    </div>
+
+    <!-- Dropdown Footer -->
+    <div class="px-3 py-2 border-top bg-sidebar text-center">
+      <%= link_to notifications_path, class: "text-decoration-none fs-8 fw-semibold text-primary d-flex align-items-center justify-content-center gap-1.5 py-1 hover-primary" do %>
+        <span>View all notifications</span>
+        <i class="fa-solid fa-arrow-right fs-9"></i>
+      <% end %>
     </div>
   </div>
 </div>

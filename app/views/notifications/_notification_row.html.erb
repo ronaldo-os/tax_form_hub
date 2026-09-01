@@ -1,0 +1,132 @@
+<%
+  icon_cfg = notification.icon_config
+  is_unread = notification.unread?
+%>
+<div class="card notification-page-card rounded-3 border-0 <%= 'unread-card' if is_unread %>"
+     id="notification_row_<%= notification.id %>"
+     data-notification-id="<%= notification.id %>"
+     data-category="<%= notification.category %>"
+     data-status="<%= is_unread ? 'unread' : 'read' %>">
+  <div class="card-body p-3.5 pb-2.5 p-md-3.5">
+    <div class="d-flex align-items-start gap-3">
+      
+      <!-- Selection Checkbox -->
+      <div class="form-check mt-1 d-none d-sm-block">
+        <input class="form-check-input notification-select-checkbox"
+               type="checkbox"
+               value="<%= notification.id %>"
+               id="checkbox_notif_<%= notification.id %>"
+               data-action="change->notifications#onItemSelect">
+        <label class="form-check-label visually-hidden" for="checkbox_notif_<%= notification.id %>">
+          Select notification <%= notification.id %>
+        </label>
+      </div>
+
+      <!-- Icon -->
+      <div class="notification-item-icon <%= icon_cfg[:bg] %> <%= icon_cfg[:color] %> rounded-3 shadow-none flex-shrink-0" style="width: 42px; height: 42px; font-size: 1.15rem;">
+        <i class="<%= icon_cfg[:icon] %>"></i>
+      </div>
+
+      <!-- Main Body -->
+      <div class="flex-grow-1 min-w-0">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-1">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h6 class="mb-0 fw-semibold fs-6 text-main">
+              <% if notification.target_url.present? %>
+                <%= link_to notification.title, click_notification_path(notification), class: "text-decoration-none text-main hover-primary", data: { turbo: false } %>
+              <% else %>
+                <%= notification.title %>
+              <% end %>
+            </h6>
+
+            <!-- Category & Status Badges -->
+            <% if notification.category == "taxes" %>
+              <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle px-2 py-0.5 rounded-pill">
+                <i class="fa-solid fa-file-invoice-dollar me-1"></i>Taxes
+              </span>
+            <% elsif notification.category == "invoices" %>
+              <span class="badge bg-primary-subtle text-primary fs-9 border border-primary-subtle px-2 py-0.5 rounded-pill">
+                <i class="fa-solid fa-file-invoice me-1"></i>Invoices
+              </span>
+            <% else %>
+              <span class="badge bg-secondary-subtle text-secondary fs-9 border border-secondary-subtle px-2 py-0.5 rounded-pill">
+                <i class="fa-solid fa-gear me-1"></i>System
+              </span>
+            <% end %>
+
+            <% if is_unread %>
+              <span class="badge bg-primary text-white fs-9 px-2 py-0.5 rounded-pill fw-medium">
+                New
+              </span>
+            <% end %>
+          </div>
+
+          <!-- Timestamp -->
+          <div class="text-muted fs-8 d-flex align-items-center gap-1.5 flex-shrink-0" title="<%= notification.created_at.strftime('%B %d, %Y at %I:%M %p') %>">
+            <i class="fa-regular fa-clock fs-9"></i>
+            <span><%= time_ago_in_words(notification.created_at) %> ago</span>
+          </div>
+        </div>
+
+        <!-- Message Body -->
+        <% if notification.message.present? %>
+          <p class="fs-7 text-secondary mb-2 lh-base">
+            <%= notification.message %>
+          </p>
+        <% end %>
+
+        <!-- Metadata & Context Footer -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-1.5 border-top border-opacity-10">
+          <div class="d-flex align-items-center gap-2 flex-wrap fs-8 text-muted">
+            <% if notification.actor.present? %>
+              <span class="d-inline-flex align-items-center gap-1">
+                <i class="fa-regular fa-user fs-9"></i>
+                <span><%= notification.actor.company&.name || notification.actor.email %></span>
+              </span>
+              <span>•</span>
+            <% end %>
+            <span><%= notification.action.humanize %></span>
+            <span>•</span>
+            <span class="fs-9 opacity-75"><%= notification.created_at.strftime('%b %d, %Y • %I:%M %p') %></span>
+          </div>
+
+          <!-- Action Buttons Group with Explicit Spacing -->
+          <div class="notification-row-actions d-flex align-items-center ms-auto flex-shrink-0 mt-2">
+            <!-- Mark as Read / Unread -->
+            <% if is_unread %>
+              <%= button_to mark_as_read_notification_path(notification),
+                            method: :patch,
+                            class: "btn btn-sm btn-light border py-1 px-2 fs-9 d-inline-flex align-items-center gap-1 text-main",
+                            form: { class: "m-0 d-inline-block", data: { turbo: true } },
+                            title: "Mark as read" do %>
+                <i class="fa-solid fa-check text-primary"></i>
+                <span class="d-none d-md-inline">Mark Read</span>
+              <% end %>
+            <% else %>
+              <%= button_to mark_as_unread_notification_path(notification),
+                            method: :patch,
+                            class: "btn btn-sm btn-light border py-1 px-2 fs-9 d-inline-flex align-items-center gap-1 text-muted",
+                            form: { class: "m-0 d-inline-block", data: { turbo: true } },
+                            title: "Mark as unread" do %>
+                <i class="fa-regular fa-envelope"></i>
+                <span class="d-none d-md-inline">Mark Unread</span>
+              <% end %>
+            <% end %>
+
+            <!-- Target Resource Link -->
+            <% if notification.target_url.present? %>
+              <%= link_to click_notification_path(notification),
+                          class: "btn btn-sm btn-primary py-1 px-2 fs-9 d-inline-flex align-items-center gap-1 text-white text-decoration-none",
+                          data: { turbo: false } do %>
+                <span>View</span>
+                <i class="fa-solid fa-arrow-up-right-from-square fs-9"></i>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+<%= turbo_stream.replace "header_notification_dropdown_container" do %>
+  <%= render "layouts/notification_dropdown", user: current_user %>
+<% end %>
+
+<%= turbo_stream.update "stat_total_count", @total_count %>
+<%= turbo_stream.update "stat_unread_count", @unread_count %>
+<%= turbo_stream.update "stat_invoices_count", @invoices_count %>
+<%= turbo_stream.update "stat_taxes_count", @taxes_count %>
+<%= turbo_stream.update "stat_system_count", @system_count %>
+<%= turbo_stream.update "tab_all_badge", @total_count %>
+<%= turbo_stream.update "tab_invoices_badge", @invoices_count %>
+<%= turbo_stream.update "tab_taxes_badge", @taxes_count %>
+<%= turbo_stream.update "tab_system_badge", @system_count %>
+
+<%= turbo_stream.replace "notifications_feed_container" do %>
+  <div id="notifications_feed_container">
+    <% if @notifications.any? %>
+      <div id="notifications_feed">
+        <% @notifications.each do |notification| %>
+          <%= render "notifications/notification_row", notification: notification %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="card border rounded-3 p-5 text-center my-4 bg-sidebar">
+        <div class="py-4">
+          <div class="mb-3">
+            <div class="rounded-circle bg-success-subtle text-success d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+              <i class="fa-solid fa-circle-check fs-3"></i>
+            </div>
+          </div>
+          <h5 class="fw-bold text-main mb-1">All caught up!</h5>
+          <p class="text-muted fs-7 mb-0">No notifications in this view.</p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
