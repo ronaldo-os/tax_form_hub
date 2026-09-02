@@ -41,15 +41,15 @@
 
             <!-- Category & Status Badges -->
             <% if notification.category == "taxes" %>
-              <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle px-2 py-0.5 rounded-pill">
+              <span class="badge bg-success-subtle text-success fs-9 px-2 py-0.5 rounded-pill">
                 <i class="fa-solid fa-file-invoice-dollar me-1"></i>Taxes
               </span>
             <% elsif notification.category == "invoices" %>
-              <span class="badge bg-primary-subtle text-primary fs-9 border border-primary-subtle px-2 py-0.5 rounded-pill">
+              <span class="badge bg-primary-subtle text-primary fs-9 px-2 py-0.5 rounded-pill">
                 <i class="fa-solid fa-file-invoice me-1"></i>Invoices
               </span>
             <% else %>
-              <span class="badge bg-secondary-subtle text-secondary fs-9 border border-secondary-subtle px-2 py-0.5 rounded-pill">
+              <span class="badge bg-secondary-subtle text-secondary fs-9 px-2 py-0.5 rounded-pill">
                 <i class="fa-solid fa-gear me-1"></i>System
               </span>
             <% end %>

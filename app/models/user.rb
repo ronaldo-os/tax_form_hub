@@ -32,8 +32,21 @@ class User < ApplicationRecord
     superadmin: "superadmin"
   }, suffix: true
 
+  SUPPORTED_CURRENCIES = {
+    "PHP" => "Philippine Peso (₱)",
+    "USD" => "US Dollar ($)",
+    "EUR" => "Euro (€)",
+    "GBP" => "British Pound (£)",
+    "JPY" => "Japanese Yen (¥)",
+    "SGD" => "Singapore Dollar (S$)",
+    "CAD" => "Canadian Dollar (C$)",
+    "AUD" => "Australian Dollar (A$)"
+  }.freeze
+
+  validates :currency, inclusion: { in: SUPPORTED_CURRENCIES.keys }, allow_blank: true
+
   # Callbacks
-  after_initialize :set_default_role, if: :new_record?
+  after_initialize :set_defaults, if: :new_record?
 
   # Methods
   def superadmin?
@@ -42,7 +55,8 @@ class User < ApplicationRecord
 
   private
 
-  def set_default_role
+  def set_defaults
     self.role ||= "user"
+    self.currency ||= "PHP"
   end
 end

@@ -1,12 +1,17 @@
 <% 
   company_name = current_user.company&.name
   full_title = company_name.present? ? "#{company_name} — Financial Intelligence" : "Financial Intelligence & KPIs"
-  currency_symbol = case @dashboard_data[:currency]
+  active_curr = @dashboard_data[:currency] == "all" ? (current_user.currency.presence || "PHP") : @dashboard_data[:currency]
+  currency_symbol = case active_curr
                     when "USD" then "$"
                     when "EUR" then "€"
                     when "PHP" then "₱"
                     when "GBP" then "£"
-                    else "$"
+                    when "JPY" then "¥"
+                    when "SGD" then "S$"
+                    when "CAD" then "C$"
+                    when "AUD" then "A$"
+                    else "#{active_curr} "
                     end
   kpis = @dashboard_data[:kpis]
 %>

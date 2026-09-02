@@ -36,6 +36,38 @@ class Notification < ApplicationRecord
     update(read_at: nil) if read?
   end
 
+  # Dynamically resolve target_url to the recipient's viewable resource
+  def target_url
+    raw_url = read_attribute(:target_url)
+    return "/notifications" if raw_url.blank?
+
+    # Resolve invoice target URLs if recipient doesn't directly own the invoice ID
+    if (match = raw_url.match(%r{\A/invoices/(\d+)\z}))
+      inv_id = match[1].to_i
+      if recipient&.invoices&.exists?(id: inv_id)
+        return raw_url
+      end
+
+      # Find by ID and look up counterpart invoice for recipient
+      inv = Invoice.find_by(id: inv_id)
+      if inv && recipient
+        target_type = (inv.invoice_type == "sale" ? "purchase" : "sale")
+        counterpart = recipient.invoices.find_by(
+          invoice_number: inv.invoice_number,
+          invoice_type: target_type
+        ) || recipient.invoices.find_by(invoice_number: inv.invoice_number)
+        return "/invoices/#{counterpart.id}" if counterpart
+      end
+    end
+
+    # Handle tax submission paths for non-admin vs admin
+    if raw_url.start_with?("/admin/tax_submissions") && recipient&.role != "superadmin"
+      return "/tax_submissions"
+    end
+
+    raw_url
+  end
+
   # Returns icon configuration for UI rendering based on category and action
   def icon_config
     case action

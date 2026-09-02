@@ -52,7 +52,7 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     sign_in @user
     get notifications_path
     assert_response :success
-    assert_select "h2", text: /Notifications Center/
+    assert_select "#notifications_stat_cards"
     assert_select "#notification_row_#{@notification1.id}"
     assert_select "#notification_row_#{@notification2.id}"
     assert_select "#notification_row_#{@other_notification.id}", count: 0
@@ -119,5 +119,52 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     patch mark_as_read_notification_path(@other_notification)
     assert_redirected_to notifications_path
     assert_not @other_notification.reload.read?
+  end
+
+  test "clicking notification marks it as read and redirects to target url" do
+    sign_in @user
+    assert @notification2.unread?
+
+    get click_notification_path(@notification2)
+    assert_response :see_other
+    assert_redirected_to "/tax_submissions"
+    assert @notification2.reload.read?
+  end
+
+  test "clicking invoice notification for counterpart invoice redirects to user's counterpart invoice" do
+    seller_company = Company.create!(name: "Seller Co #{rand(1000)}", user: @other_user)
+    buyer_company = Company.create!(name: "Buyer Co #{rand(1000)}", user: @user)
+
+    seller_invoice = Invoice.create!(
+      user: @other_user,
+      invoice_number: "INV-CLICK-001",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      recipient_company: buyer_company
+    )
+
+    buyer_invoice = Invoice.create!(
+      user: @user,
+      invoice_number: "INV-CLICK-001",
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      sale_from: seller_company
+    )
+
+    # Notification has seller_invoice id stored in target_url, but recipient is @user
+    notif = Notification.create!(
+      recipient: @user,
+      actor: @other_user,
+      category: "invoices",
+      action: "invoice_sent",
+      title: "Invoice Sent",
+      target_url: "/invoices/#{seller_invoice.id}"
+    )
+
+    sign_in @user
+    get click_notification_path(notif)
+    assert_response :see_other
+    assert_redirected_to "/invoices/#{buyer_invoice.id}"
+    assert notif.reload.read?
   end
 end

@@ -14,11 +14,11 @@
                 end %>
           </h4>
           <% if @invoice.quote? %>
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fs-7">Quote Mode</span>
+            <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fs-7">Quote Mode</span>
           <% elsif @invoice.credit_note? %>
-            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill fs-7">Credit Note Mode</span>
+            <span class="badge bg-warning-subtle text-warning px-3 py-2 rounded-pill fs-7">Credit Note Mode</span>
           <% else %>
-            <span class="badge bg-info-subtle text-info border border-info-subtle px-3 py-2 rounded-pill fs-7">Invoice Mode</span>
+            <span class="badge bg-info-subtle text-info px-3 py-2 rounded-pill fs-7">Invoice Mode</span>
           <% end %>
         </div>
         

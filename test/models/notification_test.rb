@@ -49,4 +49,66 @@ class NotificationTest < ActiveSupport::TestCase
     assert_equal "tax_submitted", latest.action
     assert_equal "BIR Form 2307 Received", latest.title
   end
+
+  test "target_url dynamically resolves counterpart invoice if recipient owns different invoice record" do
+    seller_company = Company.create!(name: "Seller Co #{rand(1000)}", user: @actor)
+    buyer_company = Company.create!(name: "Buyer Co #{rand(1000)}", user: @user)
+
+    seller_invoice = Invoice.create!(
+      user: @actor,
+      invoice_number: "INV-TEST-001",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      recipient_company: buyer_company
+    )
+
+    buyer_invoice = Invoice.create!(
+      user: @user,
+      invoice_number: "INV-TEST-001",
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      sale_from: seller_company
+    )
+
+    # Notification created with seller_invoice ID, but recipient is @user (buyer)
+    notif = Notification.create!(
+      recipient: @user,
+      actor: @actor,
+      category: "invoices",
+      action: "invoice_sent",
+      title: "Invoice Sent",
+      target_url: "/invoices/#{seller_invoice.id}"
+    )
+
+    # Calling target_url on notif should resolve to buyer_invoice.id for @user
+    assert_equal "/invoices/#{buyer_invoice.id}", notif.target_url
+  end
+
+  test "notification service resolves correct invoice when notifying sender on approval" do
+    seller_company = Company.create!(name: "Seller Co 2 #{rand(1000)}", user: @actor)
+    buyer_company = Company.create!(name: "Buyer Co 2 #{rand(1000)}", user: @user)
+
+    seller_invoice = Invoice.create!(
+      user: @actor,
+      invoice_number: "INV-TEST-002",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      recipient_company: buyer_company
+    )
+
+    buyer_invoice = Invoice.create!(
+      user: @user,
+      invoice_number: "INV-TEST-002",
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      sale_from: seller_company
+    )
+
+    # Buyer approves buyer_invoice -> NotificationService notifies seller (@actor)
+    NotificationService.notify_invoice_approved(buyer_invoice, @actor, @user)
+
+    notif = @actor.notifications.recent.first
+    assert_equal "invoice_approved", notif.action
+    assert_equal "/invoices/#{seller_invoice.id}", notif.target_url
+  end
 end

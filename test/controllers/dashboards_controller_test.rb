@@ -7,7 +7,8 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     @user = User.create!(
       email: "dashboard_user_#{Time.now.to_i}_#{rand(1000)}@example.com",
       password: "Password123!@#Secure",
-      password_confirmation: "Password123!@#Secure"
+      password_confirmation: "Password123!@#Secure",
+      currency: "USD"
     )
     @company = Company.create!(name: "Dashboard Test Corp #{Time.now.to_i}", user: @user)
     @user.update(company: @company)
@@ -207,5 +208,67 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 500.0, json["kpis"]["total_mrr"]
     assert_equal 6000.0, json["kpis"]["total_arr"]
     assert_equal 500.0, json["kpis"]["avg_mrr_per_subscription"]
+  end
+
+  test "dashboard automatically defaults to user preferred currency from profile" do
+    @user.update!(currency: "EUR")
+    Invoice.create!(
+      user: @user,
+      recipient_company: @partner_company,
+      invoice_number: "INV-EUR-001",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "paid",
+      currency: "EUR",
+      issue_date: Date.current,
+      total: { "grand_total" => "7500.00" }
+    )
+
+    sign_in @user
+    get dashboards_analytics_data_url(time_frame: "this_month", format: :json)
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    assert_equal "EUR", json["currency"]
+    assert_equal "EUR", json["user_currency"]
+    # 5,000 USD (@sale_invoice) -> 4,600 EUR + 7,500 EUR (INV-EUR-001) = 12,100 EUR
+    assert_equal 12100.0, json["kpis"]["total_sales_revenue"]
+
+    # When requesting HTML dashboard, currency symbol matches EUR (€)
+    get root_url
+    assert_response :success
+    assert_includes response.body, "EUR"
+  end
+
+  test "dashboard converts all invoices to user selected currency without altering database invoice data" do
+    # Create an invoice in PHP: 57,000 PHP (= 1,000 USD = 920 EUR)
+    php_invoice = Invoice.create!(
+      user: @user,
+      recipient_company: @partner_company,
+      invoice_number: "INV-PHP-001",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "paid",
+      currency: "PHP",
+      issue_date: Date.current,
+      total: { "grand_total" => "57000.00" }
+    )
+
+    # User views dashboard in EUR
+    sign_in @user
+    get dashboards_analytics_data_url(time_frame: "this_month", currency: "EUR", format: :json)
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    assert_equal "EUR", json["currency"]
+    
+    # Original invoices: @sale_invoice (5,000 USD -> 4,600 EUR) + php_invoice (57,000 PHP -> 920 EUR) = 5,520 EUR
+    assert_equal 5520.0, json["kpis"]["total_sales_revenue"]
+
+    # Invoices in database remain completely unchanged
+    assert_equal "PHP", php_invoice.reload.currency
+    assert_equal 57000.0, php_invoice.grand_total
+    assert_equal "USD", @sale_invoice.reload.currency
+    assert_equal 5000.0, @sale_invoice.grand_total
   end
 end

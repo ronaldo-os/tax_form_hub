@@ -23,8 +23,8 @@ class ApplicationController < ActionController::Base
   end
 
   def configure_permitted_parameters
-    devise_parameter_sanitizer.permit(:sign_up, keys: [:company_name])
-    devise_parameter_sanitizer.permit(:account_update, keys: [:company_name])
+    devise_parameter_sanitizer.permit(:sign_up, keys: [:company_name, :currency])
+    devise_parameter_sanitizer.permit(:account_update, keys: [:company_name, :currency])
   end
 
   def set_flash_from_resource_errors

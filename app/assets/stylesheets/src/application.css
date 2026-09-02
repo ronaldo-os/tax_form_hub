@@ -921,6 +921,10 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 }
 
 /* Badge */
+.badge {
+  border: none !important;
+}
+
 .badge.badge_cn {
   background-color: #032830 !important;
   color: rgba(13, 202, 240, 1) !important;

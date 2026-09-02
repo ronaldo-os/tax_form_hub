@@ -62,7 +62,26 @@ class InvoicesController < ApplicationController
     # show the sender company without extra queries
     @invoice = current_user.invoices
       .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
-      .find(params[:id])
+      .find_by(id: params[:id])
+
+    unless @invoice
+      other_invoice = Invoice.find_by(id: params[:id])
+      if other_invoice
+        target_type = (other_invoice.invoice_type == "sale" ? "purchase" : "sale")
+        counterpart = current_user.invoices.find_by(
+          invoice_number: other_invoice.invoice_number,
+          invoice_type: target_type
+        ) || current_user.invoices.find_by(invoice_number: other_invoice.invoice_number)
+
+        if counterpart
+          redirect_to invoice_path(counterpart), status: :see_other
+          return
+        end
+      end
+
+      redirect_to invoices_path, alert: "Invoice not found or access denied."
+      return
+    end
 
     @recipient_company = @invoice.recipient_company
     @sender_company = @invoice.sale_from || @invoice.user.company
@@ -87,7 +106,25 @@ class InvoicesController < ApplicationController
     # Load the invoice with necessary associations for PDF rendering
     @invoice = current_user.invoices
       .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
-      .find(params[:id])
+      .find_by(id: params[:id])
+
+    unless @invoice
+      other_invoice = Invoice.find_by(id: params[:id])
+      if other_invoice
+        target_type = (other_invoice.invoice_type == "sale" ? "purchase" : "sale")
+        @invoice = current_user.invoices
+          .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
+          .find_by(invoice_number: other_invoice.invoice_number, invoice_type: target_type) ||
+          current_user.invoices
+          .includes(:recipient_company, :sale_from, :ship_from_location, :remit_to_location, :tax_representative_location)
+          .find_by(invoice_number: other_invoice.invoice_number)
+      end
+    end
+
+    unless @invoice
+      head :not_found
+      return
+    end
 
     # Required variables for _invoice_card partial
     @recipient_company = @invoice.recipient_company
@@ -340,7 +377,7 @@ class InvoicesController < ApplicationController
           if @invoice.credit_note?
             original_invoice = @invoice.original_invoice
             InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
-            NotificationService.notify_credit_note_created(@invoice, original_invoice, recipient_user, current_user)
+            NotificationService.notify_credit_note_created(duplicated_invoice, original_purchase_invoice || original_invoice, recipient_user, current_user)
           elsif @invoice.quote?
             InvoiceMailer.quote_sent(duplicated_invoice, recipient_user).deliver_later
             NotificationService.notify_invoice_sent(duplicated_invoice, recipient_user, current_user)
@@ -443,7 +480,7 @@ class InvoicesController < ApplicationController
         if @invoice.credit_note?
           original_invoice = @invoice.original_invoice
           InvoiceMailer.credit_note_created(@invoice, original_invoice).deliver_later
-          NotificationService.notify_credit_note_created(@invoice, original_invoice, recipient_user, current_user)
+          NotificationService.notify_credit_note_created(duplicated_invoice, original_purchase_invoice || original_invoice, recipient_user, current_user)
         elsif @invoice.quote?
           InvoiceMailer.quote_sent(duplicated_invoice, recipient_user).deliver_later
           NotificationService.notify_invoice_sent(duplicated_invoice, recipient_user, current_user)

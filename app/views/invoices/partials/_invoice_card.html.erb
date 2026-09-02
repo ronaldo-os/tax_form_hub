@@ -17,12 +17,12 @@
     <div class="text-end">
       <span class="badge px-3 py-2 fs-6 rounded-pill fw-semibold
         <%= case invoice.status
-            when "sent"     then "bg-primary-subtle text-primary border border-primary-subtle"
-            when "approved" then "bg-success-subtle text-success border border-success-subtle"
-            when "rejected" then "bg-danger-subtle text-danger border border-danger-subtle"
-            when "paid"     then "bg-info-subtle text-info border border-info-subtle"
-            when "draft"    then "bg-secondary-subtle text-body border border-secondary-subtle"
-            else "bg-light text-muted border"
+            when "sent"     then "bg-primary-subtle text-primary"
+            when "approved" then "bg-success-subtle text-success"
+            when "rejected" then "bg-danger-subtle text-danger"
+            when "paid"     then "bg-info-subtle text-info"
+            when "draft"    then "bg-secondary-subtle text-body"
+            else "bg-light text-muted"
         end %>">
         <%= invoice.status.to_s.upcase %>
       </span>

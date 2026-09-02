@@ -22,9 +22,40 @@ function getThemeColors() {
   };
 }
 
-function formatCurrency(amount, currency = 'USD') {
+function formatCurrency(amount, currency = 'PHP') {
   const num = parseFloat(amount) || 0;
-  const symbol = currency === 'PHP' ? '₱' : (currency === 'EUR' ? '€' : (currency === 'GBP' ? '£' : '$'));
+  const effectiveCurrency = (currency === 'all' || !currency)
+    ? (currentDashboardData?.user_currency || 'PHP')
+    : currency;
+  let symbol = '₱';
+  switch (effectiveCurrency) {
+    case 'PHP':
+      symbol = '₱';
+      break;
+    case 'USD':
+      symbol = '$';
+      break;
+    case 'EUR':
+      symbol = '€';
+      break;
+    case 'GBP':
+      symbol = '£';
+      break;
+    case 'JPY':
+      symbol = '¥';
+      break;
+    case 'SGD':
+      symbol = 'S$';
+      break;
+    case 'CAD':
+      symbol = 'C$';
+      break;
+    case 'AUD':
+      symbol = 'A$';
+      break;
+    default:
+      symbol = effectiveCurrency + ' ';
+  }
   return symbol + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 

@@ -397,4 +397,37 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_not_empty data
     assert_match /Mark as Paid/, data.first["actions"]
   end
+
+  test "show action redirects to counterpart invoice if user accesses counterparty invoice ID" do
+    other_user = User.create!(email: "seller_#{Time.now.to_i}_#{rand(1000)}@example.com", password: "Password123!@#Secure")
+    seller_comp = Company.create!(name: "Seller Corp #{rand(1000)}", user: other_user)
+    buyer_comp = Company.create!(name: "Buyer Corp #{rand(1000)}", user: @user)
+
+    seller_invoice = Invoice.create!(
+      user: other_user,
+      invoice_number: "INV-CP-999",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      recipient_company: buyer_comp
+    )
+
+    buyer_invoice = Invoice.create!(
+      user: @user,
+      invoice_number: "INV-CP-999",
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      sale_from: seller_comp
+    )
+
+    # @user accesses seller_invoice.id -> should redirect to buyer_invoice
+    get invoice_url(seller_invoice)
+    assert_response :see_other
+    assert_redirected_to invoice_url(buyer_invoice)
+  end
+
+  test "show action gracefully redirects when invoice is completely missing or unauthorized" do
+    get invoice_url(id: 999999)
+    assert_redirected_to invoices_url
+    assert_equal "Invoice not found or access denied.", flash[:alert]
+  end
 end

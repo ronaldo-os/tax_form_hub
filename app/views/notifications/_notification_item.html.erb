@@ -2,7 +2,7 @@
   icon_cfg = notification.icon_config
   is_unread = notification.unread?
 %>
-<a href="<%= notification.target_url.presence || '#' %>"
+<a href="<%= click_notification_path(notification) %>"
    class="notification-item <%= 'unread' if is_unread %> text-decoration-none"
    id="dropdown_notification_<%= notification.id %>"
    data-notification-id="<%= notification.id %>"
@@ -28,11 +28,11 @@
     <% end %>
     <div class="d-flex align-items-center gap-1.5 mt-0.5">
       <% if notification.category == "taxes" %>
-        <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle py-0.5 px-1.5 rounded">Taxes</span>
+        <span class="badge bg-success-subtle text-success fs-9 py-0.5 px-1.5 rounded">Taxes</span>
       <% elsif notification.category == "invoices" %>
-        <span class="badge bg-primary-subtle text-primary fs-9 border border-primary-subtle py-0.5 px-1.5 rounded">Invoices</span>
+        <span class="badge bg-primary-subtle text-primary fs-9 py-0.5 px-1.5 rounded">Invoices</span>
       <% else %>
-        <span class="badge bg-secondary-subtle text-secondary fs-9 border border-secondary-subtle py-0.5 px-1.5 rounded">System</span>
+        <span class="badge bg-secondary-subtle text-secondary fs-9 py-0.5 px-1.5 rounded">System</span>
       <% end %>
       <% if notification.action.present? %>
         <span class="fs-9 text-muted">• <%= notification.action.humanize %></span>

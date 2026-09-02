@@ -62,8 +62,16 @@ class Users::RegistrationsController < Devise::RegistrationsController
   protected
   
   def update_resource(resource, params)
-    # Always require current password for any profile updates
-    resource.update_with_password(params)
+    if params[:password].present? || params[:password_confirmation].present?
+      resource.update_with_password(params)
+    else
+      clean_params = params.dup
+      clean_params.delete(:current_password)
+      clean_params.delete(:password) if clean_params[:password].blank?
+      clean_params.delete(:password_confirmation) if clean_params[:password_confirmation].blank?
+      resource.currency = clean_params[:currency] if clean_params[:currency].present?
+      resource.update_without_password(clean_params)
+    end
   end
 
   protected
@@ -71,14 +79,14 @@ class Users::RegistrationsController < Devise::RegistrationsController
   def configure_sign_up_params
     devise_parameter_sanitizer.permit(:sign_up, keys: [
       :email, :profile_image, :password,
-      :password_confirmation, :company_name
+      :password_confirmation, :company_name, :currency
     ])
   end
 
   def configure_account_update_params
     devise_parameter_sanitizer.permit(:account_update, keys: [
       :email, :profile_image, :password,
-      :password_confirmation, :current_password, :company_name
+      :password_confirmation, :current_password, :company_name, :currency
     ])
   end
 

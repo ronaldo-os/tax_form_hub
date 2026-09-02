@@ -24,7 +24,7 @@
             </div>
             <% is_active = @wrapper ? @wrapper.subscription_active? : @subscription.subscription_active? %>
             <% is_cancelled = @wrapper ? @wrapper.subscription_cancelled? : @subscription.subscription_cancelled? %>
-            <% status_class = is_active ? 'bg-success-subtle text-success border border-success-subtle' : (is_cancelled ? 'bg-danger-subtle text-danger border border-danger-subtle' : 'bg-secondary-subtle text-secondary border border-secondary-subtle') %>
+            <% status_class = is_active ? 'bg-success-subtle text-success' : (is_cancelled ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary') %>
             <% status_text = is_active ? 'Active' : (is_cancelled ? 'Cancelled' : 'Finished') %>
             <span class="badge <%= status_class %> fs-6 px-3 py-2 rounded-pill fw-semibold">
               <i class="fa-solid fa-circle me-1 small" style="font-size: 0.6rem;"></i> <%= status_text %>
@@ -192,11 +192,11 @@
                       </td>
                       <td>
                         <% if item[:is_cancellation] || (item[:item].is_a?(Hash) && item[:item].dig('optional_fields', 'cancelled')) %>
-                          <span class="badge bg-danger-subtle text-danger fw-semibold border border-danger-subtle">Cancelled</span>
+                          <span class="badge bg-danger-subtle text-danger fw-semibold">Cancelled</span>
                         <% elsif item[:type] == :pending %>
-                          <span class="badge bg-info-subtle text-info fw-semibold border border-info-subtle">Pending</span>
+                          <span class="badge bg-info-subtle text-info fw-semibold">Pending</span>
                         <% else %>
-                          <span class="badge bg-success-subtle text-success fw-semibold border border-success-subtle">Generated</span>
+                          <span class="badge bg-success-subtle text-success fw-semibold">Generated</span>
                         <% end %>
                       </td>
                       <td class="text-end fw-semibold">
@@ -241,11 +241,11 @@
                     </div>
                     <div>
                       <% if item[:is_cancellation] || (item[:item].is_a?(Hash) && item[:item].dig('optional_fields', 'cancelled')) %>
-                        <span class="badge bg-danger-subtle text-danger fw-semibold border border-danger-subtle">Cancelled</span>
+                        <span class="badge bg-danger-subtle text-danger fw-semibold">Cancelled</span>
                       <% elsif item[:type] == :pending %>
-                        <span class="badge bg-info-subtle text-info fw-semibold border border-info-subtle">Pending</span>
+                        <span class="badge bg-info-subtle text-info fw-semibold">Pending</span>
                       <% else %>
-                        <span class="badge bg-success-subtle text-success fw-semibold border border-success-subtle">Generated</span>
+                        <span class="badge bg-success-subtle text-success fw-semibold">Generated</span>
                       <% end %>
                     </div>
                   </div>

@@ -116,7 +116,7 @@ export default class extends Controller {
     const headerPill = document.getElementById("dropdown_unread_badge_pill");
     if (headerPill) {
       headerPill.textContent = "All read";
-      headerPill.className = "badge bg-secondary-subtle text-muted rounded-pill px-2 py-0.5 fs-9 fw-semibold border";
+      headerPill.className = "badge bg-secondary-subtle text-muted rounded-pill px-2 py-0.5 fs-9 fw-semibold";
     }
 
     const unreadTabBadge = document.querySelector("#notif-unread-tab .badge");

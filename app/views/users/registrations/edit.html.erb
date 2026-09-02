@@ -69,9 +69,9 @@
         id: "profile_image_input",
         style: "display: none;" %>
 
-      <!-- Section 1: Account Email -->
+      <!-- Section 1: Account & Preferences -->
       <div class="mb-4">
-        <div class="form-section-label">Account Information</div>
+        <div class="form-section-label">Account & Preferences</div>
         <div class="mb-3">
           <%= f.label :email, "Email Address", class: "form-label" %>
           <%= f.email_field :email,
@@ -82,6 +82,23 @@
           <% if resource.errors[:email].any? %>
             <div class="text-danger small mt-1">
               <%= resource.errors[:email].first.capitalize %>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="mb-3">
+          <%= f.label :currency, "Preferred Dashboard Currency", class: "form-label" %>
+          <%= f.select :currency,
+                User::SUPPORTED_CURRENCIES.map { |code, name| ["#{code} — #{name}", code] },
+                { selected: resource.currency.presence || "PHP" },
+                class: "form-select #{'is-invalid' if resource.errors[:currency].any?}",
+                id: "user_currency_select" %>
+          <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
+            Default currency used across your dashboard analytics, revenue charts, and KPI widgets.
+          </small>
+          <% if resource.errors[:currency].any? %>
+            <div class="text-danger small mt-1">
+              <%= resource.errors[:currency].first.capitalize %>
             </div>
           <% end %>
         </div>
@@ -139,21 +156,20 @@
         </div>
       </div>
 
-      <!-- Section 3: Current Password Requirement -->
+      <!-- Section 3: Current Password (Required only if changing password) -->
       <div class="security-note-box mb-4">
         <div class="mb-2">
           <%= f.label :current_password, "Current Password", class: "form-label fw-bold mb-1 text-main" %>
           <small class="text-muted d-block mb-2" style="font-size: 0.8rem;">
-            Required to authorize profile changes.
+            Only required if you are setting a new password above.
           </small>
         </div>
         <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:current_password].any? %>">
           <%= f.password_field :current_password,
                 autocomplete: "current-password",
-                required: true,
                 class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:current_password].any?}",
                 id: "current_password",
-                placeholder: "Enter current password" %>
+                placeholder: "Enter current password (if changing password)" %>
           <span class="input-group-text" style="cursor: pointer;" title="Toggle Password Visibility">
             <i class="fa-solid fa-eye toggle-password-icon"></i>
           </span>

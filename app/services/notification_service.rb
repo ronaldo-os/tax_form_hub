@@ -21,6 +21,18 @@ class NotificationService
       nil
     end
 
+    def resolve_invoice_for_recipient(invoice, recipient_user)
+      return invoice if invoice.blank? || recipient_user.blank?
+      return invoice if invoice.user_id == recipient_user.id
+
+      # If invoice does not belong to recipient_user, look up recipient_user's counterpart version
+      target_type = (invoice.invoice_type == "sale" ? "purchase" : "sale")
+      recipient_user.invoices.find_by(
+        invoice_number: invoice.invoice_number,
+        invoice_type: target_type
+      ) || recipient_user.invoices.find_by(invoice_number: invoice.invoice_number) || invoice
+    end
+
     def notify_tax_submitted(tax_submission, actor = nil)
       invoice = tax_submission.invoice
       return unless invoice
@@ -90,6 +102,7 @@ class NotificationService
     def notify_invoice_sent(invoice, recipient_user, actor = nil)
       return unless recipient_user
 
+      target_invoice = resolve_invoice_for_recipient(invoice, recipient_user)
       sender_name = actor&.company&.name || actor&.email || "A partner"
       category_name = invoice.quote? ? "Quotation" : (invoice.credit_note? ? "Credit Note" : "Invoice")
 
@@ -104,81 +117,86 @@ class NotificationService
       notify(
         recipient: recipient_user,
         actor: actor || invoice.user,
-        notifiable: invoice,
+        notifiable: target_invoice,
         category: :invoices,
         action: action_name,
         title: "New #{category_name} Received",
         message: "#{sender_name} sent you #{category_name} ##{invoice.invoice_number}.",
-        target_url: "/invoices/#{invoice.id}"
+        target_url: "/invoices/#{target_invoice.id}"
       )
     end
 
     def notify_invoice_approved(invoice, sender_user, actor = nil)
       return unless sender_user
 
+      target_invoice = resolve_invoice_for_recipient(invoice, sender_user)
       actor_name = actor&.company&.name || actor&.email || "The recipient"
       category_name = invoice.quote? ? "Quotation" : "Invoice"
 
       notify(
         recipient: sender_user,
         actor: actor,
-        notifiable: invoice,
+        notifiable: target_invoice,
         category: :invoices,
         action: invoice.quote? ? "quote_approved" : "invoice_approved",
         title: "#{category_name} Approved",
         message: "#{category_name} ##{invoice.invoice_number} was approved by #{actor_name}.",
-        target_url: "/invoices/#{invoice.id}"
+        target_url: "/invoices/#{target_invoice.id}"
       )
     end
 
     def notify_invoice_rejected(invoice, sender_user, actor = nil)
       return unless sender_user
 
+      target_invoice = resolve_invoice_for_recipient(invoice, sender_user)
       actor_name = actor&.company&.name || actor&.email || "The recipient"
       category_name = invoice.quote? ? "Quotation" : "Invoice"
 
       notify(
         recipient: sender_user,
         actor: actor,
-        notifiable: invoice,
+        notifiable: target_invoice,
         category: :invoices,
         action: invoice.quote? ? "quote_rejected" : "invoice_rejected",
         title: "#{category_name} Rejected",
         message: "#{category_name} ##{invoice.invoice_number} was rejected by #{actor_name}.",
-        target_url: "/invoices/#{invoice.id}"
+        target_url: "/invoices/#{target_invoice.id}"
       )
     end
 
     def notify_invoice_paid(invoice, counterparty_user, actor = nil)
       return unless counterparty_user
 
+      target_invoice = resolve_invoice_for_recipient(invoice, counterparty_user)
+
       notify(
         recipient: counterparty_user,
         actor: actor,
-        notifiable: invoice,
+        notifiable: target_invoice,
         category: :invoices,
         action: "invoice_paid",
         title: "Invoice Marked as Paid",
         message: "Invoice ##{invoice.invoice_number} was marked as paid.",
-        target_url: "/invoices/#{invoice.id}"
+        target_url: "/invoices/#{target_invoice.id}"
       )
     end
 
     def notify_credit_note_created(credit_note, original_invoice, recipient_user, actor = nil)
       return unless recipient_user
 
+      target_credit_note = resolve_invoice_for_recipient(credit_note, recipient_user)
       sender_name = actor&.company&.name || actor&.email || "A partner"
       orig_num = original_invoice&.invoice_number || "original invoice"
 
       notify(
         recipient: recipient_user,
         actor: actor || credit_note.user,
-        notifiable: credit_note,
+        notifiable: target_credit_note,
         category: :invoices,
         action: "credit_note_created",
         title: "Credit Note Issued",
         message: "#{sender_name} issued Credit Note ##{credit_note.invoice_number} for Invoice ##{orig_num}.",
-        target_url: "/invoices/#{credit_note.id}"
+        target_url: "/invoices/#{target_credit_note.id}"
       )
     end
   end
