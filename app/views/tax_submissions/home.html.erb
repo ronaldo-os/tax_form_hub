@@ -26,8 +26,8 @@
 
     <!-- Action buttons aligned right / stacked/full-width on mobile -->
     <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
-      <%= link_to root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap" do %>
-        <i class="fa-solid fa-arrow-left"></i> Dashboard
+      <%= link_to session[:tax_submissions_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap", data: { behavior: "back-button" } do %>
+        <i class="fa-solid fa-arrow-left"></i> Back
       <% end %>
       <% if current_user.company_id.present? %>
         <%= link_to "Incoming Submissions", tax_submissions_path, class: "btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" %>

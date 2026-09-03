@@ -175,7 +175,7 @@ a {
   margin-bottom: 5px;
 }
 
-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]),
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="reset"]):not([type="button"]):not([type="image"]):not(.notification-search-input):not(.search-input),
 select,
 textarea {
   border-radius: var(--bs-border-radius-md) !important;

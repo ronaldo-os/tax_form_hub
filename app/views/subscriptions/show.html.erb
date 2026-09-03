@@ -1,8 +1,8 @@
 <div class="container py-2 py-md-4">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-      <%= link_to subscriptions_path(tab: @subscription.purchase? ? 'purchases' : 'sales'), class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2" do %>
-        <i class="fa-solid fa-arrow-left"></i> Back to Subscriptions
+      <%= link_to session[:subscription_back_url] || subscriptions_path(tab: @subscription.purchase? ? 'purchases' : 'sales'), class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2", data: { behavior: "back-button" } do %>
+        <i class="fa-solid fa-arrow-left"></i> Back
       <% end %>
     </div>
   </div>

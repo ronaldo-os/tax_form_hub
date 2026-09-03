@@ -78,4 +78,6 @@
 
 <div>Unhappy? <%= button_to "Cancel my account", registration_path(resource_name), data: { confirm: "Are you sure?", turbo_confirm: "Are you sure?" }, method: :delete %></div>
 
-<%= link_to "Back", :back %>
+<%= link_to session[:profile_back_url] || root_path, class: "btn btn-back rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2", data: { behavior: "back-button" } do %>
+  <i class="fa-solid fa-arrow-left"></i> Back
+<% end %>

@@ -6,6 +6,7 @@
 class SubscriptionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_subscription_invoice, only: [:show, :cancel, :add_mid_cycle_item, :cancel_item]
+  before_action -> { store_back_url(:subscription_back_url) }, only: [:show]
 
   # GET /subscriptions
   # List all recurring invoices (subscription contracts) for the current user

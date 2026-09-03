@@ -33,6 +33,17 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  helper_method :store_back_url
+
+  def store_back_url(key = :back_url)
+    return if request.referrer.blank?
+
+    referrer_path = URI.parse(request.referrer).path rescue nil
+    return if referrer_path == request.path
+
+    session[key] = request.referrer
+  end
+
   # Logout → login
   def after_sign_out_path_for(resource_or_scope)
     new_user_session_path

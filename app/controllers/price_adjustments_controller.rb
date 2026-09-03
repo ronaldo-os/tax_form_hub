@@ -1,6 +1,7 @@
 class PriceAdjustmentsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_price_adjustment, only: [:show]
+  before_action -> { store_back_url(:price_adjustment_back_url) }, only: [:show]
 
   def show
     @invoices = @price_adjustment.recurring_sub_invoices.order(issue_date: :desc).limit(10)

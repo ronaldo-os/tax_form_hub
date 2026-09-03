@@ -8,7 +8,7 @@
 <div class="container mt-5">
   <div class="d-flex justify-content-between mt-5 mb-3">
     <div>
-      <%= link_to invoices_path(tab: params[:tab]), class: "btn btn-back rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2" do %>
+      <%= link_to session[:invoices_back_url] || invoices_path(tab: params[:tab]), class: "btn btn-back rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2", data: { behavior: "back-button" } do %>
         <i class="fa-solid fa-arrow-left"></i> Back
       <% end %>
     </div>

@@ -982,6 +982,34 @@ function filterCommandItems(query) {
   });
 }
 
+// Smart Back Button Navigation Handler
+document.addEventListener('click', function (e) {
+  const backBtn = e.target.closest('a.btn-back, a[data-behavior="back-button"]');
+  if (!backBtn) return;
+
+  // Ignore if user used modifier keys (Cmd/Ctrl+click to open in new tab)
+  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (backBtn.target === '_blank') return;
+
+  // If form has unsaved changes and confirmation hasn't occurred yet, let dirty form handler manage it
+  if (window.isInvoiceFormDirty && !window.isNavigatingConfirmed) return;
+
+  const referrer = document.referrer;
+  const isInternalReferrer = referrer && referrer.includes(window.location.host);
+  const isAuthPage = referrer && (
+    referrer.includes('/users/sign_in') ||
+    referrer.includes('/users/sign_up') ||
+    referrer.includes('/users/password')
+  );
+
+  // If we came from an internal page within the app (excluding auth/sign-in flows)
+  if (window.history.length > 1 && isInternalReferrer && !isAuthPage) {
+    e.preventDefault();
+    window.history.back();
+  }
+});
+
+
 
 
 

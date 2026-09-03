@@ -26,8 +26,8 @@
 
     <!-- Back button on the right -->
     <div class="d-flex justify-content-end">
-      <%= link_to root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap" do %>
-        <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+      <%= link_to session[:tax_submissions_incoming_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap", data: { behavior: "back-button" } do %>
+        <i class="fa-solid fa-arrow-left"></i> Back
       <% end %>
     </div>
   </div>

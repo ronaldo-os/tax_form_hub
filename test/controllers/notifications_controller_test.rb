@@ -167,4 +167,29 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to "/invoices/#{buyer_invoice.id}"
     assert notif.reload.read?
   end
+
+  test "notification index renders uniform filter icons, modern search bar, and status button group" do
+    sign_in @user
+    get notifications_path
+    assert_response :success
+
+    # Uniform tab icons without mismatched color classes
+    assert_select "#notificationsCategoryTabs .notification-tab-icon", count: 4
+    assert_select "#notificationsCategoryTabs i.text-primary", count: 0
+    assert_select "#notificationsCategoryTabs i.text-success", count: 0
+    assert_select "#notificationsCategoryTabs i.text-secondary", count: 0
+
+    # Modern search bar & icon
+    assert_select ".notification-search-bar" do
+      assert_select "i.notification-search-icon"
+      assert_select "input.notification-search-input[name='q']"
+    end
+
+    # Status filter group
+    assert_select ".notification-status-filter-group" do
+      assert_select "a.btn", text: "All"
+      assert_select "a.btn", text: "Unread"
+      assert_select "a.btn", text: "Read"
+    end
+  end
 end

@@ -98,7 +98,9 @@ class Users::RegistrationsController < Devise::RegistrationsController
 
   def store_profile_back_url
     return if request.referrer.blank?
-    return if request.referrer.include?(edit_profile_path)
+
+    referrer_path = URI.parse(request.referrer).path rescue nil
+    return if referrer_path == edit_profile_path || referrer_path == edit_user_registration_path
 
     session[:profile_back_url] = request.referrer
   end

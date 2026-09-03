@@ -514,7 +514,7 @@
                     <i class="fa-solid fa-floppy-disk me-1 extra-small"></i> <%= @invoice.quote? ? "Save Draft" : "Save Draft" %>
                   <% end %>
                 <% else %>
-                  <%= link_to invoices_path(tab: params[:tab]), class: "btn btn-outline-secondary btn-md flex-fill text-nowrap d-flex align-items-center justify-content-center" do %>
+                  <%= link_to session[:invoice_edit_back_url] || invoice_path(@invoice, tab: params[:tab]), class: "btn btn-back btn-outline-secondary btn-md flex-fill text-nowrap d-flex align-items-center justify-content-center", data: { behavior: "back-button" } do %>
                     <i class="fa-solid fa-arrow-left me-1 extra-small"></i> Back
                   <% end %>
                 <% end %>

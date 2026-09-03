@@ -1,7 +1,9 @@
 <div class="container mt-5">
   <div class="d-flex justify-content-between mt-5 mb-3">
     <div>
-      <%= link_to "Back", subscriptions_path(tab: @price_adjustment.purchase? ? 'purchases' : 'sales'), class: "btn btn-back btn-md" %>
+      <%= link_to session[:price_adjustment_back_url] || subscriptions_path(tab: @price_adjustment.purchase? ? 'purchases' : 'sales'), class: "btn btn-back rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2", data: { behavior: "back-button" } do %>
+        <i class="fa-solid fa-arrow-left"></i> Back
+      <% end %>
     </div>
   </div>
 

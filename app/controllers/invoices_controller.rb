@@ -4,6 +4,8 @@ class InvoicesController < ApplicationController
 
   before_action :set_form_resources, only: [:new, :edit, :create, :update]
   before_action :disable_cache_headers, only: [:index, :show]
+  before_action -> { store_back_url(:invoices_back_url) }, only: [:show]
+  before_action -> { store_back_url(:invoice_edit_back_url) }, only: [:edit]
 
   # Server-side DataTables processing endpoint
   # Returns JSON data for DataTables to reduce initial page load

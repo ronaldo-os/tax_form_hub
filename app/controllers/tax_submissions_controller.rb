@@ -1,6 +1,8 @@
 class TaxSubmissionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_tax_submission, only: [ :show, :update, :destroy ]
+  before_action -> { store_back_url(:tax_submissions_incoming_back_url) }, only: [:index]
+  before_action -> { store_back_url(:tax_submissions_back_url) }, only: [:home]
 
   def index
     Rails.logger.info "DEBUG: TaxSubmissionsController#index executing"
