@@ -207,13 +207,17 @@ class InvoicesController < ApplicationController
         invoice_type: original.invoice_type,
         recipient_company_id: original.recipient_company_id,
         sale_from_id: original.sale_from_id,
-        currency: original.currency
+        currency: original.currency.presence || current_user.currency.presence || "PHP"
       )
       @suggested_invoice_number = next_invoice_number_suggestion(@invoice.invoice_type, @invoice.invoice_category)
     else
-      @invoice = Invoice.new(invoice_type: params[:invoice_type] || 'sale', invoice_category: params[:category] || 'standard')
+      @invoice = Invoice.new(
+        invoice_type: params[:invoice_type] || 'sale',
+        invoice_category: params[:category] || 'standard',
+        currency: current_user.currency.presence || "PHP"
+      )
       last_invoice = current_user.invoices.where(invoice_type: @invoice.invoice_type, invoice_category: @invoice.invoice_category).order(created_at: :desc).first
-    @suggested_invoice_number = Invoice.next_invoice_number_for_user(current_user, @invoice.invoice_type, @invoice.invoice_category)
+      @suggested_invoice_number = Invoice.next_invoice_number_for_user(current_user, @invoice.invoice_type, @invoice.invoice_category)
       if last_invoice
         @recipient_note = last_invoice.recipient_note if last_invoice.save_notes_for_future
         @footer_notes   = last_invoice.footer_notes   if last_invoice.save_footer_notes_for_future
@@ -753,7 +757,7 @@ class InvoicesController < ApplicationController
       .order(issue_date: :desc)
       .limit(50)
 
-    render json: invoices.map { |inv| { id: inv.id, invoice_number: inv.invoice_number } }
+    render json: invoices.map { |inv| { id: inv.id, invoice_number: inv.invoice_number, currency: inv.currency } }
   end
 
   private

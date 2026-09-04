@@ -33,7 +33,7 @@
           </div>
         </td>
         <td>
-          <%= invoice.currency + ' ' + number_with_precision(invoice.total["grand_total"].to_f, precision: 2, delimiter: ",") %>
+          <%= currency_symbol(invoice) + ' ' + number_with_precision(invoice.total["grand_total"].to_f, precision: 2, delimiter: ",") %>
         </td>
         <td><%= invoice.issue_date&.strftime('%b %d, %Y') || '—' %></td>
         <td>

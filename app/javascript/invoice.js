@@ -34,6 +34,21 @@ const initInvoiceForm = () => {
   }
 
   // universal functions
+  const CURRENCY_SYMBOLS = {
+    "PHP": "₱",
+    "USD": "$",
+    "EUR": "€",
+    "GBP": "£",
+    "JPY": "¥",
+    "SGD": "S$",
+    "CAD": "C$",
+    "AUD": "A$"
+  };
+
+  function getCurrencySymbol(code) {
+    return CURRENCY_SYMBOLS[code] || code || '₱';
+  }
+
   function formatCurrency(value) {
     if (value === null || value === undefined || value === '') return '0.00';
     let num = parseFloat(String(value).replace(/,/g, ''));
@@ -118,9 +133,13 @@ const initInvoiceForm = () => {
   $(document).on('change.invoice_form', '#credit_note_original_invoice_id', function () {
     const invoiceId = $(this).val();
     const invoiceNumber = $(this).find('option:selected').text();
+    const invoiceCurrency = $(this).find('option:selected').data('currency');
 
     if (invoiceId) {
       $('#original_invoice_status_badge').html(`<span class="badge bg-success">Linked: ${invoiceNumber}</span>`);
+      if (invoiceCurrency) {
+        $('#invoice_currency').val(invoiceCurrency).trigger('change');
+      }
     } else {
       $('#original_invoice_status_badge').html('<span class="badge bg-secondary">Not Linked</span>');
     }
@@ -248,7 +267,7 @@ const initInvoiceForm = () => {
     ],
     "taxExchangeRateFields": [
       { name: "taxExchangeRateFields.exchange_rate.text.7", label: "Exchange rate", type: "text", cols: 7, class: "mb-3" },
-      { name: "taxExchangeRateFields.currency.select(php,usd,eur,jpy).5", label: "Currency", type: "select", cols: 5, options: ["PHP", "USD", "EUR", "JPY"], class: "mb-3" },
+      { name: "taxExchangeRateFields.currency.select(php,usd,eur,jpy).5", label: "Currency", type: "select", cols: 5, options: ["PHP", "USD", "EUR", "GBP", "JPY", "SGD", "CAD", "AUD"], class: "mb-3" },
       { name: "taxExchangeRateFields.date_of_exchange_rate.text.7", label: "Date of exchange rate", type: "date", cols: 7, class: "mb-3" },
       { name: "taxExchangeRateFields.converted_tax_total.text.5", label: "Converted tax total", type: "text", cols: 5, class: "mb-3" },
       { name: "taxExchangeRateFields.converted_document_total_(incl taxes).text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
@@ -1077,7 +1096,7 @@ const initInvoiceForm = () => {
         </td>
         <td class="align-top">
           <select class="form-select unit-type" data-field="unit_type">
-            <option value="false"><span class="currency_type">PHP</span></option>
+            <option value="false"><span class="currency_type">${getCurrencySymbol($("#invoice_currency").val())}</span></option>
             <option value="true">%</option>
           </select>
         </td>
@@ -1166,7 +1185,7 @@ const initInvoiceForm = () => {
       const amount = parseCurrency($row.find('.amount').val());
 
       const unit_raw = $row.find('.unit-type').val();
-      const unit = unit_raw === "true" ? "%" : "PHP";
+      const unit = unit_raw === "true" ? "%" : ($('#invoice_currency').val() || "PHP");
 
       const total = ($row.find('.total').text().trim() || "0.00").replace(/[^\d.-]/g, "");
 
@@ -2114,7 +2133,7 @@ const initInvoiceForm = () => {
             </td>
             <td class="align-top">
               <select class="form-select unit-type" data-field="unit_type">
-                <option value="false"${unitType === "false" ? " selected" : ""}><span class="currency_type">PHP</span></option>
+                <option value="false"${unitType === "false" ? " selected" : ""}><span class="currency_type">${getCurrencySymbol($("#invoice_currency").val())}</span></option>
                 <option value="true"${unitType === "true" ? " selected" : ""}>%</option>
               </select>
             </td>
@@ -2199,19 +2218,22 @@ const initInvoiceForm = () => {
 
   function updateCurrencyFields() {
     let selectedCurrency = $("#invoice_currency").val();
+    let symbol = getCurrencySymbol(selectedCurrency);
 
     if (selectedCurrency) {
-      $(".currency_type").text(selectedCurrency);
+      $(".currency_type").text(symbol);
 
       $("select[name*='discount.unit.select(php,%).2'], select[name*='charge.unit.select(php,%).2']").each(function () {
         const currentValue = $(this).val();
         $(this).empty()
-          .append(`<option value="${selectedCurrency}">${selectedCurrency}</option>`)
+          .append(`<option value="${selectedCurrency}">${symbol}</option>`)
           .append(`<option value="%">%</option>`);
-        if (currentValue === "%" || currentValue === selectedCurrency) {
-          $(this).val(currentValue);
+        if (currentValue === "%" || currentValue === selectedCurrency || currentValue === symbol) {
+          $(this).val(currentValue === symbol ? selectedCurrency : currentValue);
         }
       });
+
+      $(".unit-type option[value='false']").text(symbol);
     }
   }
 
@@ -2954,6 +2976,8 @@ const initInvoiceForm = () => {
     });
     recalculateTotals();
   }
+
+  updateCurrencyFields();
 };
 
 // Listen for theme changes and update dynamically generated badges

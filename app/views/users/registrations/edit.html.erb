@@ -89,7 +89,11 @@
         <div class="mb-3">
           <%= f.label :currency, "Preferred Dashboard Currency", class: "form-label" %>
           <%= f.select :currency,
-                User::SUPPORTED_CURRENCIES.map { |code, name| ["#{code} — #{name}", code] },
+                User::SUPPORTED_CURRENCIES.map { |code, name|
+                  symbol = User::CURRENCY_SYMBOLS[code] || code
+                  clean_name = name.sub(/\s*\([^)]*\)\s*$/, "")
+                  ["#{symbol} — #{clean_name} (#{code})", code]
+                },
                 { selected: resource.currency.presence || "PHP" },
                 class: "form-select #{'is-invalid' if resource.errors[:currency].any?}",
                 id: "user_currency_select" %>

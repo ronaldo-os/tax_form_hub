@@ -335,7 +335,7 @@
         <div class="pt-2">
           <div class="d-flex justify-content-between align-items-center mb-2 small text-secondary">
             <span>Subtotal excl. taxes:</span>
-            <strong class="text-body"><%= number_with_precision(invoice.total.dig("subtotal").to_f, precision: 2, delimiter: ',') %> <%= invoice.currency %></strong>
+            <strong class="text-body"><%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("subtotal").to_f, precision: 2, delimiter: ',') %></strong>
           </div>
 
           <% if invoice.total["tax_breakdown"].present? && invoice.total["tax_breakdown"].is_a?(Hash) %>
@@ -343,32 +343,32 @@
               <div class="d-flex justify-content-between align-items-center mb-2 small text-secondary">
                 <span>
                   <% if data.is_a?(Hash) %>
-                    <%= name %> <em class="extra-small text-muted">(of <%= number_with_precision(data["basis"].to_f, precision: 2, delimiter: ',') %> <%= invoice.currency %>)</em>
+                    <%= name %> <em class="extra-small text-muted">(of <%= currency_symbol(invoice) %> <%= number_with_precision(data["basis"].to_f, precision: 2, delimiter: ',') %>)</em>
                   <% else %>
                     <%= name %>
                   <% end %>
                 </span>
                 <strong class="text-body">
-                  <%= number_with_precision((data.is_a?(Hash) ? data["tax"] : data).to_f, precision: 2, delimiter: ',') %> <%= invoice.currency %>
+                  <%= currency_symbol(invoice) %> <%= number_with_precision((data.is_a?(Hash) ? data["tax"] : data).to_f, precision: 2, delimiter: ',') %>
                 </strong>
               </div>
             <% end %>
           <% else %>
             <div class="d-flex justify-content-between align-items-center mb-2 small text-secondary">
               <span>Total taxes:</span>
-              <strong class="text-body"><%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %> <%= invoice.currency %></strong>
+              <strong class="text-body"><%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %></strong>
             </div>
           <% end %>
 
           <div class="d-flex justify-content-between align-items-center pt-3 border-top border-body-emphasis mt-3">
-            <span class="fw-bold text-body fs-6">Total (<%= invoice.currency %>):</span>
+            <span class="fw-bold text-body fs-6">Total (<%= currency_symbol(invoice) %>):</span>
             <h3 class="fw-bold text-primary mb-0">
               <%= number_with_precision(invoice.total.dig("grand_total").to_f, precision: 2, delimiter: ',') %>
             </h3>
           </div>
           <% if invoice.total.dig("tax").to_f != 0 || invoice.total["tax_breakdown"].present? %>
             <p class="text-muted text-end extra-small mb-0 mt-1">
-              Incl. taxes <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %> <%= invoice.currency %>
+              Incl. taxes <%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
             </p>
           <% end %>
         </div>

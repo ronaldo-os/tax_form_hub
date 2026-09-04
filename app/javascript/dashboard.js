@@ -378,7 +378,7 @@ function setupDashboardEventListeners() {
         const tf = this.getAttribute('data-time-frame');
         timeframeGroup.querySelectorAll('button').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
-        fetchUpdatedAnalyticsData(tf, currentDashboardData ? currentDashboardData.currency : 'all');
+        fetchUpdatedAnalyticsData(tf, currentDashboardData ? currentDashboardData.currency : (currentDashboardData?.user_currency || 'PHP'));
       });
     });
   }

@@ -26,7 +26,10 @@ class Invoice < ApplicationRecord
   attribute :invoice_category, :string, default: "standard"
   enum invoice_category: { standard: "standard", credit_note: "credit_note", quote: "quote" }
 
+  after_initialize :set_default_currency, if: :new_record?
   before_validation :normalize_subscription_end_dates
+
+  validates :currency, inclusion: { in: User::SUPPORTED_CURRENCIES.keys }, allow_blank: true
 
   validate :attachments_type_allowed
   validate :line_items_tax_selected
@@ -44,6 +47,10 @@ class Invoice < ApplicationRecord
 
   def grand_total
     total["grand_total"].to_s.delete(',').to_f
+  end
+
+  def currency_symbol
+    User.currency_symbol(currency)
   end
 
   # Generate next invoice number for user
@@ -1050,5 +1057,9 @@ class Invoice < ApplicationRecord
         end
       end
     end
+  end
+
+  def set_default_currency
+    self.currency ||= "PHP"
   end
 end

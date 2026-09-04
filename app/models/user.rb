@@ -43,6 +43,21 @@ class User < ApplicationRecord
     "AUD" => "Australian Dollar (A$)"
   }.freeze
 
+  CURRENCY_SYMBOLS = {
+    "PHP" => "₱",
+    "USD" => "$",
+    "EUR" => "€",
+    "GBP" => "£",
+    "JPY" => "¥",
+    "SGD" => "S$",
+    "CAD" => "C$",
+    "AUD" => "A$"
+  }.freeze
+
+  def self.currency_symbol(code)
+    CURRENCY_SYMBOLS[code.to_s.upcase] || code.presence || "₱"
+  end
+
   validates :currency, inclusion: { in: SUPPORTED_CURRENCIES.keys }, allow_blank: true
 
   # Callbacks

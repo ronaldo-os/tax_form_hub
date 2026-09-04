@@ -189,6 +189,9 @@ export function initCompanySelector() {
                         const option = document.createElement('option');
                         option.value = inv.id;
                         option.textContent = inv.invoice_number;
+                        if (inv.currency) {
+                            option.dataset.currency = inv.currency;
+                        }
                         select.appendChild(option);
                     });
                 }

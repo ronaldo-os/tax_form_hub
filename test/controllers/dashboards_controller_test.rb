@@ -238,6 +238,7 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     get root_url
     assert_response :success
     assert_includes response.body, "EUR"
+    assert_select "a[data-currency='all']", count: 0
   end
 
   test "dashboard converts all invoices to user selected currency without altering database invoice data" do

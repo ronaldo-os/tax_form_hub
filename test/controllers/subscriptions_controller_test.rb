@@ -208,4 +208,13 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     mid_invoices = @user_buyer.invoices.where(recurring_parent_invoice_id: @purchase_subscription.id)
     assert_equal 0, mid_invoices.count
   end
+
+  test "viewing a subscription row displays Subscriptions header title instead of Tax Form Hub" do
+    sign_in @user_seller
+
+    get subscription_url(@sales_subscription)
+    assert_response :success
+    assert_select "h1.desktop-page-title", text: /Subscriptions/
+    assert_select "h1.mobile-page-title", text: /Subscriptions/
+  end
 end

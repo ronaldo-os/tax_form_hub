@@ -66,8 +66,6 @@
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-1.5 rounded-3 fs-8" aria-labelledby="dashboardCurrencyDropdown">
                 <li class="dropdown-header text-uppercase fs-10 fw-semibold text-muted px-2.5 py-1">Currency</li>
-                <li><a class="dropdown-item currency-select-item rounded-2 <%= 'active fw-bold' if @currency == 'all' %>" href="#" data-currency="all">All Currencies</a></li>
-                <li><hr class="dropdown-divider my-1 opacity-25"></li>
                 <% @dashboard_data[:available_currencies].each do |curr| %>
                   <li><a class="dropdown-item currency-select-item rounded-2 <%= 'active fw-bold' if @currency == curr %>" href="#" data-currency="<%= curr %>"><%= curr %></a></li>
                 <% end %>

@@ -122,10 +122,23 @@ export default class extends Controller {
     const unreadTabBadge = document.querySelector("#notif-unread-tab .badge");
     if (unreadTabBadge) {
       unreadTabBadge.textContent = "0";
+      unreadTabBadge.className = "badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9";
     }
 
     const markAllBtn = document.querySelector(".mark-all-read-btn");
     if (markAllBtn) markAllBtn.remove();
+
+    // Clear the Unread tab pane and show empty state
+    const unreadScroll = document.getElementById("notification-scroll-unread");
+    if (unreadScroll) {
+      unreadScroll.innerHTML = `
+        <div class="text-center py-4 px-3 text-muted">
+          <i class="fa-solid fa-check-circle text-success fs-4 mb-2 d-block"></i>
+          <p class="fs-8 fw-medium mb-1 text-main">All caught up!</p>
+          <p class="fs-9 text-muted mb-0">You have no unread notifications.</p>
+        </div>
+      `;
+    }
 
     try {
       await fetch("/notifications/mark_all_as_read", {
@@ -155,8 +168,9 @@ export default class extends Controller {
 
       // Decrement badge count
       const badgeCount = document.getElementById("notification_unread_badge_count");
+      let count = 0;
       if (badgeCount) {
-        let count = parseInt(badgeCount.textContent) || 0;
+        count = parseInt(badgeCount.textContent) || 0;
         if (count > 1) {
           badgeCount.textContent = (count - 1).toString();
         } else {
@@ -169,8 +183,35 @@ export default class extends Controller {
 
       const unreadTabBadge = document.querySelector("#notif-unread-tab .badge");
       if (unreadTabBadge) {
-        let count = parseInt(unreadTabBadge.textContent) || 0;
-        unreadTabBadge.textContent = Math.max(0, count - 1).toString();
+        let tabCount = parseInt(unreadTabBadge.textContent) || 0;
+        const newCount = Math.max(0, tabCount - 1);
+        unreadTabBadge.textContent = newCount.toString();
+        if (newCount === 0) {
+          unreadTabBadge.className = "badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9";
+        }
+      }
+
+      const headerPill = document.getElementById("dropdown_unread_badge_pill");
+      if (headerPill && count <= 1) {
+        headerPill.textContent = "All read";
+        headerPill.className = "badge bg-secondary-subtle text-muted rounded-pill px-2 py-0.5 fs-9 fw-semibold";
+        const markAllBtn = document.querySelector(".mark-all-read-btn");
+        if (markAllBtn) markAllBtn.remove();
+      }
+
+      // Also remove this notification from the unread tab pane
+      const unreadItems = document.querySelectorAll(`#notification-scroll-unread [data-notification-id="${notifId}"]`);
+      unreadItems.forEach(el => el.remove());
+
+      const unreadScroll = document.getElementById("notification-scroll-unread");
+      if (unreadScroll && unreadScroll.querySelectorAll(".notification-item").length === 0) {
+        unreadScroll.innerHTML = `
+          <div class="text-center py-4 px-3 text-muted">
+            <i class="fa-solid fa-check-circle text-success fs-4 mb-2 d-block"></i>
+            <p class="fs-8 fw-medium mb-1 text-main">All caught up!</p>
+            <p class="fs-9 text-muted mb-0">You have no unread notifications.</p>
+          </div>
+        `;
       }
 
       if (notifId && csrfToken) {

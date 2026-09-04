@@ -152,9 +152,9 @@ class InvoiceDatatable < BaseDatatable
   end
 
   def format_total(invoice)
-    currency = invoice.currency || 'PHP'
+    symbol = invoice.currency_symbol
     amount = number_with_precision(invoice.total.to_h['grand_total'].to_f, precision: 2, delimiter: ',')
-    "#{currency} #{amount}"
+    "#{symbol} #{amount}"
   end
 
   def format_date(date)

@@ -32,6 +32,11 @@ module InvoicesHelper
     company&.tax_id_number.presence || company&.gln.presence || '-'
   end
 
+  def currency_symbol(code_or_invoice)
+    code = code_or_invoice.is_a?(Invoice) ? code_or_invoice.currency : code_or_invoice
+    User.currency_symbol(code)
+  end
+
   def invoice_form_page_title(invoice)
     if invoice&.quote?
       "Create New Quote"
