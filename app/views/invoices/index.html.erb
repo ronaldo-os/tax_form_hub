@@ -33,9 +33,9 @@
 
     <!-- Create Invoice buttons aligned right / stacked on mobile -->
     <div class="invoice-action-buttons d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
-      <%= link_to 'Create Quote', new_invoice_path(category: 'quote', tab: @active_tab), class: 'btn btn-outline-primary flex-fill flex-sm-grow-0 text-nowrap' %>
-      <%= link_to 'Create Credit Note', new_invoice_path(category: 'credit_note', tab: @active_tab), class: 'btn btn-outline-secondary flex-fill flex-sm-grow-0 text-nowrap' %>
-      <%= link_to 'Create Invoice', new_invoice_path(tab: @active_tab), class: 'btn btn-primary flex-fill flex-sm-grow-0 text-nowrap' %>
+      <%= link_to 'Create Quote', new_invoice_path(category: 'quote', tab: @active_tab), class: 'btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap' %>
+      <%= link_to 'Create Credit Note', new_invoice_path(category: 'credit_note', tab: @active_tab), class: 'btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap' %>
+      <%= link_to 'Create Invoice', new_invoice_path(tab: @active_tab), class: 'btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap' %>
     </div>
   </div>
 

@@ -150,4 +150,11 @@ class BackNavigationTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[data-behavior='back-button'][href=?]", referrer_url
   end
+
+  test "notifications index back button uses stored referrer when present" do
+    referrer_url = invoices_url
+    get notifications_url, headers: { "HTTP_REFERER" => referrer_url }
+    assert_response :success
+    assert_select "a[data-behavior='back-button'][href=?]", referrer_url
+  end
 end

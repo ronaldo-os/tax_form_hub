@@ -249,9 +249,37 @@
   margin: 0 auto;
 }
 
+/* Page Header & Global Quick Actions */
+.notification-header-action-btn {
+  min-height: 36px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.notification-header-action-btn:active {
+  transform: scale(0.97);
+}
+
 /* ==========================================================================
-   Category Segmented Tab Group (Filters & Icon Button Group)
+   Category Segmented Tab Group (Scrollable & Responsive)
    ========================================================================== */
+.notification-tabs-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 2px;
+  padding-right: 16px;
+}
+
+.notification-tabs-scroll-wrapper::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 #notificationsCategoryTabs {
   background: var(--bg-tertiary);
   padding: 3px;
@@ -259,14 +287,17 @@
   border: 1px solid var(--border-color);
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
   margin-bottom: 0;
   box-sizing: border-box;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 #notificationsCategoryTabs .nav-item {
   margin: 0;
   display: flex;
+  flex-shrink: 0;
 }
 
 #notificationsCategoryTabs .nav-link {
@@ -284,6 +315,7 @@
   text-decoration: none;
   white-space: nowrap;
   line-height: 1.3;
+  flex-shrink: 0;
 }
 
 #notificationsCategoryTabs .nav-link:hover {
@@ -357,6 +389,7 @@
   align-items: center;
   height: 36px;
   box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .notification-status-filter-group .btn {
@@ -483,6 +516,56 @@
   color: #ffffff;
 }
 
+/* Mobile & Tablet Responsive Controls Row */
+@media (max-width: 575.98px) {
+  .notification-filters-right {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .notification-status-filter-group {
+    width: 100%;
+    display: flex;
+  }
+
+  .notification-status-filter-group .btn {
+    flex: 1 1 0;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 0.75rem;
+  }
+
+  .notification-search-form {
+    width: 100%;
+  }
+
+  .notification-search-bar {
+    width: 100% !important;
+  }
+
+  .notification-search-bar input.notification-search-input,
+  .notification-search-input {
+    min-width: 0 !important;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 991.98px) {
+  .notification-filters-right {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px !important;
+  }
+
+  .notification-search-form {
+    flex-grow: 1;
+    max-width: 380px;
+  }
+}
+
 /* Stat Widget Cards */
 .stat-widget-card {
   background-color: var(--bg-sidebar) !important;
@@ -494,6 +577,10 @@
 .stat-widget-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
+}
+
+.stat-widget-card:active {
+  transform: scale(0.98);
 }
 
 [data-theme="dark"] .stat-widget-card:hover {
@@ -518,11 +605,43 @@
   font-size: 0.9rem;
 }
 
+@media (max-width: 575.98px) {
+  .stat-widget-card {
+    padding: 0.75rem !important;
+  }
+
+  .stat-widget-card .stat-widget-icon {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .stat-widget-card h3 {
+    font-size: 1.25rem !important;
+  }
+
+  .stat-widget-card .stat-widget-title {
+    font-size: 0.72rem !important;
+    letter-spacing: 0.02em;
+    white-space: nowrap !important;
+  }
+}
+
+.stat-widget-title {
+  white-space: nowrap !important;
+}
+
 /* Notification Feed Container with clean card separation */
 #notifications_feed {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+}
+
+@media (min-width: 768px) {
+  #notifications_feed {
+    gap: 14px;
+  }
 }
 
 /* Notification Page Cards */
@@ -552,6 +671,25 @@
   background-color: rgba(0, 174, 255, 0.07) !important;
 }
 
+/* Checkbox touch wrapper in notification rows */
+.notification-row-checkbox-wrapper {
+  min-width: 20px;
+  min-height: 20px;
+  margin-right: 4px;
+}
+
+.notification-row-checkbox-wrapper .form-check-input {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  border-radius: 4px;
+  border-color: var(--border-color);
+}
+
+.notification-row-checkbox-wrapper .form-check-input:focus {
+  box-shadow: 0 0 0 2px rgba(0, 174, 255, 0.25);
+}
+
 /* Action button spacing in notification rows */
 .notification-row-actions {
   display: flex;
@@ -565,43 +703,93 @@
 }
 
 .notification-row-actions .btn {
-  border-radius: 5px !important;
-  padding: 3px 9px !important;
-  font-size: 0.725rem !important;
+  border-radius: 6px !important;
+  padding: 5px 12px !important;
+  min-height: 32px;
+  font-size: 0.8125rem !important;
   font-weight: 500 !important;
   line-height: 1.3 !important;
   display: inline-flex !important;
   align-items: center !important;
-  gap: 4px !important;
+  justify-content: center !important;
+  gap: 6px !important;
   transition: all 0.15s ease !important;
+  cursor: pointer;
+}
+
+.notification-row-actions .btn:active {
+  transform: scale(0.97);
 }
 
 .notification-row-actions .btn i {
-  font-size: 0.75rem !important;
+  font-size: 0.8rem !important;
 }
 
-.notification-row-actions .btn-light {
-  background-color: var(--bg-secondary) !important;
-  border-color: var(--border-color) !important;
-  color: var(--text-main) !important;
+/* Mobile adjustments for notification rows */
+@media (max-width: 575.98px) {
+  .notification-page-card .card-body {
+    padding: 0.85rem !important;
+  }
+
+  .notification-page-card .notification-item-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+  }
+
+  .notification-row-title {
+    font-size: 0.875rem !important;
+    line-height: 1.35;
+  }
+
+  .notification-row-message {
+    font-size: 0.8rem !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .notification-row-footer {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .notification-meta-info {
+    font-size: 0.75rem !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  .notification-meta-info span {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .notification-row-actions {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 8px !important;
+  }
+
+  .notification-row-actions .btn {
+    min-height: 34px;
+    padding: 5px 12px !important;
+    font-size: 0.775rem !important;
+  }
 }
 
-.notification-row-actions .btn-light:hover {
-  background-color: var(--bg-tertiary) !important;
-  border-color: var(--main-color) !important;
-  color: var(--main-color) !important;
-}
-
-.notification-row-actions .btn-primary {
-  background-color: #00aeff !important;
-  border-color: #00aeff !important;
-  color: #ffffff !important;
-}
-
-.notification-row-actions .btn-primary:hover {
-  background-color: #20b9ff !important;
-  border-color: #20b9ff !important;
-  color: #ffffff !important;
+/* Bulk action bar responsive floating */
+@media (max-width: 575.98px) {
+  .notification-bulk-bar {
+    position: sticky;
+    bottom: 12px;
+    z-index: 1020;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
 }
 
 /* Live Toast Popups */

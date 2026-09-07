@@ -69,10 +69,13 @@
     font-size: 0.85rem;
   }
 
-  /* Full screen width container on mobile - DASHBOARD, TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS, COMPANIES, NETWORKS, INVOICES & INVOICE FORM PAGES */
+  /* Full screen width container on mobile - DASHBOARD, TAX SUBMISSIONS, LOCATIONS, SUBSCRIPTIONS, COMPANIES, NETWORKS, INVOICES, NOTIFICATIONS & INVOICE FORM PAGES */
   .analytics-dashboard-page,
   .analytics-dashboard-page.container,
   .analytics-dashboard-page.container-fluid,
+  .notifications-center-page,
+  .notifications-center-page.container,
+  .notifications-center-page.container-fluid,
   .tax-submissions-page,
   .tax-submissions-page.container,
   .tax-submissions-page .container,
@@ -142,6 +145,47 @@
 
   .invoices-page .invoice-action-buttons {
     width: 100%;
+  }
+
+  /* Notifications page scrollable category tabs for mobile/tablet */
+  .notifications-center-page .notification-tabs-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .notifications-center-page .notification-tabs-scroll-wrapper::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .notifications-center-page #notificationsCategoryTabs {
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    background: var(--bg-tertiary) !important;
+    background-color: var(--bg-tertiary) !important;
+    border: 1px solid var(--border-color) !important;
+    padding: 3px !important;
+    border-radius: 8px !important;
+    gap: 2px !important;
+  }
+
+  .notifications-center-page #notificationsCategoryTabs .nav-item {
+    flex: 1 0 auto !important;
+    text-align: center;
+  }
+
+  .notifications-center-page #notificationsCategoryTabs .nav-link {
+    white-space: nowrap !important;
+    padding: 6px 12px !important;
+    font-size: 0.8rem !important;
   }
 
   /* ==========================================================================
