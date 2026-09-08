@@ -1,3 +1,5 @@
+import { updatePdfPreviewScale } from './invoice_preview';
+
 function initInvoicePage() {
     if (!window.location.pathname.includes("/invoices")) return;
 
@@ -215,9 +217,7 @@ function initInvoicePage() {
                     $modal.find('.modal-title').text(title + ' Preview');
                 }
 
-                if (window.updatePdfPreviewScale) {
-                    window.updatePdfPreviewScale();
-                }
+                updatePdfPreviewScale();
             },
             error: function () {
                 $previewCard.html('<div class="alert alert-danger">Failed to load preview.</div>');

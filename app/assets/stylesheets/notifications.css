@@ -245,8 +245,8 @@
    ========================================================================== */
 
 .notifications-center-page {
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 /* Page Header & Global Quick Actions */
