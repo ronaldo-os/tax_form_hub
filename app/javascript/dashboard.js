@@ -454,6 +454,9 @@ function setupDashboardEventListeners() {
   if (refreshBtn) {
     refreshBtn.addEventListener('click', function (e) {
       e.preventDefault();
+      if (refreshBtn.disabled || refreshBtn.classList.contains('disabled')) return;
+      refreshBtn.disabled = true;
+      refreshBtn.classList.add('disabled');
       const icon = document.getElementById('btn_refresh_icon');
       if (icon) icon.classList.add('fa-spin');
       fetchUpdatedAnalyticsData(currentTimeFrame, currentCurrency);
@@ -479,7 +482,12 @@ function setupDashboardEventListeners() {
   observer.observe(document.documentElement, { attributes: true });
 }
 
+let isFetchingAnalytics = false;
+
 function fetchUpdatedAnalyticsData(timeFrame, currency) {
+  if (isFetchingAnalytics) return;
+  isFetchingAnalytics = true;
+
   const loader = document.getElementById('trend_chart_loader');
   if (loader) loader.classList.add('active');
 
@@ -527,9 +535,15 @@ function fetchUpdatedAnalyticsData(timeFrame, currency) {
       console.error('Error fetching analytics data:', error);
     })
     .finally(() => {
+      isFetchingAnalytics = false;
       if (loader) loader.classList.remove('active');
       const icon = document.getElementById('btn_refresh_icon');
       if (icon) icon.classList.remove('fa-spin');
+      const refreshBtn = document.getElementById('btn_refresh_dashboard');
+      if (refreshBtn) {
+        refreshBtn.disabled = false;
+        refreshBtn.classList.remove('disabled');
+      }
     });
 }
 

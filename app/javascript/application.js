@@ -52,6 +52,9 @@ function loadPageSpecificModules() {
 // Always load network search (small utility)
 import './network_search';
 
+// Global action button spamming and double-submit prevention
+import './action_spam_prevention';
+
 // Ensure any legacy service workers are unregistered on load.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {

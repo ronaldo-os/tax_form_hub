@@ -96,6 +96,9 @@ export default class extends Controller {
       event.stopPropagation();
     }
 
+    if (this.isMarkingAllRead) return;
+    this.isMarkingAllRead = true;
+
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     // Optimistic UI updates in dropdown
@@ -151,12 +154,15 @@ export default class extends Controller {
       });
     } catch (error) {
       console.error("[Notifications] Error marking all as read:", error);
+    } finally {
+      this.isMarkingAllRead = false;
     }
   }
 
   markItemRead(event) {
     const item = event.currentTarget.closest(".notification-item");
-    if (!item) return;
+    if (!item || item.dataset.markingRead === "true") return;
+    item.dataset.markingRead = "true";
 
     const notifId = item.dataset.notificationId;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');

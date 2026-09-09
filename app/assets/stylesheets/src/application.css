@@ -1036,3 +1036,22 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
   background-color: var(--bg-tertiary) !important;
   color: var(--text-main) !important;
 }
+
+/* ==========================================================================
+   Action Spam Prevention & Submitting Button Styles
+   ========================================================================== */
+.btn-submitting,
+button.btn-submitting,
+input[type="submit"].btn-submitting {
+  opacity: 0.65 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  transition: opacity 0.15s ease-in-out;
+}
+
+a.disabled,
+a[data-action-in-flight="true"] {
+  opacity: 0.65 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+}

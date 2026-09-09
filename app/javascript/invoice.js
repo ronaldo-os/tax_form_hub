@@ -2521,6 +2521,9 @@ const initInvoiceForm = () => {
     const $previewCard = $('#invoicePreviewCard');
 
     $previewBtn.off('click.invoice_preview').on('click.invoice_preview', function () {
+      if ($previewBtn.prop('disabled')) return;
+      $previewBtn.prop('disabled', true).addClass('disabled');
+
       const $form = $('form');
       const formData = new FormData($form[0]);
 
@@ -2591,6 +2594,9 @@ const initInvoiceForm = () => {
         },
         error: function () {
           $previewCard.html('<div class="alert alert-danger">Failed to load preview. Please ensure all required fields are filled.</div>');
+        },
+        complete: function () {
+          $previewBtn.prop('disabled', false).removeClass('disabled');
         }
       });
     });
