@@ -18,7 +18,7 @@
   },
   "scripts": {
     "build": "esbuild app/javascript/*.* --bundle --minify --sourcemap --outdir=app/assets/builds --splitting --format=esm",
-    "build:css": "esbuild app/assets/stylesheets/src/application.css --bundle --minify --sourcemap --outfile=app/assets/builds/application.css",
+    "build:css": "esbuild app/assets/stylesheets/src/application.css --bundle --minify --sourcemap --outfile=app/assets/builds/application.css && esbuild app/assets/stylesheets/src/critical.css --bundle --minify --outfile=app/assets/builds/critical.css",
     "build:critical-css": "esbuild app/assets/stylesheets/src/critical.css --bundle --minify --outfile=app/assets/builds/critical.css --watch",
     "build:watch": "esbuild app/javascript/*.* --bundle --sourcemap --outdir=app/assets/builds --splitting --format=esm --watch",
     "build:css:watch": "esbuild app/assets/stylesheets/src/application.css --bundle --sourcemap --outfile=app/assets/builds/application.css --watch"

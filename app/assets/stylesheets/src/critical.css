@@ -1,6 +1,3 @@
-@import "../responsive.css";
-@import "../notifications.css";
-
 /* Critical CSS - Above the fold styles */
 /* Theme variables - MUST be first for proper rendering */
 :root,

@@ -5,7 +5,7 @@
     unread_notifications = recent_notifications.select(&:unread?)
     taxes_notifications = recent_notifications.select { |n| n.category == "taxes" }
     invoices_notifications = recent_notifications.select { |n| n.category == "invoices" }
-    unread_count = u.notifications.unread.count
+    unread_count = u.respond_to?(:unread_notifications_count) ? u.unread_notifications_count : u.notifications.unread.count
     total_count = recent_notifications.size
   else
     recent_notifications = []
@@ -94,9 +94,7 @@
       <div class="tab-pane fade show active" id="notif-all-pane" role="tabpanel" aria-labelledby="notif-all-tab" tabindex="0">
         <div class="notification-list-scroll" id="notification-scroll-all">
           <% if recent_notifications.any? %>
-            <% recent_notifications.each do |notif| %>
-              <%= render "notifications/notification_item", notification: notif %>
-            <% end %>
+            <%= render partial: "notifications/notification_item", collection: recent_notifications, as: :notification %>
           <% else %>
             <div class="text-center py-4 px-3 text-muted">
               <i class="fa-regular fa-bell-slash fs-4 mb-2 d-block opacity-50"></i>
@@ -111,9 +109,7 @@
       <div class="tab-pane fade" id="notif-unread-pane" role="tabpanel" aria-labelledby="notif-unread-tab" tabindex="0">
         <div class="notification-list-scroll" id="notification-scroll-unread">
           <% if unread_notifications.any? %>
-            <% unread_notifications.each do |notif| %>
-              <%= render "notifications/notification_item", notification: notif %>
-            <% end %>
+            <%= render partial: "notifications/notification_item", collection: unread_notifications, as: :notification %>
           <% else %>
             <div class="text-center py-4 px-3 text-muted">
               <i class="fa-solid fa-check-circle text-success fs-4 mb-2 d-block"></i>
@@ -128,9 +124,7 @@
       <div class="tab-pane fade" id="notif-taxes-pane" role="tabpanel" aria-labelledby="notif-taxes-tab" tabindex="0">
         <div class="notification-list-scroll" id="notification-scroll-taxes">
           <% if taxes_notifications.any? %>
-            <% taxes_notifications.each do |notif| %>
-              <%= render "notifications/notification_item", notification: notif %>
-            <% end %>
+            <%= render partial: "notifications/notification_item", collection: taxes_notifications, as: :notification %>
           <% else %>
             <div class="text-center py-4 px-3 text-muted">
               <i class="fa-solid fa-file-invoice-dollar fs-4 mb-2 d-block opacity-50 text-success"></i>
@@ -145,9 +139,7 @@
       <div class="tab-pane fade" id="notif-invoices-pane" role="tabpanel" aria-labelledby="notif-invoices-tab" tabindex="0">
         <div class="notification-list-scroll" id="notification-scroll-invoices">
           <% if invoices_notifications.any? %>
-            <% invoices_notifications.each do |notif| %>
-              <%= render "notifications/notification_item", notification: notif %>
-            <% end %>
+            <%= render partial: "notifications/notification_item", collection: invoices_notifications, as: :notification %>
           <% else %>
             <div class="text-center py-4 px-3 text-muted">
               <i class="fa-solid fa-file-invoice fs-4 mb-2 d-block opacity-50 text-primary"></i>

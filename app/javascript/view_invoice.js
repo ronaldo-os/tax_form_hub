@@ -1,3 +1,16 @@
+function loadHtml2Pdf() {
+    if (typeof html2pdf !== 'undefined') {
+        return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.crossOrigin = 'anonymous';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load html2pdf library'));
+        document.head.appendChild(script);
+    });
+}
 
 $(document).on('click', '#download_button', function () {
     const originalInvoice = document.getElementById("invoice_card");
@@ -120,7 +133,7 @@ $(document).on('click', '#download_button', function () {
         });
     });
 
-    Promise.all(imagePromises).then(() => {
+    Promise.all([...imagePromises, loadHtml2Pdf()]).then(() => {
         // Get today's date in YYYY-MM-DD format
         const today = new Date();
         const yyyy = today.getFullYear();

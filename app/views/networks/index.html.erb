@@ -42,7 +42,7 @@
                     <div class="d-flex align-items-center gap-3 min-w-0 me-2">
                       <div class="company-avatar-square flex-shrink-0 rounded-3 border bg-light d-flex align-items-center justify-content-center">
                          <% if company.profile_image.attached? %>
-                            <%= image_tag company.profile_image, class: "img-fluid rounded-3 w-100 h-100", style: "object-fit: cover;" %>
+                            <%= image_tag company.profile_image, class: "img-fluid rounded-3 w-100 h-100", style: "object-fit: cover;", loading: "lazy", decoding: "async" %>
                          <% else %>
                             <i class="fa-solid fa-building text-primary fs-5"></i>
                          <% end %>
@@ -105,7 +105,7 @@
                 <div class="d-flex align-items-start justify-content-between mb-3 gap-2">
                   <div class="company-avatar-box rounded-3 border d-flex justify-content-center align-items-center flex-shrink-0">
                     <% if company.profile_image.attached? %>
-                      <%= image_tag company.profile_image, class: "img-fluid rounded-3 w-100 h-100", style: "object-fit: cover;", onerror: "this.style.display='none'; this.nextElementSibling.style.display='flex';" %>
+                      <%= image_tag company.profile_image, class: "img-fluid rounded-3 w-100 h-100", style: "object-fit: cover;", loading: "lazy", decoding: "async", onerror: "this.style.display='none'; this.nextElementSibling.style.display='flex';" %>
                       <div class="avatar-initials-badge text-primary fw-bold" style="display: none;">
                         <%= company.name.first(2).upcase %>
                       </div>

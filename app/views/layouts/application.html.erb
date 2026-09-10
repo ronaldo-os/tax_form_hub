@@ -15,9 +15,11 @@
 
     <%= render "layouts/cdns" %>
 
+    <meta name="turbo-prefetch" content="true" />
+
     <!-- Critical CSS inlined for fast first paint -->
     <style>
-      <%= raw File.read(Rails.root.join('app/assets/builds/critical.css')) if File.exist?(Rails.root.join('app/assets/builds/critical.css')) %>
+      <%= raw inline_critical_css %>
     </style>
 
     <!-- Stylesheets -->
@@ -127,7 +129,7 @@
               </div>
               <div class="app-text d-flex align-items-center justify-content-between flex-grow-1">
                 <span>Notifications</span>
-                <% if (cnt = current_user&.notifications&.unread&.count.to_i) > 0 %>
+                <% if (cnt = current_user&.unread_notifications_count.to_i) > 0 %>
                   <span class="badge bg-primary rounded-pill fs-9 ms-auto me-2"><%= cnt > 99 ? '99+' : cnt %></span>
                 <% end %>
               </div>
@@ -190,7 +192,7 @@
         <div class="dropdown header-user-dropdown" id="header_user_dropdown_container">
           <button class="btn btn-sm p-1 border-0 shadow-none text-main d-flex align-items-center gap-2" type="button" id="headerUserDropdown" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
             <% if current_user&.profile_image&.attached? && current_user.profile_image.attachment&.persisted? %>
-              <%= image_tag(url_for(current_user.profile_image), class: "rounded-circle", style: "width: 32px; height: 32px; object-fit: cover;", alt: "User Avatar") %>
+              <%= image_tag(url_for(current_user.profile_image), class: "rounded-circle", style: "width: 32px; height: 32px; object-fit: cover;", alt: "User Avatar", loading: "lazy", decoding: "async") %>
             <% else %>
               <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 32px; height: 32px; font-weight: 600; font-size: 0.85rem;">
                 <%= current_user&.email&.first(2)&.upcase || "TF" %>

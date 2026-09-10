@@ -68,6 +68,11 @@ class User < ApplicationRecord
     role == "superadmin"
   end
 
+  # Memoized count of unread notifications to avoid repeated DB queries per request
+  def unread_notifications_count
+    @unread_notifications_count ||= unread_notifications.count
+  end
+
   private
 
   def set_defaults

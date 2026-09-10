@@ -6,7 +6,7 @@ class DashboardsController < ApplicationController
   def index
     @time_frame = params[:time_frame].presence || "this_month"
     @currency = params[:currency].presence || current_user.currency.presence || "PHP"
-    @dashboard_data = calculate_dashboard_metrics(@time_frame, @currency)
+    @dashboard_data = get_dashboard_metrics(@time_frame, @currency)
 
     respond_to do |format|
       format.html
@@ -17,11 +17,32 @@ class DashboardsController < ApplicationController
   def analytics_data
     time_frame = params[:time_frame].presence || "this_month"
     currency = params[:currency].presence || current_user.currency.presence || "PHP"
-    data = calculate_dashboard_metrics(time_frame, currency)
+    data = get_dashboard_metrics(time_frame, currency)
     render json: data
   end
 
   private
+
+  def get_dashboard_metrics(time_frame, currency)
+    my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
+    inv_updated = current_user.invoices.maximum(:updated_at)&.utc&.to_fs(:usec)
+    tax_updated = TaxSubmission.where(company_id: my_company_ids).maximum(:updated_at)&.utc&.to_fs(:usec)
+
+    cache_key = [
+      "user_dashboard_metrics",
+      current_user.id,
+      time_frame,
+      currency,
+      params[:start_date],
+      params[:end_date],
+      inv_updated,
+      tax_updated
+    ]
+
+    Rails.cache.fetch(cache_key, expires_in: 15.minutes) do
+      calculate_dashboard_metrics(time_frame, currency)
+    end
+  end
 
   def calculate_dashboard_metrics(time_frame, selected_currency)
     range, prev_range, range_label = resolve_time_range(time_frame, params[:start_date], params[:end_date])
@@ -45,6 +66,7 @@ class DashboardsController < ApplicationController
     # 1. SALES / REVENUE METRICS
     sales_current = current_invoices.where(invoice_type: "sale")
     sales_prev = prev_invoices.where(invoice_type: "sale")
+    sales_status_counts = aggregate_status_counts(sales_current)
 
     sales_approved_or_paid = sales_current.where(status: ["approved", "paid"])
     total_sales_revenue = sum_invoice_totals(sales_approved_or_paid, target_currency)
@@ -53,10 +75,10 @@ class DashboardsController < ApplicationController
 
     paid_sales_scope = sales_current.where(status: "paid")
     paid_sales_revenue = sum_invoice_totals(paid_sales_scope, target_currency)
-    paid_sales_count = paid_sales_scope.count
-    approved_sales_count = sales_current.where(status: "approved").count
-    total_sales_count = sales_current.count
-    pending_sales_count = sales_current.where(status: ["sent", "pending", "draft"]).count
+    paid_sales_count = sales_status_counts[:paid]
+    approved_sales_count = sales_status_counts[:approved]
+    total_sales_count = sales_status_counts[:total]
+    pending_sales_count = sales_status_counts[:sent] + sales_status_counts[:pending] + sales_status_counts[:draft]
 
     # Receivables (Outstanding unpaid sales)
     unpaid_sales_scope = base_invoices.where(invoice_type: "sale", status: ["sent", "pending", "approved"])
@@ -69,6 +91,7 @@ class DashboardsController < ApplicationController
     # 2. PURCHASES / EXPENSES METRICS
     purchases_current = current_invoices.where(invoice_type: "purchase")
     purchases_prev = prev_invoices.where(invoice_type: "purchase")
+    purchases_status_counts = aggregate_status_counts(purchases_current)
 
     purchases_approved_or_paid = purchases_current.where(status: ["approved", "paid"])
     total_purchases_expense = sum_invoice_totals(purchases_approved_or_paid, target_currency)
@@ -77,10 +100,10 @@ class DashboardsController < ApplicationController
 
     paid_purchases_scope = purchases_current.where(status: "paid")
     paid_purchases_expense = sum_invoice_totals(paid_purchases_scope, target_currency)
-    paid_purchases_count = paid_purchases_scope.count
-    approved_purchases_count = purchases_current.where(status: "approved").count
-    total_purchases_count = purchases_current.count
-    pending_purchases_count = purchases_current.where(status: ["sent", "pending", "draft"]).count
+    paid_purchases_count = purchases_status_counts[:paid]
+    approved_purchases_count = purchases_status_counts[:approved]
+    total_purchases_count = purchases_status_counts[:total]
+    pending_purchases_count = purchases_status_counts[:sent] + purchases_status_counts[:pending] + purchases_status_counts[:draft]
 
     # Payables (Outstanding unpaid purchases)
     unpaid_purchases_scope = base_invoices.where(invoice_type: "purchase", status: ["sent", "pending", "approved"])
@@ -158,9 +181,6 @@ class DashboardsController < ApplicationController
 
     # 7. CHART DATASETS
     trend_data = build_revenue_expense_trends(base_invoices, time_frame, target_currency)
-
-    sales_status_counts = aggregate_status_counts(sales_current)
-    purchases_status_counts = aggregate_status_counts(purchases_current)
 
     top_customers = calculate_top_partners(sales_current, :recipient_company, target_currency)
     top_vendors = calculate_top_partners(purchases_current, :sale_from, target_currency)
@@ -312,18 +332,19 @@ class DashboardsController < ApplicationController
   end
 
   def sum_invoice_totals(invoices_relation, target_currency = "PHP")
-    invoices_relation.to_a.sum do |inv|
-      inv_currency = inv.currency.presence || "PHP"
-      CurrencyConverter.convert(inv.grand_total, from: inv_currency, to: target_currency)
+    invoices_relation.pluck(:currency, :total).sum do |inv_currency, total_hash|
+      gt = total_hash.is_a?(Hash) ? total_hash["grand_total"].to_s.delete(',').to_f : 0.0
+      curr = inv_currency.presence || "PHP"
+      CurrencyConverter.convert(gt, from: curr, to: target_currency)
     end
   end
 
   def sum_invoice_taxes(invoices_relation, target_currency = "PHP")
-    invoices_relation.to_a.sum do |inv|
-      tax = inv.total.is_a?(Hash) ? (inv.total["tax_amount"].presence || inv.total["tax"].presence || 0) : 0
+    invoices_relation.pluck(:currency, :total).sum do |inv_currency, total_hash|
+      tax = total_hash.is_a?(Hash) ? (total_hash["tax_amount"].presence || total_hash["tax"].presence || 0) : 0
       tax_amount = tax.to_s.delete(',').to_f
-      inv_currency = inv.currency.presence || "PHP"
-      CurrencyConverter.convert(tax_amount, from: inv_currency, to: target_currency)
+      curr = inv_currency.presence || "PHP"
+      CurrencyConverter.convert(tax_amount, from: curr, to: target_currency)
     end
   end
 
@@ -336,13 +357,14 @@ class DashboardsController < ApplicationController
   end
 
   def aggregate_status_counts(invoices_relation)
+    raw_counts = invoices_relation.group(:status).count
     counts = {
-      paid: invoices_relation.where(status: "paid").count,
-      approved: invoices_relation.where(status: "approved").count,
-      sent: invoices_relation.where(status: "sent").count,
-      pending: invoices_relation.where(status: "pending").count,
-      draft: invoices_relation.where(status: "draft").count,
-      rejected: invoices_relation.where(status: "rejected").count
+      paid: raw_counts["paid"].to_i,
+      approved: raw_counts["approved"].to_i,
+      sent: raw_counts["sent"].to_i,
+      pending: raw_counts["pending"].to_i,
+      draft: raw_counts["draft"].to_i,
+      rejected: raw_counts["rejected"].to_i
     }
     counts[:total] = counts.values.sum
     counts

@@ -122,12 +122,13 @@ class NotificationsController < ApplicationController
 
   def set_summary_counts
     all_notifs = current_user.notifications
-    @total_count = all_notifs.count
-    @unread_count = all_notifs.unread.count
-    @read_count = all_notifs.read.count
-    @invoices_count = all_notifs.for_category("invoices").count
-    @taxes_count = all_notifs.for_category("taxes").count
-    @system_count = all_notifs.for_category("system").count
+    cat_counts = all_notifs.group(:category).count
+    @total_count = cat_counts.values.sum
+    @unread_count = current_user.unread_notifications_count
+    @read_count = [0, @total_count - @unread_count].max
+    @invoices_count = cat_counts["invoices"].to_i
+    @taxes_count = cat_counts["taxes"].to_i
+    @system_count = cat_counts["system"].to_i
   end
 
   def load_notifications

@@ -485,7 +485,7 @@
                     <div class="d-flex align-items-center justify-content-center" style="min-height: 100px;">
                       <% if attachment.image? %>
                         <%= link_to url_for(attachment), target: "_blank" do %>
-                          <%= image_tag attachment, class: "img-fluid rounded", style: "max-height: 110px; object-fit: contain;" %>
+                          <%= image_tag attachment, class: "img-fluid rounded", style: "max-height: 110px; object-fit: contain;", loading: "lazy", decoding: "async" %>
                         <% end %>
                       <% elsif attachment.content_type == "application/pdf" %>
                         <%= link_to url_for(attachment), target: "_blank" do %>

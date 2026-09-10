@@ -1,5 +1,19 @@
 import { updatePdfPreviewScale } from './invoice_preview';
 
+function loadHtml2Pdf() {
+    if (typeof html2pdf !== 'undefined') {
+        return Promise.resolve();
+    }
+    return new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.crossOrigin = 'anonymous';
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error('Failed to load html2pdf library'));
+        document.head.appendChild(script);
+    });
+}
+
 function initInvoicePage() {
     if (!window.location.pathname.includes("/invoices")) return;
 
@@ -345,7 +359,7 @@ function initInvoicePage() {
                 });
             });
 
-            Promise.all(imagePromises).then(() => {
+            Promise.all([...imagePromises, loadHtml2Pdf()]).then(() => {
                 // Today's date for filename
                 const today = new Date();
                 const yyyy = today.getFullYear();

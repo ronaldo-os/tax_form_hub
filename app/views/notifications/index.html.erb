@@ -206,9 +206,7 @@
   <div id="notifications_feed_container">
     <% if @notifications.any? %>
       <div id="notifications_feed">
-        <% @notifications.each do |notification| %>
-          <%= render "notifications/notification_row", notification: notification %>
-        <% end %>
+        <%= render partial: "notifications/notification_row", collection: @notifications, as: :notification %>
       </div>
     <% else %>
       <!-- Empty State -->

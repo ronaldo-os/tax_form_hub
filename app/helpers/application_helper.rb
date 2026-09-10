@@ -39,4 +39,17 @@ module ApplicationHelper
       style: "width: #{width}px; height: #{height}px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; border-radius: 4px;"
     )
   end
+
+  # Cached critical CSS inliner to avoid repeated disk reads
+  def inline_critical_css
+    if Rails.env.production?
+      @cached_critical_css ||= begin
+        path = Rails.root.join("app/assets/builds/critical.css")
+        File.exist?(path) ? File.read(path) : ""
+      end
+    else
+      path = Rails.root.join("app/assets/builds/critical.css")
+      File.exist?(path) ? File.read(path) : ""
+    end
+  end
 end
