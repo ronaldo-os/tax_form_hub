@@ -381,16 +381,29 @@ function updateThemeUI(theme) {
       if (text) text.textContent = 'Dark Mode';
     }
   });
+
+  const headerThemeStatus = document.getElementById('header_theme_status');
+  if (headerThemeStatus) {
+    headerThemeStatus.textContent = theme.charAt(0).toUpperCase() + theme.slice(1) + ' Mode';
+  }
 }
 
 function handleThemeToggle(e) {
-  e.preventDefault();
-  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  if (e && e.preventDefault) e.preventDefault();
+  const currentTheme = localStorage.getItem('user_theme') || document.documentElement.getAttribute('data-theme') || 'light';
   const newTheme = currentTheme === 'light' ? 'dark' : 'light';
 
   console.log('Theme toggle clicked. Current:', currentTheme, 'New:', newTheme);
 
-  // Disable transitions temporarily
+  // Synchronously persist theme immediately to localStorage & cookies to prevent flash during navigation
+  try {
+    localStorage.setItem('user_theme', newTheme);
+  } catch (err) {
+    console.error('Failed to set theme in localStorage:', err);
+  }
+  document.cookie = `user_theme=${newTheme}; path=/; max-age=31536000; SameSite=Lax`;
+
+  // Disable transitions temporarily to prevent awkward color shifting
   const css = document.createElement('style');
   css.appendChild(
     document.createTextNode(
@@ -408,6 +421,16 @@ function handleThemeToggle(e) {
   document.documentElement.setAttribute('data-theme', newTheme);
   document.documentElement.setAttribute('data-bs-theme', newTheme);
 
+  const metaThemeTag = document.querySelector('meta[name="user-theme"]');
+  if (metaThemeTag) {
+    metaThemeTag.setAttribute('content', newTheme);
+  }
+
+  // Invalidate Turbo cache immediately so stale snapshots from the previous theme are never restored
+  if (typeof Turbo !== 'undefined' && Turbo.cache && typeof Turbo.cache.clear === 'function') {
+    Turbo.cache.clear();
+  }
+
   const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
   if (csrfToken) {
     fetch('/profile/theme', {
@@ -423,20 +446,22 @@ function handleThemeToggle(e) {
   updateThemeUI(newTheme);
 
   // Update dynamic elements that don't automatically respond to theme changes
-  updateDynamicElementsForTheme(newTheme);
+  updateDynamicElementsForTheme(newTheme, document);
 
-  // Dispatch custom event to notify components of theme change
+  // Dispatch custom events to notify components of theme change
   const event = new CustomEvent('theme:changed', { detail: { theme: newTheme } });
   document.dispatchEvent(event);
+  const windowEvent = new CustomEvent('themeChanged', { detail: { theme: newTheme } });
+  window.dispatchEvent(windowEvent);
 
   // Force repaint before re-enabling transitions
   const _ = window.getComputedStyle(css).opacity;
   document.head.removeChild(css);
 }
 
-function updateDynamicElementsForTheme(theme) {
+function updateDynamicElementsForTheme(theme, root = document) {
   // Update all badges that use theme-dependent classes (both subtle and solid)
-  const allBadges = document.querySelectorAll('.badge.bg-primary-subtle, .badge.bg-primary, .badge.bg-success-subtle, .badge.bg-success, .badge.bg-danger-subtle, .badge.bg-danger, .badge.bg-info-subtle, .badge.bg-info');
+  const allBadges = root.querySelectorAll('.badge.bg-primary-subtle, .badge.bg-primary, .badge.bg-success-subtle, .badge.bg-success, .badge.bg-danger-subtle, .badge.bg-danger, .badge.bg-info-subtle, .badge.bg-info');
   allBadges.forEach(badge => {
     if (theme === 'dark') {
       // Convert to solid colors in dark mode
@@ -479,20 +504,24 @@ function updateDynamicElementsForTheme(theme) {
 
   // Update DataTables if they exist
   if (typeof $ !== 'undefined' && $.fn.DataTable) {
-    $('.dataTable').each(function () {
-      const dt = $(this).DataTable();
-      // Redraw without resetting paging to apply new theme styles
-      dt.draw(false);
+    const $root = $(root);
+    const $tables = $root.find('.dataTable').add($root.filter('.dataTable'));
+    $tables.each(function () {
+      if ($.fn.DataTable.isDataTable(this)) {
+        const dt = $(this).DataTable();
+        // Redraw without resetting paging to apply new theme styles
+        dt.draw(false);
+      }
     });
 
     // Update DataTable pagination and info elements
-    $('.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate').each(function () {
+    $root.find('.dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate').each(function () {
       this.style.color = 'var(--text-main)';
     });
   }
 
   // Force form controls to recalculate their styles
-  const formControls = document.querySelectorAll('.form-control, .form-select');
+  const formControls = root.querySelectorAll('.form-control, .form-select');
   formControls.forEach(control => {
     // Temporarily remove and re-add the class to force style recalculation
     const className = control.className;
@@ -501,7 +530,7 @@ function updateDynamicElementsForTheme(theme) {
   });
 
   // Specifically handle file inputs in modals
-  const modalFileInputs = document.querySelectorAll('.modal .file-upload-input, .modal input[type="file"]');
+  const modalFileInputs = root.querySelectorAll('.modal .file-upload-input, .modal input[type="file"]');
   modalFileInputs.forEach(input => {
     // Force style recalculation for file inputs
     const className = input.className;
@@ -526,17 +555,33 @@ function handleThemeToggleEvent(e) {
 }
 
 function initApplication() {
-  // Theme Toggle Logic - Ensure theme is synced from server rendering
+  // Theme Toggle Logic - Synchronize from localStorage, document attribute, or meta tag
+  const localTheme = localStorage.getItem('user_theme');
   const metaTheme = document.querySelector('meta[name="user-theme"]')?.getAttribute('content');
-  const savedTheme = metaTheme || document.documentElement.getAttribute('data-theme') || 'light';
+  const docTheme = document.documentElement.getAttribute('data-theme');
+  const savedTheme = localTheme || docTheme || metaTheme || 'light';
+
   document.documentElement.setAttribute('data-theme', savedTheme);
   document.documentElement.setAttribute('data-bs-theme', savedTheme);
+
+  const metaEl = document.querySelector('meta[name="user-theme"]');
+  if (metaEl && metaEl.getAttribute('content') !== savedTheme) {
+    metaEl.setAttribute('content', savedTheme);
+  }
+
+  // Ensure persistent state matches active theme
+  if (localTheme !== savedTheme) {
+    try { localStorage.setItem('user_theme', savedTheme); } catch (e) {}
+  }
+  if (!document.cookie.includes(`user_theme=${savedTheme}`)) {
+    document.cookie = `user_theme=${savedTheme}; path=/; max-age=31536000; SameSite=Lax`;
+  }
 
   // Initial UI update
   updateThemeUI(savedTheme);
 
   // Initialize dynamic elements for current theme
-  updateDynamicElementsForTheme(savedTheme);
+  updateDynamicElementsForTheme(savedTheme, document);
 
   // Setup theme toggle button listener using vanilla JS event delegation
   document.removeEventListener('click', handleThemeToggleEvent);
@@ -764,7 +809,18 @@ document.addEventListener("turbo:load", () => {
     }
   }
 });
-// Specifically handle the 422 error re-render
+// Ensure incoming pages during Turbo navigation preserve active theme without flashing previous theme
+document.addEventListener("turbo:before-render", (event) => {
+  const activeTheme = localStorage.getItem('user_theme') || document.documentElement.getAttribute('data-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', activeTheme);
+  document.documentElement.setAttribute('data-bs-theme', activeTheme);
+
+  if (event.detail && event.detail.newBody) {
+    updateDynamicElementsForTheme(activeTheme, event.detail.newBody);
+  }
+});
+
+// Specifically handle Turbo render
 document.addEventListener("turbo:render", () => {
   window.isNavigatingConfirmed = false;
   initApplication();
@@ -930,26 +986,16 @@ function setupHeaderThemeToggle() {
   const headerThemeBtn = document.getElementById('header_theme_toggle');
   if (!headerThemeBtn) return;
 
-  headerThemeBtn.addEventListener('click', function (e) {
+  headerThemeBtn.onclick = function (e) {
     e.preventDefault();
     e.stopPropagation();
     const mainToggle = document.getElementById('theme_toggle_btn');
     if (mainToggle) {
       mainToggle.click();
     } else {
-      const htmlEl = document.documentElement;
-      const currentTheme = htmlEl.getAttribute('data-theme') || 'light';
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      htmlEl.setAttribute('data-theme', newTheme);
-      htmlEl.setAttribute('data-bs-theme', newTheme);
+      handleThemeToggle(e);
     }
-
-    const themeStatus = document.getElementById('header_theme_status');
-    if (themeStatus) {
-      const activeTheme = document.documentElement.getAttribute('data-theme') || 'light';
-      themeStatus.textContent = activeTheme.charAt(0).toUpperCase() + activeTheme.slice(1) + ' Mode';
-    }
-  });
+  };
 }
 
 function setupCommandPalette() {

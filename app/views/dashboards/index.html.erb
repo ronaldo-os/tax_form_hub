@@ -1,5 +1,5 @@
 <% 
-  company_name = current_user.company&.name
+  company_name = current_user.company&.name || current_user.companies.first&.name
   full_title = company_name.present? ? "#{company_name} — Financial Intelligence" : "Financial Intelligence & KPIs"
   active_curr = @dashboard_data[:currency] == "all" ? (current_user.currency.presence || "PHP") : @dashboard_data[:currency]
   currency_symbol = case active_curr
@@ -386,7 +386,7 @@
         <div class="bento-card-header">
           <span class="bento-card-title">Tax 2307</span>
           <span class="bento-chip <%= kpis[:tax_pending_count] > 0 ? 'bento-chip-pending' : 'bento-chip-processed' %> fs-10" id="kpi_tax_chip">
-            <%= kpis[:tax_pending_count] > 0 ? "#{kpis[:tax_pending_count]} P" : 'Clean' %>
+            <%= kpis[:tax_pending_count] > 0 ? "#{kpis[:tax_pending_count]} Pending" : 'Clean' %>
           </span>
         </div>
         <div class="mb-1.5">

@@ -1,4 +1,10 @@
 module ApplicationHelper
+  # Determines the effective active theme, prioritizing cookies for instantaneous client-server sync
+  def current_theme
+    theme = cookies[:user_theme].presence || current_user&.theme.presence || "light"
+    %w[light dark].include?(theme) ? theme : "light"
+  end
+
   # Responsive image helper with lazy loading and proper sizing
   def responsive_image_tag(source, options = {})
     default_options = {

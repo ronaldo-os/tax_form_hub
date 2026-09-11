@@ -1,7 +1,18 @@
 <!DOCTYPE html>
-<html data-theme="<%= current_user&.theme || 'light' %>" data-bs-theme="<%= current_user&.theme || 'light' %>">
+<html data-theme="<%= current_theme %>" data-bs-theme="<%= current_theme %>">
   <head>
-    <meta name="user-theme" content="<%= current_user&.theme || 'light' %>">
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem('user_theme');
+          if (t && (t === 'dark' || t === 'light')) {
+            document.documentElement.setAttribute('data-theme', t);
+            document.documentElement.setAttribute('data-bs-theme', t);
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="user-theme" content="<%= current_theme %>">
     <title><%= content_for(:title) || "Tax Form Hub" %></title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <%= csrf_meta_tags %>
@@ -167,10 +178,10 @@
         <li id="theme_toggle_btn" class="list-unstyled" style="cursor: pointer;">
           <a class="d-flex align-items-center rounded-3 text-decoration-none">
             <div class="app-icon d-flex align-items-center justify-content-center" style="min-width: 70px; width: 70px; height: 50px; font-size: 1.3em;">
-              <i class="fa-solid <%= (current_user&.theme || 'light') == 'dark' ? 'fa-sun' : 'fa-moon' %> fa-fw"></i>
+              <i class="fa-solid <%= current_theme == 'dark' ? 'fa-sun' : 'fa-moon' %> fa-fw"></i>
             </div>
             <div class="app-text fw-medium">
-              <%= (current_user&.theme || 'light') == 'dark' ? 'Light Mode' : 'Dark Mode' %>
+              <%= current_theme == 'dark' ? 'Light Mode' : 'Dark Mode' %>
             </div>
           </a>
         </li>

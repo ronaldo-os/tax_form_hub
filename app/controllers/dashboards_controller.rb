@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 class DashboardsController < ApplicationController
+  include HttpCaching
+
   before_action :authenticate_user!
+  before_action :disable_cache_headers, only: [:index, :analytics_data]
 
   def index
     @time_frame = params[:time_frame].presence || "this_month"
@@ -26,7 +29,7 @@ class DashboardsController < ApplicationController
   def get_dashboard_metrics(time_frame, currency)
     my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
     inv_updated = current_user.invoices.maximum(:updated_at)&.utc&.to_fs(:usec)
-    tax_updated = TaxSubmission.where(company_id: my_company_ids).maximum(:updated_at)&.utc&.to_fs(:usec)
+    tax_updated = current_user.tax_submissions.maximum(:updated_at)&.utc&.to_fs(:usec)
 
     cache_key = [
       "user_dashboard_metrics",
@@ -163,8 +166,7 @@ class DashboardsController < ApplicationController
     avg_mrr_per_subscription = active_subscriptions_count.positive? ? (total_mrr / active_subscriptions_count).round(2) : 0.0
 
     # 5. TAX SUBMISSIONS & FORM 2307 COMPLIANCE METRICS
-    tax_scope = TaxSubmission.where(company_id: my_company_ids)
-                             .or(TaxSubmission.where(email: current_user.email))
+    tax_scope = current_user.tax_submissions
     tax_total_count = tax_scope.count
     tax_reviewed_count = tax_scope.where(reviewed: true).count
     tax_processed_count = tax_scope.where(processed: true).count

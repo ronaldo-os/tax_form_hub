@@ -272,4 +272,64 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "USD", @sale_invoice.reload.currency
     assert_equal 5000.0, @sale_invoice.grand_total
   end
+
+  test "dashboard does not leak tax submissions from other user accounts" do
+    # Other user creates an invoice belonging to them
+    other_invoice = Invoice.create!(
+      user: @other_user,
+      recipient_company: @company,
+      invoice_number: "OTHER-INV-999",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "pending",
+      currency: "USD",
+      issue_date: Date.current,
+      total: { "grand_total" => "10000.00" }
+    )
+
+    # Tax submission linked to other user's invoice, but directed to current user's company or matching email
+    TaxSubmission.create!(
+      company: @company,
+      invoice: other_invoice,
+      email: @user.email,
+      details: "Leaked confidential submission",
+      reviewed: false,
+      processed: false
+    )
+
+    # Current user's own tax submission linked to @sale_invoice
+    TaxSubmission.create!(
+      company: @partner_company,
+      invoice: @sale_invoice,
+      email: "client@example.com",
+      details: "My legitimate tax submission",
+      reviewed: false,
+      processed: false
+    )
+
+    sign_in @user
+    get dashboards_analytics_data_url(time_frame: "this_month", currency: "USD", format: :json)
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    # Only the current user's own tax submission should be counted (1), not the leaked one
+    assert_equal 1, json["kpis"]["tax_total_count"]
+    assert_equal 1, json["kpis"]["tax_pending_count"]
+
+    # In HTML view, verify the pending chip renders "1 Pending"
+    get root_url
+    assert_response :success
+    assert_select "#kpi_tax_chip", text: /1 Pending/
+  end
+
+  test "dashboard response includes no-store cache control headers to prevent client-side data leaks" do
+    sign_in @user
+    get root_url
+    assert_response :success
+    assert_includes response.headers["Cache-Control"], "no-store"
+
+    get dashboards_analytics_data_url(time_frame: "this_month", currency: "USD", format: :json)
+    assert_response :success
+    assert_includes response.headers["Cache-Control"], "no-store"
+  end
 end
