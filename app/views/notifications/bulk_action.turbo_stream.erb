@@ -13,14 +13,14 @@
 <%= turbo_stream.update "tab_system_badge", @system_count %>
 
 <%= turbo_stream.update "notifications_global_actions" do %>
-  <%= link_to session[:notifications_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap", data: { behavior: "back-button" } do %>
+  <%= link_to session[:notifications_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 text-nowrap", data: { behavior: "back-button" } do %>
     <i class="fa-solid fa-arrow-left"></i> Back
   <% end %>
   <% if @unread_count > 0 %>
     <%= button_to mark_all_as_read_notifications_path(category: @tab),
                   method: :post,
-                  class: "btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2",
-                  form: { class: "m-0 d-inline-block flex-fill flex-sm-grow-0", data: { turbo: true } },
+                  class: "btn btn-primary btn-sm text-nowrap d-inline-flex align-items-center justify-content-center gap-2 ms-auto",
+                  form: { class: "m-0 d-inline-block ms-auto", data: { turbo: true } },
                   id: "page_mark_all_read_btn" do %>
       <i class="fa-solid fa-check-double"></i>
       <span>Mark All Read</span>

@@ -70,4 +70,107 @@ class Users::ThemesControllerTest < ActionDispatch::IntegrationTest
     assert_select "html[data-bs-theme='dark']"
     assert_select "meta[name='user-theme'][content='dark']"
   end
+
+  test "login page always displays default light theme regardless of cookie" do
+    cookies[:user_theme] = "dark"
+    get new_user_session_path
+    assert_response :success
+
+    assert_select "html[data-theme='light']"
+    assert_select "html[data-bs-theme='light']"
+    assert_select "meta[name='user-theme'][content='light']"
+  end
+
+  test "logging out clears user_theme cookie and redirects to login in light theme" do
+    sign_in @user
+    cookies[:user_theme] = "dark"
+
+    delete destroy_user_session_path
+    assert_redirected_to new_user_session_path
+    assert cookies[:user_theme].blank?
+
+    follow_redirect!
+    assert_response :success
+    assert_select "html[data-theme='light']"
+    assert_select "html[data-bs-theme='light']"
+    assert_select "meta[name='user-theme'][content='light']"
+  end
+
+  test "logging in sets user_theme cookie to user's saved theme" do
+    @user.update(theme: "dark")
+
+    post user_session_path, params: {
+      user: {
+        email: @user.email,
+        password: "Password123!@#Secure"
+      }
+    }
+    assert_redirected_to root_path
+    assert_equal "dark", cookies[:user_theme]
+
+    follow_redirect!
+    assert_response :success
+    assert_select "html[data-theme='dark']"
+    assert_select "html[data-bs-theme='dark']"
+    assert_select "meta[name='user-theme'][content='dark']"
+  end
+
+  test "different users on the same browser do not share or leak theme preferences" do
+    user_b = User.create!(
+      email: "theme_user_b_#{Time.now.to_i}_#{rand(1000)}@example.com",
+      password: "Password123!@#Secure",
+      password_confirmation: "Password123!@#Secure",
+      theme: "light"
+    )
+
+    # User A logs in and sets dark theme
+    post user_session_path, params: {
+      user: {
+        email: @user.email,
+        password: "Password123!@#Secure"
+      }
+    }
+    patch update_theme_path, params: { theme: "dark" }, as: :json
+    assert_equal "dark", cookies[:user_theme]
+
+    # User A logs out
+    delete destroy_user_session_path
+    assert cookies[:user_theme].blank?
+
+    # User B logs in on same browser
+    post user_session_path, params: {
+      user: {
+        email: user_b.email,
+        password: "Password123!@#Secure"
+      }
+    }
+    assert_equal "light", cookies[:user_theme]
+
+    follow_redirect!
+    assert_response :success
+    assert_select "html[data-theme='light']"
+    assert_select "html[data-bs-theme='light']"
+    assert_select "meta[name='user-theme'][content='light']"
+  end
+
+  test "user saved theme preference is applied consistently on a new session or browser" do
+    @user.update(theme: "dark")
+
+    # Simulate a new browser session with empty cookies and no prior state
+    cookies.delete(:user_theme)
+
+    post user_session_path, params: {
+      user: {
+        email: @user.email,
+        password: "Password123!@#Secure"
+      }
+    }
+    assert_equal "dark", cookies[:user_theme]
+
+    follow_redirect!
+    assert_response :success
+    assert_select "html[data-theme='dark']"
+    assert_select "html[data-bs-theme='dark']"
+    assert_select "meta[name='user-theme'][content='dark']"
+  end
 end

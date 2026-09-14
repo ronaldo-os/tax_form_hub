@@ -1,6 +1,10 @@
 module ApplicationHelper
-  # Determines the effective active theme, prioritizing cookies for instantaneous client-server sync
+  # Determines the effective active theme:
+  # - For unauthenticated sessions (including login), always use the default "light" theme.
+  # - For authenticated sessions, use the cookie (for instantaneous toggle sync) or fallback to current_user.theme.
   def current_theme
+    return "light" unless user_signed_in?
+
     theme = cookies[:user_theme].presence || current_user&.theme.presence || "light"
     %w[light dark].include?(theme) ? theme : "light"
   end

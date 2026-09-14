@@ -390,7 +390,7 @@ function updateThemeUI(theme) {
 
 function handleThemeToggle(e) {
   if (e && e.preventDefault) e.preventDefault();
-  const currentTheme = localStorage.getItem('user_theme') || document.documentElement.getAttribute('data-theme') || 'light';
+  const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
   const newTheme = currentTheme === 'light' ? 'dark' : 'light';
 
   console.log('Theme toggle clicked. Current:', currentTheme, 'New:', newTheme);
@@ -420,6 +420,9 @@ function handleThemeToggle(e) {
 
   document.documentElement.setAttribute('data-theme', newTheme);
   document.documentElement.setAttribute('data-bs-theme', newTheme);
+  if (document.body) {
+    document.body.setAttribute('data-theme', newTheme);
+  }
 
   const metaThemeTag = document.querySelector('meta[name="user-theme"]');
   if (metaThemeTag) {
@@ -555,26 +558,31 @@ function handleThemeToggleEvent(e) {
 }
 
 function initApplication() {
-  // Theme Toggle Logic - Synchronize from localStorage, document attribute, or meta tag
-  const localTheme = localStorage.getItem('user_theme');
+  // Theme Toggle Logic - Synchronize from meta tag or document attribute
   const metaTheme = document.querySelector('meta[name="user-theme"]')?.getAttribute('content');
   const docTheme = document.documentElement.getAttribute('data-theme');
-  const savedTheme = localTheme || docTheme || metaTheme || 'light';
+  const savedTheme = metaTheme || docTheme || 'light';
 
   document.documentElement.setAttribute('data-theme', savedTheme);
   document.documentElement.setAttribute('data-bs-theme', savedTheme);
+  if (document.body) {
+    document.body.setAttribute('data-theme', savedTheme);
+  }
 
   const metaEl = document.querySelector('meta[name="user-theme"]');
   if (metaEl && metaEl.getAttribute('content') !== savedTheme) {
     metaEl.setAttribute('content', savedTheme);
   }
 
-  // Ensure persistent state matches active theme
-  if (localTheme !== savedTheme) {
+  const isAuthenticated = document.body?.getAttribute('data-authenticated') === 'true';
+  if (isAuthenticated) {
     try { localStorage.setItem('user_theme', savedTheme); } catch (e) {}
-  }
-  if (!document.cookie.includes(`user_theme=${savedTheme}`)) {
-    document.cookie = `user_theme=${savedTheme}; path=/; max-age=31536000; SameSite=Lax`;
+    if (!document.cookie.includes(`user_theme=${savedTheme}`)) {
+      document.cookie = `user_theme=${savedTheme}; path=/; max-age=31536000; SameSite=Lax`;
+    }
+  } else {
+    try { localStorage.removeItem('user_theme'); } catch (e) {}
+    document.cookie = "user_theme=; path=/; max-age=0; SameSite=Lax";
   }
 
   // Initial UI update
@@ -811,12 +819,18 @@ document.addEventListener("turbo:load", () => {
 });
 // Ensure incoming pages during Turbo navigation preserve active theme without flashing previous theme
 document.addEventListener("turbo:before-render", (event) => {
-  const activeTheme = localStorage.getItem('user_theme') || document.documentElement.getAttribute('data-theme') || 'light';
-  document.documentElement.setAttribute('data-theme', activeTheme);
-  document.documentElement.setAttribute('data-bs-theme', activeTheme);
+  const newBody = event.detail && event.detail.newBody;
+  const incomingTheme = newBody?.getAttribute('data-theme') || document.documentElement.getAttribute('data-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', incomingTheme);
+  document.documentElement.setAttribute('data-bs-theme', incomingTheme);
 
-  if (event.detail && event.detail.newBody) {
-    updateDynamicElementsForTheme(activeTheme, event.detail.newBody);
+  const metaThemeTag = document.querySelector('meta[name="user-theme"]');
+  if (metaThemeTag) {
+    metaThemeTag.setAttribute('content', incomingTheme);
+  }
+
+  if (newBody) {
+    updateDynamicElementsForTheme(incomingTheme, newBody);
   }
 });
 
@@ -837,6 +851,13 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("turbo:before-fetch-request", (event) => {
   const url = event.detail.url?.toString();
   if (url && url.includes("/users/sign_out")) {
+    try {
+      localStorage.removeItem('user_theme');
+    } catch (e) {}
+    document.cookie = "user_theme=; path=/; max-age=0; SameSite=Lax";
+    if (typeof Turbo !== 'undefined' && Turbo.cache && typeof Turbo.cache.clear === 'function') {
+      Turbo.cache.clear();
+    }
     // Clear company selector cached state
     const input = document.getElementById('company_search_input');
     if (input) {

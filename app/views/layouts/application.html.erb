@@ -1,17 +1,6 @@
 <!DOCTYPE html>
 <html data-theme="<%= current_theme %>" data-bs-theme="<%= current_theme %>">
   <head>
-    <script>
-      (function() {
-        try {
-          var t = localStorage.getItem('user_theme');
-          if (t && (t === 'dark' || t === 'light')) {
-            document.documentElement.setAttribute('data-theme', t);
-            document.documentElement.setAttribute('data-bs-theme', t);
-          }
-        } catch (e) {}
-      })();
-    </script>
     <meta name="user-theme" content="<%= current_theme %>">
     <title><%= content_for(:title) || "Tax Form Hub" %></title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -41,7 +30,7 @@
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module", defer: true %>
     <%= yield :javascripts %>
   </head>
-  <body data-devise="<%= devise_controller? %>" class="bg-light">
+  <body data-authenticated="<%= user_signed_in? %>" data-devise="<%= devise_controller? %>" data-theme="<%= current_theme %>" class="bg-light">
 
   <% if user_signed_in? %>
     <%= turbo_stream_from "user_#{current_user.id}_notifications" %>

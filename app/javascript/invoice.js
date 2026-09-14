@@ -1486,12 +1486,12 @@ const initInvoiceForm = () => {
     if ($breakdownContainer.length) {
       $breakdownContainer.empty();
       const taxKeys = Object.keys(taxBreakdown);
-      const currency = $('.currency_type').first().text();
+      const currency = getCurrencySymbol($('#invoice_currency').val()) || $('.currency_type').first().text() || '₱';
 
       if (taxKeys.length > 0) {
         taxKeys.forEach(name => {
           const data = taxBreakdown[name];
-          $breakdownContainer.append(`<p class="mb-1">${name} <i>of ${formatCurrency(data.basis)} ${currency}</i> <span class="ms-4 fw-bold">${formatCurrency(data.tax)}</span></p>`);
+          $breakdownContainer.append(`<p class="mb-1">${name} <i>of ${formatCurrency(data.basis)} <span class="currency_type">${currency}</span></i> <span class="ms-4 fw-bold">${formatCurrency(data.tax)}</span></p>`);
         });
       }
 
@@ -2235,6 +2235,18 @@ const initInvoiceForm = () => {
       });
 
       $(".unit-type option[value='false']").text(symbol);
+
+      // Update currency in existing tax breakdown lines if present
+      $('#tax-breakdown-container i').each(function () {
+        const $i = $(this);
+        if ($i.find('.currency_type').length) {
+          $i.find('.currency_type').text(symbol);
+        } else {
+          $i.html($i.html().replace(/(of\s+[\d,]+(?:\.\d+)?\s*)(?:[^\s<]+)/, `$1<span class="currency_type">${symbol}</span>`));
+        }
+      });
+
+      recalculateTotals();
     }
   }
 
