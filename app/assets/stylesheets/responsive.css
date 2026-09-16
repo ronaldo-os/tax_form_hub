@@ -1473,6 +1473,8 @@
     transition: margin-left 0.3s ease;
   }
 
+  html.sidebar-expanded #main_content_div,
+  html.sidebar-expanded .app-sidebar~#main_content_div,
   .app-sidebar.app-active~#main_content_div,
   body:has(.app-sidebar.app-active) #main_content_div {
     margin-left: 315px !important;

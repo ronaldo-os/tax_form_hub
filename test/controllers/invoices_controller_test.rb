@@ -430,4 +430,27 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to invoices_url
     assert_equal "Invoice not found or access denied.", flash[:alert]
   end
+
+  test "datatable formats invoice number link with preview-invoice class and data-id" do
+    company = Company.create!(name: "Preview Test Inc", user: @user)
+    invoice = Invoice.create!(
+      user: @user,
+      recipient_company: company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "SALE-PREVIEW-001",
+      status: "draft"
+    )
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", tab: "sales-invoices", format: :json }
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    assert_not_empty data
+    invoice_row = data.find { |row| row["DT_RowId"] == "invoice_#{invoice.id}" }
+    assert_match /preview-invoice/, invoice_row["invoice_number"]
+    assert_match /preview-invoice-mobile/, invoice_row["invoice_number"]
+    assert_match /data-id="#{invoice.id}"/, invoice_row["invoice_number"]
+    assert_match /SALE-PREVIEW-001/, invoice_row["invoice_number"]
+    assert_match %r{href="/invoices/#{invoice.id}\?tab=sales-invoices"}, invoice_row["invoice_number"]
+  end
 end

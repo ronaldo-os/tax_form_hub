@@ -637,11 +637,61 @@ function initApplication() {
   $mobileClose.off("click");
   $menuListItems.off("click");
   $(document).off("keyup.sidebar");
+  $(window).off("resize.sidebar_state");
+
+  // Restore desktop sidebar state
+  const isDesktop = window.innerWidth > 991.98;
+  const isDesktopExpanded = localStorage.getItem('sidebar_expanded') === 'true';
+
+  if (isDesktop && isDesktopExpanded) {
+    $menuToggle.addClass("app-active");
+    $sidebar.addClass("app-active");
+    document.documentElement.classList.add("sidebar-expanded");
+  } else if (isDesktop) {
+    $menuToggle.removeClass("app-active");
+    $sidebar.removeClass("app-active");
+    document.documentElement.classList.remove("sidebar-expanded");
+  } else {
+    // On mobile, ensure desktop active state does not open mobile drawer on page load
+    $sidebar.removeClass("app-active");
+    $mobileToggle.removeClass("app-active");
+    $body.removeClass("mobile-menu-open");
+    document.documentElement.classList.remove("sidebar-expanded");
+  }
 
   // === Desktop toggle ===
   $menuToggle.on("click", function () {
     $menuToggle.toggleClass("app-active");
     $sidebar.toggleClass("app-active");
+    const isExpanded = $sidebar.hasClass("app-active");
+    document.documentElement.classList.toggle("sidebar-expanded", isExpanded);
+    try {
+      localStorage.setItem("sidebar_expanded", isExpanded ? "true" : "false");
+    } catch (e) {}
+    document.cookie = `sidebar_expanded=${isExpanded ? "true" : "false"}; path=/; max-age=31536000; SameSite=Lax`;
+  });
+
+  // Handle responsive resize between desktop and mobile viewports
+  $(window).on("resize.sidebar_state", function () {
+    const isCurrentlyDesktop = window.innerWidth > 991.98;
+    if (!isCurrentlyDesktop) {
+      document.documentElement.classList.remove("sidebar-expanded");
+      if (!$body.hasClass("mobile-menu-open")) {
+        $sidebar.removeClass("app-active");
+      }
+    } else {
+      const shouldBeExpanded = localStorage.getItem('sidebar_expanded') === 'true';
+      $body.removeClass("mobile-menu-open");
+      if (shouldBeExpanded) {
+        $menuToggle.addClass("app-active");
+        $sidebar.addClass("app-active");
+        document.documentElement.classList.add("sidebar-expanded");
+      } else {
+        $menuToggle.removeClass("app-active");
+        $sidebar.removeClass("app-active");
+        document.documentElement.classList.remove("sidebar-expanded");
+      }
+    }
   });
 
   // === Mobile toggle ===
@@ -829,6 +879,32 @@ document.addEventListener("turbo:before-render", (event) => {
     metaThemeTag.setAttribute('content', incomingTheme);
   }
 
+  // Preserve desktop sidebar state on incoming page before render
+  const isDesktop = window.innerWidth > 991.98;
+  const isDesktopExpanded = localStorage.getItem('sidebar_expanded') === 'true';
+
+  if (isDesktop && isDesktopExpanded) {
+    document.documentElement.classList.add('sidebar-expanded');
+    if (newBody) {
+      newBody.querySelector('.app-sidebar')?.classList.add('app-active');
+      newBody.querySelector('#desktop_menu_toggle')?.classList.add('app-active');
+    }
+  } else if (isDesktop) {
+    document.documentElement.classList.remove('sidebar-expanded');
+    if (newBody) {
+      newBody.querySelector('.app-sidebar')?.classList.remove('app-active');
+      newBody.querySelector('#desktop_menu_toggle')?.classList.remove('app-active');
+    }
+  } else {
+    // On mobile, never auto-expand sidebar on page navigation
+    document.documentElement.classList.remove('sidebar-expanded');
+    if (newBody) {
+      newBody.querySelector('.app-sidebar')?.classList.remove('app-active');
+      newBody.querySelector('#mobile_menu_toggle')?.classList.remove('app-active');
+      newBody.classList.remove('mobile-menu-open');
+    }
+  }
+
   if (newBody) {
     updateDynamicElementsForTheme(incomingTheme, newBody);
   }
@@ -853,8 +929,10 @@ document.addEventListener("turbo:before-fetch-request", (event) => {
   if (url && url.includes("/users/sign_out")) {
     try {
       localStorage.removeItem('user_theme');
+      localStorage.removeItem('sidebar_expanded');
     } catch (e) {}
     document.cookie = "user_theme=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "sidebar_expanded=; path=/; max-age=0; SameSite=Lax";
     if (typeof Turbo !== 'undefined' && Turbo.cache && typeof Turbo.cache.clear === 'function') {
       Turbo.cache.clear();
     }

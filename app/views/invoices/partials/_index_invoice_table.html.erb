@@ -19,7 +19,7 @@
       <% invoices.each do |invoice| %>
         <tr>
         <td>
-          <%= link_to invoice.invoice_number, invoice_path(invoice, tab: local_assigns[:active_tab]) %>
+          <%= link_to invoice.invoice_number, invoice_path(invoice, tab: local_assigns[:active_tab]), class: 'preview-invoice preview-invoice-mobile', data: { id: invoice.id } %>
           <% if invoice.credit_note? %>
             <span class="badge badge_cn ms-1">CN</span>
           <% elsif invoice.has_associated_credit_note? %>

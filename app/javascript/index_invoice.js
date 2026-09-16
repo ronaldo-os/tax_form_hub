@@ -156,6 +156,30 @@ function initInvoicePage() {
         }
 
         $table.DataTable(tableConfig);
+
+        const tableNode = $table[0];
+        if (tableNode && !tableNode.dataset.responsiveFixAttached) {
+            tableNode.addEventListener('click', function (e) {
+                const previewBtn = e.target.closest('.preview-invoice');
+                if (previewBtn) {
+                    const isMobileOnly = previewBtn.classList.contains('preview-invoice-mobile');
+                    const isMobileOrTablet = window.matchMedia('(max-width: 991.98px)').matches;
+                    if (isMobileOnly && !isMobileOrTablet) {
+                        // Desktop invoice link: allow standard navigation to invoice show page
+                        return;
+                    }
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const invoiceId = previewBtn.getAttribute('data-id') || $(previewBtn).data('id');
+                    openInvoicePreview(invoiceId);
+                    return;
+                }
+                if (e.target.closest('a, button, input, select, textarea, .dropdown-toggle, .dropdown-menu')) {
+                    e.stopPropagation();
+                }
+            }, true);
+            tableNode.dataset.responsiveFixAttached = 'true';
+        }
     }
 
     // Initialize tables in the currently active tab immediately
@@ -192,13 +216,13 @@ function initInvoicePage() {
             .responsive.recalc();
     });
 
-    // Preview handling
-    $(document).off('click.invoicePreview', '.preview-invoice').on('click.invoicePreview', '.preview-invoice', function (e) {
-        e.preventDefault();
-        const invoiceId = $(this).data('id');
+    // Helper to open invoice preview
+    function openInvoicePreview(invoiceId) {
+        if (!invoiceId) return;
         const $modal = $('#invoicePreviewModal');
         const $previewCard = $('#invoicePreviewCard');
         const modalEl = $modal[0];
+        if (!modalEl) return;
 
         // Bind cleanup once: Bootstrap occasionally leaves a stale backdrop, blocking page clicks.
         if (!$modal.data('cleanup-bound')) {
@@ -229,6 +253,8 @@ function initInvoicePage() {
                 if (category) {
                     const title = category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ');
                     $modal.find('.modal-title').text(title + ' Preview');
+                } else {
+                    $modal.find('.modal-title').text('Preview');
                 }
 
                 updatePdfPreviewScale();
@@ -237,6 +263,19 @@ function initInvoicePage() {
                 $previewCard.html('<div class="alert alert-danger">Failed to load preview.</div>');
             }
         });
+    }
+
+    // Preview handling
+    $(document).off('click.invoicePreview', '.preview-invoice').on('click.invoicePreview', '.preview-invoice', function (e) {
+        const isMobileOnly = $(this).hasClass('preview-invoice-mobile');
+        const isMobileOrTablet = window.matchMedia('(max-width: 991.98px)').matches;
+        if (isMobileOnly && !isMobileOrTablet) {
+            // Desktop invoice link: allow standard navigation to invoice show page
+            return;
+        }
+        e.preventDefault();
+        const invoiceId = $(this).data('id');
+        openInvoicePreview(invoiceId);
     });
 
     // PDF Download

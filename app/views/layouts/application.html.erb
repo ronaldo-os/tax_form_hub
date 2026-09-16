@@ -17,6 +17,20 @@
 
     <meta name="turbo-prefetch" content="true" />
 
+    <!-- Synchronous sidebar state restoration before paint -->
+    <script>
+      (function() {
+        try {
+          var isDesktop = window.innerWidth > 991.98;
+          var saved = localStorage.getItem('sidebar_expanded');
+          var isExpanded = (saved === 'true') || (!saved && document.cookie.indexOf('sidebar_expanded=true') !== -1);
+          if (isDesktop && isExpanded) {
+            document.documentElement.classList.add('sidebar-expanded');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <!-- Critical CSS inlined for fast first paint -->
     <style>
       <%= raw inline_critical_css %>

@@ -5,8 +5,8 @@
 
 <%= hidden_field_tag :payment_terms, @invoice.payment_terms.to_json.html_safe, id: 'view_invoicepayment_terms_json' %>
 <%= hidden_field_tag 'invoice[invoice_category]', @invoice.invoice_category %>
-<div class="container mt-5">
-  <div class="d-flex justify-content-between mt-5 mb-3">
+<div class="container mt-4 mt-md-5">
+  <div class="invoice-view-header d-flex justify-content-between align-items-center mb-3">
     <div>
       <%= link_to session[:invoices_back_url] || invoices_path(tab: params[:tab]), class: "btn btn-back rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2", data: { behavior: "back-button" } do %>
         <i class="fa-solid fa-arrow-left"></i> Back

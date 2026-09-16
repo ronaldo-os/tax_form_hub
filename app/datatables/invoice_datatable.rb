@@ -138,7 +138,12 @@ class InvoiceDatatable < BaseDatatable
       badges << '<span class="badge badge_has_cn ms-1">Has CN</span>'
     end
 
-    link_to(invoice.invoice_number, url_helpers.invoice_path(invoice, tab: active_tab)) + badges.join
+    link_to(
+      invoice.invoice_number,
+      url_helpers.invoice_path(invoice, tab: active_tab),
+      class: 'preview-invoice preview-invoice-mobile',
+      data: { id: invoice.id }
+    ) + badges.join
   end
 
   def counterparty_name(invoice)

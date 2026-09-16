@@ -628,6 +628,7 @@ input[type="radio"]:checked {
     overflow: hidden;
   }
 
+  html.sidebar-expanded .app-sidebar,
   .app-sidebar.app-active {
     width: 300px;
   }
@@ -795,10 +796,12 @@ input[type="radio"]:checked {
     transition: transform 0.5s ease;
   }
 
+  html.sidebar-expanded .app-menu-toggle,
   .app-menu-toggle.app-active {
     left: 280px;
   }
 
+  html.sidebar-expanded .app-menu-toggle i,
   .app-menu-toggle.app-active i {
     transform: rotate(180deg);
   }
