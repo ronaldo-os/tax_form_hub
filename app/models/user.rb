@@ -73,6 +73,15 @@ class User < ApplicationRecord
     @unread_notifications_count ||= unread_notifications.count
   end
 
+  def reset_unread_notifications_count!
+    @unread_notifications_count = nil
+  end
+
+  def reload(options = nil)
+    @unread_notifications_count = nil
+    super
+  end
+
   private
 
   def set_defaults

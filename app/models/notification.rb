@@ -19,6 +19,7 @@ class Notification < ApplicationRecord
   after_create_commit :broadcast_creation
   after_update_commit :broadcast_update
   after_destroy_commit :broadcast_destruction
+  after_commit :reset_recipient_unread_count
 
   def read?
     read_at.present?
@@ -144,5 +145,9 @@ class Notification < ApplicationRecord
     )
   rescue StandardError => e
     Rails.logger.error "Notification broadcast error on destroy: #{e.message}"
+  end
+
+  def reset_recipient_unread_count
+    recipient&.reset_unread_notifications_count!
   end
 end

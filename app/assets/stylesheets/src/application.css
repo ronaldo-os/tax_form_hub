@@ -392,6 +392,7 @@ input[type="radio"]:checked {
   --bs-btn-hover-bg: var(--bg-tertiary);
   --bs-btn-hover-border-color: var(--border-color);
   --bs-btn-hover-color: var(--text-main);
+  --bs-btn-active-color: var(--text-main);
   --bs-btn-active-bg: var(--bg-tertiary);
   --bs-btn-active-border-color: var(--border-color);
   --bs-btn-disabled-color: var(--text-muted);

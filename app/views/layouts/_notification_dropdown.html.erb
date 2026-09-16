@@ -2,11 +2,11 @@
   u = local_assigns[:user] || (defined?(current_user) ? current_user : nil)
   if u
     recent_notifications = u.notifications.recent.limit(30).to_a
-    unread_notifications = recent_notifications.select(&:unread?)
-    taxes_notifications = recent_notifications.select { |n| n.category == "taxes" }
-    invoices_notifications = recent_notifications.select { |n| n.category == "invoices" }
-    unread_count = u.respond_to?(:unread_notifications_count) ? u.unread_notifications_count : u.notifications.unread.count
-    total_count = recent_notifications.size
+    unread_notifications = u.notifications.unread.recent.limit(30).to_a
+    taxes_notifications = u.notifications.where(category: "taxes").recent.limit(30).to_a
+    invoices_notifications = u.notifications.where(category: "invoices").recent.limit(30).to_a
+    unread_count = u.unread_notifications.count
+    total_count = u.notifications.count
   else
     recent_notifications = []
     unread_notifications = []

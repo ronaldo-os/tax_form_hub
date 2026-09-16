@@ -86,13 +86,71 @@ class NotificationsControllerTest < ActionDispatch::IntegrationTest
 
   test "can mark notification as read and unread" do
     sign_in @user
-    assert @notification1.unread?
-
     patch mark_as_read_notification_path(@notification1)
     assert @notification1.reload.read?
 
     patch mark_as_unread_notification_path(@notification1)
     assert @notification1.reload.unread?
+  end
+
+  test "marking as unread updates header dropdown and populates unread tab pane" do
+    sign_in @user
+    # Mark all as read first so unread count is 0
+    @notification1.mark_as_read!
+    @notification2.mark_as_read!
+    @user.reload
+    assert_equal 0, @user.unread_notifications_count
+
+    patch mark_as_unread_notification_path(@notification1), as: :turbo_stream
+    assert_response :success
+    assert @notification1.reload.unread?
+    assert_equal 1, @user.reload.unread_notifications_count
+
+    # Verify turbo stream response updates dropdown and unread pane
+    assert_select "turbo-stream[action='replace'][target='header_notification_dropdown_container']" do
+      # Dropdown unread tab button should have badge 1
+      assert_select "#notif-unread-tab" do
+        assert_select ".badge", text: "1"
+      end
+      # Dropdown bell badge count should show 1 and not be hidden
+      assert_select "#notification_unread_badge_count", text: "1"
+      # Dropdown unread scroll pane should contain the marked unread notification
+      assert_select "#notification-scroll-unread" do
+        assert_select "#dropdown_notification_#{@notification1.id}"
+      end
+    end
+
+    # Verify stat cards updated
+    assert_select "turbo-stream[action='update'][target='stat_unread_count']", text: "1"
+  end
+
+  test "marking older notification as unread appears in unread tab even when over 30 notifications exist" do
+    sign_in @user
+    # Mark all existing as read
+    @user.notifications.update_all(read_at: Time.current)
+    # Create 32 newer read notifications
+    32.times do |i|
+      Notification.create!(
+        recipient: @user,
+        category: "invoices",
+        action: "invoice_sent",
+        title: "Recent Read Invoice #{i}",
+        read_at: Time.current
+      )
+    end
+    @user.reload
+    assert_equal 0, @user.unread_notifications_count
+
+    # Now mark the older @notification1 as unread
+    patch mark_as_unread_notification_path(@notification1), as: :turbo_stream
+    assert_response :success
+    assert @notification1.reload.unread?
+
+    assert_select "turbo-stream[action='replace'][target='header_notification_dropdown_container']" do
+      assert_select "#notification-scroll-unread" do
+        assert_select "#dropdown_notification_#{@notification1.id}"
+      end
+    end
   end
 
   test "can mark all notifications as read" do

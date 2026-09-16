@@ -1,7 +1,7 @@
 class NotificationsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_notification, only: [:mark_as_read, :mark_as_unread, :destroy, :click]
-  before_action :set_summary_counts, only: [:index, :mark_as_read, :mark_as_unread, :destroy, :mark_all_as_read, :bulk_action]
+  before_action :set_summary_counts, only: [:index]
   before_action -> { store_back_url(:notifications_back_url) }, only: [:index]
 
   def index
@@ -20,6 +20,7 @@ class NotificationsController < ApplicationController
 
   def mark_as_read
     @notification.mark_as_read!
+    current_user.reload
     set_summary_counts
 
     respond_to do |format|
@@ -31,6 +32,7 @@ class NotificationsController < ApplicationController
 
   def mark_as_unread
     @notification.mark_as_unread!
+    current_user.reload
     set_summary_counts
 
     respond_to do |format|
@@ -42,6 +44,7 @@ class NotificationsController < ApplicationController
 
   def destroy
     @notification.destroy
+    current_user.reload
     set_summary_counts
 
     respond_to do |format|
@@ -59,6 +62,7 @@ class NotificationsController < ApplicationController
     end
 
     target_scope.update_all(read_at: Time.current, updated_at: Time.current)
+    current_user.reload
     set_summary_counts
     load_notifications
 
@@ -85,6 +89,7 @@ class NotificationsController < ApplicationController
       end
     end
 
+    current_user.reload
     set_summary_counts
     load_notifications
 

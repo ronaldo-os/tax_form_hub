@@ -72,13 +72,17 @@ export function initAnalyticsDashboard() {
     }
   }
 
-  if (currentDashboardData) {
-    renderDashboardCharts(currentDashboardData);
-  }
-
   if (!container.dataset.eventsAttached) {
     setupDashboardEventListeners();
     container.dataset.eventsAttached = 'true';
+  }
+
+  if (currentDashboardData) {
+    try {
+      renderDashboardCharts(currentDashboardData);
+    } catch (e) {
+      console.error('Failed to render dashboard charts:', e);
+    }
   }
 }
 
@@ -112,12 +116,13 @@ function renderPerformanceTrendChart(trends, currency) {
   }
 
   const colors = getThemeColors();
+  const dataTrends = trends || {};
   const datasets = [];
 
   if (currentSeriesFilter === 'all' || currentSeriesFilter === 'revenue') {
     datasets.push({
-      label: 'Sales Revenue',
-      data: trends.revenue || [],
+      label: '  Sales Revenue',
+      data: dataTrends.revenue || [],
       borderColor: '#10b981',
       backgroundColor: colors.isDark ? 'rgba(16, 185, 129, 0.08)' : 'rgba(16, 185, 129, 0.05)',
       borderWidth: 2,
@@ -132,8 +137,8 @@ function renderPerformanceTrendChart(trends, currency) {
 
   if (currentSeriesFilter === 'all' || currentSeriesFilter === 'expenses') {
     datasets.push({
-      label: 'Purchases / Spend',
-      data: trends.expenses || [],
+      label: '  Purchases / Spend',
+      data: dataTrends.expenses || [],
       borderColor: colors.isDark ? '#94a3b8' : '#64748b',
       backgroundColor: colors.isDark ? 'rgba(148, 163, 184, 0.06)' : 'rgba(100, 116, 139, 0.04)',
       borderWidth: 2,
@@ -148,8 +153,8 @@ function renderPerformanceTrendChart(trends, currency) {
 
   if (currentSeriesFilter === 'all' || currentSeriesFilter === 'net') {
     datasets.push({
-      label: 'Net Flow',
-      data: trends.net_flow || [],
+      label: '  Net Flow',
+      data: dataTrends.net_flow || [],
       borderColor: '#0ea5e9',
       backgroundColor: 'transparent',
       borderWidth: 1.5,
@@ -168,7 +173,7 @@ function renderPerformanceTrendChart(trends, currency) {
   performanceTrendChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: trends.labels || [],
+      labels: dataTrends.labels || [],
       datasets: datasets
     },
     options: {
@@ -187,8 +192,8 @@ function renderPerformanceTrendChart(trends, currency) {
             color: colors.mutedColor,
             font: { family: 'Roboto, sans-serif', size: isMobile ? 9.5 : 10.5 },
             usePointStyle: true,
-            boxWidth: 6,
-            padding: isMobile ? 6 : 10
+            boxWidth: 8,
+            padding: isMobile ? 12 : 16
           }
         },
         tooltip: {
@@ -202,7 +207,7 @@ function renderPerformanceTrendChart(trends, currency) {
           cornerRadius: 6,
           callbacks: {
             label: function (context) {
-              const label = context.dataset.label || '';
+              const label = (context.dataset.label || '').trim();
               return ` ${label}: ${formatCurrency(context.parsed.y, currency)}`;
             }
           }
@@ -245,7 +250,7 @@ function renderStatusDonutChart(statusCounts) {
   const colors = getThemeColors();
   const counts = statusCounts || {};
 
-  const labels = ['Paid', 'Approved', 'Sent', 'Pending', 'Draft', 'Rejected'];
+  const labels = ['  Paid', '  Approved', '  Sent', '  Pending', '  Draft', '  Rejected'];
   const values = [
     counts.paid || 0,
     counts.approved || 0,
@@ -289,8 +294,8 @@ function renderStatusDonutChart(statusCounts) {
             color: colors.mutedColor,
             font: { size: 10 },
             usePointStyle: true,
-            boxWidth: 6,
-            padding: 8
+            boxWidth: 8,
+            padding: 14
           }
         },
         tooltip: {
@@ -306,7 +311,8 @@ function renderStatusDonutChart(statusCounts) {
               if (totalCount === 0) return ' No records';
               const count = context.parsed;
               const pct = totalCount > 0 ? Math.round((count / totalCount) * 100) : 0;
-              return ` ${context.label}: ${count} (${pct}%)`;
+              const label = (context.label || '').trim();
+              return ` ${label}: ${count} (${pct}%)`;
             }
           }
         }
@@ -409,6 +415,13 @@ function setupDashboardEventListeners() {
         seriesToggle.querySelectorAll('button').forEach(b => b.classList.remove('active'));
         this.classList.add('active');
         currentSeriesFilter = this.getAttribute('data-series');
+        if (!currentDashboardData) {
+          const container = document.getElementById('analytics_dashboard_container');
+          const rawData = container?.getAttribute('data-initial-data');
+          if (rawData) {
+            try { currentDashboardData = JSON.parse(rawData); } catch (err) {}
+          }
+        }
         if (currentDashboardData && currentDashboardData.charts) {
           renderPerformanceTrendChart(currentDashboardData.charts.trends, currentDashboardData.currency);
         }

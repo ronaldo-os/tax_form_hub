@@ -57,22 +57,115 @@
   border-radius: 0.5rem;
   font-size: 0.775rem;
   border-color: rgba(0, 0, 0, 0.08) !important;
+  color: var(--text-main) !important;
   transition: all 0.15s ease;
 }
 
 .header-action-btn:hover {
-  background: var(--bg-secondary);
+  background: var(--bg-secondary) !important;
   border-color: rgba(0, 0, 0, 0.15) !important;
+  color: var(--text-main) !important;
   transform: translateY(-1px);
+}
+
+.header-action-btn:focus,
+.header-action-btn:active,
+.header-action-btn.show,
+.header-action-btn[aria-expanded="true"] {
+  background: var(--bg-tertiary) !important;
+  border-color: rgba(0, 0, 0, 0.18) !important;
+  color: var(--text-main) !important;
+}
+
+#dashboardCurrencyDropdown {
+  color: var(--text-main) !important;
+}
+
+#dashboardCurrencyDropdown span#selected_currency_label {
+  color: inherit !important;
+}
+
+#dashboardCurrencyDropdown:hover,
+#dashboardCurrencyDropdown:focus,
+#dashboardCurrencyDropdown:active,
+#dashboardCurrencyDropdown.show,
+#dashboardCurrencyDropdown[aria-expanded="true"] {
+  color: var(--text-main) !important;
+  background-color: var(--bg-tertiary) !important;
+}
+
+.currency-select-item {
+  color: var(--text-main);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.currency-select-item:hover,
+.currency-select-item:focus {
+  background-color: var(--bg-tertiary);
+  color: var(--text-main);
+}
+
+.currency-select-item.active {
+  background-color: var(--main-color, #00aeff) !important;
+  color: #ffffff !important;
 }
 
 [data-theme="dark"] .header-action-btn {
   border-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--text-main) !important;
 }
 
 [data-theme="dark"] .header-action-btn:hover {
-  background: var(--bg-secondary);
+  background: var(--bg-secondary) !important;
   border-color: rgba(255, 255, 255, 0.18) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .header-action-btn:focus,
+[data-theme="dark"] .header-action-btn:active,
+[data-theme="dark"] .header-action-btn.show,
+[data-theme="dark"] .header-action-btn[aria-expanded="true"] {
+  background: var(--bg-secondary) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] #dashboardCurrencyDropdown {
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] #dashboardCurrencyDropdown:hover,
+[data-theme="dark"] #dashboardCurrencyDropdown:focus,
+[data-theme="dark"] #dashboardCurrencyDropdown:active,
+[data-theme="dark"] #dashboardCurrencyDropdown.show,
+[data-theme="dark"] #dashboardCurrencyDropdown[aria-expanded="true"] {
+  color: var(--text-main) !important;
+  background-color: var(--bg-secondary) !important;
+}
+
+[data-theme="dark"] #dashboardCurrencyDropdown + .dropdown-menu {
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] #dashboardCurrencyDropdown + .dropdown-menu .dropdown-header {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] #dashboardCurrencyDropdown + .dropdown-menu .currency-select-item {
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] #dashboardCurrencyDropdown + .dropdown-menu .currency-select-item:hover,
+[data-theme="dark"] #dashboardCurrencyDropdown + .dropdown-menu .currency-select-item:focus {
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] #dashboardCurrencyDropdown + .dropdown-menu .currency-select-item.active {
+  background-color: var(--main-color, #00aeff) !important;
+  color: #ffffff !important;
 }
 
 /* Seamless Split Action Button */
