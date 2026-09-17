@@ -9,36 +9,28 @@
    data-turbo="false"
    data-turbo-prefetch="false"
    data-action="click->notifications#markItemRead">
-  <div class="notification-item-icon <%= icon_cfg[:bg] %> <%= icon_cfg[:color] %>">
+  <div class="notif-avatar <%= icon_cfg[:bg] %> <%= icon_cfg[:color] %> flex-shrink-0">
     <i class="<%= icon_cfg[:icon] %>"></i>
   </div>
+
   <div class="notification-item-content flex-grow-1 min-w-0">
-    <div class="d-flex align-items-center justify-content-between mb-0.5">
-      <span class="notification-title fw-semibold fs-7 text-main text-truncate pe-2">
-        <%= notification.title %>
-      </span>
-      <span class="notification-time fs-9 text-muted ms-2 flex-shrink-0">
+    <div class="notification-item-text text-main">
+      <span class="fw-semibold text-main fs-8"><%= notification.title %></span>
+      <% if notification.message.present? %>
+        <span class="text-muted d-block text-truncate-2 fs-8 mt-0.5"><%= notification.message %></span>
+      <% end %>
+    </div>
+    <div class="notification-item-meta d-flex align-items-center gap-1.5 mt-1">
+      <span class="notification-item-time fs-9 <%= is_unread ? 'text-primary fw-semibold' : 'text-muted' %>">
         <%= time_ago_in_words(notification.created_at) %> ago
       </span>
-    </div>
-    <% if notification.message.present? %>
-      <p class="notification-desc fs-8 text-muted mb-1 text-truncate-2">
-        <%= notification.message %>
-      </p>
-    <% end %>
-    <div class="d-flex align-items-center gap-1.5 mt-0.5">
-      <% if notification.category == "taxes" %>
-        <span class="badge bg-success-subtle text-success fs-9 py-0.5 px-1.5 rounded">Taxes</span>
-      <% elsif notification.category == "invoices" %>
-        <span class="badge bg-primary-subtle text-primary fs-9 py-0.5 px-1.5 rounded">Invoices</span>
-      <% else %>
-        <span class="badge bg-secondary-subtle text-secondary fs-9 py-0.5 px-1.5 rounded">System</span>
-      <% end %>
       <% if notification.action.present? %>
-        <span class="fs-9 text-muted">• <%= notification.action.humanize %></span>
+        <span class="fs-9 text-muted opacity-50">·</span>
+        <span class="fs-9 text-muted notif-action-text text-truncate"><%= notification.action.humanize %></span>
       <% end %>
     </div>
   </div>
+
   <% if is_unread %>
     <span class="notification-unread-dot" title="Unread"></span>
   <% end %>

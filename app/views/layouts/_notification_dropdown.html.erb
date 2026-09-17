@@ -17,7 +17,7 @@
   end
 %>
 
-<!-- Modern Notification Dropdown -->
+<!-- Notification Dropdown -->
 <div class="dropdown header-notification-dropdown" id="header_notification_dropdown_container" data-controller="notifications">
   <button class="btn btn-sm p-0 border-0 shadow-none text-main position-relative d-flex align-items-center justify-content-center notification-bell-btn"
           type="button"
@@ -35,53 +35,47 @@
     </span>
   </button>
 
-  <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 p-0 rounded-4 modern-notification-dropdown-menu"
+  <div class="dropdown-menu dropdown-menu-end border-0 mt-2 p-0 rounded-4 modern-notification-dropdown-menu"
        aria-labelledby="headerNotificationDropdown">
     <!-- Header Section -->
-    <div class="px-3 py-3 border-bottom d-flex align-items-center justify-content-between bg-sidebar">
+    <div class="dropdown-header-bar px-3 pt-3 pb-2 d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-2">
-        <h6 class="mb-0 fw-bold fs-7 text-main">Notifications</h6>
-        <% if unread_count > 0 %>
-          <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fs-9 fw-semibold" id="dropdown_unread_badge_pill">
-            <%= unread_count %> New
-          </span>
-        <% else %>
-          <span class="badge bg-secondary-subtle text-muted rounded-pill px-2 py-0.5 fs-9 fw-semibold" id="dropdown_unread_badge_pill">
-            All read
-          </span>
-        <% end %>
+        <h5 class="fw-bold fs-5 text-main">Notifications</h5>
+        <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5 fs-9 fw-semibold <%= 'd-none' if unread_count.zero? %>" id="dropdown_unread_badge_pill">
+          <%= unread_count %> New
+        </span>
       </div>
       <% if unread_count > 0 %>
         <button type="button"
-                class="btn btn-link btn-sm text-decoration-none p-0 text-muted fs-8 fw-medium d-flex align-items-center gap-1 mark-all-read-btn"
+                class="btn btn-link btn-sm text-decoration-none p-1 text-primary fs-8 fw-semibold d-flex align-items-center gap-1.5 mark-all-read-btn header-mark-read-btn"
                 data-action="click->notifications#markAllRead"
                 title="Mark all as read">
-          <i class="fa-solid fa-check-double text-primary fs-8"></i>
-          <span>Mark all read</span>
+          <i class="fa-solid fa-check-double fs-9"></i>
+          <span>Mark all as read</span>
         </button>
       <% end %>
     </div>
 
-    <!-- Category Filter Tabs (Bootstrap Nav Pills) -->
-    <div class="px-3 py-2 border-bottom">
-      <ul class="nav nav-pills notification-filter-tabs d-flex" id="notificationTabs" role="tablist">
-        <li class="nav-item flex-fill text-center" role="presentation">
-          <button class="nav-link w-100 active py-1 px-2 fs-8" id="notif-all-tab" data-bs-toggle="pill" data-bs-target="#notif-all-pane" type="button" role="tab" aria-controls="notif-all-pane" aria-selected="true">
+    <!-- Capsule Pill Filter Tabs -->
+    <div class="tabs-scroll-container px-3 pb-2">
+      <ul class="nav nav-pills notification-filter-tabs d-flex gap-1.5" id="notificationTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="notif-all-tab" data-bs-toggle="pill" data-bs-target="#notif-all-pane" type="button" role="tab" aria-controls="notif-all-pane" aria-selected="true">
             All <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9"><%= total_count %></span>
           </button>
         </li>
-        <li class="nav-item flex-fill text-center" role="presentation">
-          <button class="nav-link w-100 py-1 px-2 fs-8" id="notif-unread-tab" data-bs-toggle="pill" data-bs-target="#notif-unread-pane" type="button" role="tab" aria-controls="notif-unread-pane" aria-selected="false">
-            Unread <span class="badge rounded-pill bg-primary text-white ms-1 fs-9"><%= unread_count %></span>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="notif-unread-tab" data-bs-toggle="pill" data-bs-target="#notif-unread-pane" type="button" role="tab" aria-controls="notif-unread-pane" aria-selected="false">
+            Unread <span class="badge rounded-pill <%= unread_count > 0 ? 'bg-primary text-white' : 'bg-secondary-subtle text-secondary' %> ms-1 fs-9"><%= unread_count %></span>
           </button>
         </li>
-        <li class="nav-item flex-fill text-center" role="presentation">
-          <button class="nav-link w-100 py-1 px-2 fs-8" id="notif-taxes-tab" data-bs-toggle="pill" data-bs-target="#notif-taxes-pane" type="button" role="tab" aria-controls="notif-taxes-pane" aria-selected="false">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="notif-taxes-tab" data-bs-toggle="pill" data-bs-target="#notif-taxes-pane" type="button" role="tab" aria-controls="notif-taxes-pane" aria-selected="false">
             Taxes <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9"><%= taxes_notifications.size %></span>
           </button>
         </li>
-        <li class="nav-item flex-fill text-center" role="presentation">
-          <button class="nav-link w-100 py-1 px-2 fs-8" id="notif-invoices-tab" data-bs-toggle="pill" data-bs-target="#notif-invoices-pane" type="button" role="tab" aria-controls="notif-invoices-pane" aria-selected="false">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="notif-invoices-tab" data-bs-toggle="pill" data-bs-target="#notif-invoices-pane" type="button" role="tab" aria-controls="notif-invoices-pane" aria-selected="false">
             Invoices <span class="badge rounded-pill bg-secondary-subtle text-secondary ms-1 fs-9"><%= invoices_notifications.size %></span>
           </button>
         </li>
@@ -96,9 +90,11 @@
           <% if recent_notifications.any? %>
             <%= render partial: "notifications/notification_item", collection: recent_notifications, as: :notification %>
           <% else %>
-            <div class="text-center py-4 px-3 text-muted">
-              <i class="fa-regular fa-bell-slash fs-4 mb-2 d-block opacity-50"></i>
-              <p class="fs-8 fw-medium mb-1 text-main">No notifications yet</p>
+            <div class="text-center py-5 px-3 text-muted">
+              <div class="empty-state-icon-circle mx-auto mb-2">
+                <i class="fa-regular fa-bell-slash fs-4 opacity-50"></i>
+              </div>
+              <p class="fs-7 fw-semibold mb-1 text-main">No notifications yet</p>
               <p class="fs-9 text-muted mb-0">Alerts for taxes and invoices will appear here.</p>
             </div>
           <% end %>
@@ -111,9 +107,11 @@
           <% if unread_notifications.any? %>
             <%= render partial: "notifications/notification_item", collection: unread_notifications, as: :notification %>
           <% else %>
-            <div class="text-center py-4 px-3 text-muted">
-              <i class="fa-solid fa-check-circle text-success fs-4 mb-2 d-block"></i>
-              <p class="fs-8 fw-medium mb-1 text-main">All caught up!</p>
+            <div class="text-center py-5 px-3 text-muted">
+              <div class="empty-state-icon-circle mx-auto mb-2 text-success">
+                <i class="fa-solid fa-check-circle fs-4 opacity-75"></i>
+              </div>
+              <p class="fs-7 fw-semibold mb-1 text-main">All caught up!</p>
               <p class="fs-9 text-muted mb-0">You have no unread notifications.</p>
             </div>
           <% end %>
@@ -126,9 +124,11 @@
           <% if taxes_notifications.any? %>
             <%= render partial: "notifications/notification_item", collection: taxes_notifications, as: :notification %>
           <% else %>
-            <div class="text-center py-4 px-3 text-muted">
-              <i class="fa-solid fa-file-invoice-dollar fs-4 mb-2 d-block opacity-50 text-success"></i>
-              <p class="fs-8 fw-medium mb-1 text-main">No tax notifications</p>
+            <div class="text-center py-5 px-3 text-muted">
+              <div class="empty-state-icon-circle mx-auto mb-2 text-success">
+                <i class="fa-solid fa-file-invoice-dollar fs-4 opacity-50"></i>
+              </div>
+              <p class="fs-7 fw-semibold mb-1 text-main">No tax notifications</p>
               <p class="fs-9 text-muted mb-0">BIR Form 2307 updates will appear here.</p>
             </div>
           <% end %>
@@ -141,9 +141,11 @@
           <% if invoices_notifications.any? %>
             <%= render partial: "notifications/notification_item", collection: invoices_notifications, as: :notification %>
           <% else %>
-            <div class="text-center py-4 px-3 text-muted">
-              <i class="fa-solid fa-file-invoice fs-4 mb-2 d-block opacity-50 text-primary"></i>
-              <p class="fs-8 fw-medium mb-1 text-main">No invoice notifications</p>
+            <div class="text-center py-5 px-3 text-muted">
+              <div class="empty-state-icon-circle mx-auto mb-2 text-primary">
+                <i class="fa-solid fa-file-invoice fs-4 opacity-50"></i>
+              </div>
+              <p class="fs-7 fw-semibold mb-1 text-main">No invoice notifications</p>
               <p class="fs-9 text-muted mb-0">Invoice and quote alerts will appear here.</p>
             </div>
           <% end %>
@@ -152,10 +154,10 @@
     </div>
 
     <!-- Dropdown Footer -->
-    <div class="px-3 py-2 border-top bg-sidebar text-center">
-      <%= link_to notifications_path, class: "text-decoration-none fs-8 fw-semibold text-primary d-flex align-items-center justify-content-center gap-1.5 py-1 hover-primary" do %>
-        <span>View all notifications</span>
-        <i class="fa-solid fa-arrow-right fs-9"></i>
+    <div class="dropdown-footer-bar px-3 py-2.5 border-top text-center">
+      <%= link_to notifications_path, class: "view-all-notifications-link text-decoration-none fs-8 fw-semibold text-primary d-flex align-items-center justify-content-center gap-1.5" do %>
+        <span>See all in Notifications</span>
+        <i class="fa-solid fa-arrow-right fs-9 dropdown-arrow-icon"></i>
       <% end %>
     </div>
   </div>
