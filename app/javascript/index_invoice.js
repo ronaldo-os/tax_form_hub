@@ -48,8 +48,8 @@ function initInvoicePage() {
                     datasets: [{
                         data: filteredData.map(d => d.count),
                         backgroundColor: color,
-                        borderRadius: 5,
-                        barThickness: filteredData.length > 3 ? 4 : 8, // Thicker bars if fewer months to avoid looking like a 'dash'
+                        borderRadius: 3,
+                        barThickness: filteredData.length > 3 ? 3 : 6, // Thicker bars if fewer months to avoid looking like a 'dash'
                         borderWidth: 0,
                     }]
                 },
@@ -114,10 +114,37 @@ function initInvoicePage() {
             autoWidth: false,
             destroy: true, // Important for Turbo
             pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             order: [[3, 'desc']], // Default order by Issue Date DESC
             columnDefs: [
-                { orderable: false, targets: [4, 6] } // Disable sorting on Attachments and Actions
+                { orderable: false, targets: [4, 6] }, // Disable sorting on Attachments and Actions
+                {
+                    targets: 5, // Status column
+                    render: function (data, type, row) {
+                        if (type === 'display' && data) {
+                            const statusLower = data.toString().toLowerCase().trim();
+                            let pillClass = 'status-pill-secondary';
+                            if (statusLower === 'paid' || statusLower === 'approved') pillClass = 'status-pill-success';
+                            else if (statusLower === 'sent' || statusLower === 'received') pillClass = 'status-pill-info';
+                            else if (statusLower === 'draft') pillClass = 'status-pill-secondary';
+                            else if (['rejected', 'cancelled', 'overdue'].includes(statusLower)) pillClass = 'status-pill-danger';
+                            return `<span class="status-pill ${pillClass}">${data}</span>`;
+                        }
+                        return data;
+                    }
+                }
             ],
+            language: {
+                search: "",
+                searchPlaceholder: "Search invoices...",
+                lengthMenu: "_MENU_",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "Showing 0 to 0 of 0 entries",
+                paginate: {
+                    previous: '<i class="fa-solid fa-chevron-left"></i>',
+                    next: '<i class="fa-solid fa-chevron-right"></i>'
+                }
+            },
             deferRender: true, // Improves performance with large datasets
             initComplete: function () {
                 const api = this.api();
@@ -131,6 +158,11 @@ function initInvoicePage() {
                 $container.find('div.dataTables_filter label').contents().filter(function () {
                     return this.nodeType === 3;
                 }).remove();
+
+                // Style length select
+                $container.find('div.dataTables_length select').addClass('form-select form-select-sm');
+                // Style filter input
+                $container.find('div.dataTables_filter input').addClass('form-control form-control-sm');
             }
         };
 
@@ -206,6 +238,22 @@ function initInvoicePage() {
                 .columns.adjust()
                 .responsive.recalc();
         }, 150);
+    });
+
+    // Handle sub-tab switch (Active vs Archived) inside invoice table cards
+    $(document).off('shown.bs.tab.invoicesub').on('shown.bs.tab.invoicesub', 'button[data-bs-toggle="pill"], .invoice-sub-tabs button', function (e) {
+        const targetPaneSelector = $(e.target).data('bs-target');
+        if (targetPaneSelector) {
+            $(targetPaneSelector).find('table[data-server-side="true"]').each(function() {
+                initSingleDataTable($(this));
+            });
+        }
+        setTimeout(function () {
+            $.fn.dataTable
+                .tables({ visible: true, api: true })
+                .columns.adjust()
+                .responsive.recalc();
+        }, 100);
     });
 
     // Window resize

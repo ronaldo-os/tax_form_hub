@@ -1,6 +1,6 @@
 <% is_purchase = local_assigns.fetch(:is_purchase, false) %>
 <div class="table-responsive overflow-visible">
-    <table class="table table-hover align-middle mb-0 subscription-table w-100">
+    <table class="table table-hover table-compact invoice-datatable align-middle mb-0 subscription-table w-100">
       <thead class="table-light">
         <tr>
           <th class="ps-4"><%= is_purchase ? "Supplier" : "Recipient" %></th>
@@ -93,7 +93,9 @@
             </td>
             <td class="pe-4 text-end">
               <div class="dropdown text-center">
-                <button class="btn btn-link text-muted p-0 text-decoration-none fs-3" type="button" id="actionsDropdown_<%= invoice.id %>" data-bs-toggle="dropdown" aria-expanded="false">⋮</button>
+                <button class="btn btn-sm btn-action-dropdown text-muted" type="button" id="actionsDropdown_<%= invoice.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="actionsDropdown_<%= invoice.id %>">
                   <li>
                     <%= link_to "View Details", price_adjustment_path(invoice), class: "dropdown-item" %>

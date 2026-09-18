@@ -19,8 +19,8 @@
 
 .chart-wrapper {
   flex-shrink: 0;
-  width: 100px;
-  height: 30px;
+  width: 68px;
+  height: 22px;
   overflow: hidden;
 }
 
@@ -30,8 +30,8 @@
 
 @media (max-width: 575.98px) {
   .chart-wrapper {
-    width: 60px;
-    height: 24px;
+    width: 52px;
+    height: 18px;
   }
 
   .stat-card-number {
@@ -465,6 +465,7 @@
 .pdf-preview-container.is-zoomed .pdf-preview-scaler {
   margin-left: 0.5rem !important;
   margin-right: 0.5rem !important;
+  max-width: none !important;
 }
 
 @media (max-width: 991.98px) {
@@ -510,51 +511,284 @@
 }
 
 /* Force PDF Canvas fixed standard paper sheet dimensions inside Preview Modal */
-#invoicePreviewModal #invoice_card {
+#invoicePreviewModal #invoice_card,
+.pdf-preview-wrapper #invoice_card,
+#invoicePreviewCard #invoice_card {
   width: 800px !important;
   min-width: 800px !important;
   max-width: 800px !important;
   margin: 0 auto !important;
+  padding: 3rem !important; /* Force desktop p-md-5 padding */
   background: #ffffff !important;
+  color: #212529 !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12) !important;
   border-radius: 8px !important;
+  border: 1px solid var(--border-color, #e2e8f0) !important;
   box-sizing: border-box !important;
   overflow: visible !important;
+  font-size: 0.875rem !important;
 }
 
-[data-theme="dark"] #invoicePreviewModal #invoice_card {
+[data-theme="dark"] #invoicePreviewModal #invoice_card,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card,
+[data-theme="dark"] #invoicePreviewCard #invoice_card {
   background: var(--card-bg, #1e2227) !important;
   color: var(--text-color, #f8f9fa) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
 }
 
-/* Prevent Bootstrap responsive grid column collapsing inside Preview Sheet on Mobile/Tablet */
-#invoicePreviewModal #invoice_card .col-md-1 { flex: 0 0 auto !important; width: 8.33333333% !important; }
-#invoicePreviewModal #invoice_card .col-md-2 { flex: 0 0 auto !important; width: 16.66666667% !important; }
-#invoicePreviewModal #invoice_card .col-md-3 { flex: 0 0 auto !important; width: 25% !important; }
-#invoicePreviewModal #invoice_card .col-md-4 { flex: 0 0 auto !important; width: 33.33333333% !important; }
-#invoicePreviewModal #invoice_card .col-md-5 { flex: 0 0 auto !important; width: 41.66666667% !important; }
-#invoicePreviewModal #invoice_card .col-md-6 { flex: 0 0 auto !important; width: 50% !important; }
-#invoicePreviewModal #invoice_card .col-md-7 { flex: 0 0 auto !important; width: 58.33333333% !important; }
-#invoicePreviewModal #invoice_card .col-md-8 { flex: 0 0 auto !important; width: 66.66666667% !important; }
-#invoicePreviewModal #invoice_card .col-md-9 { flex: 0 0 auto !important; width: 75% !important; }
-#invoicePreviewModal #invoice_card .col-md-10 { flex: 0 0 auto !important; width: 83.33333333% !important; }
-#invoicePreviewModal #invoice_card .col-md-11 { flex: 0 0 auto !important; width: 91.66666667% !important; }
-#invoicePreviewModal #invoice_card .col-md-12 { flex: 0 0 auto !important; width: 100% !important; }
-
-#invoicePreviewModal #invoice_card .row {
+/* Force Flex Rows with proper wrapping & justification */
+#invoicePreviewModal #invoice_card .row,
+.pdf-preview-wrapper #invoice_card .row {
   display: flex !important;
+  flex-direction: row !important;
   flex-wrap: wrap !important;
 }
 
-/* Table styling for fixed PDF sheet inside Preview Modal */
-#invoicePreviewModal #invoice_card .table-responsive {
-  overflow-x: visible !important;
+#invoicePreviewModal #invoice_card .justify-content-between,
+.pdf-preview-wrapper #invoice_card .justify-content-between {
+  justify-content: space-between !important;
 }
 
-#invoicePreviewModal #invoice_card table {
+#invoicePreviewModal #invoice_card .justify-content-end,
+.pdf-preview-wrapper #invoice_card .justify-content-end {
+  justify-content: flex-end !important;
+}
+
+/* Prevent Bootstrap responsive grid column collapsing inside Preview Sheet on Mobile/Tablet */
+#invoicePreviewModal #invoice_card .col-1,
+#invoicePreviewModal #invoice_card .col-sm-1,
+#invoicePreviewModal #invoice_card .col-md-1,
+#invoicePreviewModal #invoice_card .col-lg-1,
+.pdf-preview-wrapper #invoice_card .col-1,
+.pdf-preview-wrapper #invoice_card .col-sm-1,
+.pdf-preview-wrapper #invoice_card .col-md-1,
+.pdf-preview-wrapper #invoice_card .col-lg-1 { flex: 0 0 auto !important; width: 8.33333333% !important; }
+
+#invoicePreviewModal #invoice_card .col-2,
+#invoicePreviewModal #invoice_card .col-sm-2,
+#invoicePreviewModal #invoice_card .col-md-2,
+#invoicePreviewModal #invoice_card .col-lg-2,
+.pdf-preview-wrapper #invoice_card .col-2,
+.pdf-preview-wrapper #invoice_card .col-sm-2,
+.pdf-preview-wrapper #invoice_card .col-md-2,
+.pdf-preview-wrapper #invoice_card .col-lg-2 { flex: 0 0 auto !important; width: 16.66666667% !important; }
+
+#invoicePreviewModal #invoice_card .col-3,
+#invoicePreviewModal #invoice_card .col-sm-3,
+#invoicePreviewModal #invoice_card .col-md-3,
+#invoicePreviewModal #invoice_card .col-lg-3,
+.pdf-preview-wrapper #invoice_card .col-3,
+.pdf-preview-wrapper #invoice_card .col-sm-3,
+.pdf-preview-wrapper #invoice_card .col-md-3,
+.pdf-preview-wrapper #invoice_card .col-lg-3 { flex: 0 0 auto !important; width: 25% !important; }
+
+#invoicePreviewModal #invoice_card .col-4,
+#invoicePreviewModal #invoice_card .col-sm-4,
+#invoicePreviewModal #invoice_card .col-md-4,
+#invoicePreviewModal #invoice_card .col-lg-4,
+.pdf-preview-wrapper #invoice_card .col-4,
+.pdf-preview-wrapper #invoice_card .col-sm-4,
+.pdf-preview-wrapper #invoice_card .col-md-4,
+.pdf-preview-wrapper #invoice_card .col-lg-4 { flex: 0 0 auto !important; width: 33.33333333% !important; }
+
+#invoicePreviewModal #invoice_card .col-5,
+#invoicePreviewModal #invoice_card .col-sm-5,
+#invoicePreviewModal #invoice_card .col-md-5,
+#invoicePreviewModal #invoice_card .col-lg-5,
+.pdf-preview-wrapper #invoice_card .col-5,
+.pdf-preview-wrapper #invoice_card .col-sm-5,
+.pdf-preview-wrapper #invoice_card .col-md-5,
+.pdf-preview-wrapper #invoice_card .col-lg-5 { flex: 0 0 auto !important; width: 41.66666667% !important; }
+
+#invoicePreviewModal #invoice_card .col-6,
+#invoicePreviewModal #invoice_card .col-sm-6,
+#invoicePreviewModal #invoice_card .col-md-6,
+#invoicePreviewModal #invoice_card .col-lg-6,
+.pdf-preview-wrapper #invoice_card .col-6,
+.pdf-preview-wrapper #invoice_card .col-sm-6,
+.pdf-preview-wrapper #invoice_card .col-md-6,
+.pdf-preview-wrapper #invoice_card .col-lg-6 { flex: 0 0 auto !important; width: 50% !important; }
+
+#invoicePreviewModal #invoice_card .col-7,
+#invoicePreviewModal #invoice_card .col-sm-7,
+#invoicePreviewModal #invoice_card .col-md-7,
+#invoicePreviewModal #invoice_card .col-lg-7,
+.pdf-preview-wrapper #invoice_card .col-7,
+.pdf-preview-wrapper #invoice_card .col-sm-7,
+.pdf-preview-wrapper #invoice_card .col-md-7,
+.pdf-preview-wrapper #invoice_card .col-lg-7 { flex: 0 0 auto !important; width: 58.33333333% !important; }
+
+#invoicePreviewModal #invoice_card .col-8,
+#invoicePreviewModal #invoice_card .col-sm-8,
+#invoicePreviewModal #invoice_card .col-md-8,
+#invoicePreviewModal #invoice_card .col-lg-8,
+.pdf-preview-wrapper #invoice_card .col-8,
+.pdf-preview-wrapper #invoice_card .col-sm-8,
+.pdf-preview-wrapper #invoice_card .col-md-8,
+.pdf-preview-wrapper #invoice_card .col-lg-8 { flex: 0 0 auto !important; width: 66.66666667% !important; }
+
+#invoicePreviewModal #invoice_card .col-9,
+#invoicePreviewModal #invoice_card .col-sm-9,
+#invoicePreviewModal #invoice_card .col-md-9,
+#invoicePreviewModal #invoice_card .col-lg-9,
+.pdf-preview-wrapper #invoice_card .col-9,
+.pdf-preview-wrapper #invoice_card .col-sm-9,
+.pdf-preview-wrapper #invoice_card .col-md-9,
+.pdf-preview-wrapper #invoice_card .col-lg-9 { flex: 0 0 auto !important; width: 75% !important; }
+
+#invoicePreviewModal #invoice_card .col-10,
+#invoicePreviewModal #invoice_card .col-sm-10,
+#invoicePreviewModal #invoice_card .col-md-10,
+#invoicePreviewModal #invoice_card .col-lg-10,
+.pdf-preview-wrapper #invoice_card .col-10,
+.pdf-preview-wrapper #invoice_card .col-sm-10,
+.pdf-preview-wrapper #invoice_card .col-md-10,
+.pdf-preview-wrapper #invoice_card .col-lg-10 { flex: 0 0 auto !important; width: 83.33333333% !important; }
+
+#invoicePreviewModal #invoice_card .col-11,
+#invoicePreviewModal #invoice_card .col-sm-11,
+#invoicePreviewModal #invoice_card .col-md-11,
+#invoicePreviewModal #invoice_card .col-lg-11,
+.pdf-preview-wrapper #invoice_card .col-11,
+.pdf-preview-wrapper #invoice_card .col-sm-11,
+.pdf-preview-wrapper #invoice_card .col-md-11,
+.pdf-preview-wrapper #invoice_card .col-lg-11 { flex: 0 0 auto !important; width: 91.66666667% !important; }
+
+#invoicePreviewModal #invoice_card .col-12,
+#invoicePreviewModal #invoice_card .col-sm-12,
+#invoicePreviewModal #invoice_card .col-md-12,
+#invoicePreviewModal #invoice_card .col-lg-12,
+.pdf-preview-wrapper #invoice_card .col-12,
+.pdf-preview-wrapper #invoice_card .col-sm-12,
+.pdf-preview-wrapper #invoice_card .col-md-12,
+.pdf-preview-wrapper #invoice_card .col-lg-12 { flex: 0 0 auto !important; width: 100% !important; }
+
+/* Totals Box Specific: 5 columns (41.666667%) pushed to right */
+#invoicePreviewModal #invoice_card .col-sm-6.col-md-5,
+#invoicePreviewModal #invoice_card .totals-section .col-sm-6,
+#invoicePreviewModal #invoice_card .totals-section .col-md-5,
+.pdf-preview-wrapper #invoice_card .col-sm-6.col-md-5,
+.pdf-preview-wrapper #invoice_card .totals-section .col-sm-6,
+.pdf-preview-wrapper #invoice_card .totals-section .col-md-5 {
+  flex: 0 0 auto !important;
+  width: 41.66666667% !important;
+}
+
+/* Payment Terms & Notes specific */
+#invoicePreviewModal #invoice_card .payment-terms-box.col-md-6,
+#invoicePreviewModal #invoice_card .message-box.col-md-6,
+.pdf-preview-wrapper #invoice_card .payment-terms-box.col-md-6,
+.pdf-preview-wrapper #invoice_card .message-box.col-md-6 {
+  flex: 0 0 auto !important;
+  width: 50% !important;
+}
+
+#invoicePreviewModal #invoice_card .message-box.col-md-12,
+.pdf-preview-wrapper #invoice_card .message-box.col-md-12 {
+  flex: 0 0 auto !important;
   width: 100% !important;
+}
+
+/* Force Desktop Spacing & Paddings */
+#invoicePreviewModal #invoice_card .ps-sm-3,
+#invoicePreviewModal #invoice_card .ps-md-3,
+.pdf-preview-wrapper #invoice_card .ps-sm-3,
+.pdf-preview-wrapper #invoice_card .ps-md-3 {
+  padding-left: 1rem !important;
+}
+
+#invoicePreviewModal #invoice_card .pe-sm-3,
+#invoicePreviewModal #invoice_card .pe-md-3,
+.pdf-preview-wrapper #invoice_card .pe-sm-3,
+.pdf-preview-wrapper #invoice_card .pe-md-3 {
+  padding-right: 1rem !important;
+}
+
+/* Table styling for fixed PDF sheet inside Preview Modal */
+#invoicePreviewModal #invoice_card .table-responsive,
+.pdf-preview-wrapper #invoice_card .table-responsive {
+  overflow: visible !important;
+  overflow-x: visible !important;
+  display: block !important;
+  width: 100% !important;
+}
+
+#invoicePreviewModal #invoice_card table.invoice-items-table,
+#invoicePreviewModal #invoice_card table,
+.pdf-preview-wrapper #invoice_card table.invoice-items-table,
+.pdf-preview-wrapper #invoice_card table {
+  width: 100% !important;
+  max-width: 100% !important;
   table-layout: auto !important;
+  border-collapse: collapse !important;
+  margin-bottom: 0 !important;
+}
+
+/* Consistent Desktop Typography (disable Bootstrap RFS scaling in Preview Mode) */
+#invoicePreviewModal #invoice_card h2,
+#invoicePreviewModal #invoice_card .h2,
+.pdf-preview-wrapper #invoice_card h2,
+.pdf-preview-wrapper #invoice_card .h2 {
+  font-size: 2rem !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+}
+
+#invoicePreviewModal #invoice_card h3,
+#invoicePreviewModal #invoice_card .h3,
+.pdf-preview-wrapper #invoice_card h3,
+.pdf-preview-wrapper #invoice_card .h3 {
+  font-size: 1.75rem !important;
+  line-height: 1.2 !important;
+  font-weight: 700 !important;
+}
+
+#invoicePreviewModal #invoice_card h4,
+#invoicePreviewModal #invoice_card .h4,
+.pdf-preview-wrapper #invoice_card h4,
+.pdf-preview-wrapper #invoice_card .h4 {
+  font-size: 1.2rem !important;
+  font-weight: 600 !important;
+}
+
+#invoicePreviewModal #invoice_card h5,
+#invoicePreviewModal #invoice_card .h5,
+.pdf-preview-wrapper #invoice_card h5,
+.pdf-preview-wrapper #invoice_card .h5 {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+}
+
+#invoicePreviewModal #invoice_card h6,
+#invoicePreviewModal #invoice_card .h6,
+.pdf-preview-wrapper #invoice_card h6,
+.pdf-preview-wrapper #invoice_card .h6 {
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+}
+
+#invoicePreviewModal #invoice_card .fs-5,
+.pdf-preview-wrapper #invoice_card .fs-5 {
+  font-size: 1.25rem !important;
+}
+
+#invoicePreviewModal #invoice_card .fs-6,
+.pdf-preview-wrapper #invoice_card .fs-6 {
+  font-size: 1rem !important;
+}
+
+#invoicePreviewModal #invoice_card .small,
+#invoicePreviewModal #invoice_card small,
+.pdf-preview-wrapper #invoice_card .small,
+.pdf-preview-wrapper #invoice_card small {
+  font-size: 0.8rem !important;
+}
+
+#invoicePreviewModal #invoice_card .extra-small,
+.pdf-preview-wrapper #invoice_card .extra-small {
+  font-size: 0.72rem !important;
 }
 
 /* Zoom controls styling */
@@ -574,5 +808,414 @@
   display: inline-block;
   min-width: 44px;
   text-align: center;
+}
+
+/* ==========================================================================
+   HOMEPAGE DATATABLES & INVOICES REDESIGN (OPTIMIZED SPACING & HIGH DENSITY)
+   ========================================================================== */
+
+/* Spacing & Layout Utilities */
+.invoices-page,
+.subscriptions-page {
+  font-size: 0.85rem;
+}
+
+.invoice-header-bar {
+  margin-bottom: 0.65rem !important;
+}
+
+.invoice-action-buttons {
+  gap: 0.5rem !important;
+}
+
+.invoice-action-buttons .btn {
+  padding: 0.35rem 0.75rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.5rem !important;
+}
+
+.letter-spacing-sm {
+  letter-spacing: 0.04em;
+}
+
+/* Compact KPI / Stat Filter Cards */
+.invoice-stats-row {
+  margin-bottom: 0.75rem !important;
+}
+
+.card-filter {
+  cursor: pointer;
+  border-radius: 10px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03) !important;
+  background-color: var(--card-bg) !important;
+}
+
+.card-filter:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  border-color: var(--main-color) !important;
+}
+
+.card-filter.active {
+  border: 1.5px solid var(--main-color) !important;
+  box-shadow: 0 3px 12px rgba(0, 174, 255, 0.15) !important;
+}
+
+[data-theme="dark"] .card-filter {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="dark"] .card-filter.active {
+  border: 1.5px solid var(--main-color) !important;
+  box-shadow: 0 4px 16px rgba(0, 174, 255, 0.25) !important;
+}
+
+.stat-card-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+.stat-card-number {
+  font-size: 1.25rem !important;
+  line-height: 1.2;
+}
+
+/* Table Card Container */
+.invoice-table-card {
+  border-radius: 12px !important;
+  background-color: var(--card-bg) !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .invoice-table-card {
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.3) !important;
+}
+
+.invoice-table-card .card-header {
+  border-bottom: 1px solid var(--border-color) !important;
+  background-color: var(--card-bg) !important;
+}
+
+[data-theme="dark"] .invoice-table-card .card-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Sub-tabs / Segmented Switcher for Active vs Archived */
+.invoice-sub-tabs {
+  background: var(--bg-tertiary);
+  padding: 3px;
+  border-radius: 8px;
+  display: inline-flex;
+}
+
+[data-theme="dark"] .invoice-sub-tabs {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.invoice-sub-tabs .nav-link {
+  color: var(--text-muted);
+  font-size: 0.785rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: none !important;
+  background: transparent;
+  transition: all 0.2s ease;
+  line-height: 1.3;
+}
+
+.invoice-sub-tabs .nav-link:hover {
+  color: var(--text-main);
+}
+
+.invoice-sub-tabs .nav-link.active {
+  color: var(--main-color) !important;
+  background: var(--card-bg) !important;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-theme="dark"] .invoice-sub-tabs .nav-link.active {
+  background: var(--card-bg) !important;
+  color: var(--main-color) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* High-Density Compact DataTable Styling */
+.invoices-page table.dataTable,
+.invoices-page .table-compact,
+.subscriptions-page table.dataTable,
+.subscriptions-page .table-compact {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.invoices-page table.dataTable thead th,
+.invoices-page .table-compact thead th,
+.subscriptions-page table.dataTable thead th,
+.subscriptions-page .table-compact thead th {
+  padding: 0.45rem 0.65rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+  color: var(--text-muted) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background-color: var(--bg-secondary) !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+[data-theme="dark"] .invoices-page table.dataTable thead th,
+[data-theme="dark"] .invoices-page .table-compact thead th,
+[data-theme="dark"] .subscriptions-page table.dataTable thead th,
+[data-theme="dark"] .subscriptions-page .table-compact thead th {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.invoices-page table.dataTable tbody td,
+.invoices-page .table-compact tbody td,
+.subscriptions-page table.dataTable tbody td,
+.subscriptions-page .table-compact tbody td {
+  padding: 0.38rem 0.65rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.35 !important;
+  vertical-align: middle !important;
+  border-top: 1px solid var(--border-color) !important;
+  border-bottom: none !important;
+}
+
+[data-theme="dark"] .invoices-page table.dataTable tbody td,
+[data-theme="dark"] .invoices-page .table-compact tbody td,
+[data-theme="dark"] .subscriptions-page table.dataTable tbody td,
+[data-theme="dark"] .subscriptions-page .table-compact tbody td {
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.invoices-page table.dataTable tbody tr:hover td,
+.invoices-page .table-compact tbody tr:hover td,
+.subscriptions-page table.dataTable tbody tr:hover td,
+.subscriptions-page .table-compact tbody tr:hover td {
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] .invoices-page table.dataTable tbody tr:hover td,
+[data-theme="dark"] .invoices-page .table-compact tbody tr:hover td,
+[data-theme="dark"] .subscriptions-page table.dataTable tbody tr:hover td,
+[data-theme="dark"] .subscriptions-page .table-compact tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Specific Columns Styling */
+.invoices-page .preview-invoice {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--main-color) !important;
+}
+
+.invoices-page .preview-invoice:hover {
+  text-decoration: underline !important;
+}
+
+.invoices-page .invoice-amount,
+.invoices-page table.dataTable td:nth-child(3) {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+/* Status Pill Badges */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.18rem 0.55rem;
+  border-radius: 9999px;
+  line-height: 1.2;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-pill-success {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+[data-theme="dark"] .status-pill-success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.status-pill-info {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+[data-theme="dark"] .status-pill-info {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.status-pill-secondary {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+[data-theme="dark"] .status-pill-secondary {
+  background-color: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.status-pill-danger {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+[data-theme="dark"] .status-pill-danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.status-pill-primary {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+[data-theme="dark"] .status-pill-primary {
+  background-color: rgba(0, 174, 255, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(0, 174, 255, 0.25);
+}
+
+/* Action Dropdown Button in Table */
+.btn-action-dropdown {
+  width: 26px;
+  height: 26px;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  font-size: 0.85rem !important;
+  transition: all 0.15s ease;
+}
+
+.btn-action-dropdown:hover,
+.btn-action-dropdown:focus {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+/* Buttons in Table Cells */
+.btn-xs {
+  padding: 0.18rem 0.5rem !important;
+  font-size: 0.72rem !important;
+  line-height: 1.2 !important;
+}
+
+/* DataTables Controls Toolbar (Search & Length Select) */
+.invoices-page .dataTables_wrapper > .row:first-child {
+  margin-top: 0 !important;
+  margin-bottom: 0.5rem !important;
+  align-items: center;
+}
+
+.invoices-page .dataTables_length label {
+  font-size: 0.8rem;
+  margin-bottom: 0;
+  color: var(--text-muted);
+}
+
+.invoices-page .dataTables_length select.form-select {
+  font-size: 0.785rem !important;
+  padding: 0.25rem 1.6rem 0.25rem 0.5rem !important;
+  height: 30px !important;
+  min-width: 65px !important;
+  border-radius: 6px !important;
+  border-color: var(--border-color) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+}
+
+.invoices-page .dataTables_filter label {
+  font-size: 0.8rem;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.invoices-page .dataTables_filter input.form-control {
+  font-size: 0.785rem !important;
+  padding: 0.25rem 0.65rem !important;
+  height: 30px !important;
+  min-width: 200px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+}
+
+.invoices-page .dataTables_filter input.form-control:focus {
+  border-color: var(--main-color) !important;
+  box-shadow: 0 0 0 0.15rem rgba(0, 174, 255, 0.18) !important;
+}
+
+/* DataTables Footer (Info & Pagination) */
+.invoices-page .dataTables_wrapper > .row:last-child {
+  margin-top: 0.4rem !important;
+  margin-bottom: 0 !important;
+  align-items: center;
+  padding-top: 0.25rem;
+}
+
+.invoices-page .dataTables_info {
+  font-size: 0.785rem !important;
+  padding-top: 0 !important;
+  color: var(--text-muted) !important;
+}
+
+.invoices-page .dataTables_paginate {
+  padding-top: 0 !important;
+}
+
+.invoices-page .dataTables_paginate .pagination {
+  margin-bottom: 0 !important;
+  gap: 3px;
+}
+
+.invoices-page .dataTables_paginate .page-link {
+  font-size: 0.75rem !important;
+  padding: 0.25rem 0.55rem !important;
+  border-radius: 6px !important;
+  line-height: 1.2;
 }
 

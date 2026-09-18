@@ -3,8 +3,8 @@
   <%= stylesheet_link_tag "invoices", media: "all" %>
 <% end %>
 
-<div class="container-fluid invoices-page px-2 px-sm-3 px-md-4 py-3">
-  <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3 invoice-header-bar">
+<div class="container-fluid invoices-page px-2 px-sm-3 px-md-4 py-2.5">
+  <div class="mt-2 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-2.5 invoice-header-bar">
     <!-- Tab Navigation Container -->
     <div class="tabs-scroll-container">
       <ul class="custom_nav_tabs nav nav-tabs border-0" id="submissionTabs" role="tablist">
@@ -32,10 +32,16 @@
     </div>
 
     <!-- Create Invoice buttons aligned right / stacked on mobile -->
-    <div class="invoice-action-buttons d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
-      <%= link_to 'Create Quote', new_invoice_path(category: 'quote', tab: @active_tab), class: 'btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap' %>
-      <%= link_to 'Create Credit Note', new_invoice_path(category: 'credit_note', tab: @active_tab), class: 'btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap' %>
-      <%= link_to 'Create Invoice', new_invoice_path(tab: @active_tab), class: 'btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap' %>
+    <div class="invoice-action-buttons d-flex gap-1.5 flex-wrap flex-sm-nowrap justify-content-end">
+      <%= link_to new_invoice_path(category: 'quote', tab: @active_tab), class: 'btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5' do %>
+        <i class="fa-solid fa-quote-left fs-8"></i> Create Quote
+      <% end %>
+      <%= link_to new_invoice_path(category: 'credit_note', tab: @active_tab), class: 'btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5' do %>
+        <i class="fa-solid fa-receipt fs-8"></i> Create Credit Note
+      <% end %>
+      <%= link_to new_invoice_path(tab: @active_tab), class: 'btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5' do %>
+        <i class="fa-solid fa-plus fs-8"></i> Create Invoice
+      <% end %>
     </div>
   </div>
 
@@ -47,141 +53,201 @@
 
     <!-- Sales Invoices -->
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'sales-invoices' %>" id="sales-invoices" role="tabpanel" aria-labelledby="sales-invoices-tab">
-      <div class="row g-2 g-md-3 mb-3">
+      <div class="row g-2 g-md-2 mb-2.5 invoice-stats-row">
         <% ["total", "draft", "sent", "paid"].each do |status| %>
           <% totals = @invoice_totals_sale[status] %>
           <div class="col-6 col-md-3">
             <div class="card card-filter shadow-sm h-100 <%= 'active' if status == 'total' %>" 
                 data-table="#sales-table" 
                 data-status="<%= (status == "total" ? "" : status) %>">
-              <div class="card-body d-flex flex-column justify-content-between p-3">
-                <div class="d-flex justify-content-between align-items-center mb-1 mb-md-2">
-                  <p class="text-muted mb-0 text-capitalize small fw-medium"><%= status %></p>
-                  <i class="fa-solid fa-filter text-secondary extra-small"></i>
+              <div class="card-body p-2 px-2.5 px-md-3 d-flex flex-column justify-content-between">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <div class="d-flex align-items-center gap-1.5">
+                    <span class="text-muted text-uppercase fw-semibold extra-small stat-card-label"><%= status %></span>
+                    <i class="fa-solid fa-filter text-secondary extra-small opacity-50"></i>
+                  </div>
+                  <small class="extra-small">
+                    <span class="<%= totals["percent_change"] > 0 ? 'text-success' : totals["percent_change"] < 0 ? 'text-danger' : 'text-muted' %> fw-bold">
+                      <%= "#{totals["percent_change"] > 0 ? '+' : ''}#{totals["percent_change"]}%" %>
+                    </span>
+                  </small>
                 </div>
 
-                <div class="d-flex align-items-center justify-content-between my-1">
+                <div class="d-flex align-items-center justify-content-between">
                   <h4 class="fw-bold mb-0 me-1 stat-card-number"><%= totals["overall"] %></h4>
                   <div class="chart-wrapper">
                     <canvas id="chart-sale-<%= status %>"></canvas>
                   </div>
                 </div>
-
-                <small class="text-muted extra-small">
-                  <span class="<%= totals["percent_change"] > 0 ? 'text-success' : totals["percent_change"] < 0 ? 'text-danger' : 'text-muted' %> fw-semibold">
-                    <%= "#{totals["percent_change"] > 0 ? '+' : ''}#{totals["percent_change"]}%" %>
-                  </span>
-                  <span class="d-none d-sm-inline">from last month</span>
-                </small>
               </div>
             </div>
           </div>
         <% end %>
       </div>
 
-      <div class="card mb-4">
-        <div class="card-body p-3">
-          <h5 class="fw-bold mb-3">Active Sales Invoices</h5>
-          <%# Server-side DataTable for large datasets - loads data via AJAX %>
-          <%= render partial: 'invoices/partials/server_side_table',
-                     locals: { table_id: 'sales-table', invoice_type: 'sale', archived: false, quote: false, active_tab: 'sales-invoices' } %>
+      <div class="card invoice-table-card shadow-sm border-0">
+        <div class="card-header bg-transparent border-0 px-3 pt-2.5 pb-2">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <ul class="nav nav-pills invoice-sub-tabs gap-1" id="salesSubTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="sales-active-tab" data-bs-toggle="pill" data-bs-target="#sales-active-pane" type="button" role="tab" aria-controls="sales-active-pane" aria-selected="true">
+                  <i class="fa-solid fa-file-invoice me-1.5"></i> Active Sales Invoices
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sales-archived-tab" data-bs-toggle="pill" data-bs-target="#sales-archived-pane" type="button" role="tab" aria-controls="sales-archived-pane" aria-selected="false">
+                  <i class="fa-solid fa-box-archive me-1.5"></i> Archived
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-body p-3">
-          <h5 class="fw-bold mb-3">Archived Sales Invoices</h5>
-          <%= render partial: 'invoices/partials/server_side_table',
-                     locals: { table_id: 'sales-archived-table', invoice_type: 'sale', archived: true, quote: false, active_tab: 'sales-invoices' } %>
+        <div class="card-body p-3 pt-1">
+          <div class="tab-content" id="salesSubTabsContent">
+            <div class="tab-pane fade show active" id="sales-active-pane" role="tabpanel" aria-labelledby="sales-active-tab">
+              <%# Server-side DataTable for large datasets - loads data via AJAX %>
+              <%= render partial: 'invoices/partials/server_side_table',
+                         locals: { table_id: 'sales-table', invoice_type: 'sale', archived: false, quote: false, active_tab: 'sales-invoices' } %>
+            </div>
+            <div class="tab-pane fade" id="sales-archived-pane" role="tabpanel" aria-labelledby="sales-archived-tab">
+              <%= render partial: 'invoices/partials/server_side_table',
+                         locals: { table_id: 'sales-archived-table', invoice_type: 'sale', archived: true, quote: false, active_tab: 'sales-invoices' } %>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Sent Quotes -->
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'sent-quotes' %>" id="sent-quotes" role="tabpanel" aria-labelledby="sent-quotes-tab">
-      <div class="card mb-4">
-        <div class="card-body p-3">
-          <h5 class="fw-bold mb-3">Active Sent Quotes</h5>
-          <%= render partial: 'invoices/partials/server_side_table',
-                     locals: { table_id: 'sent-quotes-table', title: 'Quote', invoice_type: 'sale', archived: false, quote: true, active_tab: 'sent-quotes' } %>
+      <div class="card invoice-table-card shadow-sm border-0">
+        <div class="card-header bg-transparent border-0 px-3 pt-2.5 pb-2">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <ul class="nav nav-pills invoice-sub-tabs gap-1" id="sentQuotesSubTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="sent-quotes-active-tab" data-bs-toggle="pill" data-bs-target="#sent-quotes-active-pane" type="button" role="tab" aria-controls="sent-quotes-active-pane" aria-selected="true">
+                  <i class="fa-solid fa-quote-left me-1.5"></i> Active Sent Quotes
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="sent-quotes-archived-tab" data-bs-toggle="pill" data-bs-target="#sent-quotes-archived-pane" type="button" role="tab" aria-controls="sent-quotes-archived-pane" aria-selected="false">
+                  <i class="fa-solid fa-box-archive me-1.5"></i> Archived
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-body p-3">
-          <h5 class="fw-bold mb-3">Archived Sent Quotes</h5>
-          <%= render partial: 'invoices/partials/server_side_table',
-                     locals: { table_id: 'sent-quotes-archived-table', title: 'Quote', invoice_type: 'sale', archived: true, quote: true, active_tab: 'sent-quotes' } %>
+        <div class="card-body p-3 pt-1">
+          <div class="tab-content" id="sentQuotesSubTabsContent">
+            <div class="tab-pane fade show active" id="sent-quotes-active-pane" role="tabpanel" aria-labelledby="sent-quotes-active-tab">
+              <%= render partial: 'invoices/partials/server_side_table',
+                         locals: { table_id: 'sent-quotes-table', title: 'Quote', invoice_type: 'sale', archived: false, quote: true, active_tab: 'sent-quotes' } %>
+            </div>
+            <div class="tab-pane fade" id="sent-quotes-archived-pane" role="tabpanel" aria-labelledby="sent-quotes-archived-tab">
+              <%= render partial: 'invoices/partials/server_side_table',
+                         locals: { table_id: 'sent-quotes-archived-table', title: 'Quote', invoice_type: 'sale', archived: true, quote: true, active_tab: 'sent-quotes' } %>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Purchase Invoices -->
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'purchase-invoices' %>" id="purchase-invoices" role="tabpanel" aria-labelledby="purchase-invoices-tab">
-      <div class="row g-2 g-md-3 mb-3">
+      <div class="row g-2 g-md-2 mb-2.5 invoice-stats-row">
         <% ["total", "draft", "sent", "paid"].each do |status| %>
           <% totals = @invoice_totals_purchase[status] %>
           <div class="col-6 col-md-3">
             <div class="card card-filter shadow-sm h-100 <%= 'active' if status == 'total' %>" 
                 data-table="#purchases-table" 
                 data-status="<%= (status == "total" ? "" : status) %>">
-              <div class="card-body d-flex flex-column justify-content-between p-3">
-                <div class="d-flex justify-content-between align-items-center mb-1 mb-md-2">
-                  <p class="text-muted mb-0 text-capitalize small fw-medium"><%= status %></p>
-                  <i class="fa-solid fa-filter text-secondary extra-small"></i>
+              <div class="card-body p-2 px-2.5 px-md-3 d-flex flex-column justify-content-between">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                  <div class="d-flex align-items-center gap-1.5">
+                    <span class="text-muted text-uppercase fw-semibold extra-small stat-card-label"><%= status %></span>
+                    <i class="fa-solid fa-filter text-secondary extra-small opacity-50"></i>
+                  </div>
+                  <small class="extra-small">
+                    <span class="<%= totals["percent_change"] > 0 ? 'text-success' : totals["percent_change"] < 0 ? 'text-danger' : 'text-muted' %> fw-bold">
+                      <%= "#{totals["percent_change"] > 0 ? '+' : ''}#{totals["percent_change"]}%" %>
+                    </span>
+                  </small>
                 </div>
 
-                <div class="d-flex align-items-center justify-content-between my-1">
+                <div class="d-flex align-items-center justify-content-between">
                   <h4 class="fw-bold mb-0 me-1 stat-card-number"><%= totals["overall"] %></h4>
                   <div class="chart-wrapper">
                     <canvas id="chart-purchase-<%= status %>"></canvas>
                   </div>
                 </div>
-
-                <small class="text-muted extra-small">
-                  <span class="<%= totals["percent_change"] > 0 ? 'text-success' : totals["percent_change"] < 0 ? 'text-danger' : 'text-muted' %> fw-semibold">
-                    <%= "#{totals["percent_change"] > 0 ? '+' : ''}#{totals["percent_change"]}%" %>
-                  </span>
-                  <span class="d-none d-sm-inline">from last month</span>
-                </small>
               </div>
             </div>
           </div>
         <% end %>
       </div>
 
-      <div class="card mb-4">
-        <div class="card-body p-3">
-          <h5 class="fw-bold mb-3">Active Purchase Invoices</h5>
-          <%= render partial: 'invoices/partials/server_side_table',
-                     locals: { table_id: 'purchases-table', invoice_type: 'purchase', archived: false, quote: false, active_tab: 'purchase-invoices' } %>
+      <div class="card invoice-table-card shadow-sm border-0">
+        <div class="card-header bg-transparent border-0 px-3 pt-2.5 pb-2">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <ul class="nav nav-pills invoice-sub-tabs gap-1" id="purchaseSubTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="purchase-active-tab" data-bs-toggle="pill" data-bs-target="#purchase-active-pane" type="button" role="tab" aria-controls="purchase-active-pane" aria-selected="true">
+                  <i class="fa-solid fa-receipt me-1.5"></i> Active Purchase Invoices
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="purchase-archived-tab" data-bs-toggle="pill" data-bs-target="#purchase-archived-pane" type="button" role="tab" aria-controls="purchase-archived-pane" aria-selected="false">
+                  <i class="fa-solid fa-box-archive me-1.5"></i> Archived
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-body p-3">
-          <h5 class="fw-bold mb-3">Archived Purchase Invoices</h5>
-          <%= render partial: 'invoices/partials/server_side_table',
-                     locals: { table_id: 'purchases-archived-table', invoice_type: 'purchase', archived: true, quote: false, active_tab: 'purchase-invoices' } %>
+        <div class="card-body p-3 pt-1">
+          <div class="tab-content" id="purchaseSubTabsContent">
+            <div class="tab-pane fade show active" id="purchase-active-pane" role="tabpanel" aria-labelledby="purchase-active-tab">
+              <%= render partial: 'invoices/partials/server_side_table',
+                         locals: { table_id: 'purchases-table', invoice_type: 'purchase', archived: false, quote: false, active_tab: 'purchase-invoices' } %>
+            </div>
+            <div class="tab-pane fade" id="purchase-archived-pane" role="tabpanel" aria-labelledby="purchase-archived-tab">
+              <%= render partial: 'invoices/partials/server_side_table',
+                         locals: { table_id: 'purchases-archived-table', invoice_type: 'purchase', archived: true, quote: false, active_tab: 'purchase-invoices' } %>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Received Quotes -->
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'received-quotes' %>" id="received-quotes" role="tabpanel" aria-labelledby="received-quotes-tab">
-      <div class="card mb-4">
-        <div class="card-body p-3">
-          <h5 class="fw-bold mb-3">Active Received Quotes</h5>
-          <%= render partial: 'invoices/partials/server_side_table',
-                     locals: { table_id: 'received-quotes-table', title: 'Quote', invoice_type: 'purchase', archived: false, quote: true, active_tab: 'received-quotes' } %>
+      <div class="card invoice-table-card shadow-sm border-0">
+        <div class="card-header bg-transparent border-0 px-3 pt-2.5 pb-2">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <ul class="nav nav-pills invoice-sub-tabs gap-1" id="receivedQuotesSubTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="received-quotes-active-tab" data-bs-toggle="pill" data-bs-target="#received-quotes-active-pane" type="button" role="tab" aria-controls="received-quotes-active-pane" aria-selected="true">
+                  <i class="fa-solid fa-quote-right me-1.5"></i> Active Received Quotes
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="received-quotes-archived-tab" data-bs-toggle="pill" data-bs-target="#received-quotes-archived-pane" type="button" role="tab" aria-controls="received-quotes-archived-pane" aria-selected="false">
+                  <i class="fa-solid fa-box-archive me-1.5"></i> Archived
+                </button>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-
-      <div class="card">
-        <div class="card-body p-3">
-          <h5 class="fw-bold mb-3">Archived Received Quotes</h5>
-          <%= render partial: 'invoices/partials/server_side_table',
-                     locals: { table_id: 'received-quotes-archived-table', title: 'Quote', invoice_type: 'purchase', archived: true, quote: true, active_tab: 'received-quotes' } %>
+        <div class="card-body p-3 pt-1">
+          <div class="tab-content" id="receivedQuotesSubTabsContent">
+            <div class="tab-pane fade show active" id="received-quotes-active-pane" role="tabpanel" aria-labelledby="received-quotes-active-tab">
+              <%= render partial: 'invoices/partials/server_side_table',
+                         locals: { table_id: 'received-quotes-table', title: 'Quote', invoice_type: 'purchase', archived: false, quote: true, active_tab: 'received-quotes' } %>
+            </div>
+            <div class="tab-pane fade" id="received-quotes-archived-pane" role="tabpanel" aria-labelledby="received-quotes-archived-tab">
+              <%= render partial: 'invoices/partials/server_side_table',
+                         locals: { table_id: 'received-quotes-archived-table', title: 'Quote', invoice_type: 'purchase', archived: true, quote: true, active_tab: 'received-quotes' } %>
+            </div>
+          </div>
         </div>
       </div>
     </div>

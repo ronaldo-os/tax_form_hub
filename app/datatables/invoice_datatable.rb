@@ -138,12 +138,13 @@ class InvoiceDatatable < BaseDatatable
       badges << '<span class="badge badge_has_cn ms-1">Has CN</span>'
     end
 
-    link_to(
+    link = link_to(
       invoice.invoice_number,
       url_helpers.invoice_path(invoice, tab: active_tab),
-      class: 'preview-invoice preview-invoice-mobile',
+      class: 'preview-invoice preview-invoice-mobile fw-semibold text-primary text-decoration-none',
       data: { id: invoice.id }
-    ) + badges.join
+    )
+    (link + badges.join).html_safe
   end
 
   def counterparty_name(invoice)
@@ -153,7 +154,7 @@ class InvoiceDatatable < BaseDatatable
       invoice.recipient_company&.name || '—'
     end
 
-    content_tag(:div, truncate(name, length: 30), class: 'text-truncate', title: name)
+    content_tag(:div, truncate(name, length: 30), class: 'text-truncate fw-medium', title: name)
   end
 
   def format_total(invoice)
@@ -167,14 +168,18 @@ class InvoiceDatatable < BaseDatatable
   end
 
   def format_attachments(invoice)
-    return content_tag(:span, 'No File', class: 'text-muted') if invoice.recurring_sub_invoice?
+    return content_tag(:span, '—', class: 'text-muted') if invoice.recurring_sub_invoice?
     if invoice.attachments.attached?
-      button = content_tag(:button, 'View Files',
-        class: 'btn btn-sm btn-outline-primary',
+      file_count = invoice.attachments.count
+      label = file_count > 1 ? "#{file_count} Files" : 'Files'
+      button = content_tag(:button,
+        "<i class=\"fa-solid fa-paperclip me-1\"></i>#{label}".html_safe,
+        class: 'btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 extra-small fw-medium text-nowrap',
         data: {
           'bs-toggle' => 'modal',
           'bs-target' => "#attachmentModal-#{invoice.id}"
-        }
+        },
+        title: 'View Attachments'
       )
 
       # Build modal HTML for attachments
@@ -235,7 +240,7 @@ class InvoiceDatatable < BaseDatatable
 
       button + modal
     else
-      content_tag(:span, 'No File', class: 'text-muted')
+      content_tag(:span, '—', class: 'text-muted')
     end
   end
 
@@ -249,16 +254,18 @@ class InvoiceDatatable < BaseDatatable
 
   def format_actions(invoice)
     dropdown = content_tag(:div, class: 'dropdown text-center') do
-      button = content_tag(:button, '&#8942;'.html_safe,
-        class: 'btn btn-link text-muted p-0 text-decoration-none fs-3',
+      button = content_tag(:button,
+        '<i class="fa-solid fa-ellipsis-vertical"></i>'.html_safe,
+        class: 'btn btn-sm btn-action-dropdown text-muted',
         type: 'button',
         id: "actionsDropdown_#{invoice.id}",
         data: { 'bs-toggle' => 'dropdown' },
-        'aria-expanded' => 'false'
+        'aria-expanded' => 'false',
+        title: 'Actions'
       )
 
       menu_items = build_action_items(invoice)
-      menu = content_tag(:ul, menu_items.html_safe, class: 'dropdown-menu', 'aria-labelledby' => "actionsDropdown_#{invoice.id}")
+      menu = content_tag(:ul, menu_items.html_safe, class: 'dropdown-menu dropdown-menu-end shadow-sm border-0 py-1', 'aria-labelledby' => "actionsDropdown_#{invoice.id}")
 
       button + menu
     end

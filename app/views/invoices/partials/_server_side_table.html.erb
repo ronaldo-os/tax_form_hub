@@ -1,7 +1,7 @@
 <%# Server-side rendered DataTable for better performance %>
 <%# Loads data via AJAX instead of rendering all rows server-side %>
 
-<table class="table table-hover" id="<%= table_id %>"
+<table class="table table-hover table-compact invoice-datatable align-middle w-100" id="<%= table_id %>"
        data-server-side="true"
        data-ajax-url="<%= datatable_data_invoices_path %>"
        data-ajax-data='<%= { invoice_type: local_assigns[:invoice_type], archived: local_assigns[:archived], quote: local_assigns[:quote], tab: local_assigns[:active_tab] }.to_json %>'>

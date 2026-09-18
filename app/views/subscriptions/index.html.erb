@@ -1,8 +1,11 @@
 <% content_for :page_title, "Subscriptions" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "invoices", media: "all" %>
+<% end %>
 
-<div class="subscriptions-page container-fluid px-2 px-sm-3 px-md-4 py-3">
+<div class="subscriptions-page container-fluid px-2 px-sm-3 px-md-4 py-2.5">
 
-  <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3 invoice-header-bar">
+  <div class="mt-2 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-2.5 invoice-header-bar">
     <!-- Top-Level Tab Navigation: Sales vs Purchases -->
     <div class="tabs-scroll-container">
       <ul class="custom_nav_tabs nav nav-tabs border-0" id="subscriptionTypeTabs" role="tablist">
@@ -19,6 +22,23 @@
           </button>
         </li>
       </ul>
+    </div>
+
+    <!-- Create Invoice buttons aligned right / stacked on mobile -->
+    <% active_invoice_tab = @active_tab == 'purchases' ? 'purchase-invoices' : 'sales-invoices' %>
+    <div class="invoice-action-buttons d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
+      <%= link_to new_invoice_path(category: 'quote', tab: active_invoice_tab), class: 'btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2' do %>
+        <i class="fa-solid fa-quote-left fs-8"></i>
+        <span>Create Quote</span>
+      <% end %>
+      <%= link_to new_invoice_path(category: 'credit_note', tab: active_invoice_tab), class: 'btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2' do %>
+        <i class="fa-solid fa-receipt fs-8"></i>
+        <span>Create Credit Note</span>
+      <% end %>
+      <%= link_to new_invoice_path(tab: active_invoice_tab), class: 'btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2' do %>
+        <i class="fa-solid fa-plus fs-8"></i>
+        <span>Create Invoice</span>
+      <% end %>
     </div>
   </div>
 
