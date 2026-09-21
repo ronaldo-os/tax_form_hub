@@ -28,7 +28,8 @@ function initClientSubmissionsPage() {
             searching: true,
             ordering: true,
             order: [[5, 'desc']],
-            pageLength: 10,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             lengthChange: true,
             language: {
                 search: "_INPUT_",

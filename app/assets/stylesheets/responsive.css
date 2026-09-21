@@ -1531,3 +1531,42 @@
 #commandPaletteModal .command-item.active {
   background-color: var(--bg-tertiary) !important;
 }
+
+/* High-Density DataTables Responsive Overrides */
+@media (max-width: 767.98px) {
+
+  .tax-submissions-page,
+  .locations-page,
+  .invoices-page,
+  .subscriptions-page {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  .tax-submissions-page .card,
+  .locations-page .card {
+    border-radius: 10px !important;
+  }
+
+  .tax-submissions-page .custom-filter-bar,
+  .locations-page .custom-filter-bar {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .tax-submissions-page .custom-filter-bar select,
+  .locations-page .custom-filter-bar select {
+    flex: 1 1 auto !important;
+    min-width: 120px !important;
+  }
+
+  .dataTables_filter {
+    width: 100% !important;
+  }
+
+  .dataTables_filter input.form-control {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+}

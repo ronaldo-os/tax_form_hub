@@ -16,6 +16,8 @@ function initLocationsPage() {
         responsive: true,
         autoWidth: false,
         destroy: true,
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         language: {
             search: "_INPUT_",
             searchPlaceholder: "Search locations...",

@@ -1,6 +1,6 @@
-<div class="card">
-  <div class="card-body p-3">
-  <table class="table table-hover table_text_centered align-middle nowrap submissionsTable w-100">
+<div class="card shadow-sm border-0 rounded-3">
+  <div class="card-body p-2.5">
+  <table class="table table-hover table_text_centered align-middle table-compact nowrap submissionsTable w-100">
     <thead class="table-light">
       <tr>
         <th>Transaction ID</th>
@@ -21,7 +21,7 @@
             <%= link_to submission.user_transaction_id,
                         tax_submission_path(submission, format: :js),
                         remote: true,
-                        class: "text-decoration-none",
+                        class: "text-decoration-none fw-semibold",
                         data: { bs_toggle: "modal", bs_target: "#submissionModal" } %>
           </td>
 
@@ -33,9 +33,9 @@
           <!-- Form 2307 -->
           <td>
             <% if submission.form_2307.attached? %>
-              <button type="button" class="btn btn-sm btn-outline-primary"
+              <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-0.5"
                       data-bs-toggle="modal" data-bs-target="#form2307Modal-<%= submission.id %>">
-                View Form 2307
+                <i class="fa-solid fa-file-lines me-1"></i> Form 2307
               </button>
               <!-- Form 2307 Modal -->
               <div class="modal fade" id="form2307Modal-<%= submission.id %>" tabindex="-1" aria-hidden="true">
@@ -70,16 +70,16 @@
                 </div>
               </div>
             <% else %>
-              <span class="text-muted">None</span>
+              <span class="text-muted small">None</span>
             <% end %>
           </td>
 
           <!-- Deposit Slips -->
           <td>
             <% if submission.deposit_slip.attached? %>
-              <button type="button" class="btn btn-sm btn-outline-primary"
+              <button type="button" class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-0.5"
                       data-bs-toggle="modal" data-bs-target="#depositModal-<%= submission.id %>">
-                View Deposit Slips
+                <i class="fa-solid fa-receipt me-1"></i> Deposit Slips
               </button>
               <!-- Deposit Slips Modal -->
               <div class="modal fade" id="depositModal-<%= submission.id %>" tabindex="-1" aria-hidden="true">
@@ -120,20 +120,20 @@
                 </div>
               </div>
             <% else %>
-              <span class="text-muted">None</span>
+              <span class="text-muted small">None</span>
             <% end %>
           </td>
 
           <!-- Status -->
           <td>
             <% if submission.reviewed? && submission.processed? %>
-              <span class="badge bg-success">Processed & Reviewed</span>
+              <span class="status-pill status-pill-success">Processed & Reviewed</span>
             <% elsif submission.reviewed? %>
-              <span class="badge bg-info">Reviewed</span>
+              <span class="status-pill status-pill-info">Reviewed</span>
             <% elsif submission.processed? %>
-              <span class="badge bg-warning text-dark">Processed</span>
+              <span class="status-pill status-pill-warning">Processed</span>
             <% else %>
-              <span class="badge bg-secondary">Pending</span>
+              <span class="status-pill status-pill-draft">Pending</span>
             <% end %>
           </td>
 
@@ -142,9 +142,11 @@
           <!-- Actions Dropdown -->
           <td>
             <div class="dropdown text-center">
-              <button class="btn btn-link text-muted p-0 text-decoration-none fs-3"
+              <button class="btn btn-sm btn-action-dropdown text-muted"
                       type="button" id="actionsDropdown_<%= submission.id %>"
-                      data-bs-toggle="dropdown">&#8942;</button>
+                      data-bs-toggle="dropdown" aria-expanded="false" title="Actions">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
+              </button>
 
               <ul class="dropdown-menu" aria-labelledby="actionsDropdown_<%= submission.id %>">
                 <li>

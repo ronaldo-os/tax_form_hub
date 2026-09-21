@@ -29,6 +29,8 @@ function initSubscriptionsPage() {
             responsive: true,
             autoWidth: false,
             destroy: true,
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             order: [[4, 'asc']], // Order by Next Invoice column
             columnDefs: [
                 { orderable: false, targets: [6] } // Disable ordering on Actions column
@@ -60,6 +62,52 @@ function initSubscriptionsPage() {
                 $lengthDiv.addClass('custom-filter-bar d-flex flex-wrap align-items-center gap-2');
             }
         });
+    });
+
+    // Generated Invoices Table on Subscriptions Show page
+    $('.generated-invoices-table').each(function() {
+        const tableNode = this;
+        if ($.fn.DataTable.isDataTable(tableNode)) {
+            $(tableNode).DataTable().destroy();
+        }
+
+        const rowCount = $(tableNode).find('tbody tr').length;
+        if (rowCount > 0) {
+            $(tableNode).DataTable({
+                responsive: true,
+                autoWidth: false,
+                destroy: true,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                order: [[1, 'desc']], // Order by Issue Date
+                columnDefs: [
+                    { orderable: false, targets: [4] } // Disable ordering on Action column
+                ],
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search invoices...",
+                    lengthMenu: "_MENU_",
+                    info: "Showing _START_-_END_ of _TOTAL_ invoices",
+                    infoEmpty: "Showing 0-0 of 0 invoices",
+                    paginate: {
+                        previous: '<i class="fa-solid fa-chevron-left"></i>',
+                        next: '<i class="fa-solid fa-chevron-right"></i>'
+                    }
+                },
+                initComplete: function () {
+                    const api = this.api();
+                    const $container = $(api.table().container());
+
+                    $container.find('div.dataTables_length label').contents().filter(function () {
+                        return this.nodeType === 3;
+                    }).remove();
+
+                    $container.find('div.dataTables_filter label').contents().filter(function () {
+                        return this.nodeType === 3;
+                    }).remove();
+                }
+            });
+        }
     });
 
     // Handle top-level tab switch (Sales vs Purchases)

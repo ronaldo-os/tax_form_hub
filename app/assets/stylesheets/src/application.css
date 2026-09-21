@@ -823,25 +823,154 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 }
 
 .dataTables_length select.form-select {
-  padding-right: 1rem !important;
+  padding-right: 1.6rem !important;
   background-position: right 0.75rem center;
   background-repeat: no-repeat;
   background-size: 0.65rem;
+  font-size: 0.785rem !important;
+  height: 30px !important;
+  min-width: 65px !important;
+  border-radius: 6px !important;
+  border-color: var(--border-color) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
 }
 
 .dataTables_length label {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--text-main);
+  font-size: 0.8rem;
+  margin-bottom: 0;
+  color: var(--text-muted);
 }
 
 .dataTables_length select.form-select-sm {
-  min-width: 70px;
+  min-width: 65px;
+}
+
+.dataTables_wrapper>.row:first-child {
+  margin-top: 0 !important;
+  margin-bottom: 0.5rem !important;
+  align-items: center;
 }
 
 .dataTables_wrapper .row {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+}
+
+/* Desktop Only: Put both Search and Show rows filter on the right for all datatables */
+@media (min-width: 768px) {
+  .dataTables_wrapper > .row:first-child {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    gap: 0.75rem !important;
+  }
+
+  .dataTables_wrapper > .row:first-child > div:has(.dataTables_filter),
+  .dataTables_wrapper > .row:first-child > div:nth-child(2) {
+    order: 1 !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .dataTables_wrapper > .row:first-child > div:has(.dataTables_length),
+  .dataTables_wrapper > .row:first-child > div:nth-child(1) {
+    order: 2 !important;
+    width: auto !important;
+    flex: 0 0 auto !important;
+    max-width: none !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .dataTables_wrapper > .row:first-child .dataTables_filter {
+    text-align: right !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dataTables_wrapper > .row:first-child .dataTables_filter label {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    width: auto !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dataTables_wrapper > .row:first-child .dataTables_length {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 0 !important;
+  }
+
+  .dataTables_wrapper > .row:first-child .dataTables_length label {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+/* Invoices page: Align Active and Archived tabs on the same horizontal line as the DataTable filter */
+@media (min-width: 768px) {
+  .invoice-table-card {
+    position: relative !important;
+  }
+
+  .invoice-table-card .card-header {
+    position: absolute !important;
+    top: 1rem !important;
+    left: 1rem !important;
+    z-index: 2 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: none !important;
+    width: auto !important;
+    pointer-events: auto !important;
+  }
+
+  .invoice-table-card .card-body {
+    padding: 1rem !important;
+  }
+
+  .invoice-table-card .dataTables_wrapper > .row:first-child {
+    min-height: 32px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0.65rem !important;
+  }
+}
+
+.dataTables_filter label {
+  font-size: 0.8rem;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  color: var(--text-muted);
+}
+
+.dataTables_filter input.form-control {
+  font-size: 0.785rem !important;
+  padding: 0.25rem 0.65rem !important;
+  height: 30px !important;
+  min-width: 200px !important;
+  border-radius: 6px !important;
+  border: 1px solid var(--border-color) !important;
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+}
+
+.dataTables_filter input.form-control:focus {
+  border-color: var(--main-color) !important;
+  box-shadow: 0 0 0 0.15rem rgba(0, 174, 255, 0.18) !important;
 }
 
 .table-light {
@@ -853,12 +982,18 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 .pagination {
   --bs-pagination-active-bg: var(--main-color);
   --bs-pagination-active-border-color: var(--main-color);
+  margin-bottom: 0 !important;
+  gap: 3px;
 }
 
 .page-link {
   background-color: var(--bg-body);
   color: var(--text-main);
   border-color: var(--border-color);
+  font-size: 0.75rem !important;
+  padding: 0.25rem 0.55rem !important;
+  border-radius: 6px !important;
+  line-height: 1.2;
 }
 
 .page-link:hover {
@@ -867,9 +1002,197 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
   border-color: var(--border-color);
 }
 
+.dataTables_wrapper>.row:last-child {
+  margin-top: 0.4rem !important;
+  margin-bottom: 0 !important;
+  align-items: center;
+  padding-top: 0.25rem;
+}
+
 .dataTables_wrapper .dataTables_info,
 .dataTables_wrapper .dataTables_paginate {
+  color: var(--text-muted) !important;
+  font-size: 0.785rem !important;
+}
+
+.dataTables_wrapper .dataTables_info {
+  padding-top: 0 !important;
+}
+
+.dataTables_wrapper .dataTables_paginate {
+  padding-top: 0 !important;
+}
+
+/* High-Density Compact Table Styling */
+table.table-compact,
+.table-compact {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+table.table-compact thead th,
+.table-compact thead th {
+  padding: 0.45rem 0.65rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
+  color: var(--text-muted) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background-color: var(--bg-secondary) !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+[data-theme="dark"] table.table-compact thead th,
+[data-theme="dark"] .table-compact thead th {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+table.table-compact tbody td,
+.table-compact tbody td {
+  padding: 0.38rem 0.65rem !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.35 !important;
+  vertical-align: middle !important;
+  border-top: 1px solid var(--border-color) !important;
+  border-bottom: none !important;
+}
+
+[data-theme="dark"] table.table-compact tbody td,
+[data-theme="dark"] .table-compact tbody td {
+  border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+table.table-compact tbody tr:hover td,
+.table-compact tbody tr:hover td {
+  background-color: var(--bg-tertiary) !important;
+}
+
+[data-theme="dark"] table.table-compact tbody tr:hover td,
+[data-theme="dark"] .table-compact tbody tr:hover td {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Action Dropdown Button in Table */
+.btn-action-dropdown {
+  width: 26px;
+  height: 26px;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  font-size: 0.85rem !important;
+  transition: all 0.15s ease;
+  color: var(--text-muted) !important;
+}
+
+.btn-action-dropdown:hover,
+.btn-action-dropdown:focus {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--border-color) !important;
   color: var(--text-main) !important;
+}
+
+/* Compact Buttons */
+.btn-xs {
+  padding: 0.18rem 0.5rem !important;
+  font-size: 0.72rem !important;
+  line-height: 1.25 !important;
+}
+
+/* Status Pill Badges */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 0.18rem 0.55rem;
+  border-radius: 9999px;
+  line-height: 1.2;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.status-pill-success {
+  background-color: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+[data-theme="dark"] .status-pill-success {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.status-pill-info {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+[data-theme="dark"] .status-pill-info {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.status-pill-warning {
+  background-color: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+[data-theme="dark"] .status-pill-warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.status-pill-secondary,
+.status-pill-draft {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+[data-theme="dark"] .status-pill-secondary,
+[data-theme="dark"] .status-pill-draft {
+  background-color: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.status-pill-danger {
+  background-color: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+[data-theme="dark"] .status-pill-danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.status-pill-primary {
+  background-color: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+[data-theme="dark"] .status-pill-primary {
+  background-color: rgba(0, 174, 255, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(0, 174, 255, 0.25);
 }
 
 /* Enhanced Dark Mode Datatable Styles */

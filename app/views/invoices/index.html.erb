@@ -4,7 +4,7 @@
 <% end %>
 
 <div class="container-fluid invoices-page px-2 px-sm-3 px-md-4 py-2.5">
-  <div class="mt-2 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-2.5 invoice-header-bar">
+  <div class="mt-3 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3 invoice-header-bar">
     <!-- Tab Navigation Container -->
     <div class="tabs-scroll-container">
       <ul class="custom_nav_tabs nav nav-tabs border-0" id="submissionTabs" role="tablist">
@@ -53,7 +53,7 @@
 
     <!-- Sales Invoices -->
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'sales-invoices' %>" id="sales-invoices" role="tabpanel" aria-labelledby="sales-invoices-tab">
-      <div class="row g-2 g-md-2 mb-2.5 invoice-stats-row">
+      <div class="row g-2 g-md-2 mb-3 invoice-stats-row">
         <% ["total", "draft", "sent", "paid"].each do |status| %>
           <% totals = @invoice_totals_sale[status] %>
           <div class="col-6 col-md-3">
@@ -154,7 +154,7 @@
 
     <!-- Purchase Invoices -->
     <div class="tab-pane fade <%= 'show active' if @active_tab == 'purchase-invoices' %>" id="purchase-invoices" role="tabpanel" aria-labelledby="purchase-invoices-tab">
-      <div class="row g-2 g-md-2 mb-2.5 invoice-stats-row">
+      <div class="row g-2 g-md-2 mb-3 invoice-stats-row">
         <% ["total", "draft", "sent", "paid"].each do |status| %>
           <% totals = @invoice_totals_purchase[status] %>
           <div class="col-6 col-md-3">

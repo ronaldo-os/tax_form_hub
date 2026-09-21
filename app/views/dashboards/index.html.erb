@@ -163,7 +163,7 @@
             <%= kpis[:sales_revenue_growth].abs %>%
           </span>
         </div>
-        <div class="mb-2.5">
+        <div class="mb-3">
           <div class="bento-value bento-financial-value tabular-nums text-truncate" id="kpi_sales_revenue_val">
             <%= number_to_currency(kpis[:total_sales_revenue], unit: currency_symbol) %>
           </div>
@@ -208,7 +208,7 @@
             <%= kpis[:purchases_growth].abs %>%
           </span>
         </div>
-        <div class="mb-2.5">
+        <div class="mb-3">
           <div class="bento-value bento-financial-value tabular-nums text-truncate" id="kpi_purchases_expense_val">
             <%= number_to_currency(kpis[:total_purchases_expense], unit: currency_symbol) %>
           </div>
@@ -252,7 +252,7 @@
             <%= kpis[:profit_margin] %>% Margin
           </span>
         </div>
-        <div class="mb-2.5">
+        <div class="mb-3">
           <div class="bento-value bento-financial-value tabular-nums text-truncate <%= kpis[:net_operating_income] >= 0 ? 'text-success' : 'text-danger' %>" id="kpi_net_income_val">
             <%= number_to_currency(kpis[:net_operating_income], unit: currency_symbol) %>
           </div>
@@ -298,7 +298,7 @@
             ARR <%= number_to_currency(kpis[:total_arr], unit: currency_symbol) %>
           </span>
         </div>
-        <div class="mb-2.5">
+        <div class="mb-3">
           <div class="bento-value bento-financial-value tabular-nums text-truncate" id="kpi_mrr_val">
             <%= number_to_currency(kpis[:total_mrr], unit: currency_symbol) %><span class="fs-9 text-muted fw-normal ms-1">/mo</span>
           </div>

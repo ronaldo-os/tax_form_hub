@@ -5,9 +5,12 @@
   display_title = display_company ? "#{display_company} Tax Submissions" : "Tax Submissions"
 %>
 <% content_for :page_title, full_title %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "invoices", media: "all" %>
+<% end %>
 
-<div class="tax-submissions-page container-fluid px-2 px-sm-3 px-md-4 py-3">
-  <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">
+<div class="tax-submissions-page container-fluid px-2 px-sm-3 px-md-4 py-2.5 mt-3">
+  <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3">
     <!-- Tab Navigation Container -->
     <div class="tabs-scroll-container">
       <ul class="custom_nav_tabs nav nav-tabs mb-0 border-0" id="submissionTabs" role="tablist">
@@ -30,10 +33,12 @@
         <i class="fa-solid fa-arrow-left"></i> Back
       <% end %>
       <% if current_user.company_id.present? %>
-        <%= link_to "Incoming Submissions", tax_submissions_path, class: "btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" %>
+        <%= link_to tax_submissions_path, class: "btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5" do %>
+          <i class="fa-solid fa-inbox"></i> Incoming Submissions
+        <% end %>
       <% end %>
-      <button class="btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
-        Submit Documents
+      <button class="btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
+        <i class="fa-solid fa-plus"></i> Submit Documents
       </button>
     </div>
   </div>

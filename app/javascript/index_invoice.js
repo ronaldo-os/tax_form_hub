@@ -173,11 +173,11 @@ function initInvoicePage() {
             tableConfig.ajax = {
                 url: ajaxUrl,
                 cache: false,
-                data: function(d) {
+                data: function (d) {
                     // Merge DataTables params with custom params
                     return $.extend({}, d, ajaxData);
                 },
-                error: function(xhr, error, thrown) {
+                error: function (xhr, error, thrown) {
                     console.error('DataTables server-side error:', xhr.status, error, thrown);
                     if (xhr.status === 500) {
                         console.error('Server error - check Rails logs for details');
@@ -215,7 +215,7 @@ function initInvoicePage() {
     }
 
     // Initialize tables in the currently active tab immediately
-    $('.tab-pane.active table[data-server-side="true"], .tab-pane.show.active table[data-server-side="true"]').each(function() {
+    $('.tab-pane.active table[data-server-side="true"], .tab-pane.show.active table[data-server-side="true"]').each(function () {
         initSingleDataTable($(this));
     });
 
@@ -228,7 +228,7 @@ function initInvoicePage() {
         window.history.replaceState({}, '', url);
 
         // Initialize any uninitialized tables in this pane
-        $(targetPaneSelector).find('table[data-server-side="true"]').each(function() {
+        $(targetPaneSelector).find('table[data-server-side="true"]').each(function () {
             initSingleDataTable($(this));
         });
 
@@ -244,7 +244,7 @@ function initInvoicePage() {
     $(document).off('shown.bs.tab.invoicesub').on('shown.bs.tab.invoicesub', 'button[data-bs-toggle="pill"], .invoice-sub-tabs button', function (e) {
         const targetPaneSelector = $(e.target).data('bs-target');
         if (targetPaneSelector) {
-            $(targetPaneSelector).find('table[data-server-side="true"]').each(function() {
+            $(targetPaneSelector).find('table[data-server-side="true"]').each(function () {
                 initSingleDataTable($(this));
             });
         }
@@ -336,7 +336,7 @@ function initInvoicePage() {
         $trigger.data('downloading', true);
 
         const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.getAttribute('data-bs-theme') === 'dark';
-        
+
         let $overlay = $('#pdf-loading-overlay');
         if (!$overlay.length) {
             $overlay = $(`
@@ -349,7 +349,7 @@ function initInvoicePage() {
                 </div>
             `).appendTo('body');
         }
-        
+
         if (isDarkMode) {
             $overlay.css({ 'background-color': '#212529', 'color': '#f8f9fa' });
             $overlay.find('.pdf-spinner').removeClass('text-primary').addClass('text-light');
@@ -359,7 +359,7 @@ function initInvoicePage() {
             $overlay.find('.pdf-spinner').removeClass('text-light').addClass('text-primary');
             $overlay.find('.pdf-subtext').css('color', '#6c757d');
         }
-        
+
         $overlay.show();
 
         $.get(`/invoices/${invoiceId}/pdf_partial`, function (html) {
