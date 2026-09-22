@@ -78,4 +78,70 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "embed[type='application/pdf']"
     end
   end
+
+  test "home page renders export csv button and submission row data attributes for bookkeeping" do
+    other_user = User.create!(email: "other_csv_#{Time.now.to_i}@example.com", password: "Password123!@#Secure", password_confirmation: "Password123!@#Secure")
+    target_company = Company.create!(name: "Target Vendor CSV", tax_id_number: "123-456-789-000", user: other_user)
+    @invoice.update!(
+      invoice_number: "INV-2026-CSV-01",
+      issue_date: Date.current,
+      currency: "PHP",
+      total: { "subtotal" => "10000.00", "tax" => "200.00", "grand_total" => "10200.00" }
+    )
+    tax_submission = TaxSubmission.create!(
+      company: target_company,
+      invoice: @invoice,
+      email: @user.email,
+      details: "Detailed notes for financial reporting"
+    )
+
+    get tax_submissions_home_url
+    assert_response :success
+
+    # Verify Export CSV button is present
+    assert_select "button#exportTaxSubmissionsBtn", text: /Export CSV/
+
+    # Verify table row contains required CSV data attributes
+    assert_select "tr[data-transaction-id='#{tax_submission.user_transaction_id}']" do
+      assert_select "[data-company-name='Target Vendor CSV']"
+      assert_select "[data-company-tin='123-456-789-000']"
+      assert_select "[data-invoice-number='INV-2026-CSV-01']"
+      assert_select "[data-currency='PHP']"
+      assert_select "[data-subtotal='10000.00']"
+      assert_select "[data-tax-amount='200.00']"
+      assert_select "[data-grand-total='10200.00']"
+      assert_select "[data-status='Pending']"
+      assert_select "[data-archived='Active']"
+    end
+  end
+
+  test "index page renders export csv button and incoming submission row data attributes" do
+    @invoice.update!(
+      invoice_number: "INV-INCOMING-CSV-02",
+      issue_date: Date.current,
+      currency: "USD",
+      total: { "subtotal" => "500.00", "tax" => "50.00", "grand_total" => "550.00" }
+    )
+    tax_submission = TaxSubmission.create!(
+      company: @company,
+      invoice: @invoice,
+      email: "client_sender@example.com",
+      details: "Incoming payment report"
+    )
+
+    get tax_submissions_url
+    assert_response :success
+
+    # Verify Export CSV button is present
+    assert_select "button#exportIncomingSubmissionsBtn", text: /Export CSV/
+
+    # Verify incoming table row contains required data attributes
+    assert_select "tr[data-transaction-id='#{tax_submission.company_submission_id}']" do
+      assert_select "[data-email='client_sender@example.com']"
+      assert_select "[data-invoice-number='INV-INCOMING-CSV-02']"
+      assert_select "[data-currency='USD']"
+      assert_select "[data-subtotal='500.00']"
+      assert_select "[data-grand-total='550.00']"
+    end
+  end
 end

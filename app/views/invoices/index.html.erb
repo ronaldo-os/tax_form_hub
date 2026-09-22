@@ -32,15 +32,18 @@
     </div>
 
     <!-- Create Invoice buttons aligned right / stacked on mobile -->
-    <div class="invoice-action-buttons d-flex gap-1.5 flex-wrap flex-sm-nowrap justify-content-end">
-      <%= link_to new_invoice_path(category: 'quote', tab: @active_tab), class: 'btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5' do %>
-        <i class="fa-solid fa-quote-left fs-8"></i> Create Quote
+    <div class="invoice-action-buttons d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
+      <%= link_to new_invoice_path(category: 'quote', tab: @active_tab), class: 'btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center' do %>
+        <i class="fa-solid fa-quote-left fs-8"></i>
+        <span>Create Quote</span>
       <% end %>
-      <%= link_to new_invoice_path(category: 'credit_note', tab: @active_tab), class: 'btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5' do %>
-        <i class="fa-solid fa-receipt fs-8"></i> Create Credit Note
+      <%= link_to new_invoice_path(category: 'credit_note', tab: @active_tab), class: 'btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center' do %>
+        <i class="fa-solid fa-receipt fs-8"></i>
+        <span>Create Credit Note</span>
       <% end %>
-      <%= link_to new_invoice_path(tab: @active_tab), class: 'btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5' do %>
-        <i class="fa-solid fa-plus fs-8"></i> Create Invoice
+      <%= link_to new_invoice_path(tab: @active_tab), class: 'btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center' do %>
+        <i class="fa-solid fa-plus fs-8"></i>
+        <span>Create Invoice</span>
       <% end %>
     </div>
   </div>

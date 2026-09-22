@@ -30,15 +30,22 @@
     <!-- Action buttons aligned right / stacked/full-width on mobile -->
     <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
       <%= link_to session[:tax_submissions_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap", data: { behavior: "back-button" } do %>
-        <i class="fa-solid fa-arrow-left"></i> Back
+        <i class="fa-solid fa-arrow-left me-1.5"></i>
+        <span>Back</span>
       <% end %>
       <% if current_user.company_id.present? %>
-        <%= link_to tax_submissions_path, class: "btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5" do %>
-          <i class="fa-solid fa-inbox"></i> Incoming Submissions
+        <%= link_to tax_submissions_path, class: "btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" do %>
+          <i class="fa-solid fa-inbox me-1.5"></i>
+          <span>Incoming Submissions</span>
         <% end %>
       <% end %>
-      <button class="btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center gap-1.5" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
-        <i class="fa-solid fa-plus"></i> Submit Documents
+      <button type="button" class="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center" id="exportTaxSubmissionsBtn" title="Export currently filtered records to CSV">
+        <i class="fa-solid fa-file-csv text-success fs-8"></i>
+        <span>Export CSV</span>
+      </button>
+      <button class="btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
+        <i class="fa-solid fa-plus"></i>
+        <span>Submit Documents</span>
       </button>
     </div>
   </div>

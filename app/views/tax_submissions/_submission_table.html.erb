@@ -16,7 +16,35 @@
     </thead>
     <tbody>
       <% submissions.each do |submission| %>
-        <tr>
+        <%
+          target_company = submission.company || submission.invoice&.recipient_company
+          company_name = target_company&.name.presence || submission.company_name.presence || "N/A"
+          company_tin = target_company&.tax_id_number.presence || "N/A"
+          inv = submission.invoice
+          inv_subtotal = inv&.total.is_a?(Hash) ? inv.total["subtotal"].to_s : ""
+          inv_tax = inv&.total.is_a?(Hash) ? inv.total["tax"].to_s : ""
+          deposit_slip_names = submission.deposit_slip.attached? ? submission.deposit_slip.map { |f| f.filename.to_s }.join("; ") : ""
+          status_text = tax_submission_status_text(submission)
+        %>
+        <tr data-transaction-id="<%= submission.user_transaction_id %>"
+            data-company-name="<%= company_name %>"
+            data-company-tin="<%= company_tin %>"
+            data-invoice-number="<%= inv&.invoice_number || 'N/A' %>"
+            data-invoice-date="<%= inv&.issue_date&.strftime('%Y-%m-%d') || 'N/A' %>"
+            data-currency="<%= inv&.currency || 'PHP' %>"
+            data-subtotal="<%= inv_subtotal %>"
+            data-tax-amount="<%= inv_tax %>"
+            data-grand-total="<%= inv ? ('%.2f' % inv.grand_total) : '' %>"
+            data-invoice-status="<%= inv&.status&.titleize || 'N/A' %>"
+            data-status="<%= status_text %>"
+            data-form-2307-attached="<%= submission.form_2307.attached? ? 'Yes' : 'No' %>"
+            data-form-2307-filename="<%= submission.form_2307.attached? ? submission.form_2307.filename.to_s : '' %>"
+            data-deposit-slip-attached="<%= submission.deposit_slip.attached? ? 'Yes' : 'No' %>"
+            data-deposit-slip-count="<%= submission.deposit_slip.attached? ? submission.deposit_slip.count : 0 %>"
+            data-deposit-slip-filenames="<%= deposit_slip_names %>"
+            data-details="<%= submission.details.to_s %>"
+            data-date-submitted="<%= submission.created_at.strftime('%Y-%m-%d %H:%M:%S') %>"
+            data-archived="<%= archived_table ? 'Archived' : 'Active' %>">
           <td>
             <%= link_to submission.user_transaction_id,
                         tax_submission_path(submission, format: :js),

@@ -9,8 +9,8 @@
       <i class="fa-solid fa-eye me-1"></i>
       <span>You are currently viewing your profile as visitors see it.</span>
       <b>
-        <%= link_to companies_path(id: @company.slug), class: "view-as-me ms-1", id: "exit-visitor-mode" do %>
-          <i class="fa-solid fa-arrow-left me-1"></i>Exit Visitor Mode
+        <%= link_to companies_path(id: @company.slug), class: "view-as-me ms-1 d-inline-flex align-items-center gap-1", id: "exit-visitor-mode" do %>
+          <i class="fa-solid fa-arrow-left me-1.5"></i><span>Exit Visitor Mode</span>
         <% end %>
       </b>
     </div>
@@ -90,18 +90,21 @@
         <div class="d-flex flex-wrap align-items-center gap-2 company-actions-wrapper flex-shrink-0 pt-2 pt-md-0">
           <% if @company.website.present? %>
             <% full_url = @company.website =~ /\Ahttp(s)?:\/\// ? @company.website : "https://#{@company.website}" %>
-            <a href="<%= full_url %>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
-              <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Website
+            <a href="<%= full_url %>" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              <span>Visit Website</span>
             </a>
           <% end %>
 
-          <button id="share-company-btn" type="button" class="btn btn-light rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm">
-            <i class="fa-solid fa-share-nodes"></i> Share
+          <button id="share-company-btn" type="button" class="btn btn-light rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center shadow-sm">
+            <i class="fa-solid fa-share-nodes"></i>
+            <span>Share</span>
           </button>
 
           <% if current_user && (current_user.companies.include?(@company) || current_user.superadmin?) %>
-            <%= link_to companies_path(id: @company.slug), class: "btn btn-primary rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2" do %>
-              <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+            <%= link_to companies_path(id: @company.slug), class: "btn btn-primary rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center" do %>
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>Edit Profile</span>
             <% end %>
           <% end %>
         </div>
@@ -257,14 +260,16 @@
               <% if current_user && current_user.company_id == @company.id %>
                 <div class="d-flex justify-content-between align-items-center">
                   <small class="text-muted"><i class="fa-solid fa-circle-info me-1 text-warning"></i> Visitor view preview active</small>
-                  <%= button_tag type: "button", id: "recommend-btn", class: "btn btn-primary rounded-pill px-4 fw-semibold" do %>
-                    <i class="fa-solid fa-paper-plane me-1"></i> Submit Recommendation
+                  <%= button_tag type: "button", id: "recommend-btn", class: "btn btn-primary rounded-pill px-4 fw-semibold d-inline-flex align-items-center gap-2" do %>
+                    <i class="fa-solid fa-paper-plane me-1.5"></i>
+                    <span>Submit Recommendation</span>
                   <% end %>
                 </div>
               <% else %>
                 <div class="d-flex justify-content-end">
                   <%= f.button class: "btn btn-primary rounded-pill px-4 fw-semibold d-inline-flex align-items-center gap-2" do %>
-                    <i class="fa-solid fa-paper-plane"></i> Submit Recommendation
+                    <i class="fa-solid fa-paper-plane me-1.5"></i>
+                    <span>Submit Recommendation</span>
                   <% end %>
                 </div>
               <% end %>

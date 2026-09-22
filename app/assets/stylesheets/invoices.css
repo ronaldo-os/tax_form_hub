@@ -874,7 +874,13 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 0.5rem !important;
+  gap: 10px !important;
+}
+
+.invoice-action-buttons .btn > i,
+.invoice-action-buttons .btn > svg {
+  margin-right: 0 !important;
+  margin-left: 0 !important;
 }
 
 .letter-spacing-sm {

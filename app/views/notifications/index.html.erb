@@ -6,7 +6,8 @@
   <div class="notifications-header-bar mb-3" id="notifications_header_bar">
     <div class="d-flex gap-2 align-items-center justify-content-between flex-wrap" id="notifications_global_actions">
       <%= link_to session[:notifications_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 text-nowrap", data: { behavior: "back-button" } do %>
-        <i class="fa-solid fa-arrow-left"></i> Back
+        <i class="fa-solid fa-arrow-left me-1.5"></i>
+        <span>Back</span>
       <% end %>
       <% if @unread_count > 0 %>
         <%= button_to mark_all_as_read_notifications_path(category: @tab),

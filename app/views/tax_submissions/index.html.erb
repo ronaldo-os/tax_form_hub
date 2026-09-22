@@ -24,11 +24,16 @@
       </ul>
     </div>
 
-    <!-- Back button on the right -->
-    <div class="d-flex justify-content-end">
-      <%= link_to session[:tax_submissions_incoming_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap", data: { behavior: "back-button" } do %>
-        <i class="fa-solid fa-arrow-left"></i> Back
+    <!-- Action buttons on the right -->
+    <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
+      <%= link_to session[:tax_submissions_incoming_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center flex-fill flex-sm-grow-0 text-nowrap", data: { behavior: "back-button" } do %>
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Back</span>
       <% end %>
+      <button type="button" class="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center" id="exportIncomingSubmissionsBtn" title="Export currently filtered records to CSV">
+        <i class="fa-solid fa-file-csv text-success fs-8"></i>
+        <span>Export CSV</span>
+      </button>
     </div>
   </div>
 

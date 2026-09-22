@@ -8,14 +8,16 @@
 <div class="container mt-4 mt-md-5">
   <div class="invoice-view-header d-flex justify-content-between align-items-center mb-3">
     <div>
-      <%= link_to session[:invoices_back_url] || invoices_path(tab: params[:tab]), class: "btn btn-back rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2", data: { behavior: "back-button" } do %>
-        <i class="fa-solid fa-arrow-left"></i> Back
+      <%= link_to session[:invoices_back_url] || invoices_path(tab: params[:tab]), class: "btn btn-back rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center", data: { behavior: "back-button" } do %>
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Back</span>
       <% end %>
     </div>
 
     <div class="d-flex gap-2">
-      <button id="download_button" class="btn btn-outline-primary btn-md">
-        <i class="fas fa-download me-1"></i> PDF
+      <button id="download_button" class="btn btn-outline-primary btn-md d-inline-flex align-items-center justify-content-center">
+        <i class="fas fa-download"></i>
+        <span>PDF</span>
       </button>
     <% if @invoice.invoice_type == "sale" && !["sent", "approved", "rejected", "paid"].include?(@invoice.status) %>
         <%= link_to "Modify", edit_invoice_path(@invoice, tab: params[:tab]), class: "btn btn-secondary btn-md" %>

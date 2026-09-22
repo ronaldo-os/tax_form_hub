@@ -1,3 +1,5 @@
+import { exportSubmissionsToCsv } from './tax_submissions_export';
+
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
     const $table = $(tableApi.table().node());
@@ -114,6 +116,25 @@ function initClientSubmissionsPage() {
                     });
 
                     $lengthDiv.append($statusSelect);
+                }
+
+                // Append Export CSV button to custom filter bar
+                if (!$container.find('.custom-export-csv-btn').length) {
+                    const $exportBtn = $(`
+                        <button type="button" class="btn btn-outline-secondary btn-sm custom-export-csv-btn d-inline-flex align-items-center gap-1.5" title="Export currently filtered records to CSV">
+                            <i class="fa-solid fa-file-csv text-success"></i>
+                            <span>Export CSV</span>
+                        </button>
+                    `);
+
+                    $exportBtn.on('click', function (e) {
+                        e.preventDefault();
+                        const tabPane = $(api.table().node()).closest('.tab-pane');
+                        const isArchived = tabPane.attr('id') === 'archived';
+                        exportSubmissionsToCsv(api, isArchived ? 'tax_submissions_archived' : 'tax_submissions_active', false);
+                    });
+
+                    $lengthDiv.append($exportBtn);
                 }
             },
             drawCallback: function () {
@@ -349,6 +370,18 @@ function initClientSubmissionsPage() {
         }
 
         return true;
+    });
+
+    // Global Header Export CSV Button Handler
+    $(document).off('click', '#exportTaxSubmissionsBtn').on('click', '#exportTaxSubmissionsBtn', function (e) {
+        e.preventDefault();
+        const $activePane = $('.tab-content .tab-pane.active');
+        const $activeTable = $activePane.find('.submissionsTable');
+        if ($activeTable.length && $.fn.DataTable.isDataTable($activeTable[0])) {
+            const api = $activeTable.DataTable();
+            const isArchived = $activePane.attr('id') === 'archived';
+            exportSubmissionsToCsv(api, isArchived ? 'tax_submissions_archived' : 'tax_submissions_active', false);
+        }
     });
 }
 
