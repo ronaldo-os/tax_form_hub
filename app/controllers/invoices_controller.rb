@@ -3,7 +3,7 @@ class InvoicesController < ApplicationController
   include HttpCaching
 
   before_action :set_form_resources, only: [:new, :edit, :create, :update]
-  before_action :disable_cache_headers, only: [:index, :show]
+  before_action :disable_cache_headers, only: [:index, :show, :export_csv]
   before_action -> { store_back_url(:invoices_back_url) }, only: [:show]
   before_action -> { store_back_url(:invoice_edit_back_url) }, only: [:edit]
 
@@ -12,6 +12,39 @@ class InvoicesController < ApplicationController
   def datatable_data
     datatable = InvoiceDatatable.new(view_context, current_user, datatable_options)
     render_datatable_json(datatable)
+  end
+
+  # CSV Export endpoint for filtered invoice records (Bookkeeping & Financial Reporting)
+  def export_csv
+    datatable = InvoiceDatatable.new(view_context, current_user, datatable_options)
+    records = datatable.filtered_records
+
+    # Generate filename based on filters: e.g. invoices_sales_paid_active_2026-09-23_1430.csv
+    prefix_parts = ['invoices']
+    if params[:tab].present?
+      prefix_parts << params[:tab].to_s.tr('-', '_')
+    elsif params[:invoice_type].present?
+      prefix_parts << (params[:quote] == 'true' ? "#{params[:invoice_type]}_quotes" : "#{params[:invoice_type]}_invoices")
+    end
+
+    status_filter = datatable.send(:column_search_value, 'status') || datatable.send(:column_search_value, '5') || params[:status]
+    if status_filter.present?
+      clean_status = status_filter.to_s.gsub(/[\^\$]/, '').downcase
+      prefix_parts << clean_status if clean_status.present?
+    end
+
+    prefix_parts << (params[:archived] == 'true' ? 'archived' : 'active')
+    timestamp = Time.current.strftime('%Y-%m-%d_%H%M')
+    filename = "#{prefix_parts.join('_')}_#{timestamp}.csv"
+
+    exporter = InvoiceCsvExporter.new(records, invoice_type: params[:invoice_type], tab: params[:tab])
+    csv_data = exporter.generate
+
+    response.headers['X-Total-Count'] = records.count.to_s
+
+    send_data csv_data,
+              type: 'text/csv; charset=utf-8',
+              disposition: "attachment; filename=\"#{filename}\""
   end
 
   def index
@@ -55,6 +88,11 @@ class InvoicesController < ApplicationController
     @invoice_trends_purchase = @invoices_data[:invoice_trends_purchase]
 
     @active_tab = params[:tab] || 'sales-invoices'
+
+    respond_to do |format|
+      format.html
+      format.csv { export_csv }
+    end
   end
 
 

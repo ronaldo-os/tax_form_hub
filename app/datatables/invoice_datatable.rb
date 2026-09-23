@@ -36,6 +36,10 @@ class InvoiceDatatable < BaseDatatable
     filtered_scope.count
   end
 
+  def filtered_records
+    filtered_scope
+  end
+
   def data
     records = paginate(filtered_scope).to_a
     preload_associated_credit_notes(records)

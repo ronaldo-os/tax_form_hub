@@ -40,6 +40,7 @@ Rails.application.routes.draw do
       post :create_and_send
       post :preview
       get :datatable_data  # Server-side processing endpoint
+      get :export_csv      # CSV export endpoint for filtered records
     end
     member do
       patch :approve

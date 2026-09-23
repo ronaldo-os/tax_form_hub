@@ -1,4 +1,5 @@
 import { updatePdfPreviewScale } from './invoice_preview';
+import { initInvoiceExport } from './invoices_export';
 
 function loadHtml2Pdf() {
     if (typeof html2pdf !== 'undefined') {
@@ -16,6 +17,8 @@ function loadHtml2Pdf() {
 
 function initInvoicePage() {
     if (!window.location.pathname.includes("/invoices")) return;
+
+    initInvoiceExport();
 
     // Render mini charts for invoice trends
     function renderMiniCharts(prefix, trends, color) {

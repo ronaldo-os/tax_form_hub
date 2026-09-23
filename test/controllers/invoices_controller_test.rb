@@ -453,4 +453,193 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_match /SALE-PREVIEW-001/, invoice_row["invoice_number"]
     assert_match %r{href="/invoices/#{invoice.id}\?tab=sales-invoices"}, invoice_row["invoice_number"]
   end
+
+  test "export_csv returns 200 with text/csv, attachment disposition, and financial reporting headers" do
+    company = Company.create!(name: "Acme Financial Services", tax_id_number: "987-654-321-000", user: @user)
+    invoice = Invoice.create!(
+      user: @user,
+      recipient_company: company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-CSV-001",
+      issue_date: Date.new(2026, 9, 1),
+      currency: "PHP",
+      status: "paid",
+      total: { "subtotal" => "10000.00", "tax" => "1200.00", "discount" => "0.00", "grand_total" => "11200.00" },
+      recipient_note: "Bookkeeping test note"
+    )
+
+    get export_csv_invoices_url, params: { invoice_type: "sale", tab: "sales-invoices" }
+    assert_response :success
+    assert_equal "text/csv; charset=utf-8", response.content_type
+    assert_match /attachment; filename="invoices_sales_invoices_active_.*\.csv"/, response.headers["Content-Disposition"]
+    assert_equal "1", response.headers["X-Total-Count"]
+
+    body = response.body
+    # Verify UTF-8 BOM
+    assert body.start_with?("\uFEFF")
+
+    # Verify financial reporting headers
+    assert_includes body, "Invoice #"
+    assert_includes body, "Transaction Type"
+    assert_includes body, "Subtotal (Excl. Tax)"
+    assert_includes body, "Tax Amount"
+    assert_includes body, "Grand Total"
+    assert_includes body, "Customer Name"
+    assert_includes body, "Customer TIN"
+
+    # Verify record data values
+    assert_includes body, "INV-CSV-001"
+    assert_includes body, "Acme Financial Services"
+    assert_includes body, "987-654-321-000"
+    assert_includes body, "10000.00"
+    assert_includes body, "1200.00"
+    assert_includes body, "11200.00"
+    assert_includes body, "Paid"
+    assert_includes body, "Bookkeeping test note"
+
+    # Also test format: :csv via index
+    get invoices_url(format: :csv, invoice_type: "sale", tab: "sales-invoices")
+    assert_response :success
+    assert_equal "text/csv; charset=utf-8", response.content_type
+  end
+
+  test "export_csv filters records by invoice_type, archived, quote, status, and search" do
+    company = Company.create!(name: "Filter Target Corp", user: @user)
+    inv_paid = Invoice.create!(
+      user: @user,
+      recipient_company: company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-PAID-100",
+      status: "paid"
+    )
+    inv_draft = Invoice.create!(
+      user: @user,
+      recipient_company: company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-DRAFT-200",
+      status: "draft"
+    )
+    inv_quote = Invoice.create!(
+      user: @user,
+      recipient_company: company,
+      invoice_type: "sale",
+      invoice_category: "quote",
+      invoice_number: "Q-QUOTE-300",
+      status: "sent"
+    )
+    inv_archived = Invoice.create!(
+      user: @user,
+      recipient_company: company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-ARCH-400",
+      status: "paid",
+      archived: true
+    )
+
+    # Filter by status: paid (active standard sale)
+    get export_csv_invoices_url, params: { invoice_type: "sale", status: "paid", archived: "false", quote: "false" }
+    assert_response :success
+    assert_includes response.body, "INV-PAID-100"
+    assert_not_includes response.body, "INV-DRAFT-200"
+    assert_not_includes response.body, "Q-QUOTE-300"
+    assert_not_includes response.body, "INV-ARCH-400"
+
+    # Filter by search term
+    get export_csv_invoices_url, params: { invoice_type: "sale", search: "DRAFT-200", archived: "false", quote: "false" }
+    assert_response :success
+    assert_includes response.body, "INV-DRAFT-200"
+    assert_not_includes response.body, "INV-PAID-100"
+
+    # Filter by quote: true
+    get export_csv_invoices_url, params: { invoice_type: "sale", quote: "true", archived: "false" }
+    assert_response :success
+    assert_includes response.body, "Q-QUOTE-300"
+    assert_not_includes response.body, "INV-PAID-100"
+
+    # Filter by archived: true
+    get export_csv_invoices_url, params: { invoice_type: "sale", archived: "true", quote: "false" }
+    assert_response :success
+    assert_includes response.body, "INV-ARCH-400"
+    assert_not_includes response.body, "INV-PAID-100"
+  end
+
+  test "export_csv sanitizes cells against formula injection (CWE-1236)" do
+    malicious_company = Company.create!(name: "=cmd|' /C calc'!A0", user: @user)
+    Invoice.create!(
+      user: @user,
+      recipient_company: malicious_company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "+@SUM(1+1)",
+      recipient_note: "-DDE(\"cmd\";\"/C calc\";\"__proc\")"
+    )
+
+    get export_csv_invoices_url, params: { invoice_type: "sale" }
+    assert_response :success
+    body = response.body
+
+    # Ensure dangerous formula prefixes are escaped with a prepended single quote (')
+    assert_includes body, "'=cmd|' /C calc'!A0"
+    assert_includes body, "'+@SUM(1+1)"
+    assert_includes body, "'-DDE(\"\"cmd\"\";\"\"/C calc\"\";\"\"__proc\"\")"
+
+    # Also verify with CSV.parse that parsed cell values have the leading single quote
+    parsed_rows = CSV.parse(body.delete_prefix("\uFEFF"))
+    data_row = parsed_rows.last
+    assert_equal "'+@SUM(1+1)", data_row[0]
+    assert_equal "'=cmd|' /C calc'!A0", data_row[6]
+    assert_equal "'-DDE(\"cmd\";\"/C calc\";\"__proc\")", data_row[17]
+  end
+
+  test "export_csv enforces user multi-tenancy and does not leak other users invoices" do
+    other_user = User.create!(
+      email: "other_tenant_#{Time.now.to_i}@example.com",
+      password: "Password123!@#Secure",
+      password_confirmation: "Password123!@#Secure"
+    )
+    other_company = Company.create!(name: "Other Tenant Inc", user: other_user)
+    Invoice.create!(
+      user: other_user,
+      recipient_company: other_company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "OTHER-TENANT-SECRET-999"
+    )
+
+    my_company = Company.create!(name: "My Tenant Inc", user: @user)
+    Invoice.create!(
+      user: @user,
+      recipient_company: my_company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "MY-TENANT-INV-001"
+    )
+
+    get export_csv_invoices_url, params: { invoice_type: "sale" }
+    assert_response :success
+    assert_includes response.body, "MY-TENANT-INV-001"
+    assert_not_includes response.body, "OTHER-TENANT-SECRET-999"
+  end
+
+  test "index page renders export csv button and sub-tab export buttons" do
+    get invoices_url
+    assert_response :success
+    assert_select "button#exportInvoicesBtn", text: /Export CSV/
+    assert_select "button.export-invoices-sub-btn", minimum: 1
+  end
+
+  test "index page renders create document dropdown with invoice, quote, and credit note options" do
+    get invoices_url
+    assert_response :success
+    assert_select "button#createDocumentDropdown", text: /Create Document/
+    assert_select "ul[aria-labelledby='createDocumentDropdown']" do
+      assert_select "a[href*='/invoices/new']", text: /Create Invoice/
+      assert_select "a[href*='category=quote']", text: /Create Quote/
+      assert_select "a[href*='category=credit_note']", text: /Create Credit Note/
+    end
+  end
 end

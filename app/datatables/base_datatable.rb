@@ -47,7 +47,11 @@ class BaseDatatable
   end
 
   def search_value
-    params.dig(:search, :value)
+    if params[:search].is_a?(ActionController::Parameters) || params[:search].is_a?(Hash)
+      params.dig(:search, :value)
+    elsif params[:search].is_a?(String)
+      params[:search]
+    end
   end
 
   def column_search_value(key_or_index)
@@ -72,7 +76,13 @@ class BaseDatatable
   end
 
   def order_params
-    params[:order] || { '0' => { 'column' => '0', 'dir' => 'desc' } }
+    if params[:order].present?
+      params[:order]
+    elsif params[:order_column].present?
+      { '0' => { 'column' => params[:order_column].to_s, 'dir' => (params[:order_dir] || 'desc').to_s } }
+    else
+      { '0' => { 'column' => '0', 'dir' => 'desc' } }
+    end
   end
 
   # Apply search to relation
