@@ -1,4 +1,5 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
+import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
 
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
@@ -21,6 +22,7 @@ function initClientSubmissionsPage() {
         if ($.fn.DataTable.isDataTable(this)) {
             const table = $(this).DataTable();
             tables.push(table);
+            setupTaxSubmissionsBulkActions(table, $(this).attr('id'));
             return;
         }
 
@@ -29,7 +31,10 @@ function initClientSubmissionsPage() {
             paging: true,
             searching: true,
             ordering: true,
-            order: [[5, 'desc']],
+            order: [[8, 'desc']],
+            columnDefs: [
+                { orderable: false, targets: [0, -1] }
+            ],
             pageLength: 25,
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             lengthChange: true,
@@ -148,6 +153,7 @@ function initClientSubmissionsPage() {
         });
 
         tables.push(table);
+        setupTaxSubmissionsBulkActions(table, $(this).attr('id'));
     });
 
     // Tab persistence and table adjustment

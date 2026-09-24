@@ -126,9 +126,9 @@ export function exportSubmissionsToCsv(tableApi, filePrefix = 'tax_submissions',
     const tr = rows[i];
     const $tr = $(tr);
 
-    const transactionId = $tr.attr('data-transaction-id') || $tr.find('td:eq(0)').text().trim();
+    const transactionId = $tr.attr('data-transaction-id') || $tr.find('td:eq(1)').text().trim() || $tr.find('td:eq(0)').text().trim();
     const dateSubmitted = $tr.attr('data-date-submitted') || '';
-    const email = isIncoming ? ($tr.attr('data-email') || $tr.find('td:eq(1)').text().trim()) : null;
+    const email = isIncoming ? ($tr.attr('data-email') || $tr.find('td:eq(2)').text().trim() || $tr.find('td:eq(1)').text().trim()) : null;
     const companyName = $tr.attr('data-company-name') || '';
     const companyTin = $tr.attr('data-company-tin') || '';
     const invoiceNumber = $tr.attr('data-invoice-number') || '';

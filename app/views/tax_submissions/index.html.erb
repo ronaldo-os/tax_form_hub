@@ -5,6 +5,9 @@
   display_title_incoming = display_company ? "#{display_company} Incoming Submissions" : "Incoming Submissions"
 %>
 <% content_for :page_title, full_title_incoming %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "invoices", media: "all" %>
+<% end %>
 
 <div class="tax-submissions-page container-fluid px-2 px-sm-3 px-md-4 py-3">
   <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-3 mb-3">

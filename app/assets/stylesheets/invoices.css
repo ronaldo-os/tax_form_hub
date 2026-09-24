@@ -1435,3 +1435,120 @@
   background-color: transparent !important;
   color: var(--text-muted) !important;
 }
+
+/* ==========================================================================
+   Tax Submissions Bulk Actions Bar & Selection Controls
+   ========================================================================== */
+
+.tax-submissions-bulk-bar {
+  background-color: var(--bg-tertiary, #f1f3f5) !important;
+  border: 1px solid var(--border-color, #d1d1d1) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeInBulkBar 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-theme="dark"] .tax-submissions-bulk-bar {
+  background-color: var(--bg-secondary, #25292d) !important;
+  border: 1px solid var(--border-color, #495057) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+}
+
+@keyframes fadeInBulkBar {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tax-submissions-bulk-bar .selected-count-badge {
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  background-color: rgba(0, 174, 255, 0.12) !important;
+  color: var(--main-color, #00aeff) !important;
+  border-color: rgba(0, 174, 255, 0.25) !important;
+}
+
+[data-theme="dark"] .tax-submissions-bulk-bar .selected-count-badge {
+  background-color: rgba(32, 185, 255, 0.18) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+.tax-submissions-bulk-bar .bulk-action-btn {
+  font-size: 0.8125rem;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.tax-submissions-bulk-bar .clear-selection-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.tax-submissions-bulk-bar .clear-selection-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .tax-submissions-bulk-bar .clear-selection-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff !important;
+}
+
+/* Row selection checkboxes */
+.submission-row-checkbox,
+.table-header-checkbox,
+.master-bulk-checkbox {
+  cursor: pointer;
+  width: 1.15em;
+  height: 1.15em;
+  accent-color: var(--main-color, #00aeff);
+  border-color: var(--border-color, #d1d1d1);
+  transition: all 0.12s ease;
+}
+
+.submission-row-checkbox:hover,
+.table-header-checkbox:hover,
+.master-bulk-checkbox:hover {
+  border-color: var(--main-color, #00aeff);
+}
+
+.submission-row-checkbox:checked,
+.table-header-checkbox:checked,
+.master-bulk-checkbox:checked {
+  background-color: var(--main-color, #00aeff);
+  border-color: var(--main-color, #00aeff);
+}
+
+/* Row highlighting when selected */
+.submissionsTable tbody tr.row-selected,
+table.dataTable tbody tr.row-selected,
+.table tbody tr.row-selected {
+  background-color: rgba(0, 174, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .submissionsTable tbody tr.row-selected,
+[data-theme="dark"] table.dataTable tbody tr.row-selected,
+[data-theme="dark"] .table tbody tr.row-selected {
+  background-color: rgba(32, 185, 255, 0.16) !important;
+}
+
+@media (max-width: 575.98px) {
+  .tax-submissions-bulk-bar {
+    position: sticky;
+    top: 10px;
+    z-index: 1025;
+  }
+}

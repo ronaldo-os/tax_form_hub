@@ -28,11 +28,16 @@ Rails.application.routes.draw do
   resources :tax_submissions, only: [:index, :new, :create, :show, :destroy, :update] do
     collection do
       get :fetch_invoices
+      post :bulk_action
     end
   end
 
   namespace :admin do
-    resources :tax_submissions, only: [:index, :show, :update]
+    resources :tax_submissions, only: [:index, :show, :update] do
+      collection do
+        post :bulk_action
+      end
+    end
   end
 
   resources :invoices do

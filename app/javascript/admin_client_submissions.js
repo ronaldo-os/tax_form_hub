@@ -1,4 +1,5 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
+import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
 
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
@@ -22,6 +23,7 @@ function initSubmissionTables() {
             if ($.fn.DataTable.isDataTable(selector)) {
                 const table = $(selector).DataTable();
                 submissionTables.push(table);
+                setupTaxSubmissionsBulkActions(table, selector.replace('#', ''));
                 return;
             }
 
@@ -32,6 +34,10 @@ function initSubmissionTables() {
                 info: true,
                 lengthChange: true,
                 pageLength: 10,
+                order: [[9, 'desc']],
+                columnDefs: [
+                    { orderable: false, targets: [0, -1] }
+                ],
                 stateSave: true,
                 language: {
                     search: "_INPUT_",
@@ -147,6 +153,7 @@ function initSubmissionTables() {
             });
 
             submissionTables.push(table);
+            setupTaxSubmissionsBulkActions(table, selector.replace('#', ''));
         }
     });
 

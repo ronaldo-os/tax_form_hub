@@ -58,6 +58,33 @@ class Admin::TaxSubmissionsController < ApplicationController
     end
   end
 
+  def bulk_action
+    action_type = params[:bulk_action]
+    submission_ids = Array(params[:tax_submission_ids]).map(&:to_i).reject(&:zero?)
+
+    if submission_ids.empty?
+      redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, alert: "No submissions selected."
+      return
+    end
+
+    submissions = TaxSubmission.where(id: submission_ids)
+    case action_type
+    when "archive"
+      count = 0
+      submissions.each { |s| count += 1 if s.update(archived: true) }
+      redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, notice: "Successfully archived #{count} #{'submission'.pluralize(count)}."
+    when "unarchive"
+      count = 0
+      submissions.each { |s| count += 1 if s.update(archived: false) }
+      redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, notice: "Successfully unarchived #{count} #{'submission'.pluralize(count)}."
+    when "destroy"
+      count = submissions.count
+      submissions.destroy_all
+      redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, notice: "Successfully deleted #{count} #{'submission'.pluralize(count)}."
+    else
+      redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, alert: "Invalid action."
+    end
+  end
 
   private
 

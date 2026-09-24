@@ -111,6 +111,64 @@ class TaxSubmissionsController < ApplicationController
     end
   end
 
+  def bulk_action
+    action_type = params[:bulk_action]
+    submission_ids = Array(params[:tax_submission_ids]).map(&:to_i).reject(&:zero?)
+
+    if submission_ids.empty?
+      redirect_back fallback_location: tax_submissions_home_path, status: :see_other, alert: "No submissions selected."
+      return
+    end
+
+    submissions = accessible_submissions_scope.where(id: submission_ids)
+
+    if submissions.empty?
+      redirect_back fallback_location: tax_submissions_home_path, status: :see_other, alert: "No authorized submissions found to perform this action."
+      return
+    end
+
+    case action_type
+    when "archive"
+      count = 0
+      submissions.each do |sub|
+        count += 1 if sub.update(archived: true)
+      end
+      notice = "Successfully archived #{count} #{'submission'.pluralize(count)}."
+      redirect_back fallback_location: tax_submissions_home_path, status: :see_other, notice: notice
+    when "unarchive"
+      count = 0
+      submissions.each do |sub|
+        count += 1 if sub.update(archived: false)
+      end
+      notice = "Successfully unarchived #{count} #{'submission'.pluralize(count)}."
+      redirect_back fallback_location: tax_submissions_home_path, status: :see_other, notice: notice
+    when "destroy"
+      deleted_count = 0
+      skipped_count = 0
+      submissions.each do |sub|
+        if sub.processed? || sub.reviewed?
+          skipped_count += 1
+        else
+          sub.destroy
+          deleted_count += 1
+        end
+      end
+
+      if deleted_count > 0 && skipped_count > 0
+        notice = "Successfully deleted #{deleted_count} #{'submission'.pluralize(deleted_count)}. #{skipped_count} #{'submission'.pluralize(skipped_count)} skipped because already processed or reviewed."
+        redirect_back fallback_location: tax_submissions_home_path, status: :see_other, notice: notice
+      elsif deleted_count > 0
+        notice = "Successfully deleted #{deleted_count} #{'submission'.pluralize(deleted_count)}."
+        redirect_back fallback_location: tax_submissions_home_path, status: :see_other, notice: notice
+      else
+        alert = "Cannot delete the selected #{'submission'.pluralize(skipped_count)} because already processed or reviewed."
+        redirect_back fallback_location: tax_submissions_home_path, status: :see_other, alert: alert
+      end
+    else
+      redirect_back fallback_location: tax_submissions_home_path, status: :see_other, alert: "Invalid action."
+    end
+  end
+
   def fetch_invoices
     company_id = params[:company_id]
 
@@ -178,21 +236,20 @@ class TaxSubmissionsController < ApplicationController
                  .with_attached_deposit_slip
   end
 
+  def accessible_submissions_scope
+    my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
+    related_invoice_ids = Invoice.where(
+      "user_id = ? OR recipient_company_id IN (?) OR sale_from_id IN (?)",
+      current_user.id,
+      my_company_ids,
+      my_company_ids
+    ).pluck(:id)
+
+    TaxSubmission.where("company_id IN (?) OR invoice_id IN (?)", my_company_ids, related_invoice_ids)
+  end
+
   def set_tax_submission
-    my_company_ids = current_user.companies.pluck(:id)
-
-    # Identify invoices related to the user (either as creator or where their company is the recipient)
-    related_invoice_ids = Invoice.where("user_id = ? OR recipient_company_id IN (?)",
-                                        current_user.id,
-                                        my_company_ids).select(:id)
-
-    # Allow finding if:
-    # 1. It belongs to one of my companies (Incoming)
-    # 2. It belongs to an invoice I'm involved in (Outgoing)
-    @tax_submission = TaxSubmission.where("company_id IN (?) OR invoice_id IN (?)",
-                                          my_company_ids,
-                                          related_invoice_ids)
-                                   .find_by(id: params[:id])
+    @tax_submission = accessible_submissions_scope.find_by(id: params[:id])
 
     unless @tax_submission
       respond_to do |format|
