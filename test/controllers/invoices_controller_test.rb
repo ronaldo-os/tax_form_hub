@@ -642,4 +642,159 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
       assert_select "a[href*='category=credit_note']", text: /Create Credit Note/
     end
   end
+
+  test "datatable returns checkbox column" do
+    Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-CHK-01",
+      status: "draft"
+    )
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", format: :json }
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    assert_not_empty data
+    assert data.first.key?("checkbox")
+    assert_match /invoice-row-checkbox/, data.first["checkbox"]
+  end
+
+  test "bulk_action archives selected invoices" do
+    inv1 = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-ARC-1", archived: false)
+    inv2 = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-ARC-2", archived: false)
+
+    post bulk_action_invoices_url, params: {
+      bulk_action: "archive",
+      invoice_ids: [inv1.id, inv2.id],
+      tab: "sales-invoices"
+    }
+
+    assert_redirected_to invoices_path(tab: "sales-invoices")
+    assert_equal "Successfully archived 2 invoices.", flash[:notice]
+    assert inv1.reload.archived?
+    assert inv2.reload.archived?
+  end
+
+  test "bulk_action unarchives selected invoices" do
+    inv1 = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-UNARC-1", archived: true)
+    inv2 = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-UNARC-2", archived: true)
+
+    post bulk_action_invoices_url, params: {
+      bulk_action: "unarchive",
+      invoice_ids: [inv1.id, inv2.id],
+      tab: "sales-invoices"
+    }
+
+    assert_redirected_to invoices_path(tab: "sales-invoices")
+    assert_equal "Successfully unarchived 2 invoices.", flash[:notice]
+    assert_not inv1.reload.archived?
+    assert_not inv2.reload.archived?
+  end
+
+  test "bulk_action destroys selected invoices" do
+    inv1 = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-DEL-1")
+    inv2 = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-DEL-2")
+
+    post bulk_action_invoices_url, params: {
+      bulk_action: "destroy",
+      invoice_ids: [inv1.id, inv2.id],
+      tab: "sales-invoices"
+    }
+
+    assert_redirected_to invoices_path(tab: "sales-invoices")
+    assert_equal "Successfully deleted 2 invoices.", flash[:notice]
+    assert_not Invoice.exists?(inv1.id)
+    assert_not Invoice.exists?(inv2.id)
+  end
+
+  test "bulk_action marks invoices as paid and synchronizes counterpart purchase invoice" do
+    seller_company = Company.create!(name: "Seller Co", user: @user)
+    buyer_user = User.create!(email: "buyer_#{Time.now.to_i}@example.com", password: "Password123!@#Secure", password_confirmation: "Password123!@#Secure")
+    buyer_company = Company.create!(name: "Buyer Co", user: buyer_user)
+
+    sale_inv = Invoice.create!(
+      user: @user,
+      recipient_company: buyer_company,
+      sale_from: seller_company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-SYNC-01",
+      status: "sent"
+    )
+
+    purchase_inv = Invoice.create!(
+      user: buyer_user,
+      recipient_company: buyer_company,
+      sale_from: seller_company,
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      invoice_number: "INV-SYNC-01",
+      status: "pending"
+    )
+
+    post bulk_action_invoices_url, params: {
+      bulk_action: "mark_paid",
+      invoice_ids: [sale_inv.id],
+      tab: "sales-invoices"
+    }
+
+    assert_redirected_to invoices_path(tab: "sales-invoices")
+    assert_equal "Successfully updated 1 invoice to Paid.", flash[:notice]
+    assert_equal "paid", sale_inv.reload.status
+    assert_equal "paid", purchase_inv.reload.status
+  end
+
+  test "bulk_action updates status to approved, rejected, and draft" do
+    inv_approved = Invoice.create!(user: @user, invoice_type: "purchase", invoice_category: "standard", invoice_number: "INV-APP-1", status: "pending")
+    post bulk_action_invoices_url, params: {
+      bulk_action: "mark_approved",
+      invoice_ids: [inv_approved.id],
+      tab: "purchase-invoices"
+    }
+    assert_equal "approved", inv_approved.reload.status
+
+    inv_rejected = Invoice.create!(user: @user, invoice_type: "purchase", invoice_category: "standard", invoice_number: "INV-REJ-1", status: "pending")
+    post bulk_action_invoices_url, params: {
+      bulk_action: "mark_rejected",
+      invoice_ids: [inv_rejected.id],
+      tab: "purchase-invoices"
+    }
+    assert_equal "rejected", inv_rejected.reload.status
+
+    inv_draft = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-DRF-1", status: "sent")
+    post bulk_action_invoices_url, params: {
+      bulk_action: "mark_draft",
+      invoice_ids: [inv_draft.id],
+      tab: "sales-invoices"
+    }
+    assert_equal "draft", inv_draft.reload.status
+  end
+
+  test "bulk_action strictly enforces tenant isolation and prevents modifying other users invoices" do
+    other_user = User.create!(email: "victim_#{Time.now.to_i}@example.com", password: "Password123!@#Secure", password_confirmation: "Password123!@#Secure")
+    other_inv = Invoice.create!(user: other_user, invoice_type: "sale", invoice_category: "standard", invoice_number: "OTHER-USER-INV", archived: false)
+
+    post bulk_action_invoices_url, params: {
+      bulk_action: "archive",
+      invoice_ids: [other_inv.id],
+      tab: "sales-invoices"
+    }
+
+    assert_redirected_to invoices_path(tab: "sales-invoices")
+    assert_equal "No authorized invoices found to perform this action.", flash[:alert]
+    assert_not other_inv.reload.archived?
+  end
+
+  test "bulk_action handles empty or invalid selections gracefully" do
+    post bulk_action_invoices_url, params: {
+      bulk_action: "archive",
+      invoice_ids: [],
+      tab: "sales-invoices"
+    }
+
+    assert_redirected_to invoices_path(tab: "sales-invoices")
+    assert_equal "No invoices selected.", flash[:alert]
+  end
 end
+

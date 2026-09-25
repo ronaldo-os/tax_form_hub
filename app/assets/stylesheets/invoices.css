@@ -938,7 +938,7 @@
   background-color: var(--card-bg) !important;
   border: 1px solid var(--border-color) !important;
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05) !important;
-  overflow: hidden;
+  overflow: visible;
 }
 
 [data-theme="dark"] .invoice-table-card {
@@ -1437,18 +1437,120 @@
 }
 
 /* ==========================================================================
-   Tax Submissions Bulk Actions Bar & Selection Controls
+/* ==========================================================================
+   Invoices & Tax Submissions Bulk Actions Bar & Selection Controls
    ========================================================================== */
 
+.invoice-bulk-bar,
 .tax-submissions-bulk-bar {
   background-color: var(--bg-tertiary, #f1f3f5) !important;
   border: 1px solid var(--border-color, #d1d1d1) !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   animation: fadeInBulkBar 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  position: relative;
+  z-index: 1040 !important;
 }
 
-[data-theme="dark"] .tax-submissions-bulk-bar {
+.invoice-bulk-bar .dropdown {
+  position: relative;
+}
+
+/* Bulk Status Dropdown and Page Dropdowns (solid background & high z-index) */
+.bulk-status-dropdown-menu,
+.invoices-page .dropdown-menu {
+  background-color: var(--card-bg, #ffffff) !important;
+  color: var(--text-main, #212529) !important;
+  border: 1px solid var(--border-color, #dee2e6) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+  z-index: 1060 !important;
+  min-width: 190px !important;
+  padding: 0.5rem 0 !important;
+  margin-top: 0.35rem !important;
+}
+
+[data-theme="dark"] .bulk-status-dropdown-menu,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu,
+[data-theme="dark"] .invoices-page .dropdown-menu,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu {
+  background-color: #25292d !important;
+  color: #f8f9fa !important;
+  border: 1px solid #495057 !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+.bulk-status-dropdown-menu .dropdown-header,
+.invoices-page .dropdown-menu .dropdown-header {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  color: #6c757d !important;
+  padding: 0.35rem 1rem 0.25rem 1rem !important;
+}
+
+[data-theme="dark"] .bulk-status-dropdown-menu .dropdown-header,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu .dropdown-header,
+[data-theme="dark"] .invoices-page .dropdown-menu .dropdown-header,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu .dropdown-header {
+  color: #adb5bd !important;
+}
+
+.bulk-status-dropdown-menu .dropdown-item,
+.invoices-page .dropdown-menu .dropdown-item {
+  color: #212529 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  background-color: transparent !important;
+  transition: all 0.12s ease;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  border: none !important;
+  cursor: pointer;
+}
+
+.bulk-status-dropdown-menu .dropdown-item:hover,
+.bulk-status-dropdown-menu .dropdown-item:focus,
+.invoices-page .dropdown-menu .dropdown-item:hover,
+.invoices-page .dropdown-menu .dropdown-item:focus {
+  background-color: rgba(0, 174, 255, 0.1) !important;
+  color: var(--main-color, #00aeff) !important;
+}
+
+[data-theme="dark"] .bulk-status-dropdown-menu .dropdown-item,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu .dropdown-item,
+[data-theme="dark"] .invoices-page .dropdown-menu .dropdown-item,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu .dropdown-item {
+  color: #f8f9fa !important;
+}
+
+[data-theme="dark"] .bulk-status-dropdown-menu .dropdown-item:hover,
+[data-theme="dark"] .bulk-status-dropdown-menu .dropdown-item:focus,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu .dropdown-item:hover,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu .dropdown-item:focus,
+[data-theme="dark"] .invoices-page .dropdown-menu .dropdown-item:hover,
+[data-theme="dark"] .invoices-page .dropdown-menu .dropdown-item:focus,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu .dropdown-item:hover,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.bulk-status-dropdown-menu .dropdown-item .badge {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme="dark"] .invoice-bulk-bar,
+[data-bs-theme="dark"] .invoice-bulk-bar,
+[data-theme="dark"] .tax-submissions-bulk-bar,
+[data-bs-theme="dark"] .tax-submissions-bulk-bar {
   background-color: var(--bg-secondary, #25292d) !important;
   border: 1px solid var(--border-color, #495057) !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
@@ -1465,6 +1567,7 @@
   }
 }
 
+.invoice-bulk-bar .selected-count-badge,
 .tax-submissions-bulk-bar .selected-count-badge {
   font-size: 0.8125rem;
   letter-spacing: 0.01em;
@@ -1473,12 +1576,14 @@
   border-color: rgba(0, 174, 255, 0.25) !important;
 }
 
+[data-theme="dark"] .invoice-bulk-bar .selected-count-badge,
 [data-theme="dark"] .tax-submissions-bulk-bar .selected-count-badge {
   background-color: rgba(32, 185, 255, 0.18) !important;
   color: #38bdf8 !important;
   border-color: rgba(56, 189, 248, 0.3) !important;
 }
 
+.invoice-bulk-bar .bulk-action-btn,
 .tax-submissions-bulk-bar .bulk-action-btn {
   font-size: 0.8125rem;
   min-height: 32px;
@@ -1487,6 +1592,7 @@
   transition: all 0.15s ease;
 }
 
+.invoice-bulk-bar .clear-selection-btn,
 .tax-submissions-bulk-bar .clear-selection-btn {
   width: 30px;
   height: 30px;
@@ -1497,17 +1603,20 @@
   transition: all 0.15s ease;
 }
 
+.invoice-bulk-bar .clear-selection-btn:hover,
 .tax-submissions-bulk-bar .clear-selection-btn:hover {
   background-color: rgba(0, 0, 0, 0.08);
   color: var(--text-main) !important;
 }
 
+[data-theme="dark"] .invoice-bulk-bar .clear-selection-btn:hover,
 [data-theme="dark"] .tax-submissions-bulk-bar .clear-selection-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff !important;
 }
 
 /* Row selection checkboxes */
+.invoice-row-checkbox,
 .submission-row-checkbox,
 .table-header-checkbox,
 .master-bulk-checkbox {
@@ -1519,12 +1628,14 @@
   transition: all 0.12s ease;
 }
 
+.invoice-row-checkbox:hover,
 .submission-row-checkbox:hover,
 .table-header-checkbox:hover,
 .master-bulk-checkbox:hover {
   border-color: var(--main-color, #00aeff);
 }
 
+.invoice-row-checkbox:checked,
 .submission-row-checkbox:checked,
 .table-header-checkbox:checked,
 .master-bulk-checkbox:checked {
@@ -1533,20 +1644,40 @@
 }
 
 /* Row highlighting when selected */
+.invoice-datatable tbody tr.row-selected,
 .submissionsTable tbody tr.row-selected,
 table.dataTable tbody tr.row-selected,
 .table tbody tr.row-selected {
   background-color: rgba(0, 174, 255, 0.08) !important;
 }
 
+[data-theme="dark"] .invoice-datatable tbody tr.row-selected,
 [data-theme="dark"] .submissionsTable tbody tr.row-selected,
 [data-theme="dark"] table.dataTable tbody tr.row-selected,
 [data-theme="dark"] .table tbody tr.row-selected {
   background-color: rgba(32, 185, 255, 0.16) !important;
 }
 
+/* ZIP Export Progress Modal Styling */
+#zip-export-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+#zip-export-overlay .progress {
+  height: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] #zip-export-overlay .progress {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 @media (max-width: 575.98px) {
-  .tax-submissions-bulk-bar {
+  .tax-submissions-bulk-bar,
+  .invoice-bulk-bar {
     position: sticky;
     top: 10px;
     z-index: 1025;

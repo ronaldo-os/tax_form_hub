@@ -798,6 +798,188 @@ class InvoicesController < ApplicationController
     render json: invoices.map { |inv| { id: inv.id, invoice_number: inv.invoice_number, currency: inv.currency } }
   end
 
+  # Bulk actions handler for invoices: archive, unarchive, destroy, and status updates
+  def bulk_action
+    action_type = params[:bulk_action].to_s
+    invoice_ids = Array(params[:invoice_ids]).map(&:to_i).reject(&:zero?)
+    tab = params[:tab].presence || "sales-invoices"
+
+    if invoice_ids.empty?
+      redirect_to invoices_path(tab: tab), status: :see_other, alert: "No invoices selected."
+      return
+    end
+
+    # Authorization: strictly scope to current_user
+    invoices = current_user.invoices.where(id: invoice_ids)
+
+    if invoices.empty?
+      redirect_to invoices_path(tab: tab), status: :see_other, alert: "No authorized invoices found to perform this action."
+      return
+    end
+
+    case action_type
+    when "archive"
+      archived_count = 0
+      skipped_count = 0
+      invoices.each do |inv|
+        if inv.has_associated_credit_note?
+          skipped_count += 1
+        elsif inv.update(archived: true)
+          archived_count += 1
+        else
+          skipped_count += 1
+        end
+      end
+
+      if archived_count > 0 && skipped_count > 0
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    notice: "Successfully archived #{archived_count} #{'invoice'.pluralize(archived_count)}. #{skipped_count} skipped due to associated credit notes or errors."
+      elsif archived_count > 0
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    notice: "Successfully archived #{archived_count} #{'invoice'.pluralize(archived_count)}."
+      else
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    alert: "Could not archive selected invoices (e.g., associated credit notes present)."
+      end
+
+    when "unarchive"
+      unarchived_count = 0
+      skipped_count = 0
+      invoices.each do |inv|
+        if inv.has_associated_credit_note?
+          skipped_count += 1
+        elsif inv.update(archived: false)
+          unarchived_count += 1
+        else
+          skipped_count += 1
+        end
+      end
+
+      if unarchived_count > 0 && skipped_count > 0
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    notice: "Successfully unarchived #{unarchived_count} #{'invoice'.pluralize(unarchived_count)}. #{skipped_count} skipped due to associated credit notes."
+      elsif unarchived_count > 0
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    notice: "Successfully unarchived #{unarchived_count} #{'invoice'.pluralize(unarchived_count)}."
+      else
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    alert: "Could not unarchive selected invoices (e.g., associated credit notes present)."
+      end
+
+    when "destroy"
+      deleted_count = 0
+      skipped_count = 0
+      invoices.each do |inv|
+        if inv.credit_notes.exists? || inv.recurring_sub_invoices.exists?
+          skipped_count += 1
+        else
+          begin
+            if inv.destroy
+              deleted_count += 1
+            else
+              skipped_count += 1
+            end
+          rescue StandardError => e
+            Rails.logger.error("Failed to delete invoice #{inv.id}: #{e.message}")
+            skipped_count += 1
+          end
+        end
+      end
+
+      if deleted_count > 0 && skipped_count > 0
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    notice: "Successfully deleted #{deleted_count} #{'invoice'.pluralize(deleted_count)}. #{skipped_count} skipped due to dependencies."
+      elsif deleted_count > 0
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    notice: "Successfully deleted #{deleted_count} #{'invoice'.pluralize(deleted_count)}."
+      else
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    alert: "Could not delete the selected invoices because of associated records or restrictions."
+      end
+
+    when "mark_paid", "mark_approved", "mark_rejected", "mark_sent", "mark_draft"
+      target_status = case action_type
+                      when "mark_paid" then "paid"
+                      when "mark_approved" then "approved"
+                      when "mark_rejected" then "rejected"
+                      when "mark_sent" then "sent"
+                      when "mark_draft" then "draft"
+                      end
+
+      updated_count = 0
+      skipped_count = 0
+
+      invoices.each do |inv|
+        # Associated credit note prevents changing status to paid/approved/rejected
+        if %w[paid approved rejected].include?(target_status) && inv.has_associated_credit_note?
+          skipped_count += 1
+          next
+        end
+
+        # Paid status: only issuer/seller can mark as paid
+        if target_status == "paid" && inv.invoice_type != "sale"
+          skipped_count += 1
+          next
+        end
+
+        if inv.update(status: target_status)
+          updated_count += 1
+
+          if target_status == "paid"
+            sale_company_id = inv.user.company&.id || inv.user.companies.first&.id
+            purchase_invoice = Invoice.find_by(
+              invoice_number: inv.invoice_number,
+              invoice_type: "purchase",
+              invoice_category: inv.invoice_category,
+              sale_from_id: sale_company_id,
+              recipient_company_id: inv.recipient_company_id
+            )
+            purchase_invoice&.update(status: "paid")
+            counterparty = inv.recipient_company&.user
+            NotificationService.notify_invoice_paid(inv, counterparty, current_user) if counterparty
+          elsif target_status == "approved"
+            update_original_sale_status(inv, "approved")
+            sender_user = inv.invoice_type == "purchase" && inv.sale_from ? inv.sale_from.user : inv.user
+            if inv.quote?
+              InvoiceMailer.quote_approved(inv, sender_user, current_user).deliver_later rescue nil
+              NotificationService.notify_invoice_approved(inv, sender_user, current_user) rescue nil
+            else
+              InvoiceMailer.invoice_approved(inv, sender_user, current_user).deliver_later rescue nil
+              NotificationService.notify_invoice_approved(inv, sender_user, current_user) rescue nil
+            end
+          elsif target_status == "rejected"
+            update_original_sale_status(inv, "rejected")
+            sender_user = inv.invoice_type == "purchase" && inv.sale_from ? inv.sale_from.user : inv.user
+            if inv.quote?
+              InvoiceMailer.quote_rejected(inv, sender_user, current_user).deliver_later rescue nil
+              NotificationService.notify_invoice_rejected(inv, sender_user, current_user) rescue nil
+            else
+              InvoiceMailer.invoice_rejected(inv, sender_user, current_user).deliver_later rescue nil
+              NotificationService.notify_invoice_rejected(inv, sender_user, current_user) rescue nil
+            end
+          end
+        else
+          skipped_count += 1
+        end
+      end
+
+      status_label = target_status.capitalize
+      if updated_count > 0 && skipped_count > 0
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    notice: "Successfully updated #{updated_count} #{'invoice'.pluralize(updated_count)} to #{status_label}. #{skipped_count} skipped due to restrictions."
+      elsif updated_count > 0
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    notice: "Successfully updated #{updated_count} #{'invoice'.pluralize(updated_count)} to #{status_label}."
+      else
+        redirect_to invoices_path(tab: tab), status: :see_other,
+                    alert: "Could not update the status of the selected invoices."
+      end
+
+    else
+      redirect_to invoices_path(tab: tab), status: :see_other, alert: "Invalid bulk action."
+    end
+  end
+
   private
 
   def build_invoice_trends(relation)

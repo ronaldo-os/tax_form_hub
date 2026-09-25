@@ -1,12 +1,112 @@
 <%# Server-side rendered DataTable for better performance %>
 <%# Loads data via AJAX instead of rendering all rows server-side %>
 
+<!-- Bulk Action Bar -->
+<div class="card border-0 rounded-3 mb-2.5 d-none invoice-bulk-bar shadow-sm" id="bulk_action_bar_<%= table_id %>">
+  <div class="card-body py-2 px-3">
+    <%= form_with url: bulk_action_invoices_path, method: :post, class: "bulk-invoices-form", id: "bulk_form_#{table_id}" do |f| %>
+      <input type="hidden" name="tab" value="<%= local_assigns[:active_tab] %>">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div class="d-flex align-items-center gap-2 gap-sm-3">
+          <div class="form-check mb-0 d-flex align-items-center">
+            <input class="form-check-input me-2 master-bulk-checkbox invoice-master-checkbox" type="checkbox" id="master_bulk_<%= table_id %>" data-table-id="<%= table_id %>">
+            <label class="form-check-label fw-semibold fs-7 text-main" for="master_bulk_<%= table_id %>">
+              Select All
+            </label>
+          </div>
+          <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fs-8 fw-semibold selected-count-badge">
+            <span class="selected-count">0</span> selected
+          </span>
+        </div>
+
+        <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end align-items-center">
+          <!-- Export ZIP of PDFs Button -->
+          <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-export-zip-btn" data-table-id="<%= table_id %>" title="Export selected invoices as a ZIP of PDFs">
+            <i class="fa-solid fa-file-zipper"></i>
+            <span>Export ZIP</span>
+          </button>
+
+          <!-- Update Status Dropdown -->
+          <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold dropdown-toggle d-inline-flex align-items-center gap-1.5" type="button" id="bulkStatusDropdown_<%= table_id %>" data-bs-toggle="dropdown" data-bs-offset="0,6" aria-expanded="false">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Update Status</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-1.5 bulk-status-dropdown-menu" aria-labelledby="bulkStatusDropdown_<%= table_id %>">
+              <li><h6 class="dropdown-header text-uppercase fs-8 text-muted">Change Status To</h6></li>
+              <li>
+                <button type="submit" name="bulk_action" value="mark_paid" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Paid?">
+                  <span class="badge bg-success-subtle text-success p-1 rounded-circle"><i class="fa-solid fa-check fs-9"></i></span>
+                  <span>Paid</span>
+                </button>
+              </li>
+              <li>
+                <button type="submit" name="bulk_action" value="mark_approved" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Approved?">
+                  <span class="badge bg-success-subtle text-success p-1 rounded-circle"><i class="fa-solid fa-thumbs-up fs-9"></i></span>
+                  <span>Approved</span>
+                </button>
+              </li>
+              <li>
+                <button type="submit" name="bulk_action" value="mark_sent" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Sent?">
+                  <span class="badge bg-info-subtle text-info p-1 rounded-circle"><i class="fa-solid fa-paper-plane fs-9"></i></span>
+                  <span>Sent</span>
+                </button>
+              </li>
+              <li>
+                <button type="submit" name="bulk_action" value="mark_rejected" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Rejected?">
+                  <span class="badge bg-danger-subtle text-danger p-1 rounded-circle"><i class="fa-solid fa-xmark fs-9"></i></span>
+                  <span>Rejected</span>
+                </button>
+              </li>
+              <li>
+                <button type="submit" name="bulk_action" value="mark_draft" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Draft?">
+                  <span class="badge bg-secondary-subtle text-secondary p-1 rounded-circle"><i class="fa-solid fa-file-pen fs-9"></i></span>
+                  <span>Draft</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Archive / Unarchive Button -->
+          <% if local_assigns[:archived] %>
+            <button type="submit" name="bulk_action" value="unarchive" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-action-btn" data-turbo-confirm="Are you sure you want to unarchive the selected invoices?">
+              <i class="fa-solid fa-box-open"></i>
+              <span>Unarchive</span>
+            </button>
+          <% else %>
+            <button type="submit" name="bulk_action" value="archive" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-action-btn" data-turbo-confirm="Are you sure you want to archive the selected invoices?">
+              <i class="fa-solid fa-box-archive"></i>
+              <span>Archive</span>
+            </button>
+          <% end %>
+
+          <!-- Delete Button -->
+          <button type="submit" name="bulk_action" value="destroy" class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-action-btn" data-turbo-confirm="Are you sure you want to delete the selected invoices? This action cannot be undone.">
+            <i class="fa-solid fa-trash"></i>
+            <span>Delete</span>
+          </button>
+
+          <!-- Clear Selection Button -->
+          <button type="button" class="btn btn-sm btn-link text-muted p-1 text-decoration-none clear-selection-btn invoice-clear-selection-btn" data-table-id="<%= table_id %>" title="Clear selection">
+            <i class="fa-solid fa-xmark fs-6"></i>
+          </button>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+
 <table class="table table-hover table-compact invoice-datatable align-middle w-100" id="<%= table_id %>"
        data-server-side="true"
        data-ajax-url="<%= datatable_data_invoices_path %>"
        data-ajax-data='<%= { invoice_type: local_assigns[:invoice_type], archived: local_assigns[:archived], quote: local_assigns[:quote], tab: local_assigns[:active_tab] }.to_json %>'>
   <thead class="table-light">
     <tr>
+      <th data-data="checkbox" data-orderable="false" class="text-center no-sort" style="width: 40px;">
+        <div class="form-check d-flex justify-content-center mb-0">
+          <input class="form-check-input table-header-checkbox invoice-header-checkbox" type="checkbox" id="header_checkbox_<%= table_id %>" data-table-id="<%= table_id %>" title="Select all on this page">
+        </div>
+      </th>
       <th data-data="invoice_number"><%= local_assigns[:title] || 'Invoice' %> #</th>
       <th data-data="counterparty"><%= local_assigns[:invoice_type] == 'purchase' ? 'Supplier Name' : 'Customer Name' %></th>
       <th data-data="total">Total</th>

@@ -1,5 +1,6 @@
 import { updatePdfPreviewScale } from './invoice_preview';
 import { initInvoiceExport } from './invoices_export';
+import { setupInvoiceBulkActions } from './invoice_bulk';
 
 function loadHtml2Pdf() {
     if (typeof html2pdf !== 'undefined') {
@@ -118,11 +119,12 @@ function initInvoicePage() {
             destroy: true, // Important for Turbo
             pageLength: 25,
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-            order: [[3, 'desc']], // Default order by Issue Date DESC
+            order: [[4, 'desc']], // Default order by Issue Date DESC (column 4 with checkbox at 0)
             columnDefs: [
-                { orderable: false, targets: [4, 6] }, // Disable sorting on Attachments and Actions
+                { orderable: false, targets: [0, 5, 7] }, // Disable sorting on Checkbox, Attachments, and Actions
+                { className: 'text-center', targets: [0, 7] },
                 {
-                    targets: 5, // Status column
+                    targets: 6, // Status column
                     render: function (data, type, row) {
                         if (type === 'display' && data) {
                             const statusLower = data.toString().toLowerCase().trim();
@@ -190,7 +192,8 @@ function initInvoicePage() {
             tableConfig.searchDelay = 400; // Delay search to reduce server requests
         }
 
-        $table.DataTable(tableConfig);
+        const dtInstance = $table.DataTable(tableConfig);
+        setupInvoiceBulkActions(dtInstance, $table.attr('id'));
 
         const tableNode = $table[0];
         if (tableNode && !tableNode.dataset.responsiveFixAttached) {
@@ -569,9 +572,9 @@ function initInvoicePage() {
             const table = $(tableSelector).DataTable();
             if (status) {
                 // Use exact regex with caseInsen = true (4th param) to match formatted status text (e.g. "Draft", "Sent", "Paid")
-                table.column(5).search('^' + status + '$', true, false, true).draw();
+                table.column(6).search('^' + status + '$', true, false, true).draw();
             } else {
-                table.column(5).search("").draw();
+                table.column(6).search("").draw();
             }
         }
     });

@@ -1483,3 +1483,103 @@ a.btn:not(.d-inline-flex):not(.d-flex) > svg:last-child:not(:only-child),
 .ms-1\.5 {
   margin-left: 0.375rem !important;
 }
+
+/* Bulk Actions Bar & Dropdown Menu Styling */
+.invoice-bulk-bar {
+  position: relative;
+  z-index: 1040 !important;
+}
+
+.invoice-bulk-bar .dropdown {
+  position: relative;
+}
+
+.bulk-status-dropdown-menu,
+.invoices-page .dropdown-menu {
+  background-color: var(--card-bg, #ffffff) !important;
+  color: var(--text-main, #212529) !important;
+  border: 1px solid var(--border-color, #dee2e6) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08) !important;
+  z-index: 1060 !important;
+  min-width: 190px !important;
+  padding: 0.5rem 0 !important;
+  margin-top: 0.35rem !important;
+}
+
+[data-theme="dark"] .bulk-status-dropdown-menu,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu,
+[data-theme="dark"] .invoices-page .dropdown-menu,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu {
+  background-color: #25292d !important;
+  color: #f8f9fa !important;
+  border: 1px solid #495057 !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+.bulk-status-dropdown-menu .dropdown-header,
+.invoices-page .dropdown-menu .dropdown-header {
+  font-size: 0.72rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  color: #6c757d !important;
+  padding: 0.35rem 1rem 0.25rem 1rem !important;
+}
+
+[data-theme="dark"] .bulk-status-dropdown-menu .dropdown-header,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu .dropdown-header,
+[data-theme="dark"] .invoices-page .dropdown-menu .dropdown-header,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu .dropdown-header {
+  color: #adb5bd !important;
+}
+
+.bulk-status-dropdown-menu .dropdown-item,
+.invoices-page .dropdown-menu .dropdown-item {
+  color: #212529 !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  padding: 0.5rem 1rem !important;
+  background-color: transparent !important;
+  transition: all 0.12s ease;
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  border: none !important;
+  cursor: pointer;
+}
+
+.bulk-status-dropdown-menu .dropdown-item:hover,
+.bulk-status-dropdown-menu .dropdown-item:focus,
+.invoices-page .dropdown-menu .dropdown-item:hover,
+.invoices-page .dropdown-menu .dropdown-item:focus {
+  background-color: rgba(0, 174, 255, 0.1) !important;
+  color: var(--main-color, #00aeff) !important;
+}
+
+[data-theme="dark"] .bulk-status-dropdown-menu .dropdown-item,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu .dropdown-item,
+[data-theme="dark"] .invoices-page .dropdown-menu .dropdown-item,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu .dropdown-item {
+  color: #f8f9fa !important;
+}
+
+[data-theme="dark"] .bulk-status-dropdown-menu .dropdown-item:hover,
+[data-theme="dark"] .bulk-status-dropdown-menu .dropdown-item:focus,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu .dropdown-item:hover,
+[data-bs-theme="dark"] .bulk-status-dropdown-menu .dropdown-item:focus,
+[data-theme="dark"] .invoices-page .dropdown-menu .dropdown-item:hover,
+[data-theme="dark"] .invoices-page .dropdown-menu .dropdown-item:focus,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu .dropdown-item:hover,
+[data-bs-theme="dark"] .invoices-page .dropdown-menu .dropdown-item:focus {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.bulk-status-dropdown-menu .dropdown-item .badge {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

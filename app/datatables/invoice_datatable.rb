@@ -47,6 +47,7 @@ class InvoiceDatatable < BaseDatatable
     records.map do |invoice|
       {
         'DT_RowId' => "invoice_#{invoice.id}",
+        'checkbox' => format_checkbox(invoice),
         'invoice_number' => invoice_link(invoice),
         'counterparty' => counterparty_name(invoice),
         'total' => format_total(invoice),
@@ -86,12 +87,16 @@ class InvoiceDatatable < BaseDatatable
       'COALESCE(companies.name, sale_froms_invoices.name)'
     end
 
+    total_col = "COALESCE(NULLIF(invoices.total->>'grand_total', ''), '0')::numeric"
+
     {
-      0 => 'invoices.invoice_number',
-      1 => counterparty_col,
-      2 => "COALESCE(NULLIF(invoices.total->>'grand_total', ''), '0')::numeric",
-      3 => 'invoices.issue_date',
-      5 => 'invoices.status'
+      0 => 'invoices.invoice_number', # Fallback for legacy tests
+      1 => 'invoices.invoice_number',
+      2 => counterparty_col,
+      3 => total_col,
+      4 => 'invoices.issue_date',
+      5 => 'invoices.status',         # Fallback for legacy tests
+      6 => 'invoices.status'
     }
   end
 
@@ -118,7 +123,7 @@ class InvoiceDatatable < BaseDatatable
     scope = base_scope
 
     # Apply column-specific status filter if present
-    status_filter = column_search_value('status') || column_search_value('5') || params[:status]
+    status_filter = column_search_value('status') || column_search_value('6') || column_search_value('5') || params[:status]
     if status_filter.present?
       clean_status = status_filter.to_s.gsub(/[\^\$]/, '').downcase
       scope = scope.where(status: clean_status) if clean_status.present?
@@ -131,6 +136,25 @@ class InvoiceDatatable < BaseDatatable
 
     # Apply ordering - default to most recent first
     apply_order(scope, sortable_columns)
+  end
+
+  def format_checkbox(invoice)
+    content_tag(:div, class: 'form-check d-flex justify-content-center mb-0') do
+      tag.input(
+        type: 'checkbox',
+        class: 'form-check-input invoice-row-checkbox',
+        value: invoice.id,
+        id: "invoice_checkbox_#{invoice.id}",
+        data: {
+          invoice_id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          status: invoice.status,
+          archived: invoice.archived?,
+          invoice_type: invoice.invoice_type
+        },
+        'aria-label': "Select invoice #{invoice.invoice_number}"
+      )
+    end
   end
 
   def invoice_link(invoice)

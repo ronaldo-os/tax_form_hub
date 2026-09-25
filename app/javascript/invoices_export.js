@@ -110,7 +110,7 @@ export function exportInvoicesToCsv(tableElement) {
   // Determine active status filter
   let statusFilter = '';
   if (tableApi) {
-    const colSearch = tableApi.column(5).search();
+    const colSearch = tableApi.column(6).search() || tableApi.column(5).search();
     if (colSearch) {
       statusFilter = colSearch.replace(/[\^\$]/g, '').trim();
     }
@@ -123,7 +123,7 @@ export function exportInvoicesToCsv(tableElement) {
   }
 
   // Determine sort order
-  let orderColumn = 3;
+  let orderColumn = 4;
   let orderDir = 'desc';
   if (tableApi) {
     const order = tableApi.order();
