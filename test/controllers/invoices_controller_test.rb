@@ -796,5 +796,20 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to invoices_path(tab: "sales-invoices")
     assert_equal "No invoices selected.", flash[:alert]
   end
+
+  test "pdf_partial returns invoice card HTML with data-invoice-number" do
+    inv = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-PDF-99",
+      status: "sent"
+    )
+
+    get pdf_partial_invoice_url(inv)
+    assert_response :success
+    assert_select "#invoice_card[data-invoice-number='INV-PDF-99']"
+    assert_match /INV-PDF-99/, response.body
+  end
 end
 

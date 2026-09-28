@@ -52,7 +52,7 @@ $(document).on('click', '#download_button', function () {
 
     // Create a temp container for the clone
     const temp = document.createElement('div');
-    temp.classList.add('force-light-mode', 'invoice-card');
+    temp.classList.add('force-light-mode', 'invoice-card', 'invoice-container');
     temp.setAttribute('data-theme', 'light');
     temp.setAttribute('data-bs-theme', 'light');
 
@@ -61,8 +61,8 @@ $(document).on('click', '#download_button', function () {
     temp.style.left = '-9999px';
     temp.style.top = '0';
     temp.style.width = '1000px'; // Set a fixed width for consistent PDF layout
-    temp.style.background = 'white';
-    temp.style.color = 'black';
+    temp.style.backgroundColor = '#ffffff';
+    temp.style.color = '#212529';
     temp.style.opacity = '0';
     temp.style.pointerEvents = 'none';
     temp.appendChild(clone);
@@ -74,7 +74,11 @@ $(document).on('click', '#download_button', function () {
     const content = document.createElement('div');
 
     // Move all children from invoice card to the clean container
-    content.classList.add('invoice-card');
+    content.classList.add('invoice-card', 'force-light-mode', 'invoice-container');
+    content.setAttribute('data-theme', 'light');
+    content.setAttribute('data-bs-theme', 'light');
+    content.style.backgroundColor = '#ffffff';
+    content.style.color = '#212529';
     while (invoice.firstChild) {
         content.appendChild(invoice.firstChild);
     }

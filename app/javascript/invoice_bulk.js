@@ -49,30 +49,64 @@ function renderInvoiceToPdfBlob(invoiceId) {
       url: `/invoices/${invoiceId}/pdf_partial`,
       method: 'GET',
       success: function (html) {
+        const htmlElement = document.documentElement;
+        const wasDark =
+          htmlElement.getAttribute('data-theme') === 'dark' ||
+          htmlElement.getAttribute('data-bs-theme') === 'dark';
+        const prevDataTheme = htmlElement.getAttribute('data-theme');
+        const prevBSTheme = htmlElement.getAttribute('data-bs-theme');
+
+        if (wasDark) {
+          htmlElement.setAttribute('data-theme', 'light');
+          htmlElement.setAttribute('data-bs-theme', 'light');
+        }
+
+        const restoreRootThemeIfNeeded = () => {
+          if (wasDark) {
+            if (prevDataTheme) htmlElement.setAttribute('data-theme', prevDataTheme);
+            else htmlElement.removeAttribute('data-theme');
+
+            if (prevBSTheme) htmlElement.setAttribute('data-bs-theme', prevBSTheme);
+            else htmlElement.removeAttribute('data-bs-theme');
+          }
+        };
+
         const temp = document.createElement('div');
-        temp.classList.add('force-light-mode', 'invoice-card');
+        temp.classList.add('force-light-mode', 'invoice-card', 'invoice-container');
         temp.setAttribute('data-theme', 'light');
         temp.setAttribute('data-bs-theme', 'light');
-        temp.innerHTML = html;
+
+        // Parse HTML safely using DOMParser
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const parsedCard = doc.querySelector('#invoice_card');
+
+        if (!parsedCard) {
+          restoreRootThemeIfNeeded();
+          return reject(new Error(`Invoice card for ID ${invoiceId} not found in partial.`));
+        }
+
+        temp.appendChild(parsedCard);
         temp.style.position = 'absolute';
         temp.style.left = '-9999px';
         temp.style.top = '0';
         temp.style.width = '1000px';
-        temp.style.background = 'white';
-        temp.style.color = 'black';
+        temp.style.backgroundColor = '#ffffff';
+        temp.style.color = '#212529';
         temp.style.opacity = '0';
         temp.style.pointerEvents = 'none';
         document.body.appendChild(temp);
 
-        let invoice = temp.querySelector('#invoice_card');
-        if (!invoice) {
-          if (document.body.contains(temp)) document.body.removeChild(temp);
-          return reject(new Error(`Invoice card for ID ${invoiceId} not found in partial.`));
-        }
+        let invoice = parsedCard;
 
         // Clean container
         const content = document.createElement('div');
-        content.classList.add('invoice-card');
+        content.classList.add('invoice-card', 'force-light-mode', 'invoice-container');
+        content.setAttribute('data-theme', 'light');
+        content.setAttribute('data-bs-theme', 'light');
+        content.style.backgroundColor = '#ffffff';
+        content.style.color = '#212529';
+
         while (invoice.firstChild) {
           content.appendChild(invoice.firstChild);
         }
@@ -170,15 +204,18 @@ function renderInvoiceToPdfBlob(invoiceId) {
               .then(function (pdf) {
                 const blob = pdf.output('blob');
                 if (document.body.contains(temp)) document.body.removeChild(temp);
+                restoreRootThemeIfNeeded();
                 resolve(blob);
               })
               .catch(function (err) {
                 if (document.body.contains(temp)) document.body.removeChild(temp);
+                restoreRootThemeIfNeeded();
                 reject(err);
               });
           })
           .catch((err) => {
             if (document.body.contains(temp)) document.body.removeChild(temp);
+            restoreRootThemeIfNeeded();
             reject(err);
           });
       },
@@ -215,6 +252,8 @@ function getOrCreateZipProgressOverlay() {
   card.className = 'card border-0 shadow-lg p-4 text-center rounded-4 zip-progress-card';
   card.style.maxWidth = '460px';
   card.style.width = '100%';
+  card.style.backgroundColor = '#ffffff';
+  card.style.color = '#212529';
 
   const spinner = document.createElement('div');
   spinner.className = 'spinner-border text-primary mx-auto mb-3';
@@ -303,6 +342,29 @@ export async function exportSelectedInvoicesToZip(tableId) {
   const selectedInvoices = Array.from(selectionMap.values());
   const total = selectedInvoices.length;
 
+  const htmlElement = document.documentElement;
+  const originalDataTheme = htmlElement.getAttribute('data-theme');
+  const originalBSTheme = htmlElement.getAttribute('data-bs-theme');
+
+  // Disable transitions temporarily during bulk export to prevent animation jitter
+  const noTransitionStyle = document.createElement('style');
+  noTransitionStyle.appendChild(
+    document.createTextNode(
+      `* {
+         -webkit-transition: none !important;
+         -moz-transition: none !important;
+         -o-transition: none !important;
+         -ms-transition: none !important;
+         transition: none !important;
+      }`
+    )
+  );
+  document.head.appendChild(noTransitionStyle);
+
+  // Force light mode on document root for high-fidelity light theme PDF export
+  htmlElement.setAttribute('data-theme', 'light');
+  htmlElement.setAttribute('data-bs-theme', 'light');
+
   getOrCreateZipProgressOverlay();
   updateZipProgress(5, `Preparing to generate ${total} ${total === 1 ? 'invoice' : 'invoices'}...`);
 
@@ -315,47 +377,47 @@ export async function exportSelectedInvoicesToZip(tableId) {
   let successCount = 0;
   let failCount = 0;
 
-  for (let i = 0; i < total; i++) {
-    const item = selectedInvoices[i];
-    const itemIndex = i + 1;
-    const itemNumber = item.number || `Invoice_${item.id}`;
-    const cleanNumber = itemNumber.toString().replace(/[^a-zA-Z0-9_\-]/g, '_');
-
-    let filename = `${dateStr}-invoice-${cleanNumber}.pdf`;
-    if (usedFilenames.has(filename)) {
-      filename = `${dateStr}-invoice-${cleanNumber}_${item.id}.pdf`;
-    }
-    usedFilenames.add(filename);
-
-    const progressPct = Math.round(5 + ((i / total) * 80));
-    updateZipProgress(
-      progressPct,
-      `Generating PDF ${itemIndex} of ${total}: ${itemNumber}...`
-    );
-
-    try {
-      const blob = await renderInvoiceToPdfBlob(item.id);
-      zip.file(filename, blob);
-      successCount++;
-    } catch (err) {
-      console.error(`Failed to generate PDF for invoice #${item.id}:`, err);
-      failCount++;
-      zip.file(
-        `ERROR_${cleanNumber}.txt`,
-        `Failed to generate PDF for invoice ${itemNumber} (ID: ${item.id}). Error: ${err.message}`
-      );
-    }
-  }
-
-  if (successCount === 0) {
-    hideZipProgress();
-    showInvoiceToast('Failed to generate any invoice PDFs. Please try again.', 'danger');
-    return;
-  }
-
-  updateZipProgress(90, 'Compressing PDFs into ZIP archive...');
-
   try {
+    for (let i = 0; i < total; i++) {
+      const item = selectedInvoices[i];
+      const itemIndex = i + 1;
+      const itemNumber = item.number || `Invoice_${item.id}`;
+      const cleanNumber = itemNumber.toString().replace(/[^a-zA-Z0-9_\-]/g, '_');
+
+      let filename = `${dateStr}-invoice-${cleanNumber}.pdf`;
+      if (usedFilenames.has(filename)) {
+        filename = `${dateStr}-invoice-${cleanNumber}_${item.id}.pdf`;
+      }
+      usedFilenames.add(filename);
+
+      const progressPct = Math.round(5 + ((i / total) * 80));
+      updateZipProgress(
+        progressPct,
+        `Generating PDF ${itemIndex} of ${total}: ${itemNumber}...`
+      );
+
+      try {
+        const blob = await renderInvoiceToPdfBlob(item.id);
+        zip.file(filename, blob);
+        successCount++;
+      } catch (err) {
+        console.error(`Failed to generate PDF for invoice #${item.id}:`, err);
+        failCount++;
+        zip.file(
+          `ERROR_${cleanNumber}.txt`,
+          `Failed to generate PDF for invoice ${itemNumber} (ID: ${item.id}). Error: ${err.message}`
+        );
+      }
+    }
+
+    if (successCount === 0) {
+      hideZipProgress();
+      showInvoiceToast('Failed to generate any invoice PDFs. Please try again.', 'danger');
+      return;
+    }
+
+    updateZipProgress(90, 'Compressing PDFs into ZIP archive...');
+
     const zipBlob = await zip.generateAsync(
       { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } },
       (metadata) => {
@@ -395,6 +457,19 @@ export async function exportSelectedInvoicesToZip(tableId) {
     console.error('Error generating ZIP archive:', zipErr);
     hideZipProgress();
     showInvoiceToast('Failed to create ZIP file. Please try again.', 'danger');
+  } finally {
+    // Safely restore original themes
+    if (originalDataTheme) htmlElement.setAttribute('data-theme', originalDataTheme);
+    else htmlElement.removeAttribute('data-theme');
+
+    if (originalBSTheme) htmlElement.setAttribute('data-bs-theme', originalBSTheme);
+    else htmlElement.removeAttribute('data-bs-theme');
+
+    // Force repaint and restore transitions
+    if (document.head.contains(noTransitionStyle)) {
+      const _ = window.getComputedStyle(noTransitionStyle).opacity;
+      document.head.removeChild(noTransitionStyle);
+    }
   }
 }
 

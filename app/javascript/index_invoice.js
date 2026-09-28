@@ -1,5 +1,5 @@
 import { updatePdfPreviewScale } from './invoice_preview';
-import { initInvoiceExport } from './invoices_export';
+import { initInvoiceExport, showInvoiceToast } from './invoices_export';
 import { setupInvoiceBulkActions } from './invoice_bulk';
 
 function loadHtml2Pdf() {
@@ -198,6 +198,15 @@ function initInvoicePage() {
         const tableNode = $table[0];
         if (tableNode && !tableNode.dataset.responsiveFixAttached) {
             tableNode.addEventListener('click', function (e) {
+                const downloadBtn = e.target.closest('.download-pdf');
+                if (downloadBtn) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    const invoiceId = downloadBtn.getAttribute('data-id') || $(downloadBtn).data('id');
+                    downloadInvoicePdf(invoiceId, $(downloadBtn));
+                    return;
+                }
+
                 const previewBtn = e.target.closest('.preview-invoice');
                 if (previewBtn) {
                     const isMobileOnly = previewBtn.classList.contains('preview-invoice-mobile');
@@ -212,7 +221,13 @@ function initInvoicePage() {
                     openInvoicePreview(invoiceId);
                     return;
                 }
-                if (e.target.closest('a, button, input, select, textarea, .dropdown-toggle, .dropdown-menu')) {
+
+                // Allow dropdown items, modal triggers, and turbo actions to bubble normally
+                if (e.target.closest('.dropdown-menu, [data-turbo-method], [data-bs-toggle="modal"]')) {
+                    return;
+                }
+
+                if (e.target.closest('a, button, input, select, textarea, .dropdown-toggle')) {
                     e.stopPropagation();
                 }
             }, true);
@@ -332,70 +347,111 @@ function initInvoicePage() {
         openInvoicePreview(invoiceId);
     });
 
-    // PDF Download
-    $(document).off('click.invoiceDownload', '.download-pdf').on('click.invoiceDownload', '.download-pdf', function (e) {
-        e.preventDefault();
-        const invoiceId = $(this).data('id');
-        const $trigger = $(this);
+    // Helper to download invoice as PDF
+    function downloadInvoicePdf(invoiceId, $trigger) {
+        if (!invoiceId) {
+            console.error('Invoice ID is missing for PDF download');
+            return;
+        }
 
-        if ($trigger.data('downloading')) return;
-        $trigger.data('downloading', true);
+        if ($trigger && $trigger.data('downloading')) return;
+        if ($trigger) $trigger.data('downloading', true);
 
-        const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark' || document.documentElement.getAttribute('data-bs-theme') === 'dark';
+        const htmlElement = document.documentElement;
+        const currentDataTheme = htmlElement.getAttribute('data-theme');
+        const currentBSTheme = htmlElement.getAttribute('data-bs-theme');
+
+        // Disable transitions temporarily during PDF capture to avoid rendering glitches
+        const noTransitionStyle = document.createElement('style');
+        noTransitionStyle.appendChild(
+            document.createTextNode(
+                `* {
+                   -webkit-transition: none !important;
+                   -moz-transition: none !important;
+                   -o-transition: none !important;
+                   -ms-transition: none !important;
+                   transition: none !important;
+                }`
+            )
+        );
+        document.head.appendChild(noTransitionStyle);
+
+        // Force light mode on document root for high-fidelity light theme PDF export
+        htmlElement.setAttribute('data-theme', 'light');
+        htmlElement.setAttribute('data-bs-theme', 'light');
 
         let $overlay = $('#pdf-loading-overlay');
         if (!$overlay.length) {
             $overlay = $(`
-                <div id="pdf-loading-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <div class="spinner-border pdf-spinner" style="width: 4rem; height: 4rem;" role="status">
+                <div id="pdf-loading-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0.65); color: #ffffff;">
+                    <div class="spinner-border text-primary pdf-spinner" style="width: 4rem; height: 4rem;" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <h3 class="mt-4 pdf-text">Downloading PDF...</h3>
-                    <p class="pdf-subtext">Please do not close this window.</p>
+                    <p class="pdf-subtext" style="color: #dee2e6;">Please do not close this window.</p>
                 </div>
             `).appendTo('body');
-        }
-
-        if (isDarkMode) {
-            $overlay.css({ 'background-color': '#212529', 'color': '#f8f9fa' });
-            $overlay.find('.pdf-spinner').removeClass('text-primary').addClass('text-light');
-            $overlay.find('.pdf-subtext').css('color', '#adb5bd');
         } else {
-            $overlay.css({ 'background-color': '#ffffff', 'color': '#212529' });
+            $overlay.css({ 'background-color': 'rgba(0, 0, 0, 0.65)', 'color': '#ffffff' });
             $overlay.find('.pdf-spinner').removeClass('text-light').addClass('text-primary');
-            $overlay.find('.pdf-subtext').css('color', '#6c757d');
+            $overlay.find('.pdf-subtext').css('color', '#dee2e6');
         }
 
         $overlay.show();
 
+        const cleanupAndRestore = () => {
+            if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
+            else htmlElement.removeAttribute('data-theme');
+
+            if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
+            else htmlElement.removeAttribute('data-bs-theme');
+
+            if (document.head.contains(noTransitionStyle)) {
+                const _ = window.getComputedStyle(noTransitionStyle).opacity;
+                document.head.removeChild(noTransitionStyle);
+            }
+
+            if ($trigger) $trigger.data('downloading', false);
+            $overlay.hide();
+        };
+
         $.get(`/invoices/${invoiceId}/pdf_partial`, function (html) {
             const temp = document.createElement('div');
-            temp.classList.add('force-light-mode', 'invoice-card');
+            temp.classList.add('force-light-mode', 'invoice-card', 'invoice-container');
             temp.setAttribute('data-theme', 'light');
             temp.setAttribute('data-bs-theme', 'light');
-            temp.innerHTML = html;
+
+            // Parse HTML safely using DOMParser
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const parsedCard = doc.querySelector('#invoice_card');
+
+            if (!parsedCard) {
+                showInvoiceToast('Invoice HTML not found', 'danger');
+                cleanupAndRestore();
+                return;
+            }
+
+            temp.appendChild(parsedCard);
             temp.style.position = 'absolute';
             temp.style.left = '-9999px';
+            temp.style.top = '0';
             temp.style.width = '1000px';
-            temp.style.background = 'white';
-            temp.style.color = 'black';
+            temp.style.backgroundColor = '#ffffff';
+            temp.style.color = '#212529';
             temp.style.opacity = '0';
             temp.style.pointerEvents = 'none';
             document.body.appendChild(temp);
 
-            let invoice = temp.querySelector("#invoice_card");
-
-            if (!invoice) {
-                alert("Invoice HTML not found");
-                if (document.body.contains(temp)) document.body.removeChild(temp);
-                $trigger.data('downloading', false);
-                $('#pdf-loading-overlay').hide();
-                return;
-            }
+            let invoice = parsedCard;
 
             // Create a clean container for the invoice content
             const content = document.createElement('div');
-            content.classList.add('invoice-card');
+            content.classList.add('invoice-card', 'force-light-mode', 'invoice-container');
+            content.setAttribute('data-theme', 'light');
+            content.setAttribute('data-bs-theme', 'light');
+            content.style.backgroundColor = '#ffffff';
+            content.style.color = '#212529';
             while (invoice.firstChild) {
                 content.appendChild(invoice.firstChild);
             }
@@ -459,10 +515,11 @@ function initInvoicePage() {
                 const mm = String(today.getMonth() + 1).padStart(2, '0');
                 const dd = String(today.getDate()).padStart(2, '0');
                 const dateStr = `${yyyy}-${mm}-${dd}`;
+                const invoiceNumber = (parsedCard.getAttribute('data-invoice-number') || invoiceId).toString().replace(/[^a-zA-Z0-9_-]/g, '_');
 
                 const opt = {
                     margin: [9, 9, 9, 9],
-                    filename: `${dateStr}-invoice-${invoiceId}.pdf`,
+                    filename: `${dateStr}-invoice-${invoiceNumber}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: {
                         scale: 1.5,
@@ -487,76 +544,33 @@ function initInvoicePage() {
                     throw new Error('html2pdf is not available on the page');
                 }
 
-                const htmlElement = document.documentElement;
-                const currentDataTheme = htmlElement.getAttribute('data-theme');
-                const currentBSTheme = htmlElement.getAttribute('data-bs-theme');
-
-                // Disable transitions temporarily to prevent animation during PDF capture
-                const noTransitionStyle = document.createElement('style');
-                noTransitionStyle.appendChild(
-                    document.createTextNode(
-                        `* {
-                           -webkit-transition: none !important;
-                           -moz-transition: none !important;
-                           -o-transition: none !important;
-                           -ms-transition: none !important;
-                           transition: none !important;
-                        }`
-                    )
-                );
-                document.head.appendChild(noTransitionStyle);
-
-                // Force light mode temporarily for high-fidelity capture
-                htmlElement.setAttribute('data-theme', 'light');
-                htmlElement.setAttribute('data-bs-theme', 'light');
-
                 html2pdf().set(opt).from(invoice).save().then(() => {
-                    // Restore themes
-                    if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
-                    else htmlElement.removeAttribute('data-theme');
-
-                    if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
-                    else htmlElement.removeAttribute('data-bs-theme');
-
-                    // Force repaint and restore transitions
-                    const _ = window.getComputedStyle(noTransitionStyle).opacity;
-                    if (document.head.contains(noTransitionStyle)) document.head.removeChild(noTransitionStyle);
-
-                    // Clean up
                     if (document.body.contains(temp)) document.body.removeChild(temp);
+                    cleanupAndRestore();
                 }).catch((error) => {
                     console.error('Error generating PDF:', error);
-
-                    // Restore themes
-                    if (currentDataTheme) htmlElement.setAttribute('data-theme', currentDataTheme);
-                    else htmlElement.removeAttribute('data-theme');
-
-                    if (currentBSTheme) htmlElement.setAttribute('data-bs-theme', currentBSTheme);
-                    else htmlElement.removeAttribute('data-bs-theme');
-
-                    // Force repaint and restore transitions
-                    const _ = window.getComputedStyle(noTransitionStyle).opacity;
-                    if (document.head.contains(noTransitionStyle)) document.head.removeChild(noTransitionStyle);
-
-                    alert('Failed to generate PDF. Please check the console for details and try again.');
                     if (document.body.contains(temp)) document.body.removeChild(temp);
-                }).finally(() => {
-                    $trigger.data('downloading', false);
-                    $('#pdf-loading-overlay').hide();
+                    cleanupAndRestore();
+                    showInvoiceToast('Failed to generate PDF. Please try again.', 'danger');
                 });
             }).catch((error) => {
                 console.error('Error preparing PDF:', error);
-                alert('Failed to prepare PDF. Please try again.');
                 if (document.body.contains(temp)) document.body.removeChild(temp);
-                $trigger.data('downloading', false);
-                $('#pdf-loading-overlay').hide();
+                cleanupAndRestore();
+                showInvoiceToast('Failed to prepare PDF. Please try again.', 'danger');
             });
         }).fail(function (xhr, status, error) {
             console.error('Error fetching invoice:', error);
-            alert('Failed to load invoice data. Please try again.');
-            $trigger.data('downloading', false);
-            $('#pdf-loading-overlay').hide();
+            cleanupAndRestore();
+            showInvoiceToast('Failed to load invoice data. Please try again.', 'danger');
         });
+    }
+
+    // PDF Download delegated listener for elements outside the table
+    $(document).off('click.invoiceDownload', '.download-pdf').on('click.invoiceDownload', '.download-pdf', function (e) {
+        e.preventDefault();
+        const invoiceId = $(this).data('id') || $(this).attr('data-id');
+        downloadInvoicePdf(invoiceId, $(this));
     });
 
     // Card filter

@@ -78,35 +78,237 @@ h6 {
 }
 
 /* Helper to force light mode context for PDF generation */
-.force-light-mode {
+.force-light-mode,
+.force-light-mode.invoice-container,
+.force-light-mode.invoice-card,
+.force-light-mode#invoice_card,
+.force-light-mode .invoice-container,
+.force-light-mode .invoice-card,
+[data-theme="dark"] .force-light-mode,
+[data-bs-theme="dark"] .force-light-mode,
+[data-theme="dark"] .force-light-mode.invoice-container,
+[data-bs-theme="dark"] .force-light-mode.invoice-container,
+[data-theme="dark"] .force-light-mode.invoice-card,
+[data-bs-theme="dark"] .force-light-mode.invoice-card,
+[data-theme="dark"] .force-light-mode#invoice_card,
+[data-bs-theme="dark"] .force-light-mode#invoice_card,
+[data-theme="dark"] .force-light-mode .invoice-container,
+[data-bs-theme="dark"] .force-light-mode .invoice-container,
+[data-theme="dark"] .force-light-mode .invoice-card,
+[data-bs-theme="dark"] .force-light-mode .invoice-card {
   --app-clr: rgb(240 240 240) !important;
-  --bg-body: rgb(240, 240, 240) !important;
+  --bg-body: #ffffff !important;
   --bg-sidebar: #ffffff !important;
   --bg-secondary: #f8f9fa !important;
   --bg-tertiary: #f1f3f5 !important;
   --text-main: #212529 !important;
+  --text-body: #212529 !important;
   --text-sidebar: #333333 !important;
-  --border-color: #d1d1d1 !important;
+  --border-color: #dee2e6 !important;
   --card-bg: #ffffff !important;
   --input-bg: #ffffff !important;
   --input-text: #212529 !important;
   --table-bg: #ffffff !important;
-  --table-border-color: #ffffff !important;
+  --table-border-color: #dee2e6 !important;
   --modal-content-bg: #ffffff !important;
   --modal-content-color: #212529 !important;
   --text-muted: #6c757d !important;
-  background-color: var(--bg-body) !important;
-  color: var(--text-main) !important;
+  --text-secondary: #6c757d !important;
+  --bs-body-bg: #ffffff !important;
+  --bs-body-color: #212529 !important;
+  --bs-emphasis-color: #000000 !important;
+  --bs-secondary-color: #6c757d !important;
+  --bs-tertiary-color: #6c757d !important;
+  --bs-border-color: #dee2e6 !important;
+  --bs-border-color-translucent: rgba(0, 0, 0, 0.12) !important;
+  --bs-card-bg: #ffffff !important;
+  --bs-card-color: #212529 !important;
+  --bs-table-bg: #ffffff !important;
+  --bs-table-color: #212529 !important;
+  background-color: #ffffff !important;
+  background: #ffffff !important;
+  color: #212529 !important;
 }
 
-.force-light-mode .card {
-  background-color: var(--card-bg) !important;
-  color: var(--text-main) !important;
-  border-color: #ededed !important;
+.force-light-mode .card,
+[data-theme="dark"] .force-light-mode .card,
+[data-bs-theme="dark"] .force-light-mode .card {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border-color: #dee2e6 !important;
 }
 
-.force-light-mode .text-muted {
-  color: var(--text-muted) !important;
+.force-light-mode .text-dark,
+.force-light-mode .text-body,
+.force-light-mode h1,
+.force-light-mode h2,
+.force-light-mode h3,
+.force-light-mode h4,
+.force-light-mode h5,
+.force-light-mode h6,
+.force-light-mode p,
+.force-light-mode span:not(.badge),
+.force-light-mode strong,
+.force-light-mode b,
+[data-theme="dark"] .force-light-mode .text-dark,
+[data-bs-theme="dark"] .force-light-mode .text-dark,
+[data-theme="dark"] .force-light-mode .text-body,
+[data-bs-theme="dark"] .force-light-mode .text-body,
+[data-theme="dark"] .force-light-mode h1,
+[data-bs-theme="dark"] .force-light-mode h1,
+[data-theme="dark"] .force-light-mode h2,
+[data-bs-theme="dark"] .force-light-mode h2,
+[data-theme="dark"] .force-light-mode h3,
+[data-bs-theme="dark"] .force-light-mode h3,
+[data-theme="dark"] .force-light-mode h4,
+[data-bs-theme="dark"] .force-light-mode h4,
+[data-theme="dark"] .force-light-mode h5,
+[data-bs-theme="dark"] .force-light-mode h5,
+[data-theme="dark"] .force-light-mode h6,
+[data-bs-theme="dark"] .force-light-mode h6,
+[data-theme="dark"] .force-light-mode strong,
+[data-bs-theme="dark"] .force-light-mode strong {
+  color: #212529 !important;
+}
+
+.force-light-mode .text-secondary,
+.force-light-mode .text-muted,
+[data-theme="dark"] .force-light-mode .text-secondary,
+[data-bs-theme="dark"] .force-light-mode .text-secondary,
+[data-theme="dark"] .force-light-mode .text-muted,
+[data-bs-theme="dark"] .force-light-mode .text-muted {
+  color: #6c757d !important;
+}
+
+.force-light-mode .border,
+.force-light-mode .border-bottom,
+.force-light-mode .border-top,
+.force-light-mode .border-light,
+[data-theme="dark"] .force-light-mode .border,
+[data-bs-theme="dark"] .force-light-mode .border,
+[data-theme="dark"] .force-light-mode .border-bottom,
+[data-bs-theme="dark"] .force-light-mode .border-bottom,
+[data-theme="dark"] .force-light-mode .border-top,
+[data-bs-theme="dark"] .force-light-mode .border-top,
+[data-theme="dark"] .force-light-mode .border-light,
+[data-bs-theme="dark"] .force-light-mode .border-light {
+  border-color: #dee2e6 !important;
+}
+
+.force-light-mode .table,
+.force-light-mode table,
+.force-light-mode .table > :not(caption) > * > *,
+[data-theme="dark"] .force-light-mode .table,
+[data-bs-theme="dark"] .force-light-mode .table,
+[data-theme="dark"] .force-light-mode table,
+[data-bs-theme="dark"] .force-light-mode table,
+[data-theme="dark"] .force-light-mode .table > :not(caption) > * > *,
+[data-bs-theme="dark"] .force-light-mode .table > :not(caption) > * > * {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border-color: #dee2e6 !important;
+}
+
+.force-light-mode .attachment-item,
+.force-light-mode .attachment-card,
+[data-theme="dark"] .force-light-mode .attachment-item,
+[data-bs-theme="dark"] .force-light-mode .attachment-item,
+[data-theme="dark"] .force-light-mode .attachment-card,
+[data-bs-theme="dark"] .force-light-mode .attachment-card {
+  background-color: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+  color: #212529 !important;
+}
+
+/* Force light adjustments badges */
+.force-light-mode .adj-badge-discount,
+[data-theme="dark"] .force-light-mode .adj-badge-discount,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-discount {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+.force-light-mode .adj-badge-charge,
+.force-light-mode .adj-badge-monthly_charge,
+[data-theme="dark"] .force-light-mode .adj-badge-charge,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-charge,
+[data-theme="dark"] .force-light-mode .adj-badge-monthly_charge,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-monthly_charge {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+.force-light-mode .adj-badge-fixedtax,
+.force-light-mode .adj-badge-tax,
+.force-light-mode .adj-badge-fixed_tax,
+[data-theme="dark"] .force-light-mode .adj-badge-fixedtax,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-fixedtax,
+[data-theme="dark"] .force-light-mode .adj-badge-tax,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-tax,
+[data-theme="dark"] .force-light-mode .adj-badge-fixed_tax,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-fixed_tax {
+  background-color: #eef2ff !important;
+  color: #4338ca !important;
+  border-color: #c7d2fe !important;
+}
+
+.force-light-mode .adj-badge-default,
+.force-light-mode .adj-badge-fee,
+.force-light-mode .adj-badge-adjustment,
+[data-theme="dark"] .force-light-mode .adj-badge-default,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-default,
+[data-theme="dark"] .force-light-mode .adj-badge-fee,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-fee,
+[data-theme="dark"] .force-light-mode .adj-badge-adjustment,
+[data-bs-theme="dark"] .force-light-mode .adj-badge-adjustment {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Force light status badges */
+.force-light-mode .bg-primary-subtle,
+[data-theme="dark"] .force-light-mode .bg-primary-subtle,
+[data-bs-theme="dark"] .force-light-mode .bg-primary-subtle {
+  background-color: #cfe2ff !important;
+  color: #084298 !important;
+}
+
+.force-light-mode .bg-success-subtle,
+[data-theme="dark"] .force-light-mode .bg-success-subtle,
+[data-bs-theme="dark"] .force-light-mode .bg-success-subtle {
+  background-color: #d1e7dd !important;
+  color: #0f5132 !important;
+}
+
+.force-light-mode .bg-danger-subtle,
+[data-theme="dark"] .force-light-mode .bg-danger-subtle,
+[data-bs-theme="dark"] .force-light-mode .bg-danger-subtle {
+  background-color: #f8d7da !important;
+  color: #842029 !important;
+}
+
+.force-light-mode .bg-info-subtle,
+[data-theme="dark"] .force-light-mode .bg-info-subtle,
+[data-bs-theme="dark"] .force-light-mode .bg-info-subtle {
+  background-color: #cff4fc !important;
+  color: #055160 !important;
+}
+
+.force-light-mode .bg-secondary-subtle,
+[data-theme="dark"] .force-light-mode .bg-secondary-subtle,
+[data-bs-theme="dark"] .force-light-mode .bg-secondary-subtle {
+  background-color: #e2e3e5 !important;
+  color: #41464b !important;
+}
+
+.force-light-mode .bg-light,
+[data-theme="dark"] .force-light-mode .bg-light,
+[data-bs-theme="dark"] .force-light-mode .bg-light {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
 }
 
 [data-theme="dark"] .bg-body-tertiary {
@@ -853,6 +1055,7 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
   margin-top: 0 !important;
   margin-bottom: 0.5rem !important;
   align-items: center;
+  padding-top: 0.25rem !important;
 }
 
 .dataTables_wrapper .row {
@@ -939,6 +1142,12 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 
   .invoice-table-card .card-body {
     padding: 1rem !important;
+  }
+
+  /* When bulk action bar is shown on desktop, push it down so it does not overlap the absolute card-header tabs */
+  .invoice-table-card .invoice-bulk-bar:not(.d-none) {
+    margin-top: 2.75rem !important;
+    margin-bottom: 1.25rem !important;
   }
 
   .invoice-table-card .dataTables_wrapper > .row:first-child {
@@ -1485,9 +1694,11 @@ a.btn:not(.d-inline-flex):not(.d-flex) > svg:last-child:not(:only-child),
 }
 
 /* Bulk Actions Bar & Dropdown Menu Styling */
-.invoice-bulk-bar {
+.invoice-bulk-bar,
+.tax-submissions-bulk-bar {
   position: relative;
   z-index: 1040 !important;
+  margin-bottom: 1.25rem !important;
 }
 
 .invoice-bulk-bar .dropdown {
