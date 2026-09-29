@@ -19,21 +19,63 @@
   </div>
 
 
+  <!-- Bulk Action Bar -->
+  <div class="card border-0 rounded-3 mb-3 d-none locations-bulk-bar shadow-sm" id="bulk_action_bar_location_table">
+    <div class="card-body py-2 px-3">
+      <%= form_with url: bulk_action_locations_path, method: :post, class: "bulk-locations-form", id: "bulk_form_location_table" do |f| %>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div class="d-flex align-items-center gap-2 gap-sm-3">
+            <div class="form-check mb-0 d-flex align-items-center">
+              <input class="form-check-input me-2 master-bulk-checkbox location-master-checkbox" type="checkbox" id="master_bulk_location_table" data-table-id="location-table">
+              <label class="form-check-label fw-semibold fs-7 text-main" for="master_bulk_location_table">
+                Select All
+              </label>
+            </div>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 fs-8 fw-semibold selected-count-badge">
+              <span class="selected-count">0</span> selected
+            </span>
+          </div>
+
+          <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end align-items-center">
+            <button type="submit" name="bulk_action" value="destroy" class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-action-btn" data-turbo-confirm="Are you sure you want to delete the selected locations?">
+              <i class="fa-solid fa-trash"></i>
+              <span>Delete</span>
+            </button>
+
+            <button type="button" class="btn btn-sm btn-link text-muted p-1 text-decoration-none clear-selection-btn" data-table-id="location-table" title="Clear selection">
+              <i class="fa-solid fa-xmark fs-6"></i>
+            </button>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
   <div class="card shadow-sm border-0 rounded-3">
     <div class="card-body p-2.5">
       <table class="table table-hover table_text_centered align-middle table-compact nowrap w-100" id="location-table">
         <thead class="table-light">
           <tr>
+            <th class="text-center no-sort" style="width: 40px;" data-orderable="false">
+              <div class="form-check d-flex justify-content-center mb-0">
+                <input class="form-check-input table-header-checkbox" type="checkbox" id="header_checkbox_location_table" data-table-id="location-table" title="Select all on this page">
+              </div>
+            </th>
             <th>Type</th>
             <th>Location Name</th>
             <th>Address</th>
             <th>Company Name</th>
-            <th>Actions</th>
+            <th class="text-center no-sort" data-orderable="false" style="width: 80px;">Actions</th>
           </tr>
         </thead>
         <tbody>
           <% @locations.each do |location| %>
-            <tr>
+            <tr data-location-id="<%= location.id %>">
+              <td class="text-center">
+                <div class="form-check d-flex justify-content-center mb-0">
+                  <input class="form-check-input location-row-checkbox" type="checkbox" name="location_ids[]" value="<%= location.id %>" data-table-id="location-table" title="Select <%= location.location_name %>">
+                </div>
+              </td>
               <td>
                 <span class="status-pill status-pill-primary"><%= location.location_type %></span>
               </td>

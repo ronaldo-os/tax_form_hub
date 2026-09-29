@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
-  resources :locations
+  resources :locations do
+    collection do
+      post :bulk_action
+    end
+  end
   resources :networks, only: [:index, :create, :destroy]
   get "invoices/index"
   resources :tax_rates, only: [:create, :update, :destroy]

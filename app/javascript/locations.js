@@ -1,5 +1,5 @@
 function fixEmptyRowColspan(api) {
-    const table = api.table().node();
+    const table = api.table ? api.table().node() : api;
     const $emptyCell = $(table).find('td.dataTables_empty');
     if ($emptyCell.length) {
         const totalCols = $(table).find('thead tr:first-child th').length;
@@ -9,13 +9,178 @@ function fixEmptyRowColspan(api) {
     }
 }
 
+function setupLocationsBulkActions(tableApi) {
+    if (!tableApi) return;
+
+    const tableNode = tableApi.table().node();
+    const $table = $(tableNode);
+    const bulkBar = document.getElementById('bulk_action_bar_location_table');
+    const bulkForm = document.getElementById('bulk_form_location_table');
+    const headerCheckbox = document.getElementById('header_checkbox_location_table');
+    const masterBulkCheckbox = document.getElementById('master_bulk_location_table');
+
+    if (!bulkBar || !bulkForm) return;
+
+    const selectedIds = new Set();
+
+    function updateBulkBar() {
+        const count = selectedIds.size;
+        const countSpan = bulkBar.querySelector('.selected-count');
+        if (countSpan) {
+            countSpan.textContent = count.toString();
+        }
+
+        if (count > 0) {
+            bulkBar.classList.remove('d-none');
+        } else {
+            bulkBar.classList.add('d-none');
+        }
+
+        // Synchronize checkboxes in current DOM page with selectedIds
+        const allRowNodes = tableApi.rows().nodes();
+        $(allRowNodes).each(function () {
+            const $cb = $(this).find('.location-row-checkbox');
+            if ($cb.length) {
+                const locId = $cb.val();
+                const isSelected = selectedIds.has(locId);
+                $cb.prop('checked', isSelected);
+                $(this).toggleClass('row-selected table-active', isSelected);
+            }
+        });
+
+        // Determine if all visible (under current search/filter) are selected
+        const activeRows = tableApi.rows({ search: 'applied' }).nodes();
+        let activeTotal = 0;
+        let activeSelected = 0;
+        $(activeRows).each(function () {
+            const $cb = $(this).find('.location-row-checkbox');
+            if ($cb.length) {
+                activeTotal++;
+                if (selectedIds.has($cb.val())) {
+                    activeSelected++;
+                }
+            }
+        });
+
+        const isAllSelected = activeTotal > 0 && activeSelected === activeTotal;
+        const isIndeterminate = activeSelected > 0 && activeSelected < activeTotal;
+
+        if (headerCheckbox) {
+            headerCheckbox.checked = isAllSelected;
+            headerCheckbox.indeterminate = isIndeterminate;
+        }
+
+        if (masterBulkCheckbox) {
+            masterBulkCheckbox.checked = isAllSelected;
+            masterBulkCheckbox.indeterminate = isIndeterminate;
+        }
+    }
+
+    function toggleAllVisible(isChecked) {
+        const activeRows = tableApi.rows({ search: 'applied' }).nodes();
+        $(activeRows).each(function () {
+            const $cb = $(this).find('.location-row-checkbox');
+            if ($cb.length) {
+                const locId = $cb.val();
+                if (isChecked) {
+                    selectedIds.add(locId);
+                } else {
+                    selectedIds.delete(locId);
+                }
+            }
+        });
+        updateBulkBar();
+    }
+
+    // Header checkbox toggle
+    if (headerCheckbox && !headerCheckbox.dataset.bulkBound) {
+        headerCheckbox.dataset.bulkBound = 'true';
+        headerCheckbox.addEventListener('change', function () {
+            toggleAllVisible(this.checked);
+        });
+    }
+
+    // Master checkbox in bulk bar toggle
+    if (masterBulkCheckbox && !masterBulkCheckbox.dataset.bulkBound) {
+        masterBulkCheckbox.dataset.bulkBound = 'true';
+        masterBulkCheckbox.addEventListener('change', function () {
+            toggleAllVisible(this.checked);
+        });
+    }
+
+    // Row checkbox change (delegated to table node for dynamic / paginated rows)
+    $table.off('change.locationCheckbox', '.location-row-checkbox').on('change.locationCheckbox', '.location-row-checkbox', function () {
+        const locId = this.value;
+        if (this.checked) {
+            selectedIds.add(locId);
+        } else {
+            selectedIds.delete(locId);
+        }
+        updateBulkBar();
+    });
+
+    // Row click toggle: clicking row (outside buttons/links/dropdowns/inputs) toggles checkbox
+    $table.off('click.locationRow', 'tbody tr').on('click.locationRow', 'tbody tr', function (e) {
+        if ($(e.target).closest('a, button, input, select, textarea, .dropdown, label').length) return;
+        const $cb = $(this).find('.location-row-checkbox');
+        if ($cb.length) {
+            $cb.prop('checked', !$cb.prop('checked')).trigger('change');
+        }
+    });
+
+    // Clear selection button
+    const clearBtn = bulkBar.querySelector('.clear-selection-btn');
+    if (clearBtn && !clearBtn.dataset.bulkBound) {
+        clearBtn.dataset.bulkBound = 'true';
+        clearBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            selectedIds.clear();
+            updateBulkBar();
+        });
+    }
+
+    // Form submission: inject hidden inputs for all selected locations across all pages
+    if (bulkForm && !bulkForm.dataset.bulkFormBound) {
+        bulkForm.dataset.bulkFormBound = 'true';
+        bulkForm.addEventListener('submit', function (e) {
+            // Remove previously appended hidden inputs
+            bulkForm.querySelectorAll('input[name="location_ids[]"]').forEach((el) => el.remove());
+
+            if (selectedIds.size === 0) {
+                e.preventDefault();
+                return;
+            }
+
+            selectedIds.forEach((locId) => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.setAttribute('type', 'hidden');
+                hiddenInput.setAttribute('name', 'location_ids[]');
+                hiddenInput.setAttribute('value', locId.toString());
+                bulkForm.appendChild(hiddenInput);
+            });
+        });
+    }
+
+    // When DataTable is redrawn (page change, search, sort), re-synchronize state
+    tableApi.off('draw.locationBulk').on('draw.locationBulk', function () {
+        updateBulkBar();
+    });
+
+    // Initial state check
+    updateBulkBar();
+}
+
 function initLocationsPage() {
-    if (!window.location.pathname.includes("/locations")) return;
+    if (!window.location.pathname.includes("/locations") || $('#location-table').length === 0) return;
 
     const $table = $('#location-table').DataTable({
         responsive: true,
         autoWidth: false,
         destroy: true,
+        order: [[1, 'asc']],
+        columnDefs: [
+            { orderable: false, targets: [0, -1] }
+        ],
         pageLength: 25,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         language: {
@@ -106,6 +271,8 @@ function initLocationsPage() {
 
                 $lengthDiv.append($companySelect);
             }
+
+            setupLocationsBulkActions(api);
         },
         drawCallback: function () {
             const api = this.api();
@@ -163,13 +330,17 @@ function initLocationsPage() {
     // Form success (ajax:success for Turbo / Rails UJS)
     $form.off('ajax:success').on('ajax:success', function () {
         $('#locationModal').modal('hide');
-        $table.ajax.reload(null, false);
+        if ($table.ajax && typeof $table.ajax.reload === 'function') {
+            $table.ajax.reload(null, false);
+        }
         this.reset();
     });
 
     // Form error
     $form.off('ajax:error').on('ajax:error', function () {
-        showFlashMessage("Failed to save location.", "danger");
+        if (typeof showFlashMessage === 'function') {
+            showFlashMessage("Failed to save location.", "danger");
+        }
     });
 }
 
