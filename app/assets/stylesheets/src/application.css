@@ -1696,7 +1696,8 @@ a.btn:not(.d-inline-flex):not(.d-flex) > svg:last-child:not(:only-child),
 /* Bulk Actions Bar & Dropdown Menu Styling */
 .invoice-bulk-bar,
 .tax-submissions-bulk-bar,
-.locations-bulk-bar {
+.locations-bulk-bar,
+.subscriptions-bulk-bar {
   position: relative;
   z-index: 1040 !important;
   margin-bottom: 1.25rem !important;

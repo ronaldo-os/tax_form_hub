@@ -217,4 +217,175 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1.desktop-page-title", text: /Subscriptions/
     assert_select "h1.mobile-page-title", text: /Subscriptions/
   end
+
+  test "subscriptions index page renders bulk action bar and row checkboxes for active subscriptions" do
+    sign_in @user_seller
+
+    get subscriptions_url
+    assert_response :success
+
+    assert_select "#bulk_action_bar_salesActiveSubscriptionsTable"
+    assert_select "form.bulk-subscriptions-form[action='#{bulk_action_subscriptions_path}']"
+    assert_select "input.subscription-master-checkbox[data-table-id='salesActiveSubscriptionsTable']"
+    assert_select "input.table-header-checkbox[data-table-id='salesActiveSubscriptionsTable']"
+    assert_select "input.subscription-row-checkbox[value='#{@sales_subscription.id}']"
+    assert_select "button[name='bulk_action'][value='cancel']"
+  end
+
+  test "subscriptions index page renders bulk action bar and row checkboxes for active purchase subscriptions" do
+    sign_in @user_buyer
+
+    get subscriptions_url, params: { tab: "purchases" }
+    assert_response :success
+
+    assert_select "#bulk_action_bar_purchasesActiveSubscriptionsTable"
+    assert_select "input.subscription-row-checkbox[value='#{@purchase_subscription.id}']"
+  end
+
+  test "bulk cancel active sales subscriptions successfully cancels them" do
+    sales_sub2 = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "SUB-002",
+      currency: "USD",
+      line_items_data: [
+        {
+          "description" => "Team Subscription Plan",
+          "quantity" => "1",
+          "price" => "100.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "billing_cycle" => "monthly",
+              "start_date" => (Date.current - 1.month).to_s,
+              "end_date" => (Date.current + 11.months).to_s
+            }
+          }
+        }
+      ],
+      total: { "grand_total" => "100.00" }
+    )
+
+    sign_in @user_seller
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [@sales_subscription.id, sales_sub2.id],
+      bulk_action: "cancel",
+      tab: "sales"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "sales")
+    assert_equal "Successfully cancelled 2 subscriptions.", flash[:notice]
+
+    @sales_subscription.reload
+    sales_sub2.reload
+
+    assert @sales_subscription.archived? || @sales_subscription.subscription_cancelled?
+    assert sales_sub2.archived? || sales_sub2.subscription_cancelled?
+  end
+
+  test "bulk cancel active purchase subscriptions successfully cancels them" do
+    purchase_sub2 = Invoice.create!(
+      user: @user_buyer,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "SUB-003",
+      currency: "USD",
+      line_items_data: [
+        {
+          "description" => "Developer Plan",
+          "quantity" => "1",
+          "price" => "50.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "billing_cycle" => "monthly",
+              "start_date" => (Date.current - 1.month).to_s,
+              "end_date" => (Date.current + 11.months).to_s
+            }
+          }
+        }
+      ],
+      total: { "grand_total" => "50.00" }
+    )
+
+    sign_in @user_buyer
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [@purchase_subscription.id, purchase_sub2.id],
+      bulk_action: "cancel",
+      tab: "purchases"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "purchases")
+    assert_equal "Successfully cancelled 2 subscriptions.", flash[:notice]
+
+    @purchase_subscription.reload
+    purchase_sub2.reload
+
+    assert @purchase_subscription.archived? || @purchase_subscription.subscription_cancelled?
+    assert purchase_sub2.archived? || purchase_sub2.subscription_cancelled?
+  end
+
+  test "bulk action returns alert when no subscriptions are selected" do
+    sign_in @user_seller
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [],
+      bulk_action: "cancel",
+      tab: "sales"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "sales")
+    assert_equal "No subscriptions selected.", flash[:alert]
+  end
+
+  test "bulk action enforces tenant isolation and ignores subscriptions of other users" do
+    sign_in @user_unrelated
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [@sales_subscription.id],
+      bulk_action: "cancel",
+      tab: "sales"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "sales")
+    assert_equal "No authorized subscriptions found to perform this action.", flash[:alert]
+
+    @sales_subscription.reload
+    assert @sales_subscription.subscription_active?
+  end
+
+  test "bulk action handles invalid action type gracefully" do
+    sign_in @user_seller
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [@sales_subscription.id],
+      bulk_action: "invalid_action",
+      tab: "sales"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "sales")
+    assert_equal "Invalid action.", flash[:alert]
+  end
+
+  test "unauthenticated bulk action redirects" do
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [@sales_subscription.id],
+      bulk_action: "cancel"
+    }
+    assert_response :redirect
+  end
 end

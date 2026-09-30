@@ -1645,7 +1645,8 @@
 
 .invoice-bulk-bar,
 .tax-submissions-bulk-bar,
-.locations-bulk-bar {
+.locations-bulk-bar,
+.subscriptions-bulk-bar {
   background-color: var(--bg-tertiary, #f1f3f5) !important;
   border: 1px solid var(--border-color, #d1d1d1) !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
@@ -1756,7 +1757,9 @@
 [data-theme="dark"] .tax-submissions-bulk-bar,
 [data-bs-theme="dark"] .tax-submissions-bulk-bar,
 [data-theme="dark"] .locations-bulk-bar,
-[data-bs-theme="dark"] .locations-bulk-bar {
+[data-bs-theme="dark"] .locations-bulk-bar,
+[data-theme="dark"] .subscriptions-bulk-bar,
+[data-bs-theme="dark"] .subscriptions-bulk-bar {
   background-color: var(--bg-secondary, #25292d) !important;
   border: 1px solid var(--border-color, #495057) !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
@@ -1775,7 +1778,8 @@
 
 .invoice-bulk-bar .selected-count-badge,
 .tax-submissions-bulk-bar .selected-count-badge,
-.locations-bulk-bar .selected-count-badge {
+.locations-bulk-bar .selected-count-badge,
+.subscriptions-bulk-bar .selected-count-badge {
   font-size: 0.8125rem;
   letter-spacing: 0.01em;
   background-color: rgba(0, 174, 255, 0.12) !important;
@@ -1785,7 +1789,8 @@
 
 [data-theme="dark"] .invoice-bulk-bar .selected-count-badge,
 [data-theme="dark"] .tax-submissions-bulk-bar .selected-count-badge,
-[data-theme="dark"] .locations-bulk-bar .selected-count-badge {
+[data-theme="dark"] .locations-bulk-bar .selected-count-badge,
+[data-theme="dark"] .subscriptions-bulk-bar .selected-count-badge {
   background-color: rgba(32, 185, 255, 0.18) !important;
   color: #38bdf8 !important;
   border-color: rgba(56, 189, 248, 0.3) !important;
@@ -1793,7 +1798,8 @@
 
 .invoice-bulk-bar .bulk-action-btn,
 .tax-submissions-bulk-bar .bulk-action-btn,
-.locations-bulk-bar .bulk-action-btn {
+.locations-bulk-bar .bulk-action-btn,
+.subscriptions-bulk-bar .bulk-action-btn {
   font-size: 0.8125rem;
   min-height: 32px;
   display: inline-flex;
@@ -1803,7 +1809,8 @@
 
 .invoice-bulk-bar .clear-selection-btn,
 .tax-submissions-bulk-bar .clear-selection-btn,
-.locations-bulk-bar .clear-selection-btn {
+.locations-bulk-bar .clear-selection-btn,
+.subscriptions-bulk-bar .clear-selection-btn {
   width: 30px;
   height: 30px;
   display: inline-flex;
@@ -1815,14 +1822,16 @@
 
 .invoice-bulk-bar .clear-selection-btn:hover,
 .tax-submissions-bulk-bar .clear-selection-btn:hover,
-.locations-bulk-bar .clear-selection-btn:hover {
+.locations-bulk-bar .clear-selection-btn:hover,
+.subscriptions-bulk-bar .clear-selection-btn:hover {
   background-color: rgba(0, 0, 0, 0.08);
   color: var(--text-main) !important;
 }
 
 [data-theme="dark"] .invoice-bulk-bar .clear-selection-btn:hover,
 [data-theme="dark"] .tax-submissions-bulk-bar .clear-selection-btn:hover,
-[data-theme="dark"] .locations-bulk-bar .clear-selection-btn:hover {
+[data-theme="dark"] .locations-bulk-bar .clear-selection-btn:hover,
+[data-theme="dark"] .subscriptions-bulk-bar .clear-selection-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff !important;
 }
@@ -1831,6 +1840,7 @@
 .invoice-row-checkbox,
 .submission-row-checkbox,
 .location-row-checkbox,
+.subscription-row-checkbox,
 .table-header-checkbox,
 .master-bulk-checkbox {
   cursor: pointer;
@@ -1844,6 +1854,7 @@
 .invoice-row-checkbox:hover,
 .submission-row-checkbox:hover,
 .location-row-checkbox:hover,
+.subscription-row-checkbox:hover,
 .table-header-checkbox:hover,
 .master-bulk-checkbox:hover {
   border-color: var(--main-color, #00aeff);
@@ -1852,6 +1863,7 @@
 .invoice-row-checkbox:checked,
 .submission-row-checkbox:checked,
 .location-row-checkbox:checked,
+.subscription-row-checkbox:checked,
 .table-header-checkbox:checked,
 .master-bulk-checkbox:checked {
   background-color: var(--main-color, #00aeff);
@@ -1861,6 +1873,7 @@
 /* Row highlighting when selected */
 .invoice-datatable tbody tr.row-selected,
 .submissionsTable tbody tr.row-selected,
+.subscription-table tbody tr.row-selected,
 table.dataTable tbody tr.row-selected,
 .table tbody tr.row-selected {
   background-color: rgba(0, 174, 255, 0.08) !important;
@@ -1868,6 +1881,7 @@ table.dataTable tbody tr.row-selected,
 
 [data-theme="dark"] .invoice-datatable tbody tr.row-selected,
 [data-theme="dark"] .submissionsTable tbody tr.row-selected,
+[data-theme="dark"] .subscription-table tbody tr.row-selected,
 [data-theme="dark"] table.dataTable tbody tr.row-selected,
 [data-theme="dark"] .table tbody tr.row-selected {
   background-color: rgba(32, 185, 255, 0.16) !important;
@@ -1893,7 +1907,8 @@ table.dataTable tbody tr.row-selected,
 @media (max-width: 575.98px) {
   .tax-submissions-bulk-bar,
   .invoice-bulk-bar,
-  .locations-bulk-bar {
+  .locations-bulk-bar,
+  .subscriptions-bulk-bar {
     position: sticky;
     top: 10px;
     z-index: 1025;

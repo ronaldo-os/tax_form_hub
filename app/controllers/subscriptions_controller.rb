@@ -290,6 +290,180 @@ class SubscriptionsController < ApplicationController
     end
   end
 
+  # POST /subscriptions/bulk_action
+  def bulk_action
+    action_type = params[:bulk_action].to_s
+    raw_ids = Array(params[:subscription_ids].presence || params[:ids])
+    subscription_ids = raw_ids.map do |raw_id|
+      raw_id.to_s.split(':').first.to_i
+    end.reject(&:zero?).uniq
+
+    tab = params[:tab].presence || "sales"
+
+    if subscription_ids.empty?
+      redirect_to subscriptions_path(tab: tab), status: :see_other, alert: "No subscriptions selected."
+      return
+    end
+
+    # Authorization: strictly scope to current_user
+    subscriptions = current_user.invoices.where(id: subscription_ids).select(&:subscription_contract?)
+
+    if subscriptions.empty?
+      redirect_to subscriptions_path(tab: tab), status: :see_other, alert: "No authorized subscriptions found to perform this action."
+      return
+    end
+
+    case action_type
+    when "cancel", "cancel_subscription"
+      effective_date = Date.parse(params[:effective_date].to_s) rescue Date.current
+      billing_option = params[:billing_option].presence || "none"
+      reason = params[:reason].presence || "Bulk cancelled"
+
+      cancelled_count = 0
+      skipped_count = 0
+
+      subscriptions.each do |sub|
+        unless sub.subscription_active?
+          skipped_count += 1
+          next
+        end
+
+        begin
+          if ['prorate', 'full'].include?(billing_option) && sub.sale?
+            primary_item = sub.primary_recurring_item
+            if primary_item
+              billing_cycle = primary_item[:cycle] || 'monthly'
+              start_d = Date.parse(primary_item[:start_date]) rescue Date.current
+              current_sequence = sub.recurring_sub_invoices.count + 1
+              next_date = start_d
+              current_sequence.times do
+                next_date = sub.calculate_next_period_date(next_date, billing_cycle)
+              end
+
+              recurring_price = (sub.line_items_data || []).select do |item|
+                item.is_a?(Hash) && item.dig('optional_fields', 'subscription').present? && !item.dig('optional_fields', 'hidden_on_parent')
+              end.sum { |item| (item['price'].to_f * (item['quantity'] || 1).to_f) }
+
+              amount_to_charge = 0.0
+              if billing_option == 'prorate'
+                days_remaining = (next_date - effective_date).to_i
+                days_remaining = 0 if days_remaining < 0
+                months = case billing_cycle
+                         when 'monthly' then 1
+                         when 'quarterly' then 3
+                         when 'annual' then 12
+                         else 1
+                         end
+                cycle_start_date = next_date << months
+                total_days = (next_date - cycle_start_date).to_i
+                total_days = 30 if total_days <= 0
+                proration_ratio = [days_remaining.to_f / total_days.to_f, 1.0].min
+                amount_to_charge = recurring_price * proration_ratio
+              elsif billing_option == 'full'
+                amount_to_charge = recurring_price
+              end
+
+              if amount_to_charge > 0
+                desc = "Final Invoice - #{billing_option == 'prorate' ? 'Prorated' : 'Full'} Charge"
+                sub_invoice_number = Invoice.next_recurring_sub_invoice_number(sub) + "-mid"
+                f_item = {
+                  'description' => "Mid-cycle: #{desc}#{reason.present? ? ' - ' + reason : ''}",
+                  'quantity' => '1',
+                  'price' => ('%.2f' % amount_to_charge),
+                  'unit' => 'service',
+                  'tax' => '0'
+                }
+                new_invoice = current_user.invoices.build(
+                  recipient_company: sub.recipient_company,
+                  sale_from: sub.sale_from,
+                  invoice_type: sub.invoice_type,
+                  invoice_category: sub.invoice_category,
+                  issue_date: Date.current,
+                  invoice_number: sub_invoice_number,
+                  currency: sub.currency,
+                  line_items_data: [f_item],
+                  recipient_note: reason,
+                  billing_reference: sub.invoice_number,
+                  recurring_parent_invoice_id: sub.id,
+                  total: {
+                    "subtotal" => ('%.2f' % amount_to_charge),
+                    "grand_total" => ('%.2f' % amount_to_charge),
+                    "charge" => ('%.2f' % amount_to_charge)
+                  }
+                )
+                new_invoice.save!
+              end
+            end
+          end
+
+          cancellation_item = {
+            'description' => "Subscription Cancelled#{reason.present? ? ' - ' + reason : ''}",
+            'quantity' => '1',
+            'price' => '0.00',
+            'unit' => 'service',
+            'tax' => '0',
+            'optional_fields' => {
+              'cancellation' => true,
+              'effective_date' => effective_date.to_s,
+              'billing_option' => billing_option,
+              'hidden_on_parent' => true
+            }
+          }
+
+          lines = sub.line_items_data || []
+          lines.each do |l_item|
+            if l_item.is_a?(Hash) && l_item['optional_fields'].is_a?(Hash) && l_item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
+              l_item['optional_fields']['cancelled'] = true
+            end
+          end
+          lines << cancellation_item
+          sub.line_items_data = lines
+
+          has_custom_items = sub.line_items_data.any? do |item|
+            item.is_a?(Hash) &&
+              item.dig('optional_fields', 'subscription').blank? &&
+              item.dig('optional_fields', 'cancellation').blank?
+          end
+
+          if has_custom_items
+            sub.save!
+          else
+            sub.update!(archived: true)
+          end
+          cancelled_count += 1
+        rescue StandardError => e
+          Rails.logger.error("Failed to bulk cancel subscription #{sub.id}: #{e.message}")
+          skipped_count += 1
+        end
+      end
+
+      if cancelled_count > 0 && skipped_count > 0
+        notice = "Successfully cancelled #{cancelled_count} #{'subscription'.pluralize(cancelled_count)}. #{skipped_count} #{'subscription'.pluralize(skipped_count)} skipped (already finished, cancelled, or encountered an error)."
+        respond_to do |format|
+          format.html { redirect_to subscriptions_path(tab: tab), status: :see_other, notice: notice }
+          format.json { render json: { notice: notice, cancelled_count: cancelled_count, skipped_count: skipped_count }, status: :ok }
+        end
+      elsif cancelled_count > 0
+        notice = "Successfully cancelled #{cancelled_count} #{'subscription'.pluralize(cancelled_count)}."
+        respond_to do |format|
+          format.html { redirect_to subscriptions_path(tab: tab), status: :see_other, notice: notice }
+          format.json { render json: { notice: notice, cancelled_count: cancelled_count }, status: :ok }
+        end
+      else
+        alert = "Could not cancel the selected subscriptions."
+        respond_to do |format|
+          format.html { redirect_to subscriptions_path(tab: tab), status: :see_other, alert: alert }
+          format.json { render json: { alert: alert }, status: :unprocessable_entity }
+        end
+      end
+    else
+      respond_to do |format|
+        format.html { redirect_to subscriptions_path(tab: tab), status: :see_other, alert: "Invalid action." }
+        format.json { render json: { alert: "Invalid action." }, status: :unprocessable_entity }
+      end
+    end
+  end
+
   # PATCH /subscriptions/:id/cancel_item
   def cancel_item
     item_index = params[:item_index].to_i

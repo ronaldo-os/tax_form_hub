@@ -88,6 +88,9 @@ Rails.application.routes.draw do
   get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
 
   resources :subscriptions, only: [:index, :show] do
+    collection do
+      post :bulk_action
+    end
     member do
       patch :cancel
       patch :cancel_item
