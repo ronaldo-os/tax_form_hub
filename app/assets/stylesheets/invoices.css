@@ -138,13 +138,18 @@
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Force light mode during PDF export and download */
+/* Force light mode during PDF export, download, and invoice preview */
 .force-light-mode,
 .force-light-mode.invoice-container,
 .force-light-mode.invoice-card,
 .force-light-mode#invoice_card,
 .force-light-mode .invoice-container,
 .force-light-mode .invoice-card,
+#invoicePreviewModal #invoice_card,
+#invoicePreviewModal .invoice-container,
+.pdf-preview-wrapper #invoice_card,
+#invoicePreviewCard,
+#invoicePreviewCard #invoice_card,
 [data-theme="dark"] .force-light-mode,
 [data-bs-theme="dark"] .force-light-mode,
 [data-theme="dark"] .force-light-mode.invoice-container,
@@ -156,7 +161,17 @@
 [data-theme="dark"] .force-light-mode .invoice-container,
 [data-bs-theme="dark"] .force-light-mode .invoice-container,
 [data-theme="dark"] .force-light-mode .invoice-card,
-[data-bs-theme="dark"] .force-light-mode .invoice-card {
+[data-bs-theme="dark"] .force-light-mode .invoice-card,
+[data-theme="dark"] #invoicePreviewModal #invoice_card,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card,
+[data-theme="dark"] #invoicePreviewModal .invoice-container,
+[data-bs-theme="dark"] #invoicePreviewModal .invoice-container,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card,
+[data-theme="dark"] #invoicePreviewCard,
+[data-bs-theme="dark"] #invoicePreviewCard,
+[data-theme="dark"] #invoicePreviewCard #invoice_card,
+[data-bs-theme="dark"] #invoicePreviewCard #invoice_card {
   --bg-body: #ffffff !important;
   --card-bg: #ffffff !important;
   --bs-body-bg: #ffffff !important;
@@ -228,6 +243,9 @@
 .force-light-mode .border-bottom,
 .force-light-mode .border-top,
 .force-light-mode .border-light,
+.force-light-mode .border-secondary-subtle,
+.force-light-mode .border-body-emphasis,
+.force-light-mode hr,
 [data-theme="dark"] .force-light-mode .border,
 [data-bs-theme="dark"] .force-light-mode .border,
 [data-theme="dark"] .force-light-mode .border-bottom,
@@ -235,8 +253,20 @@
 [data-theme="dark"] .force-light-mode .border-top,
 [data-bs-theme="dark"] .force-light-mode .border-top,
 [data-theme="dark"] .force-light-mode .border-light,
-[data-bs-theme="dark"] .force-light-mode .border-light {
+[data-bs-theme="dark"] .force-light-mode .border-light,
+[data-theme="dark"] .force-light-mode .border-secondary-subtle,
+[data-bs-theme="dark"] .force-light-mode .border-secondary-subtle,
+[data-theme="dark"] .force-light-mode .border-body-emphasis,
+[data-bs-theme="dark"] .force-light-mode .border-body-emphasis,
+[data-theme="dark"] .force-light-mode hr,
+[data-bs-theme="dark"] .force-light-mode hr {
   border-color: #dee2e6 !important;
+}
+
+.force-light-mode .border-primary-subtle,
+[data-theme="dark"] .force-light-mode .border-primary-subtle,
+[data-bs-theme="dark"] .force-light-mode .border-primary-subtle {
+  border-color: #cfe2ff !important;
 }
 
 .force-light-mode .table,
@@ -726,13 +756,390 @@
   font-size: 0.875rem !important;
 }
 
+/* Always display invoice preview sheet in Light Theme regardless of active dark mode */
+#invoicePreviewModal #invoice_card,
+.pdf-preview-wrapper #invoice_card,
+#invoicePreviewCard #invoice_card,
 [data-theme="dark"] #invoicePreviewModal #invoice_card,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card,
 [data-theme="dark"] .pdf-preview-wrapper #invoice_card,
-[data-theme="dark"] #invoicePreviewCard #invoice_card {
-  background: var(--card-bg, #1e2227) !important;
-  color: var(--text-color, #f8f9fa) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card,
+[data-theme="dark"] #invoicePreviewCard #invoice_card,
+[data-bs-theme="dark"] #invoicePreviewCard #invoice_card {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border: 1px solid var(--border-color, #dee2e6) !important;
+  border-color: var(--border-color, #dee2e6) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25) !important;
+  --bg-body: #ffffff !important;
+  --card-bg: #ffffff !important;
+  --bs-body-bg: #ffffff !important;
+  --bs-body-color: #212529 !important;
+  --bs-emphasis-color: #000000 !important;
+  --bs-secondary-color: #6c757d !important;
+  --bs-tertiary-color: #6c757d !important;
+  --bs-border-color: #dee2e6 !important;
+  --bs-border-color-translucent: rgba(0, 0, 0, 0.12) !important;
+  --bs-secondary-border-subtle: #dee2e6 !important;
+  --bs-border-color-emphasis: #212529 !important;
+  --bs-card-bg: #ffffff !important;
+  --bs-card-color: #212529 !important;
+  --bs-table-bg: #ffffff !important;
+  --bs-table-color: #212529 !important;
+  --text-main: #212529 !important;
+  --text-body: #212529 !important;
+  --text-muted: #6c757d !important;
+  --text-secondary: #6c757d !important;
+  --border-color: #dee2e6 !important;
+  --table-bg: #ffffff !important;
+  --table-border-color: #dee2e6 !important;
+}
+
+/* Ensure all child elements inside preview sheet strictly follow light theme */
+#invoicePreviewModal #invoice_card h1,
+#invoicePreviewModal #invoice_card h2,
+#invoicePreviewModal #invoice_card h3,
+#invoicePreviewModal #invoice_card h4,
+#invoicePreviewModal #invoice_card h5,
+#invoicePreviewModal #invoice_card h6,
+#invoicePreviewModal #invoice_card .h1,
+#invoicePreviewModal #invoice_card .h2,
+#invoicePreviewModal #invoice_card .h3,
+#invoicePreviewModal #invoice_card .h4,
+#invoicePreviewModal #invoice_card .h5,
+#invoicePreviewModal #invoice_card .h6,
+.pdf-preview-wrapper #invoice_card h1,
+.pdf-preview-wrapper #invoice_card h2,
+.pdf-preview-wrapper #invoice_card h3,
+.pdf-preview-wrapper #invoice_card h4,
+.pdf-preview-wrapper #invoice_card h5,
+.pdf-preview-wrapper #invoice_card h6,
+.pdf-preview-wrapper #invoice_card .h1,
+.pdf-preview-wrapper #invoice_card .h2,
+.pdf-preview-wrapper #invoice_card .h3,
+.pdf-preview-wrapper #invoice_card .h4,
+.pdf-preview-wrapper #invoice_card .h5,
+.pdf-preview-wrapper #invoice_card .h6,
+[data-theme="dark"] #invoicePreviewModal #invoice_card h1,
+[data-theme="dark"] #invoicePreviewModal #invoice_card h2,
+[data-theme="dark"] #invoicePreviewModal #invoice_card h3,
+[data-theme="dark"] #invoicePreviewModal #invoice_card h4,
+[data-theme="dark"] #invoicePreviewModal #invoice_card h5,
+[data-theme="dark"] #invoicePreviewModal #invoice_card h6,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .h1,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .h2,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .h3,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .h4,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .h5,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .h6,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card h1,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card h2,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card h3,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card h4,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card h5,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card h6,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .h1,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .h2,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .h3,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .h4,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .h5,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .h6,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card h1,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card h2,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card h3,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card h4,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card h5,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card h6,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card h1,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card h2,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card h3,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card h4,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card h5,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card h6 {
+  color: #212529 !important;
+}
+
+#invoicePreviewModal #invoice_card p,
+#invoicePreviewModal #invoice_card strong,
+#invoicePreviewModal #invoice_card b,
+#invoicePreviewModal #invoice_card label,
+#invoicePreviewModal #invoice_card .text-body,
+#invoicePreviewModal #invoice_card .text-dark,
+.pdf-preview-wrapper #invoice_card p,
+.pdf-preview-wrapper #invoice_card strong,
+.pdf-preview-wrapper #invoice_card b,
+.pdf-preview-wrapper #invoice_card label,
+.pdf-preview-wrapper #invoice_card .text-body,
+.pdf-preview-wrapper #invoice_card .text-dark,
+[data-theme="dark"] #invoicePreviewModal #invoice_card p,
+[data-theme="dark"] #invoicePreviewModal #invoice_card strong,
+[data-theme="dark"] #invoicePreviewModal #invoice_card b,
+[data-theme="dark"] #invoicePreviewModal #invoice_card label,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .text-body,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .text-dark,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card p,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card strong,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card b,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card label,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .text-body,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .text-dark,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card p,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card strong,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card b,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card label,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .text-body,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .text-dark,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card p,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card strong,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card b,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card label,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .text-body,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .text-dark {
+  color: #212529 !important;
+}
+
+#invoicePreviewModal #invoice_card .text-secondary,
+#invoicePreviewModal #invoice_card .text-muted,
+.pdf-preview-wrapper #invoice_card .text-secondary,
+.pdf-preview-wrapper #invoice_card .text-muted,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .text-secondary,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .text-muted,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .text-secondary,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .text-muted,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .text-secondary,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .text-muted,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .text-secondary,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .text-muted {
+  color: #6c757d !important;
+}
+
+#invoicePreviewModal #invoice_card .table,
+#invoicePreviewModal #invoice_card table,
+#invoicePreviewModal #invoice_card .table > :not(caption) > * > *,
+.pdf-preview-wrapper #invoice_card .table,
+.pdf-preview-wrapper #invoice_card table,
+.pdf-preview-wrapper #invoice_card .table > :not(caption) > * > *,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .table,
+[data-theme="dark"] #invoicePreviewModal #invoice_card table,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .table > :not(caption) > * > *,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .table,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card table,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .table > :not(caption) > * > *,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .table,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card table,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .table > :not(caption) > * > *,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .table,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card table,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .table > :not(caption) > * > * {
+  background-color: #ffffff !important;
+  color: #212529 !important;
+  border-color: #dee2e6 !important;
+}
+
+#invoicePreviewModal #invoice_card .border,
+#invoicePreviewModal #invoice_card .border-bottom,
+#invoicePreviewModal #invoice_card .border-top,
+#invoicePreviewModal #invoice_card .border-light,
+#invoicePreviewModal #invoice_card .border-secondary-subtle,
+#invoicePreviewModal #invoice_card .border-body-emphasis,
+#invoicePreviewModal #invoice_card hr,
+.pdf-preview-wrapper #invoice_card .border,
+.pdf-preview-wrapper #invoice_card .border-bottom,
+.pdf-preview-wrapper #invoice_card .border-top,
+.pdf-preview-wrapper #invoice_card .border-light,
+.pdf-preview-wrapper #invoice_card .border-secondary-subtle,
+.pdf-preview-wrapper #invoice_card .border-body-emphasis,
+.pdf-preview-wrapper #invoice_card hr,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .border,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .border-bottom,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .border-top,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .border-light,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .border-secondary-subtle,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .border-body-emphasis,
+[data-theme="dark"] #invoicePreviewModal #invoice_card hr,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .border,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .border-bottom,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .border-top,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .border-light,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .border-secondary-subtle,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .border-body-emphasis,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card hr,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .border,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .border-bottom,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .border-top,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .border-light,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .border-secondary-subtle,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .border-body-emphasis,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card hr,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .border,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .border-bottom,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .border-top,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .border-light,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .border-secondary-subtle,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .border-body-emphasis,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card hr {
+  border-color: #dee2e6 !important;
+}
+
+#invoicePreviewModal #invoice_card .border-primary-subtle,
+.pdf-preview-wrapper #invoice_card .border-primary-subtle,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .border-primary-subtle,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .border-primary-subtle,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .border-primary-subtle,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .border-primary-subtle {
+  border-color: #cfe2ff !important;
+}
+
+#invoicePreviewModal #invoice_card .bg-primary-subtle,
+.pdf-preview-wrapper #invoice_card .bg-primary-subtle,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .bg-primary-subtle,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .bg-primary-subtle,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-primary-subtle,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-primary-subtle {
+  background-color: #cfe2ff !important;
+  color: #084298 !important;
+}
+
+#invoicePreviewModal #invoice_card .bg-success-subtle,
+.pdf-preview-wrapper #invoice_card .bg-success-subtle,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .bg-success-subtle,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .bg-success-subtle,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-success-subtle,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-success-subtle {
+  background-color: #d1e7dd !important;
+  color: #0f5132 !important;
+}
+
+#invoicePreviewModal #invoice_card .bg-danger-subtle,
+.pdf-preview-wrapper #invoice_card .bg-danger-subtle,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .bg-danger-subtle,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .bg-danger-subtle,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-danger-subtle,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-danger-subtle {
+  background-color: #f8d7da !important;
+  color: #842029 !important;
+}
+
+#invoicePreviewModal #invoice_card .bg-info-subtle,
+.pdf-preview-wrapper #invoice_card .bg-info-subtle,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .bg-info-subtle,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .bg-info-subtle,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-info-subtle,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-info-subtle {
+  background-color: #cff4fc !important;
+  color: #055160 !important;
+}
+
+#invoicePreviewModal #invoice_card .bg-secondary-subtle,
+.pdf-preview-wrapper #invoice_card .bg-secondary-subtle,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .bg-secondary-subtle,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .bg-secondary-subtle,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-secondary-subtle,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-secondary-subtle {
+  background-color: #e2e3e5 !important;
+  color: #41464b !important;
+}
+
+#invoicePreviewModal #invoice_card .bg-light,
+.pdf-preview-wrapper #invoice_card .bg-light,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .bg-light,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .bg-light,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-light,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .bg-light {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+}
+
+#invoicePreviewModal #invoice_card .adj-badge-discount,
+.pdf-preview-wrapper #invoice_card .adj-badge-discount,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-discount,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-discount,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-discount,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-discount {
+  background-color: #ecfdf5 !important;
+  color: #047857 !important;
+  border-color: #a7f3d0 !important;
+}
+
+#invoicePreviewModal #invoice_card .adj-badge-charge,
+#invoicePreviewModal #invoice_card .adj-badge-monthly_charge,
+.pdf-preview-wrapper #invoice_card .adj-badge-charge,
+.pdf-preview-wrapper #invoice_card .adj-badge-monthly_charge,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-charge,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-charge,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-monthly_charge,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-monthly_charge,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-charge,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-charge,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-monthly_charge,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-monthly_charge {
+  background-color: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fde68a !important;
+}
+
+#invoicePreviewModal #invoice_card .adj-badge-fixedtax,
+#invoicePreviewModal #invoice_card .adj-badge-tax,
+#invoicePreviewModal #invoice_card .adj-badge-fixed_tax,
+.pdf-preview-wrapper #invoice_card .adj-badge-fixedtax,
+.pdf-preview-wrapper #invoice_card .adj-badge-tax,
+.pdf-preview-wrapper #invoice_card .adj-badge-fixed_tax,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-fixedtax,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-fixedtax,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-tax,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-tax,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-fixed_tax,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-fixed_tax,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-fixedtax,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-fixedtax,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-tax,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-tax,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-fixed_tax,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-fixed_tax {
+  background-color: #eef2ff !important;
+  color: #4338ca !important;
+  border-color: #c7d2fe !important;
+}
+
+#invoicePreviewModal #invoice_card .adj-badge-default,
+#invoicePreviewModal #invoice_card .adj-badge-fee,
+#invoicePreviewModal #invoice_card .adj-badge-adjustment,
+.pdf-preview-wrapper #invoice_card .adj-badge-default,
+.pdf-preview-wrapper #invoice_card .adj-badge-fee,
+.pdf-preview-wrapper #invoice_card .adj-badge-adjustment,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-default,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-default,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-fee,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-fee,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-adjustment,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .adj-badge-adjustment,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-default,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-default,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-fee,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-fee,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-adjustment,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .adj-badge-adjustment {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
+#invoicePreviewModal #invoice_card .attachment-item,
+#invoicePreviewModal #invoice_card .attachment-card,
+.pdf-preview-wrapper #invoice_card .attachment-item,
+.pdf-preview-wrapper #invoice_card .attachment-card,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .attachment-item,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .attachment-item,
+[data-theme="dark"] #invoicePreviewModal #invoice_card .attachment-card,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card .attachment-card,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .attachment-item,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .attachment-item,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card .attachment-card,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card .attachment-card {
+  background-color: #f8f9fa !important;
+  border: 1px solid #dee2e6 !important;
+  color: #212529 !important;
 }
 
 /* Force Flex Rows with proper wrapping & justification */
@@ -1646,7 +2053,8 @@
 .invoice-bulk-bar,
 .tax-submissions-bulk-bar,
 .locations-bulk-bar,
-.subscriptions-bulk-bar {
+.subscriptions-bulk-bar,
+.notification-bulk-bar {
   background-color: var(--bg-tertiary, #f1f3f5) !important;
   border: 1px solid var(--border-color, #d1d1d1) !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
@@ -1759,7 +2167,9 @@
 [data-theme="dark"] .locations-bulk-bar,
 [data-bs-theme="dark"] .locations-bulk-bar,
 [data-theme="dark"] .subscriptions-bulk-bar,
-[data-bs-theme="dark"] .subscriptions-bulk-bar {
+[data-bs-theme="dark"] .subscriptions-bulk-bar,
+[data-theme="dark"] .notification-bulk-bar,
+[data-bs-theme="dark"] .notification-bulk-bar {
   background-color: var(--bg-secondary, #25292d) !important;
   border: 1px solid var(--border-color, #495057) !important;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
@@ -1779,7 +2189,8 @@
 .invoice-bulk-bar .selected-count-badge,
 .tax-submissions-bulk-bar .selected-count-badge,
 .locations-bulk-bar .selected-count-badge,
-.subscriptions-bulk-bar .selected-count-badge {
+.subscriptions-bulk-bar .selected-count-badge,
+.notification-bulk-bar .selected-count-badge {
   font-size: 0.8125rem;
   letter-spacing: 0.01em;
   background-color: rgba(0, 174, 255, 0.12) !important;
@@ -1790,7 +2201,8 @@
 [data-theme="dark"] .invoice-bulk-bar .selected-count-badge,
 [data-theme="dark"] .tax-submissions-bulk-bar .selected-count-badge,
 [data-theme="dark"] .locations-bulk-bar .selected-count-badge,
-[data-theme="dark"] .subscriptions-bulk-bar .selected-count-badge {
+[data-theme="dark"] .subscriptions-bulk-bar .selected-count-badge,
+[data-theme="dark"] .notification-bulk-bar .selected-count-badge {
   background-color: rgba(32, 185, 255, 0.18) !important;
   color: #38bdf8 !important;
   border-color: rgba(56, 189, 248, 0.3) !important;
@@ -1799,7 +2211,8 @@
 .invoice-bulk-bar .bulk-action-btn,
 .tax-submissions-bulk-bar .bulk-action-btn,
 .locations-bulk-bar .bulk-action-btn,
-.subscriptions-bulk-bar .bulk-action-btn {
+.subscriptions-bulk-bar .bulk-action-btn,
+.notification-bulk-bar .bulk-action-btn {
   font-size: 0.8125rem;
   min-height: 32px;
   display: inline-flex;
@@ -1810,7 +2223,8 @@
 .invoice-bulk-bar .clear-selection-btn,
 .tax-submissions-bulk-bar .clear-selection-btn,
 .locations-bulk-bar .clear-selection-btn,
-.subscriptions-bulk-bar .clear-selection-btn {
+.subscriptions-bulk-bar .clear-selection-btn,
+.notification-bulk-bar .clear-selection-btn {
   width: 30px;
   height: 30px;
   display: inline-flex;
@@ -1823,7 +2237,8 @@
 .invoice-bulk-bar .clear-selection-btn:hover,
 .tax-submissions-bulk-bar .clear-selection-btn:hover,
 .locations-bulk-bar .clear-selection-btn:hover,
-.subscriptions-bulk-bar .clear-selection-btn:hover {
+.subscriptions-bulk-bar .clear-selection-btn:hover,
+.notification-bulk-bar .clear-selection-btn:hover {
   background-color: rgba(0, 0, 0, 0.08);
   color: var(--text-main) !important;
 }
@@ -1831,7 +2246,8 @@
 [data-theme="dark"] .invoice-bulk-bar .clear-selection-btn:hover,
 [data-theme="dark"] .tax-submissions-bulk-bar .clear-selection-btn:hover,
 [data-theme="dark"] .locations-bulk-bar .clear-selection-btn:hover,
-[data-theme="dark"] .subscriptions-bulk-bar .clear-selection-btn:hover {
+[data-theme="dark"] .subscriptions-bulk-bar .clear-selection-btn:hover,
+[data-theme="dark"] .notification-bulk-bar .clear-selection-btn:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: #ffffff !important;
 }
@@ -1841,6 +2257,7 @@
 .submission-row-checkbox,
 .location-row-checkbox,
 .subscription-row-checkbox,
+.notification-select-checkbox,
 .table-header-checkbox,
 .master-bulk-checkbox {
   cursor: pointer;
@@ -1855,6 +2272,7 @@
 .submission-row-checkbox:hover,
 .location-row-checkbox:hover,
 .subscription-row-checkbox:hover,
+.notification-select-checkbox:hover,
 .table-header-checkbox:hover,
 .master-bulk-checkbox:hover {
   border-color: var(--main-color, #00aeff);
@@ -1864,6 +2282,7 @@
 .submission-row-checkbox:checked,
 .location-row-checkbox:checked,
 .subscription-row-checkbox:checked,
+.notification-select-checkbox:checked,
 .table-header-checkbox:checked,
 .master-bulk-checkbox:checked {
   background-color: var(--main-color, #00aeff);
@@ -1875,7 +2294,8 @@
 .submissionsTable tbody tr.row-selected,
 .subscription-table tbody tr.row-selected,
 table.dataTable tbody tr.row-selected,
-.table tbody tr.row-selected {
+.table tbody tr.row-selected,
+.notification-page-card.row-selected {
   background-color: rgba(0, 174, 255, 0.08) !important;
 }
 
@@ -1883,7 +2303,8 @@ table.dataTable tbody tr.row-selected,
 [data-theme="dark"] .submissionsTable tbody tr.row-selected,
 [data-theme="dark"] .subscription-table tbody tr.row-selected,
 [data-theme="dark"] table.dataTable tbody tr.row-selected,
-[data-theme="dark"] .table tbody tr.row-selected {
+[data-theme="dark"] .table tbody tr.row-selected,
+[data-theme="dark"] .notification-page-card.row-selected {
   background-color: rgba(32, 185, 255, 0.16) !important;
 }
 
@@ -1908,7 +2329,8 @@ table.dataTable tbody tr.row-selected,
   .tax-submissions-bulk-bar,
   .invoice-bulk-bar,
   .locations-bulk-bar,
-  .subscriptions-bulk-bar {
+  .subscriptions-bulk-bar,
+  .notification-bulk-bar {
     position: sticky;
     top: 10px;
     z-index: 1025;

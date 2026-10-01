@@ -25,6 +25,9 @@ export default class extends Controller {
     if (bulkForm && !bulkForm.dataset.bulkFormBound) {
       bulkForm.dataset.bulkFormBound = "true";
       bulkForm.addEventListener("submit", (e) => this.handleBulkSubmit(e));
+      bulkForm.addEventListener("turbo:submit-end", () => {
+        this.clearSelection();
+      });
     }
   }
 
@@ -33,24 +36,59 @@ export default class extends Controller {
     const checkboxes = document.querySelectorAll(".notification-select-checkbox");
     checkboxes.forEach(cb => {
       cb.checked = isChecked;
+      const card = cb.closest(".notification-page-card");
+      if (card) {
+        card.classList.toggle("row-selected", isChecked);
+      }
     });
     this.updateBulkActionBar();
   }
 
-  onItemSelect() {
+  onItemSelect(event) {
+    if (event && event.target) {
+      const cb = event.target;
+      const card = cb.closest(".notification-page-card");
+      if (card) {
+        card.classList.toggle("row-selected", cb.checked);
+      }
+    }
+    this.updateBulkActionBar();
+  }
+
+  clearSelection(event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    const checkboxes = document.querySelectorAll(".notification-select-checkbox");
+    checkboxes.forEach(cb => {
+      cb.checked = false;
+      const card = cb.closest(".notification-page-card");
+      if (card) {
+        card.classList.remove("row-selected");
+      }
+    });
+    const masterCheckbox = document.getElementById("master_select_all");
+    if (masterCheckbox) {
+      masterCheckbox.checked = false;
+      masterCheckbox.indeterminate = false;
+    }
     this.updateBulkActionBar();
   }
 
   updateBulkActionBar() {
     const bulkBar = document.getElementById("notifications_bulk_action_bar");
     const countBadge = document.getElementById("selected_count_badge");
+    const countSpan = document.getElementById("selected_count") || bulkBar?.querySelector(".selected-count");
     const masterCheckbox = document.getElementById("master_select_all");
     const selectedCheckboxes = document.querySelectorAll(".notification-select-checkbox:checked");
     const allCheckboxes = document.querySelectorAll(".notification-select-checkbox");
 
     const count = selectedCheckboxes.length;
 
-    if (countBadge) {
+    if (countSpan) {
+      countSpan.textContent = count.toString();
+    } else if (countBadge) {
       countBadge.textContent = `${count} selected`;
     }
 

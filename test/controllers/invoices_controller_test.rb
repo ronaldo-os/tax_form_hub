@@ -811,5 +811,23 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#invoice_card[data-invoice-number='INV-PDF-99']"
     assert_match /INV-PDF-99/, response.body
   end
+
+  test "invoices index page renders preview modal configured for light theme" do
+    get invoices_url
+    assert_response :success
+    assert_select "#invoicePreviewModal" do
+      assert_select ".pdf-preview-wrapper.force-light-mode[data-theme='light'][data-bs-theme='light']"
+      assert_select "#invoicePreviewCard.force-light-mode[data-theme='light'][data-bs-theme='light']"
+    end
+  end
+
+  test "invoices new form renders preview modal configured for light theme" do
+    get new_invoice_url
+    assert_response :success
+    assert_select "#invoicePreviewModal" do
+      assert_select ".pdf-preview-wrapper.force-light-mode[data-theme='light'][data-bs-theme='light']"
+      assert_select "#invoicePreviewCard.force-light-mode[data-theme='light'][data-bs-theme='light']"
+    end
+  end
 end
 

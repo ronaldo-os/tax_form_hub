@@ -2556,7 +2556,12 @@ const initInvoiceForm = () => {
         contentType: false,
         headers: { 'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content') },
         success: function (data) {
+          $previewCard.addClass('force-light-mode').attr('data-theme', 'light').attr('data-bs-theme', 'light');
           $previewCard.html(data);
+
+          const $invoiceCard = $previewCard.find('#invoice_card');
+          $invoiceCard.addClass('force-light-mode').attr('data-theme', 'light').attr('data-bs-theme', 'light');
+          $invoiceCard.find('.invoice-container').addClass('force-light-mode').attr('data-theme', 'light').attr('data-bs-theme', 'light');
 
           const $modalNewAttachments = $('#modal_new_attachments_preview');
           if ($modalNewAttachments.length && attachmentDataTransfer.files.length > 0) {
@@ -2590,7 +2595,7 @@ const initInvoiceForm = () => {
                                           <span class="mb-2 text-truncate small fw-bold" style="max-width: 100%;" title="${file.name}">
                                               ${file.name}
                                           </span>
-                                          ${getThemeAwareBadgeClass('New Attachment', 'primary')}
+                                          <span class="badge bg-primary-subtle text-primary small">New Attachment</span>
                                       </div>
                                   </div>
                               </div>

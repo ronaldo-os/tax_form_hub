@@ -77,13 +77,18 @@ h6 {
   background-color: var(--bg-body) !important;
 }
 
-/* Helper to force light mode context for PDF generation */
+/* Helper to force light mode context for PDF generation and preview */
 .force-light-mode,
 .force-light-mode.invoice-container,
 .force-light-mode.invoice-card,
 .force-light-mode#invoice_card,
 .force-light-mode .invoice-container,
 .force-light-mode .invoice-card,
+#invoicePreviewModal #invoice_card,
+#invoicePreviewModal .invoice-container,
+.pdf-preview-wrapper #invoice_card,
+#invoicePreviewCard,
+#invoicePreviewCard #invoice_card,
 [data-theme="dark"] .force-light-mode,
 [data-bs-theme="dark"] .force-light-mode,
 [data-theme="dark"] .force-light-mode.invoice-container,
@@ -95,7 +100,17 @@ h6 {
 [data-theme="dark"] .force-light-mode .invoice-container,
 [data-bs-theme="dark"] .force-light-mode .invoice-container,
 [data-theme="dark"] .force-light-mode .invoice-card,
-[data-bs-theme="dark"] .force-light-mode .invoice-card {
+[data-bs-theme="dark"] .force-light-mode .invoice-card,
+[data-theme="dark"] #invoicePreviewModal #invoice_card,
+[data-bs-theme="dark"] #invoicePreviewModal #invoice_card,
+[data-theme="dark"] #invoicePreviewModal .invoice-container,
+[data-bs-theme="dark"] #invoicePreviewModal .invoice-container,
+[data-theme="dark"] .pdf-preview-wrapper #invoice_card,
+[data-bs-theme="dark"] .pdf-preview-wrapper #invoice_card,
+[data-theme="dark"] #invoicePreviewCard,
+[data-bs-theme="dark"] #invoicePreviewCard,
+[data-theme="dark"] #invoicePreviewCard #invoice_card,
+[data-bs-theme="dark"] #invoicePreviewCard #invoice_card {
   --app-clr: rgb(240 240 240) !important;
   --bg-body: #ffffff !important;
   --bg-sidebar: #ffffff !important;
@@ -1697,10 +1712,176 @@ a.btn:not(.d-inline-flex):not(.d-flex) > svg:last-child:not(:only-child),
 .invoice-bulk-bar,
 .tax-submissions-bulk-bar,
 .locations-bulk-bar,
-.subscriptions-bulk-bar {
+.subscriptions-bulk-bar,
+.notification-bulk-bar {
+  background-color: var(--bg-tertiary, #f1f3f5) !important;
+  border: 1px solid var(--border-color, #d1d1d1) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: fadeInBulkBar 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   position: relative;
   z-index: 1040 !important;
   margin-bottom: 1.25rem !important;
+}
+
+[data-theme="dark"] .invoice-bulk-bar,
+[data-bs-theme="dark"] .invoice-bulk-bar,
+[data-theme="dark"] .tax-submissions-bulk-bar,
+[data-bs-theme="dark"] .tax-submissions-bulk-bar,
+[data-theme="dark"] .locations-bulk-bar,
+[data-bs-theme="dark"] .locations-bulk-bar,
+[data-theme="dark"] .subscriptions-bulk-bar,
+[data-bs-theme="dark"] .subscriptions-bulk-bar,
+[data-theme="dark"] .notification-bulk-bar,
+[data-bs-theme="dark"] .notification-bulk-bar {
+  background-color: var(--bg-secondary, #25292d) !important;
+  border: 1px solid var(--border-color, #495057) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35) !important;
+}
+
+@keyframes fadeInBulkBar {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.invoice-bulk-bar .selected-count-badge,
+.tax-submissions-bulk-bar .selected-count-badge,
+.locations-bulk-bar .selected-count-badge,
+.subscriptions-bulk-bar .selected-count-badge,
+.notification-bulk-bar .selected-count-badge {
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  background-color: rgba(0, 174, 255, 0.12) !important;
+  color: var(--main-color, #00aeff) !important;
+  border-color: rgba(0, 174, 255, 0.25) !important;
+}
+
+[data-theme="dark"] .invoice-bulk-bar .selected-count-badge,
+[data-theme="dark"] .tax-submissions-bulk-bar .selected-count-badge,
+[data-theme="dark"] .locations-bulk-bar .selected-count-badge,
+[data-theme="dark"] .subscriptions-bulk-bar .selected-count-badge,
+[data-theme="dark"] .notification-bulk-bar .selected-count-badge {
+  background-color: rgba(32, 185, 255, 0.18) !important;
+  color: #38bdf8 !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+}
+
+.invoice-bulk-bar .bulk-action-btn,
+.tax-submissions-bulk-bar .bulk-action-btn,
+.locations-bulk-bar .bulk-action-btn,
+.subscriptions-bulk-bar .bulk-action-btn,
+.notification-bulk-bar .bulk-action-btn {
+  font-size: 0.8125rem;
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+.invoice-bulk-bar .clear-selection-btn,
+.tax-submissions-bulk-bar .clear-selection-btn,
+.locations-bulk-bar .clear-selection-btn,
+.subscriptions-bulk-bar .clear-selection-btn,
+.notification-bulk-bar .clear-selection-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.15s ease;
+}
+
+.invoice-bulk-bar .clear-selection-btn:hover,
+.tax-submissions-bulk-bar .clear-selection-btn:hover,
+.locations-bulk-bar .clear-selection-btn:hover,
+.subscriptions-bulk-bar .clear-selection-btn:hover,
+.notification-bulk-bar .clear-selection-btn:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .invoice-bulk-bar .clear-selection-btn:hover,
+[data-theme="dark"] .tax-submissions-bulk-bar .clear-selection-btn:hover,
+[data-theme="dark"] .locations-bulk-bar .clear-selection-btn:hover,
+[data-theme="dark"] .subscriptions-bulk-bar .clear-selection-btn:hover,
+[data-theme="dark"] .notification-bulk-bar .clear-selection-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #ffffff !important;
+}
+
+/* Row selection checkboxes */
+.invoice-row-checkbox,
+.submission-row-checkbox,
+.location-row-checkbox,
+.subscription-row-checkbox,
+.notification-select-checkbox,
+.table-header-checkbox,
+.master-bulk-checkbox {
+  cursor: pointer;
+  width: 1.15em;
+  height: 1.15em;
+  accent-color: var(--main-color, #00aeff);
+  border-color: var(--border-color, #d1d1d1);
+  transition: all 0.12s ease;
+}
+
+.invoice-row-checkbox:hover,
+.submission-row-checkbox:hover,
+.location-row-checkbox:hover,
+.subscription-row-checkbox:hover,
+.notification-select-checkbox:hover,
+.table-header-checkbox:hover,
+.master-bulk-checkbox:hover {
+  border-color: var(--main-color, #00aeff);
+}
+
+.invoice-row-checkbox:checked,
+.submission-row-checkbox:checked,
+.location-row-checkbox:checked,
+.subscription-row-checkbox:checked,
+.notification-select-checkbox:checked,
+.table-header-checkbox:checked,
+.master-bulk-checkbox:checked {
+  background-color: var(--main-color, #00aeff);
+  border-color: var(--main-color, #00aeff);
+}
+
+/* Row highlighting when selected */
+.invoice-datatable tbody tr.row-selected,
+.submissionsTable tbody tr.row-selected,
+.subscription-table tbody tr.row-selected,
+table.dataTable tbody tr.row-selected,
+.table tbody tr.row-selected,
+.notification-page-card.row-selected {
+  background-color: rgba(0, 174, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .invoice-datatable tbody tr.row-selected,
+[data-theme="dark"] .submissionsTable tbody tr.row-selected,
+[data-theme="dark"] .subscription-table tbody tr.row-selected,
+[data-theme="dark"] table.dataTable tbody tr.row-selected,
+[data-theme="dark"] .table tbody tr.row-selected,
+[data-theme="dark"] .notification-page-card.row-selected {
+  background-color: rgba(32, 185, 255, 0.16) !important;
+}
+
+@media (max-width: 575.98px) {
+  .tax-submissions-bulk-bar,
+  .invoice-bulk-bar,
+  .locations-bulk-bar,
+  .subscriptions-bulk-bar,
+  .notification-bulk-bar {
+    position: sticky;
+    top: 10px;
+    z-index: 1025;
+  }
 }
 
 .invoice-bulk-bar .dropdown {

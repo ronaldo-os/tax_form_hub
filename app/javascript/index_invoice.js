@@ -314,11 +314,16 @@ function initInvoicePage() {
             url: `/invoices/${invoiceId}/pdf_partial`,
             method: 'GET',
             success: function (data) {
-                // Render the partial into the modal
+                // Render the partial into the modal and enforce light theme
+                $previewCard.addClass('force-light-mode').attr('data-theme', 'light').attr('data-bs-theme', 'light');
                 $previewCard.html(data);
 
+                const $invoiceCard = $previewCard.find('#invoice_card');
+                $invoiceCard.addClass('force-light-mode').attr('data-theme', 'light').attr('data-bs-theme', 'light');
+                $invoiceCard.find('.invoice-container').addClass('force-light-mode').attr('data-theme', 'light').attr('data-bs-theme', 'light');
+
                 // Set the modal title based on the invoice type from the returned HTML if possible
-                const category = $previewCard.find('#invoice_card').data('category');
+                const category = $invoiceCard.data('category');
                 if (category) {
                     const title = category.charAt(0).toUpperCase() + category.slice(1).replace('_', ' ');
                     $modal.find('.modal-title').text(title + ' Preview');
