@@ -23,16 +23,10 @@ class InvoiceCsvExporter
     csv_data = CSV.generate(headers: true) do |csv|
       csv << headers.map { |h| sanitize_cell(h) }
 
-      # Batch iterate to avoid high memory overhead for large collections
+      # Iterate over invoices preserving database order (avoid find_each which overrides order with id ASC)
       relation = @invoices.includes(:recipient_company, :sale_from, :user)
-      if relation.respond_to?(:find_each)
-        relation.find_each(batch_size: 500) do |invoice|
-          csv << row_for(invoice).map { |cell| sanitize_cell(cell) }
-        end
-      else
-        relation.each do |invoice|
-          csv << row_for(invoice).map { |cell| sanitize_cell(cell) }
-        end
+      relation.each do |invoice|
+        csv << row_for(invoice).map { |cell| sanitize_cell(cell) }
       end
     end
 

@@ -381,8 +381,8 @@ function initClientSubmissionsPage() {
     // Global Header Export CSV Button Handler
     $(document).off('click', '#exportTaxSubmissionsBtn').on('click', '#exportTaxSubmissionsBtn', function (e) {
         e.preventDefault();
-        const $activePane = $('.tab-content .tab-pane.active');
-        const $activeTable = $activePane.find('.submissionsTable');
+        const $activePane = $('.tab-content > .tab-pane.active, .tab-content > .tab-pane.show.active, .tab-content .tab-pane.active').first();
+        const $activeTable = $activePane.find('.submissionsTable:visible, .submissionsTable').first();
         if ($activeTable.length && $.fn.DataTable.isDataTable($activeTable[0])) {
             const api = $activeTable.DataTable();
             const isArchived = $activePane.attr('id') === 'archived';

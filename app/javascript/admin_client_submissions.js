@@ -205,8 +205,8 @@ function initSubmissionTables() {
     // Global Header Export CSV Button Handler for Incoming Submissions
     $(document).off('click', '#exportIncomingSubmissionsBtn').on('click', '#exportIncomingSubmissionsBtn', function (e) {
         e.preventDefault();
-        const $activePane = $('#submissionTabsContent .tab-pane.active');
-        const $activeTable = $activePane.find('table.dataTable, table');
+        const $activePane = $('#submissionTabsContent > .tab-pane.active, #submissionTabsContent > .tab-pane.show.active, #submissionTabsContent .tab-pane.active').first();
+        const $activeTable = $activePane.find('table.dataTable:visible, table:visible, table').first();
         if ($activeTable.length && $.fn.DataTable.isDataTable($activeTable[0])) {
             const api = $activeTable.DataTable();
             const isArchived = $activePane.attr('id') === 'archivedSubmissions';

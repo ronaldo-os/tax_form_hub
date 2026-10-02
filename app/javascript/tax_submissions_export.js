@@ -87,8 +87,8 @@ export function showTaxToast(message, type = 'success') {
 export function exportSubmissionsToCsv(tableApi, filePrefix = 'tax_submissions', isIncoming = false) {
   if (!tableApi) return;
 
-  // Retrieve DOM nodes for all rows matching currently applied filters
-  const rows = tableApi.rows({ search: 'applied' }).nodes();
+  // Retrieve DOM nodes for all rows matching currently applied filters and sort order
+  const rows = tableApi.rows({ search: 'applied', order: 'applied' }).nodes();
   const rowCount = rows ? rows.length : 0;
 
   if (rowCount === 0) {
@@ -124,6 +124,7 @@ export function exportSubmissionsToCsv(tableApi, filePrefix = 'tax_submissions',
 
   for (let i = 0; i < rowCount; i++) {
     const tr = rows[i];
+    if (!tr) continue;
     const $tr = $(tr);
 
     const transactionId = $tr.attr('data-transaction-id') || $tr.find('td:eq(1)').text().trim() || $tr.find('td:eq(0)').text().trim();
@@ -177,25 +178,33 @@ export function exportSubmissionsToCsv(tableApi, filePrefix = 'tax_submissions',
   const csvContent = '\uFEFF' + csvLines.join('\r\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
-  // Generate ISO date stamp for filename: YYYY-MM-DD
+  // Generate ISO date stamp for filename: YYYY-MM-DD_HHMMSS
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   const hours = String(now.getHours()).padStart(2, '0');
   const mins = String(now.getMinutes()).padStart(2, '0');
-  const filename = `${filePrefix}_${year}-${month}-${day}_${hours}${mins}.csv`;
+  const secs = String(now.getSeconds()).padStart(2, '0');
+  const filename = `${filePrefix}_${year}-${month}-${day}_${hours}${mins}${secs}.csv`;
 
   // Trigger file download
   const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
+  const url = (window.URL || window.webkitURL).createObjectURL(blob);
   link.setAttribute('href', url);
   link.setAttribute('download', filename);
   link.style.display = 'none';
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+
+  // Defer cleanup and revokeObjectURL so the browser has sufficient time to initiate the download stream.
+  // Revoking immediately causes Chromium / Safari / Firefox to abort the download on repeated clicks.
+  setTimeout(() => {
+    if (link.parentNode) {
+      document.body.removeChild(link);
+    }
+    (window.URL || window.webkitURL).revokeObjectURL(url);
+  }, 2000);
 
   showTaxToast(`Exported ${rowCount} filtered submission record${rowCount === 1 ? '' : 's'} to ${filename}.`, 'success');
 }

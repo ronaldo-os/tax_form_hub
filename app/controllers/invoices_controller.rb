@@ -34,7 +34,7 @@ class InvoicesController < ApplicationController
     end
 
     prefix_parts << (params[:archived] == 'true' ? 'archived' : 'active')
-    timestamp = Time.current.strftime('%Y-%m-%d_%H%M')
+    timestamp = Time.current.strftime('%Y-%m-%d_%H%M%S')
     filename = "#{prefix_parts.join('_')}_#{timestamp}.csv"
 
     exporter = InvoiceCsvExporter.new(records, invoice_type: params[:invoice_type], tab: params[:tab])
@@ -800,7 +800,7 @@ class InvoicesController < ApplicationController
 
   # Bulk actions handler for invoices: archive, unarchive, destroy, and status updates
   def bulk_action
-    action_type = params[:bulk_action].to_s
+    action_type = Array(params[:bulk_action]).last.to_s
     invoice_ids = Array(params[:invoice_ids]).map(&:to_i).reject(&:zero?)
     tab = params[:tab].presence || "sales-invoices"
 
@@ -916,8 +916,14 @@ class InvoicesController < ApplicationController
           next
         end
 
-        # Paid status: only issuer/seller can mark as paid
-        if target_status == "paid" && inv.invoice_type != "sale"
+        # Paid status: only issuer/seller can mark as paid; quotes cannot be paid
+        if target_status == "paid" && (inv.invoice_type != "sale" || inv.quote?)
+          skipped_count += 1
+          next
+        end
+
+        # Approved / Rejected status: only recipient/buyer of purchase invoices can approve or reject
+        if %w[approved rejected].include?(target_status) && inv.invoice_type != "purchase"
           skipped_count += 1
           next
         end

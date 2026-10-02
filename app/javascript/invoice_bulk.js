@@ -372,7 +372,10 @@ export async function exportSelectedInvoicesToZip(tableId) {
   const usedFilenames = new Set();
   const today = new Date();
   const dateStr = today.toISOString().slice(0, 10);
-  const timestamp = `${dateStr}_${String(today.getHours()).padStart(2, '0')}${String(today.getMinutes()).padStart(2, '0')}`;
+  const hours = String(today.getHours()).padStart(2, '0');
+  const minutes = String(today.getMinutes()).padStart(2, '0');
+  const seconds = String(today.getSeconds()).padStart(2, '0');
+  const timestamp = `${dateStr}_${hours}${minutes}${seconds}`;
 
   let successCount = 0;
   let failCount = 0;
@@ -429,15 +432,20 @@ export async function exportSelectedInvoicesToZip(tableId) {
     updateZipProgress(100, 'Download starting...');
 
     const zipFilename = `invoices_export_${timestamp}.zip`;
-    const downloadUrl = window.URL.createObjectURL(zipBlob);
+    const downloadUrl = (window.URL || window.webkitURL).createObjectURL(zipBlob);
     const downloadLink = document.createElement('a');
     downloadLink.href = downloadUrl;
     downloadLink.download = zipFilename;
     downloadLink.style.display = 'none';
     document.body.appendChild(downloadLink);
     downloadLink.click();
-    document.body.removeChild(downloadLink);
-    window.URL.revokeObjectURL(downloadUrl);
+
+    setTimeout(() => {
+      if (downloadLink.parentNode) {
+        document.body.removeChild(downloadLink);
+      }
+      (window.URL || window.webkitURL).revokeObjectURL(downloadUrl);
+    }, 2000);
 
     setTimeout(() => {
       hideZipProgress();
@@ -628,6 +636,20 @@ export function setupInvoiceBulkActions(tableApi, tableId) {
   // Form submission: inject hidden inputs for all selected invoices across all pages
   if (bulkForm && !bulkForm.dataset.bulkFormBound) {
     bulkForm.dataset.bulkFormBound = 'true';
+
+    // Ensure clicked submit button value is tracked in hidden field
+    $(bulkForm).on('click', 'button[type="submit"][name="bulk_action"]', function () {
+      let actionInput = bulkForm.querySelector('input[type="hidden"].bulk-action-hidden-field');
+      if (!actionInput) {
+        actionInput = document.createElement('input');
+        actionInput.type = 'hidden';
+        actionInput.name = 'bulk_action';
+        actionInput.className = 'bulk-action-hidden-field';
+        bulkForm.appendChild(actionInput);
+      }
+      actionInput.value = this.value;
+    });
+
     bulkForm.addEventListener('submit', function (e) {
       // Remove previously appended hidden inputs
       bulkForm.querySelectorAll('input[name="invoice_ids[]"]').forEach((el) => el.remove());
@@ -636,6 +658,19 @@ export function setupInvoiceBulkActions(tableApi, tableId) {
         e.preventDefault();
         showInvoiceToast('Please select at least one invoice.', 'warning');
         return;
+      }
+
+      // If e.submitter is provided and has name="bulk_action", sync it
+      if (e.submitter && e.submitter.getAttribute('name') === 'bulk_action') {
+        let actionInput = bulkForm.querySelector('input[type="hidden"].bulk-action-hidden-field');
+        if (!actionInput) {
+          actionInput = document.createElement('input');
+          actionInput.type = 'hidden';
+          actionInput.name = 'bulk_action';
+          actionInput.className = 'bulk-action-hidden-field';
+          bulkForm.appendChild(actionInput);
+        }
+        actionInput.value = e.submitter.value;
       }
 
       selectionMap.forEach((_, invId) => {

@@ -76,11 +76,30 @@ export function exportInvoicesToCsv(tableElement) {
   let $table = tableElement ? $(tableElement) : null;
 
   if (!$table || !$table.length) {
-    // Find table in currently active tab and subtab
-    const $activeTabPane = $('.invoices-page .tab-content > .tab-pane.active, .invoices-page .tab-content > .tab-pane.show.active');
-    const $activeSubPane = $activeTabPane.find('.tab-content > .tab-pane.active, .tab-content > .tab-pane.show.active');
-    const $targetPane = $activeSubPane.length ? $activeSubPane : $activeTabPane;
-    $table = $targetPane.find('table.invoice-datatable');
+    // Look for currently visible invoice datatable on the page
+    $table = $('table.invoice-datatable:visible');
+    if (!$table.length) {
+      const $activeMainTab = $('#invoiceTabsContent > .tab-pane.active, #invoiceTabsContent > .tab-pane.show.active, .invoices-page .tab-content > .tab-pane.active');
+      const $activeSubPane = $activeMainTab.find('.tab-content > .tab-pane.active, .tab-content > .tab-pane.show.active');
+      const $targetPane = $activeSubPane.length ? $activeSubPane : $activeMainTab;
+      $table = $targetPane.find('table.invoice-datatable:visible');
+      if (!$table.length) {
+        $table = $targetPane.find('table.invoice-datatable');
+      }
+    }
+  }
+
+  // If multiple tables matched, select the one that is visible or in an active pane
+  if ($table.length > 1) {
+    const $visible = $table.filter(':visible');
+    if ($visible.length) {
+      $table = $visible.first();
+    } else {
+      const $inActive = $table.filter(function () {
+        return $(this).closest('.tab-pane').hasClass('active');
+      });
+      $table = $inActive.length ? $inActive.first() : $table.first();
+    }
   }
 
   if (!$table.length) {
@@ -104,22 +123,36 @@ export function exportInvoicesToCsv(tableElement) {
     console.warn('Failed to parse data-ajax-data:', e);
   }
 
-  // Determine active search value
-  const searchValue = tableApi ? (tableApi.search() || '') : '';
+  // Determine active search value from DataTables API or input
+  let searchValue = '';
+  if (tableApi) {
+    searchValue = tableApi.search() || '';
+  }
+  if (!searchValue) {
+    const $searchInput = $table.closest('.dataTables_wrapper').find('div.dataTables_filter input');
+    if ($searchInput.length && $searchInput.val()) {
+      searchValue = $searchInput.val().trim();
+    }
+  }
 
-  // Determine active status filter
+  // Determine active status filter from column search or active card filter
   let statusFilter = '';
   if (tableApi) {
-    const colSearch = tableApi.column(6).search() || tableApi.column(5).search();
+    const headers = tableApi.columns().header().toArray();
+    const statusColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('status'));
+    const colSearch = statusColIdx !== -1 ? tableApi.column(statusColIdx).search() : (tableApi.column(6).search() || tableApi.column(5).search());
     if (colSearch) {
       statusFilter = colSearch.replace(/[\^\$]/g, '').trim();
     }
   }
   if (!statusFilter) {
-    const $activeCard = $table.closest('.tab-pane').find('.card-filter.active');
+    const $activeCard = $table.closest('.invoices-page, body').find('#invoiceTabsContent > .tab-pane.active .card-filter.active, .invoices-page .tab-content > .tab-pane.active .card-filter.active');
     if ($activeCard.length) {
       statusFilter = ($activeCard.data('status') || '').toString().trim();
     }
+  }
+  if (statusFilter.toLowerCase() === 'total') {
+    statusFilter = '';
   }
 
   // Determine sort order
@@ -176,15 +209,20 @@ export function exportInvoicesToCsv(tableElement) {
       }
 
       const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
+      const downloadUrl = (window.URL || window.webkitURL).createObjectURL(blob);
       const link = document.createElement('a');
       link.href = downloadUrl;
       link.download = filename;
       link.style.display = 'none';
       document.body.appendChild(link);
       link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(downloadUrl);
+
+      setTimeout(() => {
+        if (link.parentNode) {
+          document.body.removeChild(link);
+        }
+        (window.URL || window.webkitURL).revokeObjectURL(downloadUrl);
+      }, 2000);
 
       const countText = count ? `${count} ` : '';
       showInvoiceToast(`Exported ${countText}filtered invoice record${count === '1' ? '' : 's'} to ${filename}.`, 'success');

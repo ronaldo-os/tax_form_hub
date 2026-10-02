@@ -587,10 +587,26 @@ function initInvoicePage() {
         $this.closest(".row").find(".card-filter").removeClass("active");
         $this.addClass("active");
 
-        if ($.fn.DataTable && tableSelector && $(tableSelector).length) {
+        const $mainPane = $this.closest('.tab-pane');
+        const $tables = $mainPane.find('table.invoice-datatable');
+
+        if ($tables.length && $.fn.DataTable) {
+            $tables.each(function () {
+                if ($.fn.DataTable.isDataTable(this)) {
+                    const table = $(this).DataTable();
+                    const headers = table.columns().header().toArray();
+                    const statusColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('status'));
+                    const targetCol = statusColIdx !== -1 ? statusColIdx : 6;
+                    if (status) {
+                        table.column(targetCol).search('^' + status + '$', true, false, true).draw();
+                    } else {
+                        table.column(targetCol).search("").draw();
+                    }
+                }
+            });
+        } else if ($.fn.DataTable && tableSelector && $(tableSelector).length) {
             const table = $(tableSelector).DataTable();
             if (status) {
-                // Use exact regex with caseInsen = true (4th param) to match formatted status text (e.g. "Draft", "Sent", "Paid")
                 table.column(6).search('^' + status + '$', true, false, true).draw();
             } else {
                 table.column(6).search("").draw();

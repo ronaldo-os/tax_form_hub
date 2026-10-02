@@ -27,45 +27,40 @@
           </button>
 
           <!-- Update Status Dropdown -->
-          <div class="dropdown">
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold dropdown-toggle d-inline-flex align-items-center gap-1.5" type="button" id="bulkStatusDropdown_<%= table_id %>" data-bs-toggle="dropdown" data-bs-offset="0,6" aria-expanded="false">
-              <i class="fa-solid fa-arrows-rotate"></i>
-              <span>Update Status</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-1.5 bulk-status-dropdown-menu" aria-labelledby="bulkStatusDropdown_<%= table_id %>">
-              <li><h6 class="dropdown-header text-uppercase fs-8 text-muted">Change Status To</h6></li>
-              <li>
-                <button type="submit" name="bulk_action" value="mark_paid" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Paid?">
-                  <span class="badge bg-success-subtle text-success p-1 rounded-circle"><i class="fa-solid fa-check fs-9"></i></span>
-                  <span>Paid</span>
-                </button>
-              </li>
-              <li>
-                <button type="submit" name="bulk_action" value="mark_approved" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Approved?">
-                  <span class="badge bg-success-subtle text-success p-1 rounded-circle"><i class="fa-solid fa-thumbs-up fs-9"></i></span>
-                  <span>Approved</span>
-                </button>
-              </li>
-              <li>
-                <button type="submit" name="bulk_action" value="mark_sent" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Sent?">
-                  <span class="badge bg-info-subtle text-info p-1 rounded-circle"><i class="fa-solid fa-paper-plane fs-9"></i></span>
-                  <span>Sent</span>
-                </button>
-              </li>
-              <li>
-                <button type="submit" name="bulk_action" value="mark_rejected" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Rejected?">
-                  <span class="badge bg-danger-subtle text-danger p-1 rounded-circle"><i class="fa-solid fa-xmark fs-9"></i></span>
-                  <span>Rejected</span>
-                </button>
-              </li>
-              <li>
-                <button type="submit" name="bulk_action" value="mark_draft" class="dropdown-item d-flex align-items-center gap-2 py-2" data-turbo-confirm="Mark selected invoices as Draft?">
-                  <span class="badge bg-secondary-subtle text-secondary p-1 rounded-circle"><i class="fa-solid fa-file-pen fs-9"></i></span>
-                  <span>Draft</span>
-                </button>
-              </li>
-            </ul>
-          </div>
+          <% is_sale_invoice = (local_assigns[:invoice_type] == 'sale' && !local_assigns[:quote]) %>
+          <% is_purchase = (local_assigns[:invoice_type] == 'purchase') %>
+          <% if is_sale_invoice %>
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold dropdown-toggle" type="button" id="bulkStatusDropdown_<%= table_id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                Update Status
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1 bulk-status-dropdown-menu" aria-labelledby="bulkStatusDropdown_<%= table_id %>">
+                <li>
+                  <button type="submit" name="bulk_action" value="mark_paid" class="dropdown-item py-1.5" data-turbo-confirm="Mark selected invoices as Paid?">
+                    Mark as Paid
+                  </button>
+                </li>
+              </ul>
+            </div>
+          <% elsif is_purchase %>
+            <div class="dropdown">
+              <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold dropdown-toggle" type="button" id="bulkStatusDropdown_<%= table_id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                Update Status
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1 bulk-status-dropdown-menu" aria-labelledby="bulkStatusDropdown_<%= table_id %>">
+                <li>
+                  <button type="submit" name="bulk_action" value="mark_approved" class="dropdown-item py-1.5" data-turbo-confirm="Approve selected <%= local_assigns[:quote] ? 'quotes' : 'invoices' %>?">
+                    Approve
+                  </button>
+                </li>
+                <li>
+                  <button type="submit" name="bulk_action" value="mark_rejected" class="dropdown-item py-1.5 text-danger" data-turbo-confirm="Reject selected <%= local_assigns[:quote] ? 'quotes' : 'invoices' %>?">
+                    Reject
+                  </button>
+                </li>
+              </ul>
+            </div>
+          <% end %>
 
           <!-- Archive / Unarchive Button -->
           <% if local_assigns[:archived] %>

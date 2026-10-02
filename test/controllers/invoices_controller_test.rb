@@ -567,6 +567,28 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "INV-PAID-100"
   end
 
+  test "export_csv preserves datatable ordering in exported CSV records" do
+    company = Company.create!(name: "Order Test Company", user: @user)
+    Invoice.create!(user: @user, recipient_company: company, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-001", issue_date: Date.new(2026, 1, 1), status: "paid")
+    Invoice.create!(user: @user, recipient_company: company, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-002", issue_date: Date.new(2026, 6, 1), status: "paid")
+
+    # Order by invoice_number DESC (column 1)
+    get export_csv_invoices_url, params: { invoice_type: "sale", order_column: "1", order_dir: "desc" }
+    assert_response :success
+    body = response.body
+    pos_inv2 = body.index("INV-002")
+    pos_inv1 = body.index("INV-001")
+    assert pos_inv2 < pos_inv1, "INV-002 should appear before INV-001 when ordered DESC"
+
+    # Order by invoice_number ASC (column 1)
+    get export_csv_invoices_url, params: { invoice_type: "sale", order_column: "1", order_dir: "asc" }
+    assert_response :success
+    body = response.body
+    pos_inv2 = body.index("INV-002")
+    pos_inv1 = body.index("INV-001")
+    assert pos_inv1 < pos_inv2, "INV-001 should appear before INV-002 when ordered ASC"
+  end
+
   test "export_csv sanitizes cells against formula injection (CWE-1236)" do
     malicious_company = Company.create!(name: "=cmd|' /C calc'!A0", user: @user)
     Invoice.create!(
@@ -640,6 +662,56 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
       assert_select "a[href*='/invoices/new']", text: /Create Invoice/
       assert_select "a[href*='category=quote']", text: /Create Quote/
       assert_select "a[href*='category=credit_note']", text: /Create Credit Note/
+    end
+  end
+
+  test "index page renders bulk action bars with simplified authorized status dropdowns" do
+    get invoices_url
+    assert_response :success
+
+    # Sales Table bulk bar: has Export ZIP, Delete, Archive, and Update Status with ONLY 'Mark as Paid'
+    assert_select "#bulk_action_bar_sales-table" do
+      assert_select "button.bulk-export-zip-btn"
+      assert_select "button[value='archive']"
+      assert_select "button[value='destroy']"
+      assert_select "#bulkStatusDropdown_sales-table", text: /Update Status/
+      assert_select "#bulkStatusDropdown_sales-table i", count: 0 # no icons in dropdown button
+      assert_select "button[value='mark_paid']", text: /Mark as Paid/
+      assert_select "button[value='mark_paid'] i", count: 0 # no icons in dropdown item
+      assert_select "button[value='mark_approved']", count: 0
+      assert_select "button[value='mark_rejected']", count: 0
+    end
+
+    # Purchases Table bulk bar: has Export ZIP, Delete, Archive, and Update Status with 'Approve' and 'Reject'
+    assert_select "#bulk_action_bar_purchases-table" do
+      assert_select "button.bulk-export-zip-btn"
+      assert_select "button[value='archive']"
+      assert_select "button[value='destroy']"
+      assert_select "#bulkStatusDropdown_purchases-table", text: /Update Status/
+      assert_select "#bulkStatusDropdown_purchases-table i", count: 0 # no icons in dropdown button
+      assert_select "button[value='mark_approved']", text: /Approve/
+      assert_select "button[value='mark_rejected']", text: /Reject/
+      assert_select "button[value='mark_approved'] i", count: 0 # no icons
+      assert_select "button[value='mark_rejected'] i", count: 0 # no icons
+      assert_select "button[value='mark_paid']", count: 0
+    end
+
+    # Sent Quotes Table bulk bar: should NOT have Update Status dropdown
+    assert_select "#bulk_action_bar_sent-quotes-table" do
+      assert_select "button.bulk-export-zip-btn"
+      assert_select "button[value='archive']"
+      assert_select "button[value='destroy']"
+      assert_select "#bulkStatusDropdown_sent-quotes-table", count: 0
+    end
+
+    # Received Quotes Table bulk bar: has Approve and Reject
+    assert_select "#bulk_action_bar_received-quotes-table" do
+      assert_select "button.bulk-export-zip-btn"
+      assert_select "button[value='archive']"
+      assert_select "button[value='destroy']"
+      assert_select "#bulkStatusDropdown_received-quotes-table", text: /Update Status/
+      assert_select "button[value='mark_approved']", text: /Approve/
+      assert_select "button[value='mark_rejected']", text: /Reject/
     end
   end
 
@@ -769,6 +841,38 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
       tab: "sales-invoices"
     }
     assert_equal "draft", inv_draft.reload.status
+  end
+
+  test "bulk_action enforces status update authorization rules" do
+    # Sales invoice cannot be approved or rejected via bulk action
+    sale_inv = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-SALE-AUTH", status: "sent")
+    post bulk_action_invoices_url, params: {
+      bulk_action: "mark_approved",
+      invoice_ids: [sale_inv.id],
+      tab: "sales-invoices"
+    }
+    assert_equal "sent", sale_inv.reload.status
+    assert_equal "Could not update the status of the selected invoices.", flash[:alert]
+
+    # Purchase invoice cannot be marked as paid via bulk action
+    purch_inv = Invoice.create!(user: @user, invoice_type: "purchase", invoice_category: "standard", invoice_number: "INV-PURCH-AUTH", status: "pending")
+    post bulk_action_invoices_url, params: {
+      bulk_action: "mark_paid",
+      invoice_ids: [purch_inv.id],
+      tab: "purchase-invoices"
+    }
+    assert_equal "pending", purch_inv.reload.status
+    assert_equal "Could not update the status of the selected invoices.", flash[:alert]
+
+    # Quotes cannot be marked as paid via bulk action
+    quote_inv = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "quote", invoice_number: "QUO-AUTH-1", status: "sent")
+    post bulk_action_invoices_url, params: {
+      bulk_action: "mark_paid",
+      invoice_ids: [quote_inv.id],
+      tab: "sent-quotes"
+    }
+    assert_equal "sent", quote_inv.reload.status
+    assert_equal "Could not update the status of the selected invoices.", flash[:alert]
   end
 
   test "bulk_action strictly enforces tenant isolation and prevents modifying other users invoices" do
