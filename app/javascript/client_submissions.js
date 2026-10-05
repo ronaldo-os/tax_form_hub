@@ -1,5 +1,6 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
 import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
+import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
 
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
@@ -16,6 +17,29 @@ function initClientSubmissionsPage() {
         return;
     }
 
+    const initial = getInitialTableState();
+
+    // Tab restoration based on URL parameter or sessionStorage fallback
+    if (initial.tab === 'archived') {
+        const archivedTab = document.getElementById('archived-tab');
+        if (archivedTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(archivedTab).show();
+        }
+    } else if (initial.tab === 'active' || initial.tab === 'unarchived') {
+        const activeTab = document.getElementById('unarchived-tab') || document.getElementById('active-tab');
+        if (activeTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(activeTab).show();
+        }
+    } else {
+        const savedTabId = sessionStorage.getItem('activeClientSubmissionsTabId');
+        if (savedTabId && document.getElementById(savedTabId)) {
+            const tabEl = document.getElementById(savedTabId);
+            if (tabEl && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                bootstrap.Tab.getOrCreateInstance(tabEl).show();
+            }
+        }
+    }
+
     const tables = [];
 
     $('.submissionsTable').each(function () {
@@ -26,16 +50,20 @@ function initClientSubmissionsPage() {
             return;
         }
 
+        const defaultOrder = [[8, 'desc']];
+        const resolvedOrder = resolveSortOrder($(this), initial.sort, initial.dir, defaultOrder);
+
         const table = $(this).DataTable({
             responsive: true,
             paging: true,
             searching: true,
             ordering: true,
-            order: [[8, 'desc']],
+            order: resolvedOrder,
             columnDefs: [
                 { orderable: false, targets: [0, -1] }
             ],
             pageLength: 25,
+            displayStart: initial.page > 1 ? (initial.page - 1) * 25 : 0,
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             lengthChange: true,
             language: {
@@ -71,6 +99,8 @@ function initClientSubmissionsPage() {
                 const companyColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('company'));
                 const statusColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('status'));
 
+                let needsRedraw = false;
+
                 // Create Company Filter Select if company column exists
                 if (companyColIdx !== -1 && !$container.find('.custom-company-filter').length) {
                     const $companySelect = $('<select class="form-select form-select-sm custom-company-filter"><option value="">All Companies</option></select>');
@@ -89,6 +119,7 @@ function initClientSubmissionsPage() {
 
                     $companySelect.on('change', function () {
                         const val = $(this).val();
+                        updateUrlParams({ company: val || null }, { clearPage: true });
                         if (val) {
                             api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
                         } else {
@@ -97,6 +128,14 @@ function initClientSubmissionsPage() {
                     });
 
                     $lengthDiv.append($companySelect);
+
+                    if (initial.company) {
+                        $companySelect.val(initial.company);
+                        if ($companySelect.val() === initial.company) {
+                            api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(initial.company) + '$', true, false);
+                            needsRedraw = true;
+                        }
+                    }
                 }
 
                 // Create Status Filter Select if status column exists
@@ -113,6 +152,7 @@ function initClientSubmissionsPage() {
 
                     $statusSelect.on('change', function () {
                         const val = $(this).val();
+                        updateUrlParams({ status: val || null }, { clearPage: true });
                         if (val) {
                             api.column(statusColIdx).search($.fn.dataTable.util.escapeRegex(val), true, false).draw();
                         } else {
@@ -121,6 +161,14 @@ function initClientSubmissionsPage() {
                     });
 
                     $lengthDiv.append($statusSelect);
+
+                    if (initial.status) {
+                        $statusSelect.val(initial.status);
+                        if ($statusSelect.val()) {
+                            api.column(statusColIdx).search($.fn.dataTable.util.escapeRegex(initial.status), true, false);
+                            needsRedraw = true;
+                        }
+                    }
                 }
 
                 // Append Export CSV button to custom filter bar
@@ -141,6 +189,21 @@ function initClientSubmissionsPage() {
 
                     $lengthDiv.append($exportBtn);
                 }
+
+                // Search input synchronization
+                const $searchInput = $container.find('div.dataTables_filter input');
+                if (initial.search) {
+                    $searchInput.val(initial.search);
+                    api.search(initial.search);
+                    needsRedraw = true;
+                }
+                bindSearchInputSync($searchInput);
+                bindPaginationSync(api);
+                bindOrderSync(api, { defaultOrder: defaultOrder });
+
+                if (needsRedraw) {
+                    api.draw(false);
+                }
             },
             drawCallback: function () {
                 const api = this.api();
@@ -158,8 +221,10 @@ function initClientSubmissionsPage() {
 
     // Tab persistence and table adjustment
     $('button[data-bs-toggle="tab"]').off('shown.bs.tab.client').on('shown.bs.tab.client', function (e) {
-        const targetId = $(e.target).attr('id');
+        const targetId = $(e.target).attr('id') || '';
+        const isArchived = targetId.includes('archived');
         sessionStorage.setItem('activeClientSubmissionsTabId', targetId);
+        updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
         tables.forEach(function (table) {
             table.columns.adjust().responsive.recalc();
             fixEmptyRowColspan(table);
@@ -168,15 +233,6 @@ function initClientSubmissionsPage() {
             }, 50);
         });
     });
-
-    const activeTabId = sessionStorage.getItem('activeClientSubmissionsTabId');
-    if (activeTabId && document.getElementById(activeTabId)) {
-        const tabEl = document.getElementById(activeTabId);
-        if (tabEl) {
-            const tabTrigger = bootstrap.Tab.getOrCreateInstance(tabEl);
-            tabTrigger.show();
-        }
-    }
 
     // Show file previews (thumbnails for images, icons for PDFs)
     function updateFileList(inputSelector, listSelector, multiple = true) {
@@ -418,6 +474,11 @@ document.addEventListener("turbo:before-cache", function () {
 
 document.addEventListener("turbo:load", initClientSubmissionsPage);
 document.addEventListener("DOMContentLoaded", initClientSubmissionsPage);
+window.addEventListener("popstate", function () {
+    if (window.location.pathname.includes("/tax_submissions") && $('.submissionsTable').length > 0) {
+        initClientSubmissionsPage();
+    }
+});
 
 // Init immediately to catch late-loading scripts
 initClientSubmissionsPage();

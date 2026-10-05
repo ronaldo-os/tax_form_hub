@@ -1,5 +1,6 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
 import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
+import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
 
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
@@ -16,6 +17,27 @@ function initSubmissionTables() {
         return;
     }
 
+    const initial = getInitialTableState();
+
+    // Tab restoration based on URL parameter or sessionStorage fallback
+    if (initial.tab === 'archived') {
+        const archivedTab = document.getElementById('archived-tab');
+        if (archivedTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(archivedTab).show();
+        }
+    } else if (initial.tab === 'active') {
+        const activeTab = document.getElementById('active-tab');
+        if (activeTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(activeTab).show();
+        }
+    } else {
+        const activeTabId = sessionStorage.getItem('activeIncomingSubmissionsTab');
+        if (activeTabId && document.getElementById(activeTabId)) {
+            const tabTrigger = bootstrap.Tab.getOrCreateInstance(document.getElementById(activeTabId));
+            tabTrigger.show();
+        }
+    }
+
     const submissionTables = [];
 
     ['#taxSubmissionsTableActive', '#taxSubmissionsTableArchived'].forEach(function (selector) {
@@ -27,6 +49,9 @@ function initSubmissionTables() {
                 return;
             }
 
+            const defaultOrder = [[9, 'desc']];
+            const resolvedOrder = resolveSortOrder($(selector), initial.sort, initial.dir, defaultOrder);
+
             const table = $(selector).DataTable({
                 responsive: true,
                 paging: true,
@@ -34,11 +59,11 @@ function initSubmissionTables() {
                 info: true,
                 lengthChange: true,
                 pageLength: 10,
-                order: [[9, 'desc']],
+                displayStart: initial.page > 1 ? (initial.page - 1) * 10 : 0,
+                order: resolvedOrder,
                 columnDefs: [
                     { orderable: false, targets: [0, -1] }
                 ],
-                stateSave: true,
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search submissions...",
@@ -72,6 +97,8 @@ function initSubmissionTables() {
                     const companyColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('company'));
                     const statusColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('status'));
 
+                    let needsRedraw = false;
+
                     // Create Company Filter Select if company column exists
                     if (companyColIdx !== -1 && !$container.find('.custom-company-filter').length) {
                         const $companySelect = $('<select class="form-select form-select-sm custom-company-filter"><option value="">All Companies</option></select>');
@@ -90,6 +117,7 @@ function initSubmissionTables() {
 
                         $companySelect.on('change', function () {
                             const val = $(this).val();
+                            updateUrlParams({ company: val || null }, { clearPage: true });
                             if (val) {
                                 api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
                             } else {
@@ -98,6 +126,14 @@ function initSubmissionTables() {
                         });
 
                         $lengthDiv.append($companySelect);
+
+                        if (initial.company) {
+                            $companySelect.val(initial.company);
+                            if ($companySelect.val() === initial.company) {
+                                api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(initial.company) + '$', true, false);
+                                needsRedraw = true;
+                            }
+                        }
                     }
 
                     // Create Status Filter Select if status column exists
@@ -114,6 +150,7 @@ function initSubmissionTables() {
 
                         $statusSelect.on('change', function () {
                             const val = $(this).val();
+                            updateUrlParams({ status: val || null }, { clearPage: true });
                             if (val) {
                                 api.column(statusColIdx).search($.fn.dataTable.util.escapeRegex(val), true, false).draw();
                             } else {
@@ -122,6 +159,14 @@ function initSubmissionTables() {
                         });
 
                         $lengthDiv.append($statusSelect);
+
+                        if (initial.status) {
+                            $statusSelect.val(initial.status);
+                            if ($statusSelect.val()) {
+                                api.column(statusColIdx).search($.fn.dataTable.util.escapeRegex(initial.status), true, false);
+                                needsRedraw = true;
+                            }
+                        }
                     }
 
                     // Append Export CSV button to custom filter bar
@@ -141,6 +186,21 @@ function initSubmissionTables() {
 
                         $lengthDiv.append($exportBtn);
                     }
+
+                    // Search input synchronization
+                    const $searchInput = $container.find('div.dataTables_filter input');
+                    if (initial.search) {
+                        $searchInput.val(initial.search);
+                        api.search(initial.search);
+                        needsRedraw = true;
+                    }
+                    bindSearchInputSync($searchInput);
+                    bindPaginationSync(api);
+                    bindOrderSync(api, { defaultOrder: defaultOrder });
+
+                    if (needsRedraw) {
+                        api.draw(false);
+                    }
                 },
                 drawCallback: function () {
                     const api = this.api();
@@ -159,7 +219,10 @@ function initSubmissionTables() {
 
     // Tab persistence and table adjustment
     $('button[data-bs-toggle="tab"]').off('shown.bs.tab').on('shown.bs.tab', function (e) {
-        sessionStorage.setItem('activeIncomingSubmissionsTab', $(e.target).attr('id'));
+        const targetId = $(e.target).attr('id') || '';
+        const isArchived = targetId.includes('archived');
+        sessionStorage.setItem('activeIncomingSubmissionsTab', targetId);
+        updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
         submissionTables.forEach(function (table) {
             table.columns.adjust().responsive.recalc();
             fixEmptyRowColspan(table);
@@ -168,12 +231,6 @@ function initSubmissionTables() {
             }, 50);
         });
     });
-
-    const activeTabId = sessionStorage.getItem('activeIncomingSubmissionsTab');
-    if (activeTabId && document.getElementById(activeTabId)) {
-        const tabTrigger = bootstrap.Tab.getOrCreateInstance(document.getElementById(activeTabId));
-        tabTrigger.show();
-    }
 
 
     $('.auto-submit').off('change.auto-submit').on('change.auto-submit', function () {
@@ -215,12 +272,13 @@ function initSubmissionTables() {
     });
 }
 
-// Bind to turbo:load for navigation support
-// Bind to turbo:load for navigation support
 document.addEventListener("turbo:load", initSubmissionTables);
-
-// Also run on DOMContentLoaded just in case turbo isn't controlling the initial load or for fallback
 document.addEventListener("DOMContentLoaded", initSubmissionTables);
+window.addEventListener("popstate", function () {
+    if (window.location.pathname.match(/(\/admin\/tax_submissions|\/tax_submissions)/)) {
+        initSubmissionTables();
+    }
+});
 
 // Run immediately if the script is loaded after the event has already fired (e.g. via Turbo navigation injection)
 initSubmissionTables();

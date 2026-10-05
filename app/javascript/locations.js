@@ -1,3 +1,5 @@
+import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+
 function fixEmptyRowColspan(api) {
     const table = api.table ? api.table().node() : api;
     const $emptyCell = $(table).find('td.dataTables_empty');
@@ -173,15 +175,21 @@ function setupLocationsBulkActions(tableApi) {
 function initLocationsPage() {
     if (!window.location.pathname.includes("/locations") || $('#location-table').length === 0) return;
 
-    const $table = $('#location-table').DataTable({
+    const initial = getInitialTableState();
+
+    const defaultOrder = [[1, 'asc']];
+    const resolvedOrder = resolveSortOrder($('#location-table'), initial.sort, initial.dir, defaultOrder);
+
+    const dtConfig = {
         responsive: true,
         autoWidth: false,
         destroy: true,
-        order: [[1, 'asc']],
+        order: resolvedOrder,
         columnDefs: [
             { orderable: false, targets: [0, -1] }
         ],
         pageLength: 25,
+        displayStart: initial.page > 1 ? (initial.page - 1) * 25 : 0,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         language: {
             search: "_INPUT_",
@@ -216,6 +224,8 @@ function initLocationsPage() {
             const typeColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('type'));
             const companyColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('company'));
 
+            let needsFilterRedraw = false;
+
             // Create Type Filter Select if Type column exists
             if (typeColIdx !== -1 && !$container.find('.custom-type-filter').length) {
                 const $typeSelect = $('<select class="form-select form-select-sm custom-type-filter"><option value="">All Types</option></select>');
@@ -234,6 +244,7 @@ function initLocationsPage() {
 
                 $typeSelect.on('change', function () {
                     const val = $(this).val();
+                    updateUrlParams({ type: val || null }, { clearPage: true });
                     if (val) {
                         api.column(typeColIdx).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
                     } else {
@@ -242,6 +253,14 @@ function initLocationsPage() {
                 });
 
                 $lengthDiv.append($typeSelect);
+
+                if (initial.type) {
+                    $typeSelect.val(initial.type);
+                    if ($typeSelect.val() === initial.type) {
+                        api.column(typeColIdx).search('^' + $.fn.dataTable.util.escapeRegex(initial.type) + '$', true, false);
+                        needsFilterRedraw = true;
+                    }
+                }
             }
 
             // Create Company Filter Select if Company column exists
@@ -262,6 +281,7 @@ function initLocationsPage() {
 
                 $companySelect.on('change', function () {
                     const val = $(this).val();
+                    updateUrlParams({ company: val || null }, { clearPage: true });
                     if (val) {
                         api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(val) + '$', true, false).draw();
                     } else {
@@ -270,6 +290,29 @@ function initLocationsPage() {
                 });
 
                 $lengthDiv.append($companySelect);
+
+                if (initial.company) {
+                    $companySelect.val(initial.company);
+                    if ($companySelect.val() === initial.company) {
+                        api.column(companyColIdx).search('^' + $.fn.dataTable.util.escapeRegex(initial.company) + '$', true, false);
+                        needsFilterRedraw = true;
+                    }
+                }
+            }
+
+            // Search input synchronization
+            const $searchInput = $container.find('div.dataTables_filter input');
+            if (initial.search) {
+                $searchInput.val(initial.search);
+                api.search(initial.search);
+                needsFilterRedraw = true;
+            }
+            bindSearchInputSync($searchInput);
+            bindPaginationSync(api);
+            bindOrderSync(api, { defaultOrder: defaultOrder });
+
+            if (needsFilterRedraw) {
+                api.draw(false);
             }
 
             setupLocationsBulkActions(api);
@@ -278,7 +321,9 @@ function initLocationsPage() {
             const api = this.api();
             fixEmptyRowColspan(api);
         }
-    });
+    };
+
+    const $table = $('#location-table').DataTable(dtConfig);
 
     // Fix empty row colspan on draw and resize
     $table.on('draw.dt responsive-resize.dt', function () {
@@ -346,6 +391,11 @@ function initLocationsPage() {
 
 document.addEventListener("turbo:load", initLocationsPage);
 document.addEventListener("DOMContentLoaded", initLocationsPage);
+window.addEventListener("popstate", function () {
+    if (window.location.pathname.includes("/locations")) {
+        initLocationsPage();
+    }
+});
 
 // Init immediately to catch late-loading scripts
 initLocationsPage();

@@ -27,12 +27,17 @@ module DatatablesServerSide
   # Renders JSON response for DataTables server-side processing
   # @param datatable [Object] Datatable object that responds to #data, #records_filtered, #records_total
   def render_datatable_json(datatable)
-    render json: {
+    response_data = {
       draw: params[:draw].to_i,
       recordsTotal: datatable.records_total,
       recordsFiltered: datatable.records_filtered,
       data: datatable.data
     }
+    if datatable.respond_to?(:total_amount)
+      response_data[:totalAmount] = datatable.total_amount
+      response_data[:formattedTotalAmount] = datatable.formatted_total_amount
+    end
+    render json: response_data
   rescue StandardError => e
     Rails.logger.error "DataTables error: #{e.message}"
     Rails.logger.error e.backtrace.first(10).join("\n")

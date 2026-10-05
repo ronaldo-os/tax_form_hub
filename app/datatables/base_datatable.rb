@@ -78,6 +78,8 @@ class BaseDatatable
   def order_params
     if params[:order].present?
       params[:order]
+    elsif params[:sort].present?
+      { '0' => { 'column' => params[:sort].to_s, 'dir' => (params[:dir] || 'desc').to_s } }
     elsif params[:order_column].present?
       { '0' => { 'column' => params[:order_column].to_s, 'dir' => (params[:order_dir] || 'desc').to_s } }
     else
@@ -106,10 +108,13 @@ class BaseDatatable
     has_custom_order = false
 
     order_params.each do |_, order|
-      column_index = order['column'].to_i
-      direction = order['dir'].to_s.downcase == 'asc' ? 'ASC' : 'DESC'
+      col_val = order['column'] || order[:column]
+      dir_val = order['dir'] || order[:dir]
+      direction = dir_val.to_s.downcase == 'asc' ? 'ASC' : 'DESC'
 
-      column = sortable_columns[column_index] || sortable_columns[column_index.to_s]
+      column = sortable_columns[col_val] ||
+               sortable_columns[col_val.to_s] ||
+               sortable_columns[col_val.to_i]
       if column.present?
         relation = has_custom_order ? relation.order(Arel.sql("#{column} #{direction}")) : relation.reorder(Arel.sql("#{column} #{direction}"))
         has_custom_order = true

@@ -1,3 +1,5 @@
+import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+
 function fixEmptyRowColspan(api) {
     const table = api.table ? api.table().node() : api;
     const $emptyCell = $(table).find('td.dataTables_empty');
@@ -182,6 +184,27 @@ function initSubscriptionsPage() {
         return;
     }
 
+    const initial = getInitialTableState();
+
+    // Restore top-level tab (sales vs purchases)
+    if (initial.tab) {
+        const topTabBtn = document.getElementById(`${initial.tab}-tab`);
+        if (topTabBtn && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(topTabBtn).show();
+        }
+    }
+
+    // Restore inner status tab (active, finished, cancelled)
+    const statusParam = initial.status || initial.subtab;
+    if (statusParam) {
+        const currentTopTab = (initial.tab && ['sales', 'purchases'].includes(initial.tab)) ? initial.tab : 'sales';
+        const innerTabId = `${currentTopTab}-${statusParam}-tab`;
+        const innerTabBtn = document.getElementById(innerTabId);
+        if (innerTabBtn && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(innerTabBtn).show();
+        }
+    }
+
     $('.subscription-table').each(function() {
         const tableNode = this;
         const tableId = $(tableNode).attr('id');
@@ -214,13 +237,17 @@ function initSubscriptionsPage() {
             ? [{ orderable: false, targets: [0, -1] }] 
             : [{ orderable: false, targets: [-1] }];
 
+        const defaultOrder = [[nextInvoiceColIdx, 'asc']];
+        const resolvedOrder = resolveSortOrder($(tableNode), initial.sort, initial.dir, defaultOrder);
+
         const tableApi = $(tableNode).DataTable({
             responsive: true,
             autoWidth: false,
             destroy: true,
             pageLength: 25,
+            displayStart: initial.page > 1 ? (initial.page - 1) * 25 : 0,
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-            order: [[nextInvoiceColIdx, 'asc']], // Order by Next Invoice column
+            order: resolvedOrder,
             columnDefs: columnDefs,
             language: {
                 search: "",
@@ -247,6 +274,15 @@ function initSubscriptionsPage() {
                 // Setup filter bar container around dataTables_length (only per-page dropdown filter)
                 const $lengthDiv = $container.find('div.dataTables_length');
                 $lengthDiv.addClass('custom-filter-bar d-flex flex-wrap align-items-center gap-2');
+
+                const $searchInput = $container.find('div.dataTables_filter input');
+                if (initial.search) {
+                    $searchInput.val(initial.search);
+                    api.search(initial.search).draw(false);
+                }
+                bindSearchInputSync($searchInput);
+                bindPaginationSync(api);
+                bindOrderSync(api, { defaultOrder: defaultOrder });
 
                 if (hasCheckboxCol && tableId) {
                     setupSubscriptionsBulkActions(api, tableId);
@@ -312,9 +348,7 @@ function initSubscriptionsPage() {
     // Handle top-level tab switch (Sales vs Purchases)
     $('#subscriptionTypeTabs button[data-bs-toggle="tab"]').off('shown.bs.tab.subs').on('shown.bs.tab.subs', function (e) {
         const tabId = $(e.target).attr('id').replace('-tab', '');
-        const url = new URL(window.location);
-        url.searchParams.set('tab', tabId);
-        window.history.replaceState({}, '', url);
+        updateUrlParams({ tab: tabId });
 
         setTimeout(function () {
             $.fn.dataTable
@@ -324,8 +358,18 @@ function initSubscriptionsPage() {
         }, 150);
     });
 
-    // Also recalculate when inner status tabs are clicked
-    $('.subscriptions-page button[data-bs-toggle="tab"]').off('shown.bs.tab.subs_inner').on('shown.bs.tab.subs_inner', function () {
+    // Also recalculate when inner status tabs are clicked and sync status param
+    $('.subscriptions-page button[data-bs-toggle="tab"]').off('shown.bs.tab.subs_inner').on('shown.bs.tab.subs_inner', function (e) {
+        const tabBtnId = $(e.target).attr('id') || '';
+        let status = null;
+        if (tabBtnId.includes('-active-tab')) status = 'active';
+        else if (tabBtnId.includes('-finished-tab')) status = 'finished';
+        else if (tabBtnId.includes('-cancelled-tab')) status = 'cancelled';
+
+        if (status) {
+            updateUrlParams({ status: status === 'active' ? null : status }, { clearPage: true });
+        }
+
         setTimeout(function () {
             $.fn.dataTable
                 .tables({ visible: true, api: true })
@@ -337,6 +381,11 @@ function initSubscriptionsPage() {
 
 document.addEventListener("turbo:load", initSubscriptionsPage);
 document.addEventListener("DOMContentLoaded", initSubscriptionsPage);
+window.addEventListener("popstate", function () {
+    if (window.location.pathname.includes("/subscriptions")) {
+        initSubscriptionsPage();
+    }
+});
 
 // Init immediately to catch late-loading scripts
 initSubscriptionsPage();

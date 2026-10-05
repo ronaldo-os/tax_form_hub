@@ -88,6 +88,8 @@ class InvoicesController < ApplicationController
     @invoice_trends_purchase = @invoices_data[:invoice_trends_purchase]
 
     @active_tab = params[:tab] || 'sales-invoices'
+    @active_subtab = params[:subtab].to_s.downcase == 'archived' ? 'archived' : 'active'
+    @active_status = params[:status].to_s.downcase.presence || 'total'
 
     respond_to do |format|
       format.html

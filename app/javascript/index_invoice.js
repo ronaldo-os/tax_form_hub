@@ -1,6 +1,15 @@
 import { updatePdfPreviewScale } from './invoice_preview';
 import { initInvoiceExport, showInvoiceToast } from './invoices_export';
 import { setupInvoiceBulkActions } from './invoice_bulk';
+import { 
+    getInitialTableState, 
+    updateUrlParams, 
+    bindSearchInputSync, 
+    bindPaginationSync, 
+    resolveSortOrder, 
+    bindOrderSync, 
+    getUrlParam 
+} from './table_url_sync';
 
 function loadHtml2Pdf() {
     if (typeof html2pdf !== 'undefined') {
@@ -16,8 +25,54 @@ function loadHtml2Pdf() {
     });
 }
 
+/**
+ * Synchronizes the active visual state on .card-filter elements across all panes.
+ * Ensures that if status is e.g. "paid", the Paid card is active, and if empty/null,
+ * the Total card is active.
+ */
+function syncCardFilterState(targetStatus) {
+    const statusVal = (targetStatus || '').toString().trim().toLowerCase();
+    $('.invoice-stats-row').each(function () {
+        const $row = $(this);
+        $row.find('.card-filter').removeClass('active');
+        if (statusVal && ['draft', 'sent', 'paid'].includes(statusVal)) {
+            const $targetCard = $row.find(`.card-filter[data-status="${statusVal}"]`);
+            if ($targetCard.length) {
+                $targetCard.addClass('active');
+            } else {
+                $row.find('.card-filter[data-status=""], .card-filter:not([data-status])').first().addClass('active');
+            }
+        } else {
+            $row.find('.card-filter[data-status=""], .card-filter:not([data-status])').first().addClass('active');
+        }
+    });
+}
+
 function initInvoicePage() {
     if (!window.location.pathname.includes("/invoices")) return;
+
+    const initial = getInitialTableState();
+
+    // Restore active tab if specified in URL and not already active
+    const targetTab = initial.tab || 'sales-invoices';
+    const mainTabBtn = document.getElementById(`${targetTab}-tab`);
+    if (mainTabBtn && !mainTabBtn.classList.contains('active') && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+        bootstrap.Tab.getOrCreateInstance(mainTabBtn).show();
+    }
+
+    // Restore subtab (Active vs Archived) in the active tab
+    const $targetMainPane = $(`#${targetTab}`);
+    if ($targetMainPane.length && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+        const isArchived = initial.subtab === 'archived';
+        const subTabSelector = isArchived ? '.invoice-sub-tabs button[id$="-archived-tab"]' : '.invoice-sub-tabs button[id$="-active-tab"]';
+        const subTabBtn = $targetMainPane.find(subTabSelector)[0];
+        if (subTabBtn && !subTabBtn.classList.contains('active')) {
+            bootstrap.Tab.getOrCreateInstance(subTabBtn).show();
+        }
+    }
+
+    // Synchronize status card selection across tabs
+    syncCardFilterState(initial.status);
 
     initInvoiceExport();
 
@@ -113,13 +168,18 @@ function initInvoicePage() {
             console.warn('Failed to parse data-ajax-data:', e);
         }
 
+        const currentTableState = getInitialTableState();
+        const defaultOrder = [[4, 'desc']]; // Default order by Issue Date DESC (column 4 with checkbox at 0)
+        const resolvedOrder = resolveSortOrder($table, currentTableState.sort, currentTableState.dir, defaultOrder);
+
         const tableConfig = {
             responsive: true,
             autoWidth: false,
             destroy: true, // Important for Turbo
             pageLength: 25,
+            displayStart: currentTableState.page > 1 ? (currentTableState.page - 1) * 25 : 0,
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-            order: [[4, 'desc']], // Default order by Issue Date DESC (column 4 with checkbox at 0)
+            order: resolvedOrder,
             columnDefs: [
                 { orderable: false, targets: [0, 5, 7] }, // Disable sorting on Checkbox, Attachments, and Actions
                 { className: 'text-center', targets: [0, 7] },
@@ -167,9 +227,27 @@ function initInvoicePage() {
                 // Style length select
                 $container.find('div.dataTables_length select').addClass('form-select form-select-sm');
                 // Style filter input
-                $container.find('div.dataTables_filter input').addClass('form-control form-control-sm');
+                const $searchInput = $container.find('div.dataTables_filter input');
+                $searchInput.addClass('form-control form-control-sm');
+
+                if (currentTableState.search) {
+                    $searchInput.val(currentTableState.search);
+                }
+                bindSearchInputSync($searchInput);
+                bindPaginationSync(api);
+                bindOrderSync(api, { defaultOrder: defaultOrder });
             }
         };
+
+        if (currentTableState.search) {
+            tableConfig.search = { search: currentTableState.search };
+        }
+        if (currentTableState.status) {
+            const searchCols = [];
+            while (searchCols.length < 6) searchCols.push(null);
+            searchCols[6] = { search: '^' + currentTableState.status + '$', regex: true };
+            tableConfig.searchCols = searchCols;
+        }
 
         // Configure server-side processing if enabled
         if (isServerSide && ajaxUrl) {
@@ -235,23 +313,37 @@ function initInvoicePage() {
         }
     }
 
-    // Initialize tables in the currently active tab immediately
-    $('.tab-pane.active table[data-server-side="true"], .tab-pane.show.active table[data-server-side="true"]').each(function () {
-        initSingleDataTable($(this));
-    });
+    // Helper to initialize visible table in an active tab pane
+    function initVisibleTableInPane($mainPane) {
+        if (!$mainPane || !$mainPane.length) return;
+        const $visibleSubPane = $mainPane.find('.tab-content > .tab-pane.active, .tab-content > .tab-pane.show.active').first();
+        const $table = $visibleSubPane.length ? $visibleSubPane.find('table[data-server-side="true"]') : $mainPane.find('table[data-server-side="true"]').first();
+        if ($table.length) {
+            initSingleDataTable($table);
+        }
+    }
+
+    // Initialize table in currently active main tab and active subtab immediately
+    const $initialActiveMainPane = $('#invoiceTabsContent > .tab-pane.active, #invoiceTabsContent > .tab-pane.show.active').first();
+    initVisibleTableInPane($initialActiveMainPane);
 
     // Handle tab switch - initialize tables for newly activated tab on demand
     $('button[data-bs-toggle="tab"]').off('shown.bs.tab.invoice').on('shown.bs.tab.invoice', function (e) {
         const tabId = $(e.target).attr('id').replace('-tab', '');
         const targetPaneSelector = $(e.target).data('bs-target') || `#${tabId}`;
-        const url = new URL(window.location);
-        url.searchParams.set('tab', tabId);
-        window.history.replaceState({}, '', url);
+        const $targetPane = $(targetPaneSelector);
 
-        // Initialize any uninitialized tables in this pane
-        $(targetPaneSelector).find('table[data-server-side="true"]').each(function () {
-            initSingleDataTable($(this));
-        });
+        // Find which subtab is active in the newly shown tab
+        const $activeSubTab = $targetPane.find('.invoice-sub-tabs button.active');
+        const isArchived = $activeSubTab.attr('id') && $activeSubTab.attr('id').includes('archived');
+        updateUrlParams({ tab: tabId, subtab: isArchived ? 'archived' : null });
+
+        // Synchronize card-filter active state in newly activated tab
+        const currentStatus = getUrlParam('status') || '';
+        syncCardFilterState(currentStatus);
+
+        // Initialize ONLY the visible subtab table in this pane
+        initVisibleTableInPane($targetPane);
 
         setTimeout(function () {
             $.fn.dataTable
@@ -261,13 +353,26 @@ function initInvoicePage() {
         }, 150);
     });
 
+    // Click on subtab buttons immediately updates URL subtab param
+    $(document).off('click.invoicesub', 'button[data-bs-toggle="pill"], .invoice-sub-tabs button').on('click.invoicesub', 'button[data-bs-toggle="pill"], .invoice-sub-tabs button', function () {
+        const targetId = $(this).attr('id') || '';
+        const isArchived = targetId.includes('archived');
+        updateUrlParams({ subtab: isArchived ? 'archived' : null });
+    });
+
     // Handle sub-tab switch (Active vs Archived) inside invoice table cards
     $(document).off('shown.bs.tab.invoicesub').on('shown.bs.tab.invoicesub', 'button[data-bs-toggle="pill"], .invoice-sub-tabs button', function (e) {
+        const targetId = $(e.target).attr('id') || '';
+        const isArchived = targetId.includes('archived');
+        updateUrlParams({ subtab: isArchived ? 'archived' : null });
+
         const targetPaneSelector = $(e.target).data('bs-target');
         if (targetPaneSelector) {
-            $(targetPaneSelector).find('table[data-server-side="true"]').each(function () {
-                initSingleDataTable($(this));
-            });
+            const $subPane = $(targetPaneSelector);
+            const $table = $subPane.find('table[data-server-side="true"]');
+            if ($table.length) {
+                initSingleDataTable($table);
+            }
         }
         setTimeout(function () {
             $.fn.dataTable
@@ -582,10 +687,17 @@ function initInvoicePage() {
     $(document).off("click.filter", ".card-filter").on("click.filter", ".card-filter", function () {
         const $this = $(this);
         const tableSelector = $this.data("table");
-        const status = $this.data("status");
+        const status = ($this.data("status") || '').toString().trim().toLowerCase();
+        const isAlreadyActive = $this.hasClass("active");
 
-        $this.closest(".row").find(".card-filter").removeClass("active");
-        $this.addClass("active");
+        // Toggle behavior: if clicking an already active non-total card, deselect back to total ("")
+        let targetStatus = status;
+        if (isAlreadyActive && status) {
+            targetStatus = "";
+        }
+
+        updateUrlParams({ status: targetStatus || null }, { clearPage: true });
+        syncCardFilterState(targetStatus);
 
         const $mainPane = $this.closest('.tab-pane');
         const $tables = $mainPane.find('table.invoice-datatable');
@@ -597,8 +709,8 @@ function initInvoicePage() {
                     const headers = table.columns().header().toArray();
                     const statusColIdx = headers.findIndex(th => $(th).text().trim().toLowerCase().includes('status'));
                     const targetCol = statusColIdx !== -1 ? statusColIdx : 6;
-                    if (status) {
-                        table.column(targetCol).search('^' + status + '$', true, false, true).draw();
+                    if (targetStatus) {
+                        table.column(targetCol).search('^' + targetStatus + '$', true, false, true).draw();
                     } else {
                         table.column(targetCol).search("").draw();
                     }
@@ -606,8 +718,8 @@ function initInvoicePage() {
             });
         } else if ($.fn.DataTable && tableSelector && $(tableSelector).length) {
             const table = $(tableSelector).DataTable();
-            if (status) {
-                table.column(6).search('^' + status + '$', true, false, true).draw();
+            if (targetStatus) {
+                table.column(6).search('^' + targetStatus + '$', true, false, true).draw();
             } else {
                 table.column(6).search("").draw();
             }
@@ -691,6 +803,11 @@ function initInvoicePage() {
 
 document.addEventListener("turbo:load", initInvoicePage);
 document.addEventListener("DOMContentLoaded", initInvoicePage);
+window.addEventListener("popstate", function () {
+    if (window.location.pathname.includes("/invoices")) {
+        initInvoicePage();
+    }
+});
 
 // Init immediately to catch late-loading scripts
 initInvoicePage();

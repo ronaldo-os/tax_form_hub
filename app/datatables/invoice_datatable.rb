@@ -40,6 +40,16 @@ class InvoiceDatatable < BaseDatatable
     filtered_scope
   end
 
+  def total_amount
+    filtered_scope.unscope(:order).sum("COALESCE(NULLIF(invoices.total->>'grand_total', ''), '0')::numeric").to_f
+  end
+
+  def formatted_total_amount
+    sym = current_user.currency.present? ? User.currency_symbol(current_user.currency) : "₱"
+    formatted = number_with_precision(total_amount, precision: 2, delimiter: ',')
+    "#{sym} #{formatted}"
+  end
+
   def data
     records = paginate(filtered_scope).to_a
     preload_associated_credit_notes(records)
@@ -96,7 +106,12 @@ class InvoiceDatatable < BaseDatatable
       3 => total_col,
       4 => 'invoices.issue_date',
       5 => 'invoices.status',         # Fallback for legacy tests
-      6 => 'invoices.status'
+      6 => 'invoices.status',
+      'invoice_number' => 'invoices.invoice_number',
+      'counterparty' => counterparty_col,
+      'total' => total_col,
+      'issue_date' => 'invoices.issue_date',
+      'status' => 'invoices.status'
     }
   end
 
@@ -129,13 +144,53 @@ class InvoiceDatatable < BaseDatatable
       scope = scope.where(status: clean_status) if clean_status.present?
     end
 
-    # Apply search if provided
+    # Apply column-specific total filter if present
+    total_filter = column_search_value('total') || column_search_value('3')
+    if total_filter.present?
+      clean_total = total_filter.to_s.gsub(/[\^\$]/, '').gsub(/[^0-9.]/, '')
+      if clean_total.present?
+        scope = scope.where(
+          "CAST(invoices.total->>'grand_total' AS text) ILIKE :ct OR REPLACE(CAST(invoices.total->>'grand_total' AS text), ',', '') ILIKE :ct",
+          ct: "%#{clean_total}%"
+        )
+      end
+    end
+
+    # Apply search if provided (searches invoice number, counterparty, status, and total price)
     if search_value.present?
       scope = apply_search(scope, SEARCHABLE_COLUMNS)
     end
 
     # Apply ordering - default to most recent first
     apply_order(scope, sortable_columns)
+  end
+
+  def apply_search(relation, _columns = nil)
+    return relation if search_value.blank?
+
+    text_columns = [
+      'invoices.invoice_number',
+      'companies.name',
+      'sale_froms_invoices.name',
+      'invoices.status'
+    ]
+
+    conditions = text_columns.map { |col| "#{col} ILIKE :term" }
+    bind_params = { term: "%#{search_value}%" }
+
+    # Search against total price (both raw text and comma-removed text)
+    conditions << "CAST(invoices.total->>'grand_total' AS text) ILIKE :term"
+    conditions << "REPLACE(CAST(invoices.total->>'grand_total' AS text), ',', '') ILIKE :term"
+
+    # Also clean currency/commas to match numeric values (e.g. "₱560" -> "560", "1,500" -> "1500")
+    clean_numeric = search_value.to_s.gsub(/[^0-9.]/, '')
+    if clean_numeric.present? && clean_numeric != search_value
+      conditions << "CAST(invoices.total->>'grand_total' AS text) ILIKE :clean_num"
+      conditions << "REPLACE(CAST(invoices.total->>'grand_total' AS text), ',', '') ILIKE :clean_num"
+      bind_params[:clean_num] = "%#{clean_numeric}%"
+    end
+
+    relation.where(conditions.join(' OR '), bind_params)
   end
 
   def format_checkbox(invoice)

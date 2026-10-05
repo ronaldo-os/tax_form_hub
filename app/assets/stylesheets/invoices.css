@@ -476,44 +476,6 @@
   border-color: rgba(203, 213, 225, 0.25) !important;
 }
 
-.card-filter {
-  cursor: pointer;
-  border: none !important;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.card-filter:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.12),
-    0 10px 14px -4px rgba(0, 0, 0, 0.08),
-    0 4px 6px 0 rgba(0, 0, 0, 0.06) !important;
-}
-
-[data-theme="dark"] .card-filter:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.35),
-    0 8px 14px -2px rgba(0, 0, 0, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-}
-
-.card-filter.active {
-  border: none !important;
-  box-shadow: 0 12px 28px -4px rgba(0, 174, 255, 0.35),
-    0 0 0 2px var(--main-color) !important;
-}
-
-[data-theme="dark"] .card-filter.active {
-  border: none !important;
-  box-shadow: 0 14px 30px -4px rgba(0, 174, 255, 0.45),
-    0 0 0 2px var(--main-color) !important;
-}
-
-.card-filter.active p,
-.card-filter.active i {
-  color: var(--main-color) !important;
-  font-weight: 600;
-}
-
 /* Company dropdown styling with theme support */
 #company_search_dropdown {
   background-color: var(--input-bg);
@@ -1504,14 +1466,9 @@
 }
 
 .card-filter:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08) !important;
   border-color: var(--main-color) !important;
-}
-
-.card-filter.active {
-  border: 1.5px solid var(--main-color) !important;
-  box-shadow: 0 3px 12px rgba(0, 174, 255, 0.15) !important;
 }
 
 [data-theme="dark"] .card-filter {
@@ -1519,9 +1476,48 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
+[data-theme="dark"] .card-filter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35) !important;
+  border-color: var(--main-color) !important;
+}
+
+/* Card Filter - Active State */
+.card.card-filter.active,
+.invoice-stats-row .card.card-filter.active,
+.card-filter.active {
+  border: 2px solid var(--main-color) !important;
+  background-color: rgba(0, 174, 255, 0.07) !important;
+  box-shadow: 0 4px 18px rgba(0, 174, 255, 0.25), 0 0 0 1px var(--main-color) !important;
+  transform: translateY(-2px);
+}
+
+[data-theme="dark"] .card.card-filter.active,
+[data-theme="dark"] .invoice-stats-row .card.card-filter.active,
 [data-theme="dark"] .card-filter.active {
-  border: 1.5px solid var(--main-color) !important;
-  box-shadow: 0 4px 16px rgba(0, 174, 255, 0.25) !important;
+  border: 2px solid var(--main-color) !important;
+  background-color: rgba(0, 174, 255, 0.14) !important;
+  box-shadow: 0 6px 22px rgba(0, 174, 255, 0.35), 0 0 0 1px var(--main-color) !important;
+  transform: translateY(-2px);
+}
+
+.card-filter.active .stat-card-label,
+.card-filter.active span.stat-card-label,
+.card-filter.active .text-muted.stat-card-label {
+  color: var(--main-color) !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em;
+}
+
+.card-filter.active .stat-card-number,
+.card-filter.active h4.stat-card-number {
+  color: var(--main-color) !important;
+}
+
+.card-filter.active i.fa-filter,
+.card-filter.active .text-secondary.fa-filter {
+  color: var(--main-color) !important;
+  opacity: 1 !important;
 }
 
 .stat-card-label {
