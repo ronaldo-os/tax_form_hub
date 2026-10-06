@@ -1,0 +1,85 @@
+<% currency_symbols = { "PHP" => "₱", "USD" => "$", "EUR" => "€", "GBP" => "£", "JPY" => "¥" } %>
+<% symbol = currency_symbols[@contract.currency] || @contract.currency rescue "₱" %>
+<% contract_number = @contract.respond_to?(:invoice_number) ? @contract.invoice_number : "##{@contract.id}" %>
+<% customer_name = (@contract.respond_to?(:recipient_company) && @contract.recipient_company&.name) || "Customer" %>
+<% primary_item = @contract.respond_to?(:primary_recurring_item) ? @contract.primary_recurring_item : nil %>
+<% cycle = (primary_item && primary_item[:cycle]) ? primary_item[:cycle].capitalize : "Monthly" %>
+<% destination_url = begin subscription_url(@contract) rescue invoices_url end %>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9fafb;padding:40px 0;font-family:Arial,Helvetica,sans-serif;">
+  <tr>
+    <td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:40px;text-align:left;">
+
+        <!-- Header -->
+        <tr>
+          <td style="text-align:center;padding-bottom:24px;">
+            <div style="display:inline-block;width:56px;height:56px;line-height:56px;background-color:#fee2e2;border-radius:50%;text-align:center;margin-bottom:16px;">
+              <span style="color:#dc2626;font-size:28px;font-weight:bold;line-height:56px;">!</span>
+            </div>
+            <h2 style="margin:0;font-size:24px;color:#111827;font-weight:700;">Recurring Invoice Generation Failed</h2>
+            <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">An automated background billing cycle could not be completed for your recurring subscription.</p>
+          </td>
+        </tr>
+
+        <!-- Error Details Callout -->
+        <tr>
+          <td style="padding:16px 20px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+            <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.5px;">Error Details</p>
+            <p style="margin:0;font-size:14px;color:#b91c1c;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;">
+              <%= @error_message %>
+            </p>
+          </td>
+        </tr>
+
+        <!-- Contract Summary -->
+        <tr>
+          <td style="padding-top:20px;padding-bottom:10px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;border-radius:8px;padding:20px;">
+              <tr>
+                <td style="font-size:14px;color:#374151;padding-bottom:10px;"><strong>Contract / Invoice Number:</strong> <%= contract_number %></td>
+              </tr>
+              <tr>
+                <td style="font-size:14px;color:#374151;padding-bottom:10px;"><strong>Customer:</strong> <%= customer_name %></td>
+              </tr>
+              <tr>
+                <td style="font-size:14px;color:#374151;padding-bottom:10px;"><strong>Billing Cycle:</strong> <%= cycle %></td>
+              </tr>
+              <tr>
+                <td style="font-size:14px;color:#374151;padding-bottom:10px;"><strong>Attempted Billing Date:</strong> <%= @on_date&.strftime("%b %d, %Y") || Date.current.strftime("%b %d, %Y") %></td>
+              </tr>
+              <% if @contract.respond_to?(:grand_total) %>
+                <tr>
+                  <td style="font-size:14px;color:#374151;"><strong>Contract Amount:</strong> <%= symbol %><%= number_with_precision(@contract.grand_total, precision: 2) %></td>
+                </tr>
+              <% end %>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Instructions -->
+        <tr>
+          <td style="padding-top:16px;font-size:14px;color:#4b5563;line-height:1.5;">
+            Please review the contract details, ensure line items and customer settings are valid, and use the button below to retry recurring invoice generation.
+          </td>
+        </tr>
+
+        <!-- Action Button -->
+        <tr>
+          <td style="text-align:center;padding-top:28px;">
+            <a href="<%= destination_url %>" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;box-shadow:0 2px 4px rgba(220,38,38,0.2);">
+              View Subscription &amp; Retry
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td style="text-align:center;padding-top:30px;font-size:12px;color:#9ca3af;border-top:1px solid #f3f4f6;margin-top:30px;">
+            <p style="margin:0;">This is an automated notification from TaxFormHub. Please do not reply directly to this email.</p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>

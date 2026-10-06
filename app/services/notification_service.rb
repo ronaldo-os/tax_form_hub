@@ -199,5 +199,25 @@ class NotificationService
         target_url: "/invoices/#{target_credit_note.id}"
       )
     end
+
+    def notify_recurring_invoice_failed(contract, error_message, actor = nil)
+      owner = contract.respond_to?(:user) ? contract.user : nil
+      owner ||= contract.sender_user if contract.respond_to?(:sender_user)
+      return unless owner
+
+      contract_ref = contract.respond_to?(:invoice_number) ? contract.invoice_number : contract.id
+      target_path = "/subscriptions/#{contract.id}"
+
+      notify(
+        recipient: owner,
+        actor: actor,
+        notifiable: contract,
+        category: :invoices,
+        action: "recurring_invoice_failed",
+        title: "Recurring Invoice Generation Failed",
+        message: "Failed to generate recurring invoice for contract ##{contract_ref}: #{error_message}",
+        target_url: target_path
+      )
+    end
   end
 end

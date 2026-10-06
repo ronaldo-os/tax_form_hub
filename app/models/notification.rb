@@ -84,6 +84,8 @@ class Notification < ApplicationRecord
       { icon: "fa-solid fa-circle-dollar-to-slot", color: "text-success", bg: "bg-success-subtle" }
     when "credit_note_created"
       { icon: "fa-solid fa-receipt", color: "text-warning", bg: "bg-warning-subtle" }
+    when "recurring_invoice_failed"
+      { icon: "fa-solid fa-triangle-exclamation", color: "text-danger", bg: "bg-danger-subtle" }
     when "tax_submitted", "tax_submitted_admin"
       { icon: "fa-solid fa-file-arrow-up", color: "text-primary", bg: "bg-primary-subtle" }
     when "tax_reviewed"

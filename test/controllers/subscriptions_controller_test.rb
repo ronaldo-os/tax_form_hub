@@ -388,4 +388,81 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     }
     assert_response :redirect
   end
+
+  test "seller can retry recurring invoicing successfully and clear previous error" do
+    sign_in @user_seller
+
+    @sales_subscription.update_column(
+      :invoice_info,
+      {
+        "recurring_generation_error" => {
+          "message" => "Previous transient failure",
+          "failed_at" => 2.hours.ago.iso8601
+        }
+      }
+    )
+
+    post retry_invoicing_subscription_url(@sales_subscription)
+    assert_redirected_to subscription_url(@sales_subscription)
+    follow_redirect!
+    assert_includes flash[:notice], "Successfully generated"
+
+    @sales_subscription.reload
+    assert_nil @sales_subscription.invoice_info["recurring_generation_error"]
+    assert_equal 1, @sales_subscription.recurring_sub_invoices.count
+  end
+
+  test "retry recurring invoicing records error details if generation raises error" do
+    sign_in @user_seller
+
+    Invoice.class_eval do
+      alias_method :orig_generate_subscription_invoices_test, :generate_subscription_invoices
+      def generate_subscription_invoices(on_date = Date.current)
+        raise StandardError, "Payment service unavailable"
+      end
+    end
+
+    post retry_invoicing_subscription_url(@sales_subscription)
+    assert_redirected_to subscription_url(@sales_subscription)
+    assert_includes flash[:alert], "Payment service unavailable"
+
+    @sales_subscription.reload
+    err = @sales_subscription.invoice_info["recurring_generation_error"]
+    assert_not_nil err
+    assert_equal "Payment service unavailable", err["message"]
+  ensure
+    Invoice.class_eval do
+      if method_defined?(:orig_generate_subscription_invoices_test)
+        alias_method :generate_subscription_invoices, :orig_generate_subscription_invoices_test
+        remove_method :orig_generate_subscription_invoices_test
+      end
+    end
+  end
+
+  test "unrelated user cannot retry invoicing on another user subscription" do
+    sign_in @user_unrelated
+
+    post retry_invoicing_subscription_url(@sales_subscription)
+    assert_response :not_found
+  end
+
+  test "subscription show page displays error banner and retry button when recurring error exists" do
+    sign_in @user_seller
+
+    @sales_subscription.update_column(
+      :invoice_info,
+      {
+        "recurring_generation_error" => {
+          "message" => "Invoice generation failed due to invalid tax rate",
+          "failed_at" => Time.current.iso8601
+        }
+      }
+    )
+
+    get subscription_url(@sales_subscription)
+    assert_response :success
+    assert_select ".alert.alert-danger", text: /Recurring Invoice Generation Failed/
+    assert_select ".alert.alert-danger", text: /Invoice generation failed due to invalid tax rate/
+    assert_select "form[action='#{retry_invoicing_subscription_path(@sales_subscription)}'] button", text: /Retry Generation/
+  end
 end

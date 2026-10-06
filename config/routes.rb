@@ -95,6 +95,7 @@ Rails.application.routes.draw do
       patch :cancel
       patch :cancel_item
       post :add_mid_cycle_item
+      post :retry_invoicing
     end
   end
 

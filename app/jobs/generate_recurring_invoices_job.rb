@@ -36,6 +36,7 @@ class GenerateRecurringInvoicesJob < ApplicationJob
     due_contracts.each do |subscription_contract|
       begin
         invoices = subscription_contract.generate_subscription_invoices(on_date)
+        clear_recurring_error(subscription_contract)
         results[:successful] += 1
         results[:invoices_generated] += invoices.size
         invoices.each do |invoice|
@@ -46,6 +47,12 @@ class GenerateRecurringInvoicesJob < ApplicationJob
         error_msg = "Subscription contract #{subscription_contract.invoice_number}: #{e.message}"
         results[:errors] << error_msg
         Rails.logger.error error_msg
+
+        # Record error details on subscription contract for UI review/retry
+        record_recurring_error(subscription_contract, e.message, on_date)
+
+        # Send in-app notification and email to the business owner
+        send_failure_notifications(subscription_contract, e.message, on_date)
       end
     end
 
@@ -54,6 +61,40 @@ class GenerateRecurringInvoicesJob < ApplicationJob
   end
 
   private
+
+  def send_failure_notifications(contract, error_message, on_date)
+    # Send in-app notification to business owner
+    NotificationService.notify_recurring_invoice_failed(contract, error_message)
+
+    # Send email notification to business owner
+    InvoiceMailer.recurring_invoice_failed(contract, error_message, on_date).deliver_later
+  rescue StandardError => notif_err
+    Rails.logger.error "GenerateRecurringInvoicesJob: Failed to dispatch failure notifications for contract #{contract.try(:invoice_number)}: #{notif_err.message}"
+  end
+
+  def record_recurring_error(contract, message, on_date)
+    return unless contract.respond_to?(:invoice_info)
+
+    error_data = {
+      'message' => message,
+      'failed_at' => Time.current.iso8601,
+      'attempted_date' => on_date.to_s
+    }
+    new_info = (contract.invoice_info || {}).merge('recurring_generation_error' => error_data)
+    contract.update_column(:invoice_info, new_info)
+  rescue StandardError => err
+    Rails.logger.warn "GenerateRecurringInvoicesJob: Failed to record error on contract #{contract.try(:invoice_number)}: #{err.message}"
+  end
+
+  def clear_recurring_error(contract)
+    return unless contract.respond_to?(:invoice_info) && contract.invoice_info.is_a?(Hash)
+    return unless contract.invoice_info['recurring_generation_error'].present?
+
+    new_info = contract.invoice_info.except('recurring_generation_error')
+    contract.update_column(:invoice_info, new_info)
+  rescue StandardError => err
+    Rails.logger.warn "GenerateRecurringInvoicesJob: Failed to clear error on contract #{contract.try(:invoice_number)}: #{err.message}"
+  end
 
   def log_job_result(results)
     Rails.logger.info "GenerateRecurringInvoicesJob completed: #{results[:successful]} successful, #{results[:failed]} failed"

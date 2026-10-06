@@ -5,7 +5,7 @@
 
 class SubscriptionsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_subscription_invoice, only: [:show, :cancel, :add_mid_cycle_item, :cancel_item]
+  before_action :set_subscription_invoice, only: [:show, :cancel, :add_mid_cycle_item, :cancel_item, :retry_invoicing]
   before_action -> { store_back_url(:subscription_back_url) }, only: [:show]
 
   # GET /subscriptions
@@ -191,6 +191,32 @@ class SubscriptionsController < ApplicationController
           end
         end
       end
+    end
+  end
+
+  # POST /subscriptions/:id/retry_invoicing
+  # Manually retry or trigger recurring invoice generation for a subscription contract
+  def retry_invoicing
+    begin
+      invoices = @subscription.generate_subscription_invoices(Date.current)
+      if invoices.any?
+        if @subscription.invoice_info.is_a?(Hash) && @subscription.invoice_info['recurring_generation_error'].present?
+          new_info = @subscription.invoice_info.except('recurring_generation_error')
+          @subscription.update_column(:invoice_info, new_info)
+        end
+        redirect_to subscription_path(@subscription), notice: "Successfully generated #{invoices.size} recurring invoice(s)."
+      else
+        redirect_to subscription_path(@subscription), notice: "No recurring invoices were due for generation at this time."
+      end
+    rescue StandardError => e
+      error_data = {
+        'message' => e.message,
+        'failed_at' => Time.current.iso8601,
+        'attempted_date' => Date.current.to_s
+      }
+      new_info = (@subscription.invoice_info || {}).merge('recurring_generation_error' => error_data)
+      @subscription.update_column(:invoice_info, new_info)
+      redirect_to subscription_path(@subscription), alert: "Failed to generate recurring invoice: #{e.message}"
     end
   end
 

@@ -67,4 +67,20 @@ class InvoiceMailer < ApplicationMailer
       )
     end
   end
+
+  def recurring_invoice_failed(contract, error_message, on_date = Date.current)
+    @contract = contract
+    @invoice = contract if contract.is_a?(Invoice)
+    @error_message = error_message
+    @on_date = on_date
+    @business_owner = contract.respond_to?(:user) ? contract.user : nil
+    @business_owner ||= contract.sender_user if contract.respond_to?(:sender_user)
+    return unless @business_owner&.email.present?
+
+    contract_ref = contract.respond_to?(:invoice_number) ? contract.invoice_number : contract.id
+    mail(
+      to: @business_owner.email,
+      subject: "Action Required: Recurring invoice generation failed for ##{contract_ref}"
+    )
+  end
 end

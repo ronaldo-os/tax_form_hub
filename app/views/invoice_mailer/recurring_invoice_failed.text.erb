@@ -1,0 +1,17 @@
+RECURRING INVOICE GENERATION FAILED
+====================================
+
+An automated background billing cycle could not be completed for your recurring subscription.
+
+ERROR DETAILS:
+<%= @error_message %>
+
+CONTRACT INFORMATION:
+Contract Number: <%= @contract.respond_to?(:invoice_number) ? @contract.invoice_number : @contract.id %>
+Customer: <%= (@contract.respond_to?(:recipient_company) && @contract.recipient_company&.name) || "Customer" %>
+Attempted Billing Date: <%= @on_date&.strftime("%b %d, %Y") || Date.current.strftime("%b %d, %Y") %>
+
+Please review the contract and retry recurring invoice generation:
+<%= begin subscription_url(@contract) rescue invoices_url end %>
+
+This is an automated notification from TaxFormHub. Please do not reply directly to this email.
