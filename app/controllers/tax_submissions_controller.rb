@@ -70,6 +70,7 @@ class TaxSubmissionsController < ApplicationController
       @tax_submission = TaxSubmission.new(submission_params)
 
       if @tax_submission.save
+        ActivityLogger.log_tax_submitted(@tax_submission, current_user)
         begin
           TaxSubmissionMailer.confirmation_email(@tax_submission).deliver_later
           TaxSubmissionMailer.notify_invoice_sender(@tax_submission)&.deliver_later
@@ -94,6 +95,15 @@ class TaxSubmissionsController < ApplicationController
 
   def update
     if @tax_submission.update(tax_submission_params)
+      if @tax_submission.saved_change_to_reviewed?
+        ActivityLogger.log_tax_status_updated(@tax_submission, current_user, "reviewed", @tax_submission.reviewed?)
+      end
+      if @tax_submission.saved_change_to_processed?
+        ActivityLogger.log_tax_status_updated(@tax_submission, current_user, "processed", @tax_submission.processed?)
+      end
+      if @tax_submission.saved_change_to_archived?
+        ActivityLogger.log_tax_status_updated(@tax_submission, current_user, "archived", @tax_submission.archived?)
+      end
       notice = "Submission updated."
       NotificationService.notify_tax_status_updated(@tax_submission, notice, current_user)
       redirect_back fallback_location: root_path, status: :see_other, notice: notice
@@ -131,14 +141,20 @@ class TaxSubmissionsController < ApplicationController
     when "archive"
       count = 0
       submissions.each do |sub|
-        count += 1 if sub.update(archived: true)
+        if sub.update(archived: true)
+          count += 1
+          ActivityLogger.log_tax_status_updated(sub, current_user, "archived", true)
+        end
       end
       notice = "Successfully archived #{count} #{'submission'.pluralize(count)}."
       redirect_back fallback_location: tax_submissions_home_path, status: :see_other, notice: notice
     when "unarchive"
       count = 0
       submissions.each do |sub|
-        count += 1 if sub.update(archived: false)
+        if sub.update(archived: false)
+          count += 1
+          ActivityLogger.log_tax_status_updated(sub, current_user, "archived", false)
+        end
       end
       notice = "Successfully unarchived #{count} #{'submission'.pluralize(count)}."
       redirect_back fallback_location: tax_submissions_home_path, status: :see_other, notice: notice

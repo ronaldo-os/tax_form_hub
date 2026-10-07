@@ -1,0 +1,90 @@
+<!-- Activity Timeline Modal (Styled uniformly with Submission Overview modal) -->
+<div class="modal fade" id="activityTimelineModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="activityTimelineModalLabel">Activity Timeline</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="activityTimelineModalBody">
+
+        <!-- Loading State (Identical to Submission Overview) -->
+        <div id="activityTimelineLoading" class="text-center p-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-3">Loading...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="activityTimelineError" class="alert alert-danger d-none my-3 d-flex align-items-center justify-content-between rounded-3" role="alert">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="activityTimelineErrorMessage">Failed to load activity history.</span>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-danger" id="activityRetryBtn">Retry</button>
+        </div>
+
+        <!-- Content Container (Hidden while loading) -->
+        <div id="activityTimelineContent" class="d-none">
+
+          <!-- Overview Card (Uniform with Submission Overview card) -->
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+              <div class="row g-4">
+                <div class="col-md-3">
+                  <p class="text-muted mb-1">Resource</p>
+                  <p class="fw-semibold fs-6 mb-0" id="activitySummaryTitle">-</p>
+                </div>
+                <div class="col-md-3">
+                  <p class="text-muted mb-1">Type</p>
+                  <p class="fw-semibold fs-6 mb-0" id="activitySummaryType">-</p>
+                </div>
+                <div class="col-md-3">
+                  <p class="text-muted mb-1">Total Activities</p>
+                  <p class="fw-semibold fs-6 mb-0" id="activitySummaryCount">-</p>
+                </div>
+                <div class="col-md-3">
+                  <p class="text-muted mb-1">Latest Activity</p>
+                  <p class="fw-semibold fs-6 mb-0" id="activitySummaryLatest">-</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Activity History Table Card -->
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-light border-0 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+              <h6 class="fw-bold mb-0">Activity History</h6>
+              <div class="d-flex align-items-center gap-2">
+                <input type="text" class="form-control form-control-sm" id="activitySearchInput" placeholder="Filter activities..." style="max-width: 220px;">
+              </div>
+            </div>
+            <div class="card-body p-0">
+              <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="activityTimelineTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 22%;" class="ps-4">Date &amp; Time</th>
+                      <th style="width: 20%;">User</th>
+                      <th style="width: 18%;">Action</th>
+                      <th style="width: 40%;" class="pe-4">Description &amp; Details</th>
+                    </tr>
+                  </thead>
+                  <tbody id="activityTimelineList">
+                    <!-- Rows dynamically inserted safely via JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Empty State -->
+              <div id="activityTimelineEmpty" class="text-center py-5 d-none">
+                <p class="text-muted mb-0">No activities recorded yet.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

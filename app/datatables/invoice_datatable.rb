@@ -64,6 +64,7 @@ class InvoiceDatatable < BaseDatatable
         'issue_date' => format_date(invoice.issue_date),
         'attachments' => format_attachments(invoice),
         'status' => format_status(invoice),
+        'history' => format_history(invoice),
         'actions' => format_actions(invoice)
       }
     end
@@ -332,6 +333,28 @@ class InvoiceDatatable < BaseDatatable
       'Received'
     else
       invoice.status.to_s.capitalize
+    end
+  end
+
+  def format_history(invoice)
+    title = invoice.standard? ? "Invoice ##{invoice.invoice_number}" : "#{invoice.invoice_category.humanize} ##{invoice.invoice_number}"
+    content_tag(:div, class: 'd-flex justify-content-center align-items-center') do
+      content_tag(
+        :button,
+        type: 'button',
+        class: 'btn btn-sm btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center btn-history-icon open-activity-timeline-btn',
+        title: 'View History',
+        data: {
+          trackable_type: 'Invoice',
+          trackable_id: invoice.id,
+          resource_title: title,
+          resource_number: invoice.invoice_number,
+          bs_toggle: 'tooltip'
+        },
+        style: 'width: 32px; height: 32px; padding: 0;'
+      ) do
+        content_tag(:i, '', class: 'fa-solid fa-clock-rotate-left fs-7')
+      end
     end
   end
 

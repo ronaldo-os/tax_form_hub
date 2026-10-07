@@ -62,7 +62,7 @@ function initSubmissionTables() {
                 displayStart: initial.page > 1 ? (initial.page - 1) * 10 : 0,
                 order: resolvedOrder,
                 columnDefs: [
-                    { orderable: false, targets: [0, -1] }
+                    { orderable: false, targets: [0, -2, -1] }
                 ],
                 language: {
                     search: "_INPUT_",

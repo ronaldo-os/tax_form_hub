@@ -181,8 +181,8 @@ function initInvoicePage() {
             lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
             order: resolvedOrder,
             columnDefs: [
-                { orderable: false, targets: [0, 5, 7] }, // Disable sorting on Checkbox, Attachments, and Actions
-                { className: 'text-center', targets: [0, 7] },
+                { orderable: false, targets: [0, 5, 7, 8] }, // Disable sorting on Checkbox, Attachments, History, and Actions
+                { className: 'text-center', targets: [0, 7, 8] },
                 {
                     targets: 6, // Status column
                     render: function (data, type, row) {

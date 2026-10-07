@@ -291,4 +291,34 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button[value='archive']"
     assert_select "button[value='destroy']"
   end
+
+  test "index page renders History column header and button for incoming submissions" do
+    tax_submission = TaxSubmission.create!(company: @company, invoice: @invoice, email: "incoming_sender@example.com", details: "Incoming History Check")
+
+    get tax_submissions_url
+    assert_response :success
+
+    assert_select "th", text: "History"
+    assert_select "button.open-activity-timeline-btn[data-trackable-id='#{tax_submission.id}']"
+  end
+
+  test "create logs activity for both tax submission and invoice" do
+    assert_difference("Activity.count", 2) do
+      post tax_submissions_url, params: {
+        tax_submission: {
+          invoice_id: @invoice.id,
+          details: "Form 2307 Filing",
+          email: @user.email
+        }
+      }
+    end
+
+    created_sub = TaxSubmission.order(created_at: :desc).first
+    sub_activity = created_sub.activities.recent.first
+    assert_match /submitted Form 2307/, sub_activity.description
+    assert_equal "tax_submitted", sub_activity.action
+
+    inv_activity = @invoice.activities.recent.first
+    assert_match /submitted Form 2307/, inv_activity.description
+  end
 end

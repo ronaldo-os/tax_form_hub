@@ -24,6 +24,7 @@ class User < ApplicationRecord
   has_many :locations, dependent: :destroy
   has_many :notifications, foreign_key: :recipient_id, dependent: :destroy
   has_many :unread_notifications, -> { unread }, class_name: "Notification", foreign_key: :recipient_id
+  has_many :activities, dependent: :nullify
   has_one_attached :profile_image
 
   # Enums
@@ -64,6 +65,10 @@ class User < ApplicationRecord
   after_initialize :set_defaults, if: :new_record?
 
   # Methods
+  def display_name
+    name.presence || email.to_s.split("@").first.tr("._-", " ").titleize
+  end
+
   def superadmin?
     role == "superadmin"
   end

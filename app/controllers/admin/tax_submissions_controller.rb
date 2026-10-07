@@ -29,6 +29,16 @@ class Admin::TaxSubmissionsController < ApplicationController
 
   def update
     if @tax_submission.update(tax_submission_params)
+      if @tax_submission.saved_change_to_reviewed?
+        ActivityLogger.log_tax_status_updated(@tax_submission, current_user, "reviewed", @tax_submission.reviewed?)
+      end
+      if @tax_submission.saved_change_to_processed?
+        ActivityLogger.log_tax_status_updated(@tax_submission, current_user, "processed", @tax_submission.processed?)
+      end
+      if @tax_submission.saved_change_to_archived?
+        ActivityLogger.log_tax_status_updated(@tax_submission, current_user, "archived", @tax_submission.archived?)
+      end
+
       message =
         if tax_submission_params.key?(:reviewed) && tax_submission_params.key?(:processed)
           if @tax_submission.reviewed? && @tax_submission.processed?

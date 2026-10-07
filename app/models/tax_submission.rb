@@ -4,6 +4,7 @@ class TaxSubmission < ApplicationRecord
 
   belongs_to :company
   belongs_to :invoice
+  has_many :activities, as: :trackable, dependent: :destroy
 
   validates :company_id, :invoice_id, presence: true
   validate :reject_heic_files

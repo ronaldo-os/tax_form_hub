@@ -16,6 +16,7 @@ class Invoice < ApplicationRecord
   belongs_to :tax_representative_location, class_name: "Location", optional: true
   has_many :credit_notes, class_name: "Invoice", foreign_key: :credit_note_original_invoice_id
   has_many :tax_submissions
+  has_many :activities, as: :trackable, dependent: :destroy
   has_many_attached :attachments
 
   after_update :sync_archived_status, if: :saved_change_to_archived?

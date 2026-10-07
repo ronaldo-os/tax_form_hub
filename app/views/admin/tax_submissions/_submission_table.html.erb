@@ -12,6 +12,7 @@
           <th>Deposit Slip</th>
           <th>Status</th>
           <th>Date Submitted</th>
+          <th class="text-center no-sort" data-orderable="false" style="width: 70px;">History</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -144,6 +145,13 @@
             </td>
 
             <td><%= submission.created_at.strftime("%B %d, %Y %I:%M %p") %></td>
+
+            <!-- History -->
+            <td class="text-center">
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center btn-history-icon open-activity-timeline-btn" title="View History" data-trackable-type="TaxSubmission" data-trackable-id="<%= submission.id %>" data-resource-title="Tax Submission #<%= submission.id %>" data-resource-number="<%= submission.id %>" data-bs-toggle="tooltip" style="width: 32px; height: 32px; padding: 0;">
+                <i class="fa-solid fa-clock-rotate-left fs-7"></i>
+              </button>
+            </td>
 
             <!-- Actions Dropdown (unchanged) -->
             <td style="min-width: 150px; position: relative;">

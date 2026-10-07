@@ -60,7 +60,7 @@ function initClientSubmissionsPage() {
             ordering: true,
             order: resolvedOrder,
             columnDefs: [
-                { orderable: false, targets: [0, -1] }
+                { orderable: false, targets: [0, -2, -1] }
             ],
             pageLength: 25,
             displayStart: initial.page > 1 ? (initial.page - 1) * 25 : 0,

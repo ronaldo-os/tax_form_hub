@@ -302,6 +302,7 @@ class InvoicesController < ApplicationController
     end
 
     if @invoice.save
+      ActivityLogger.log_invoice_created(@invoice, current_user)
       category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
       redirect_to invoices_path, notice: "#{category_name} created successfully."
     else
@@ -331,6 +332,8 @@ class InvoicesController < ApplicationController
 
   def update
     @invoice = current_user.invoices.find(params[:id])
+    previous_grand_total = @invoice.grand_total
+    previous_status = @invoice.status
 
     # Handle removing attachments
     if params[:invoice][:remove_attachment_ids].present?
@@ -384,6 +387,7 @@ class InvoicesController < ApplicationController
     if @invoice.update(clean_params)
       if params[:commit_action] == "send"
         @invoice.update(status: "sent")
+        ActivityLogger.log_invoice_sent(@invoice, current_user)
 
         recipient_user = Company.find_by(id: @invoice.recipient_company_id)&.user
 
@@ -436,6 +440,7 @@ class InvoicesController < ApplicationController
         category_name = @invoice.standard? ? "Invoice" : @invoice.invoice_category.humanize
         redirect_to invoice_path(@invoice), notice: "#{category_name} sent successfully."
       else
+        ActivityLogger.log_invoice_updated(@invoice, current_user, previous_grand_total: previous_grand_total, previous_status: previous_status)
         redirect_to invoice_path(@invoice), notice: "Invoice updated successfully."
       end
     else
@@ -731,6 +736,7 @@ class InvoicesController < ApplicationController
       return
     end
     invoice.update(archived: true)
+    ActivityLogger.log_archived(invoice, current_user)
     tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
     redirect_to invoices_path(tab: tab), status: :see_other, notice: "Invoice archived."
   end
@@ -743,6 +749,7 @@ class InvoicesController < ApplicationController
       return
     end
     invoice.update(archived: false)
+    ActivityLogger.log_unarchived(invoice, current_user)
     tab = params[:tab] || (invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
     redirect_to invoices_path(tab: tab), status: :see_other, notice: "Invoice unarchived."
   end
@@ -771,6 +778,9 @@ class InvoicesController < ApplicationController
         recipient_company_id: invoice.recipient_company_id
       )
       purchase_invoice&.update(status: "paid")
+
+      ActivityLogger.log_invoice_paid(invoice, current_user)
+      ActivityLogger.log_invoice_paid(purchase_invoice, current_user) if purchase_invoice
 
       # Notify counterparty of payment
       counterparty = invoice.recipient_company&.user
@@ -828,6 +838,7 @@ class InvoicesController < ApplicationController
           skipped_count += 1
         elsif inv.update(archived: true)
           archived_count += 1
+          ActivityLogger.log_archived(inv, current_user)
         else
           skipped_count += 1
         end
@@ -852,6 +863,7 @@ class InvoicesController < ApplicationController
           skipped_count += 1
         elsif inv.update(archived: false)
           unarchived_count += 1
+          ActivityLogger.log_unarchived(inv, current_user)
         else
           skipped_count += 1
         end
@@ -930,6 +942,7 @@ class InvoicesController < ApplicationController
           next
         end
 
+        prev_status = inv.status
         if inv.update(status: target_status)
           updated_count += 1
 
@@ -943,9 +956,14 @@ class InvoicesController < ApplicationController
               recipient_company_id: inv.recipient_company_id
             )
             purchase_invoice&.update(status: "paid")
+            ActivityLogger.log_invoice_paid(inv, current_user)
+            ActivityLogger.log_invoice_paid(purchase_invoice, current_user) if purchase_invoice
             counterparty = inv.recipient_company&.user
             NotificationService.notify_invoice_paid(inv, counterparty, current_user) if counterparty
-          elsif target_status == "approved"
+          else
+            ActivityLogger.log_invoice_status_changed(inv, current_user, prev_status, target_status)
+          end
+          if target_status == "approved"
             update_original_sale_status(inv, "approved")
             sender_user = inv.invoice_type == "purchase" && inv.sale_from ? inv.sale_from.user : inv.user
             if inv.quote?

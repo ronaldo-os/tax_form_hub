@@ -55,6 +55,9 @@ import './network_search';
 // Global action button spamming and double-submit prevention
 import './action_spam_prevention';
 
+// Activity timeline for audit history
+import { initActivityTimeline } from './activity_timeline';
+
 // Ensure any legacy service workers are unregistered on load.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
@@ -594,6 +597,9 @@ function initApplication() {
   // Setup theme toggle button listener using vanilla JS event delegation
   document.removeEventListener('click', handleThemeToggleEvent);
   document.addEventListener('click', handleThemeToggleEvent);
+
+  // Initialize activity timeline listeners
+  initActivityTimeline();
 
   // password toggle handler - delegated event
   $(document).off('click.pw-toggle').on('click.pw-toggle', '.toggle-password-icon, .input-group-text', function (event) {

@@ -732,6 +732,24 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_match /invoice-row-checkbox/, data.first["checkbox"]
   end
 
+  test "datatable returns history column with activity timeline trigger" do
+    Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-HIST-01",
+      status: "draft"
+    )
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", format: :json }
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    assert_not_empty data
+    assert data.first.key?("history")
+    assert_match /open-activity-timeline-btn/, data.first["history"]
+    assert_match /fa-clock-rotate-left/, data.first["history"]
+  end
+
   test "bulk_action archives selected invoices" do
     inv1 = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-ARC-1", archived: false)
     inv2 = Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", invoice_number: "INV-ARC-2", archived: false)
