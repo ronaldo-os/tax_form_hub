@@ -47,10 +47,12 @@ class ActivityLoggerTest < ActiveSupport::TestCase
     sub_activity = @tax_submission.activities.recent.first
     assert_match /Jane submitted Form 2307/, sub_activity.description
     assert_equal "tax_submitted", sub_activity.action
+    assert_equal "Acme Global", sub_activity.company_name
 
     inv_activity = @invoice.activities.recent.first
     assert_match /Jane submitted Form 2307/, inv_activity.description
     assert_equal "tax_submitted", inv_activity.action
+    assert_equal "Acme Global", inv_activity.company_name
   end
 
   test "logs invoice marked as paid (Mark marked Invoice as Paid)" do
@@ -85,5 +87,13 @@ class ActivityLoggerTest < ActiveSupport::TestCase
     activity2 = @tax_submission.activities.recent.first
     assert_match /Mark marked submission as Processed/, activity2.description
     assert_equal "processed", activity2.action
+  end
+
+  test "logs activity with actor company details" do
+    ActivityLogger.log_invoice_created(@invoice, @jane)
+    activity = @invoice.activities.recent.first
+    assert_equal "Jane", activity.user_name
+    assert_equal "Acme Global", activity.company_name
+    assert_equal "Acme Global", activity.metadata["company_name"]
   end
 end

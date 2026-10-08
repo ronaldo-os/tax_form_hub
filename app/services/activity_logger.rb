@@ -2,7 +2,7 @@
 
 class ActivityLogger
   class << self
-    def log(trackable:, actor: nil, action:, description: nil, metadata: {}, created_at: nil)
+    def log(trackable:, actor: nil, action:, description: nil, metadata: {}, company: nil, created_at: nil)
       return unless trackable
 
       actor_name = if actor.respond_to?(:display_name)
@@ -18,17 +18,24 @@ class ActivityLogger
       actor_email = actor.respond_to?(:email) ? actor.email : (trackable.respond_to?(:email) ? trackable.email : nil)
       user_record = actor.is_a?(User) ? actor : nil
 
+      company_record, resolved_company_name = resolve_company_details(actor, trackable, company)
+
       date_str = (created_at || Time.current).strftime("%b %-d")
       default_desc = "#{actor_name} performed #{action.to_s.humanize.downcase} on #{date_str}"
+
+      meta = (metadata || {}).dup
+      meta["company_name"] = resolved_company_name if resolved_company_name.present? && !meta.key?("company_name")
 
       Activity.create!(
         trackable: trackable,
         user: user_record,
         user_name: actor_name,
         user_email: actor_email,
+        company: company_record,
+        company_name: resolved_company_name,
         action: action.to_s,
         description: description.presence || default_desc,
-        metadata: metadata || {},
+        metadata: meta,
         created_at: created_at || Time.current
       )
     rescue StandardError => e
@@ -204,9 +211,12 @@ class ActivityLogger
 
       desc = "#{actor_name} submitted #{form_name} on #{date_str}"
 
+      comp_record, comp_name = resolve_company_details(actor, tax_submission)
+
       meta = {
         transaction_id: tax_submission.company_submission_id || tax_submission.user_transaction_id || tax_submission.id,
         invoice_number: tax_submission.invoice&.invoice_number,
+        company_name: comp_name,
         form_2307_attached: tax_submission.form_2307.attached?,
         deposit_slip_attached: tax_submission.deposit_slip.attached?,
         deposit_slip_count: tax_submission.deposit_slip.attached? ? tax_submission.deposit_slip.count : 0
@@ -218,6 +228,7 @@ class ActivityLogger
         actor: actor,
         action: "tax_submitted",
         description: desc,
+        company: comp_record || comp_name,
         metadata: meta
       )
 
@@ -228,6 +239,7 @@ class ActivityLogger
           actor: actor,
           action: "tax_submitted",
           description: "#{actor_name} submitted #{form_name} on #{date_str}",
+          company: comp_record || comp_name,
           metadata: meta.merge(tax_submission_id: tax_submission.id)
         )
       end
@@ -328,6 +340,42 @@ class ActivityLogger
       else
         "User"
       end
+    end
+
+    def resolve_company_details(actor, trackable, explicit_company = nil)
+      comp_record = nil
+      comp_name = nil
+
+      if explicit_company.is_a?(Company)
+        comp_record = explicit_company
+        comp_name = explicit_company.name
+      elsif explicit_company.is_a?(String) && explicit_company.present?
+        comp_name = explicit_company
+        comp_record = Company.find_by(name: explicit_company)
+      end
+
+      if comp_name.blank? && actor.is_a?(User)
+        comp_record = actor.company || actor.companies.first
+        comp_name = comp_record&.name
+      end
+
+      if comp_name.blank? && trackable.present?
+        case trackable
+        when Invoice
+          if actor.is_a?(User) && actor.id == trackable.user_id
+            comp_record = trackable.sale_from || trackable.user&.company || trackable.user&.companies&.first
+            comp_name = comp_record&.name
+          else
+            comp_record = trackable.recipient_company || trackable.sale_from
+            comp_name = comp_record&.name
+          end
+        when TaxSubmission
+          comp_record = trackable.company || trackable.invoice&.recipient_company || trackable.invoice&.sale_from
+          comp_name = comp_record&.name || trackable.try(:company_name)
+        end
+      end
+
+      [comp_record, comp_name]
     end
   end
 end

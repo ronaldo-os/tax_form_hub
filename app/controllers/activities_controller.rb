@@ -16,7 +16,7 @@ class ActivitiesController < ApplicationController
     trackable = find_and_authorize_trackable(trackable_type, trackable_id)
     return if performed?
 
-    activities = trackable.activities.recent.includes(:user).to_a
+    activities = trackable.activities.recent.includes(:user, :company).to_a
 
     if activities.empty?
       activities = synthesize_baseline_activities(trackable)
@@ -115,6 +115,9 @@ class ActivitiesController < ApplicationController
       action: activity.action,
       actor_name: activity.actor_name,
       actor_initial: activity.actor_initial,
+      user_name: activity.user_name.presence || activity.actor_name,
+      user_email: activity.user_email,
+      company_name: activity.actor_company_name,
       description: activity.description,
       formatted_date: activity.formatted_date_with_year,
       formatted_time: activity.formatted_time,
@@ -136,6 +139,8 @@ class ActivitiesController < ApplicationController
       creator_name = trackable.user&.display_name || "User"
       date_str = trackable.created_at.strftime("%b %-d")
       category_name = trackable.standard? ? "Invoice" : trackable.invoice_category.humanize
+      creator_company = trackable.sale_from || trackable.user&.company || trackable.user&.companies&.first
+      creator_company_name = creator_company&.name
 
       # 1. Creation event
       items << Activity.new(
@@ -143,10 +148,13 @@ class ActivitiesController < ApplicationController
         user: trackable.user,
         user_name: creator_name,
         user_email: trackable.user&.email,
+        company: creator_company,
+        company_name: creator_company_name,
         action: "invoice_created",
         description: "#{creator_name} created #{category_name} ##{trackable.invoice_number} on #{date_str}",
         metadata: {
           invoice_number: trackable.invoice_number,
+          company_name: creator_company_name,
           total: trackable.grand_total,
           currency: trackable.currency
         },
@@ -156,15 +164,22 @@ class ActivitiesController < ApplicationController
       # 2. Paid event if invoice is paid
       if trackable.status == "paid"
         paid_date_str = trackable.updated_at.strftime("%b %-d")
+        payer_company = trackable.recipient_company || creator_company
+        payer_company_name = payer_company&.name
+        payer_user = trackable.recipient_company&.user
+        payer_name = payer_user&.display_name || (payer_company_name.present? ? payer_company_name : "Customer")
         items << Activity.new(
           trackable: trackable,
-          user: trackable.user,
-          user_name: creator_name,
-          user_email: trackable.user&.email,
+          user: payer_user,
+          user_name: payer_name,
+          user_email: payer_user&.email,
+          company: payer_company,
+          company_name: payer_company_name,
           action: "marked_as_paid",
-          description: "#{creator_name} marked Invoice as Paid on #{paid_date_str}",
+          description: "#{payer_name} marked Invoice as Paid on #{paid_date_str}",
           metadata: {
             invoice_number: trackable.invoice_number,
+            company_name: payer_company_name,
             status: "paid"
           },
           created_at: trackable.updated_at
@@ -173,16 +188,33 @@ class ActivitiesController < ApplicationController
 
       # 3. Associated Tax Submissions
       trackable.tax_submissions.each do |sub|
-        sub_name = sub.email.present? ? sub.email.split("@").first.tr("._-", " ").titleize : "Jane"
+        sub_company = sub.company || trackable.recipient_company
+        sub_company_name = sub_company&.name || sub.try(:company_name)
+        sub_user = (sub.email.present? ? User.find_by(email: sub.email) : nil) || sub_company&.user
+        sub_name = if sub_user.present? && sub_user.id != trackable.user_id
+                     sub_user.display_name
+                   elsif sub.email.present? && sub.email.to_s.downcase != trackable.user&.email.to_s.downcase
+                     sub.email.split("@").first.tr("._-", " ").titleize
+                   elsif sub_company_name.present? && sub_company_name != creator_company_name
+                     sub_company_name
+                   elsif sub.email.present?
+                     sub.email.split("@").first.tr("._-", " ").titleize
+                   else
+                     sub_company_name.presence || "Customer"
+                   end
         sub_date = sub.created_at.strftime("%b %-d")
         items << Activity.new(
           trackable: trackable,
+          user: sub_user,
           user_name: sub_name,
-          user_email: sub.email,
+          user_email: sub.email.presence || sub_user&.email,
+          company: sub_company,
+          company_name: sub_company_name,
           action: "tax_submitted",
           description: "#{sub_name} submitted Form 2307 on #{sub_date}",
           metadata: {
             transaction_id: sub.company_submission_id || sub.user_transaction_id || sub.id,
+            company_name: sub_company_name,
             form_2307_attached: sub.form_2307.attached?,
             deposit_slip_attached: sub.deposit_slip.attached?
           },
@@ -191,7 +223,20 @@ class ActivitiesController < ApplicationController
       end
 
     when TaxSubmission
-      submitter_name = trackable.email.present? ? trackable.email.split("@").first.tr("._-", " ").titleize : "Jane"
+      sub_company = trackable.company || trackable.invoice&.recipient_company
+      sub_company_name = sub_company&.name || trackable.try(:company_name)
+      submitter_user = (trackable.email.present? ? User.find_by(email: trackable.email) : nil) || sub_company&.user
+      submitter_name = if submitter_user.present? && (!trackable.invoice || submitter_user.id != trackable.invoice.user_id)
+                         submitter_user.display_name
+                       elsif trackable.email.present? && (!trackable.invoice || trackable.email.to_s.downcase != trackable.invoice.user&.email.to_s.downcase)
+                         trackable.email.split("@").first.tr("._-", " ").titleize
+                       elsif sub_company_name.present?
+                         sub_company_name
+                       elsif trackable.email.present?
+                         trackable.email.split("@").first.tr("._-", " ").titleize
+                       else
+                         sub_company_name.presence || "Submitter"
+                       end
       sub_date = trackable.created_at.strftime("%b %-d")
       form_name = if trackable.form_2307.attached? && trackable.deposit_slip.attached?
                     "Form 2307 and Deposit Slip"
@@ -206,13 +251,17 @@ class ActivitiesController < ApplicationController
       # 1. Submission event
       items << Activity.new(
         trackable: trackable,
+        user: submitter_user,
         user_name: submitter_name,
         user_email: trackable.email,
+        company: sub_company,
+        company_name: sub_company_name,
         action: "tax_submitted",
         description: "#{submitter_name} submitted #{form_name} on #{sub_date}",
         metadata: {
           transaction_id: trackable.company_submission_id || trackable.user_transaction_id || trackable.id,
           invoice_number: trackable.invoice&.invoice_number,
+          company_name: sub_company_name,
           form_2307_attached: trackable.form_2307.attached?,
           deposit_slip_attached: trackable.deposit_slip.attached?
         },
@@ -222,12 +271,19 @@ class ActivitiesController < ApplicationController
       # 2. Reviewed event
       if trackable.reviewed?
         rev_date = trackable.updated_at.strftime("%b %-d")
+        rev_user = trackable.invoice&.user || trackable.invoice&.sale_from&.user
+        rev_company = trackable.invoice&.sale_from || trackable.invoice&.user&.company || trackable.company
+        rev_name = rev_user&.display_name || (rev_company&.name.present? ? "#{rev_company.name} Reviewer" : "Reviewer")
         items << Activity.new(
           trackable: trackable,
-          user_name: "Reviewer",
+          user: rev_user,
+          user_name: rev_name,
+          user_email: rev_user&.email,
+          company: rev_company,
+          company_name: rev_company&.name,
           action: "reviewed",
-          description: "Reviewer marked submission as Reviewed on #{rev_date}",
-          metadata: { field: "reviewed", new_value: true },
+          description: "#{rev_name} marked submission as Reviewed on #{rev_date}",
+          metadata: { field: "reviewed", new_value: true, company_name: rev_company&.name },
           created_at: trackable.updated_at
         )
       end
@@ -235,12 +291,19 @@ class ActivitiesController < ApplicationController
       # 3. Processed event
       if trackable.processed?
         proc_date = trackable.updated_at.strftime("%b %-d")
+        proc_user = trackable.invoice&.user || trackable.invoice&.sale_from&.user
+        proc_company = trackable.invoice&.sale_from || trackable.invoice&.user&.company || trackable.company
+        proc_name = proc_user&.display_name || (proc_company&.name.present? ? "#{proc_company.name} Processor" : "Processor")
         items << Activity.new(
           trackable: trackable,
-          user_name: "Processor",
+          user: proc_user,
+          user_name: proc_name,
+          user_email: proc_user&.email,
+          company: proc_company,
+          company_name: proc_company&.name,
           action: "processed",
-          description: "Processor marked submission as Processed on #{proc_date}",
-          metadata: { field: "processed", new_value: true },
+          description: "#{proc_name} marked submission as Processed on #{proc_date}",
+          metadata: { field: "processed", new_value: true, company_name: proc_company&.name },
           created_at: trackable.updated_at
         )
       end

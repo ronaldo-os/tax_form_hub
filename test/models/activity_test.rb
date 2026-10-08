@@ -75,4 +75,35 @@ class ActivityTest < ActiveSupport::TestCase
     assert_equal "M", activity.actor_initial
     assert_equal "Paid", activity.icon_config[:label]
   end
+
+  test "activity automatically caches actor user and company details on create" do
+    activity = Activity.create!(
+      trackable: @invoice,
+      user: @user,
+      action: "invoice_created",
+      description: "Jane created Invoice #INV-ACT-001"
+    )
+
+    assert_equal @company, activity.company
+    assert_equal "Acme Corp", activity.company_name
+    assert_equal "Acme Corp", activity.actor_company_name
+  end
+
+  test "actor_company_name resolves company from trackable when user company is not set" do
+    unaffiliated_user = User.create!(
+      email: "contractor@example.com",
+      name: "Contractor Bob",
+      password: "SecurePass#2026!xyz"
+    )
+
+    activity = Activity.create!(
+      trackable: @tax_submission,
+      user: unaffiliated_user,
+      action: "tax_submitted",
+      description: "Bob submitted Form 2307"
+    )
+
+    assert_equal "Contractor Bob", activity.actor_name
+    assert_equal "Acme Corp", activity.actor_company_name
+  end
 end

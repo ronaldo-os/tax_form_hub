@@ -82,8 +82,8 @@ export function ensureTimelineModalElement() {
                     <thead class="table-light">
                       <tr>
                         <th style="width: 22%;" class="ps-4">Date &amp; Time</th>
-                        <th style="width: 20%;">User</th>
-                        <th style="width: 18%;">Action</th>
+                        <th style="width: 22%;">Company</th>
+                        <th style="width: 16%;">Action</th>
                         <th style="width: 40%;" class="pe-4">Description &amp; Details</th>
                       </tr>
                     </thead>
@@ -371,28 +371,26 @@ function renderActivitiesTable(activities, container) {
     }
     tr.appendChild(tdDate);
 
-    // 2. User
-    const tdUser = document.createElement('td');
-    const userWrap = document.createElement('div');
-    userWrap.className = 'd-flex align-items-center gap-1.5';
+    // 2. Company
+    const tdCompany = document.createElement('td');
+    const companyWrap = document.createElement('div');
+    companyWrap.className = 'd-flex align-items-center gap-1.5';
 
-    const userIcon = document.createElement('i');
-    userIcon.className = 'fa-solid fa-user-circle text-muted fs-6';
-    userWrap.appendChild(userIcon);
+    const companyIcon = document.createElement('i');
+    companyIcon.className = 'fa-solid fa-building text-secondary fs-6';
+    companyWrap.appendChild(companyIcon);
 
-    const userName = document.createElement('span');
-    userName.className = 'fw-medium text-body';
-    userName.textContent = act.user_name || act.user_email || 'System';
-    userWrap.appendChild(userName);
-    tdUser.appendChild(userWrap);
-
-    if (act.user_email && act.user_name && act.user_name !== act.user_email) {
-      const userEmail = document.createElement('small');
-      userEmail.className = 'text-muted d-block ps-4';
-      userEmail.textContent = act.user_email;
-      tdUser.appendChild(userEmail);
+    const companyName = document.createElement('span');
+    if (act.company_name && act.company_name.trim().length > 0) {
+      companyName.className = 'fw-medium text-body';
+      companyName.textContent = act.company_name;
+    } else {
+      companyName.className = 'text-muted fst-italic';
+      companyName.textContent = '—';
     }
-    tr.appendChild(tdUser);
+    companyWrap.appendChild(companyName);
+    tdCompany.appendChild(companyWrap);
+    tr.appendChild(tdCompany);
 
     // 3. Action Badge (Uniform with Submission Overview rounded-pill badges)
     const tdAction = document.createElement('td');

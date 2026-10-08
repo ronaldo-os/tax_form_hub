@@ -6,6 +6,7 @@ class Company < ApplicationRecord
   has_many :recipient_invoices, class_name: "Invoice", foreign_key: :recipient_company_id, dependent: :destroy
   has_many :sale_from_invoices, class_name: "Invoice", foreign_key: :sale_from_id, dependent: :destroy
   belongs_to :user, optional: true
+  has_many :activities, dependent: :nullify
 
   INDUSTRIES = [
     [ "Select Industry", "", { disabled: true, selected: true } ],

@@ -3,6 +3,7 @@
 class Activity < ApplicationRecord
   belongs_to :trackable, polymorphic: true
   belongs_to :user, optional: true
+  belongs_to :company, optional: true
 
   validates :action, presence: true
 
@@ -18,6 +19,10 @@ class Activity < ApplicationRecord
 
   def actor_initial
     actor_name.strip.first&.upcase || "A"
+  end
+
+  def actor_company_name
+    company_name.presence || company&.name || user&.company&.name || user&.companies&.first&.name || metadata&.dig("company_name") || fallback_company_name
   end
 
   def formatted_date
@@ -88,6 +93,28 @@ class Activity < ApplicationRecord
     if user.present?
       self.user_name ||= user.display_name
       self.user_email ||= user.email
+      self.company ||= user.company || user.companies.first
+      self.company_name ||= company&.name || user.company&.name || user.companies.first&.name
+    elsif company.present?
+      self.company_name ||= company.name
+    end
+
+    if company_name.blank?
+      fallback = fallback_company_name
+      self.company_name = fallback if fallback.present?
+    end
+  end
+
+  def fallback_company_name
+    case trackable
+    when Invoice
+      if user_id.present? && user_id == trackable.user_id
+        trackable.sale_from&.name || trackable.user&.company&.name || trackable.user&.companies&.first&.name
+      else
+        trackable.recipient_company&.name || trackable.sale_from&.name
+      end
+    when TaxSubmission
+      trackable.company&.name || trackable.invoice&.recipient_company&.name || trackable.invoice&.sale_from&.name
     end
   end
 end
