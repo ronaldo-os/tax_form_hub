@@ -19,13 +19,22 @@
         <i class="fas fa-download"></i>
         <span>PDF</span>
       </button>
+      <button type="button" 
+              class="btn btn-outline-secondary btn-md d-inline-flex align-items-center gap-1.5 open-activity-timeline-btn"
+              data-trackable-type="Invoice"
+              data-trackable-id="<%= @invoice.id %>"
+              data-resource-title="Invoice #<%= @invoice.invoice_number %>"
+              title="View History Timeline">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>History</span>
+      </button>
     <% if @invoice.subscription_contract? %>
       <%= link_to subscription_path(@invoice), class: "btn btn-outline-primary btn-md d-inline-flex align-items-center gap-1.5" do %>
         <i class="fa-solid fa-arrows-rotate"></i>
         <span>Subscription</span>
       <% end %>
     <% end %>
-    <% if @invoice.invoice_type == "sale" && !["sent", "approved", "rejected", "paid"].include?(@invoice.status) %>
+    <% if @invoice.invoice_type == "sale" && !["sent", "approved", "rejected", "partially_paid", "paid"].include?(@invoice.status) %>
         <%= link_to "Modify", edit_invoice_path(@invoice, tab: params[:tab]), class: "btn btn-secondary btn-md" %>
 
         <%= button_to "Send",
@@ -37,7 +46,17 @@
             name: "commit_action",
             value: "send" %>
 
-    <% elsif @invoice.standard? && @invoice.invoice_type == "sale" && ["sent", "approved", "paid"].include?(@invoice.status) %>
+    <% elsif @invoice.standard? && @invoice.invoice_type == "sale" && ["sent", "approved", "partially_paid", "paid"].include?(@invoice.status) %>
+        <% if %w[sent approved partially_paid].include?(@invoice.status) && !@invoice.has_associated_credit_note? %>
+          <button type="button" 
+                  class="btn btn-primary btn-md d-inline-flex align-items-center gap-1.5"
+                  data-bs-toggle="modal" 
+                  data-bs-target="#recordPaymentModal-<%= @invoice.id %>">
+            <i class="fa-solid fa-file-invoice-dollar"></i>
+            <span><%= @invoice.payments.any? ? "Add Payment" : "Mark as Partially Paid" %></span>
+          </button>
+        <% end %>
+
         <%= link_to "Create Credit Note", 
             new_invoice_path(original_invoice_id: @invoice.id, category: "credit_note", tab: params[:tab]), 
             class: "btn btn-outline-primary btn-md" %>
@@ -65,5 +84,7 @@
   <% end %>
 
   <%= render "invoices/partials/invoice_card", invoice: @invoice %>
+
+  <%= render "invoices/partials/record_payment_modal", invoice: @invoice if @invoice.invoice_type == "sale" && %w[sent approved partially_paid].include?(@invoice.status) && !@invoice.has_associated_credit_note? %>
 
 </div>

@@ -88,6 +88,32 @@ class ActivityLogger
       )
     end
 
+    def log_invoice_payment_recorded(invoice, actor, payment)
+      return unless invoice && payment
+
+      actor_name = resolve_name(actor, invoice)
+      date_str = Time.current.strftime("%b %-d")
+      status_label = invoice.status == "paid" ? "Paid" : "Partially Paid"
+      desc = "#{actor_name} recorded a payment of #{payment.formatted_amount} via #{payment.payment_method} (Ref: #{payment.reference_number}) marking Invoice as #{status_label} on #{date_str}"
+
+      log(
+        trackable: invoice,
+        actor: actor,
+        action: "payment_recorded",
+        description: desc,
+        metadata: {
+          invoice_number: invoice.invoice_number,
+          status: invoice.status,
+          amount_paid: payment.amount.to_f,
+          payment_method: payment.payment_method,
+          reference_number: payment.reference_number,
+          payment_date: payment.payment_date.to_s,
+          total_paid: invoice.total_paid,
+          remaining_balance: invoice.remaining_balance
+        }
+      )
+    end
+
     def log_invoice_amount_updated(invoice, actor, old_amount, new_amount)
       return unless invoice
 
@@ -127,10 +153,16 @@ class ActivityLogger
       date_str = Time.current.strftime("%b %-d")
       desc = "#{actor_name} marked Invoice as #{new_status.to_s.titleize} on #{date_str}"
 
+      action_key = case new_status.to_s.downcase
+                   when "approved" then "approved"
+                   when "rejected" then "rejected"
+                   else "status_changed"
+                   end
+
       log(
         trackable: invoice,
         actor: actor,
-        action: "status_changed",
+        action: action_key,
         description: desc,
         metadata: {
           invoice_number: invoice.invoice_number,

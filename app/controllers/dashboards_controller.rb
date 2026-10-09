@@ -71,9 +71,9 @@ class DashboardsController < ApplicationController
     sales_prev = prev_invoices.where(invoice_type: "sale")
     sales_status_counts = aggregate_status_counts(sales_current)
 
-    sales_approved_or_paid = sales_current.where(status: ["approved", "paid"])
+    sales_approved_or_paid = sales_current.where(status: ["approved", "paid", "partially_paid"])
     total_sales_revenue = sum_invoice_totals(sales_approved_or_paid, target_currency)
-    prev_sales_revenue = sum_invoice_totals(sales_prev.where(status: ["approved", "paid"]), target_currency)
+    prev_sales_revenue = sum_invoice_totals(sales_prev.where(status: ["approved", "paid", "partially_paid"]), target_currency)
     sales_revenue_growth = calculate_percentage_change(total_sales_revenue, prev_sales_revenue)
 
     paid_sales_scope = sales_current.where(status: "paid")
@@ -84,7 +84,7 @@ class DashboardsController < ApplicationController
     pending_sales_count = sales_status_counts[:sent] + sales_status_counts[:pending] + sales_status_counts[:draft]
 
     # Receivables (Outstanding unpaid sales)
-    unpaid_sales_scope = base_invoices.where(invoice_type: "sale", status: ["sent", "pending", "approved"])
+    unpaid_sales_scope = base_invoices.where(invoice_type: "sale", status: ["sent", "pending", "approved", "partially_paid"])
     total_receivables = sum_invoice_totals(unpaid_sales_scope, target_currency)
     receivables_count = unpaid_sales_scope.count
 
@@ -96,9 +96,9 @@ class DashboardsController < ApplicationController
     purchases_prev = prev_invoices.where(invoice_type: "purchase")
     purchases_status_counts = aggregate_status_counts(purchases_current)
 
-    purchases_approved_or_paid = purchases_current.where(status: ["approved", "paid"])
+    purchases_approved_or_paid = purchases_current.where(status: ["approved", "paid", "partially_paid"])
     total_purchases_expense = sum_invoice_totals(purchases_approved_or_paid, target_currency)
-    prev_purchases_expense = sum_invoice_totals(purchases_prev.where(status: ["approved", "paid"]), target_currency)
+    prev_purchases_expense = sum_invoice_totals(purchases_prev.where(status: ["approved", "paid", "partially_paid"]), target_currency)
     purchases_growth = calculate_percentage_change(total_purchases_expense, prev_purchases_expense)
 
     paid_purchases_scope = purchases_current.where(status: "paid")
@@ -109,7 +109,7 @@ class DashboardsController < ApplicationController
     pending_purchases_count = purchases_status_counts[:sent] + purchases_status_counts[:pending] + purchases_status_counts[:draft]
 
     # Payables (Outstanding unpaid purchases)
-    unpaid_purchases_scope = base_invoices.where(invoice_type: "purchase", status: ["sent", "pending", "approved"])
+    unpaid_purchases_scope = base_invoices.where(invoice_type: "purchase", status: ["sent", "pending", "approved", "partially_paid"])
     total_payables = sum_invoice_totals(unpaid_purchases_scope, target_currency)
     payables_count = unpaid_purchases_scope.count
 
@@ -362,6 +362,7 @@ class DashboardsController < ApplicationController
     raw_counts = invoices_relation.group(:status).count
     counts = {
       paid: raw_counts["paid"].to_i,
+      partially_paid: raw_counts["partially_paid"].to_i,
       approved: raw_counts["approved"].to_i,
       sent: raw_counts["sent"].to_i,
       pending: raw_counts["pending"].to_i,
@@ -431,7 +432,7 @@ class DashboardsController < ApplicationController
 
   def calculate_top_partners(relation, association_name, target_currency = "PHP")
     grouped = {}
-    relation.includes(association_name).where(status: ["approved", "paid"]).find_each do |invoice|
+    relation.includes(association_name).where(status: ["approved", "paid", "partially_paid"]).find_each do |invoice|
       partner = invoice.send(association_name)
       partner_key = partner ? partner.id : "direct"
       grouped[partner_key] ||= {

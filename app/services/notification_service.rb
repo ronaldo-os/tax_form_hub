@@ -181,6 +181,25 @@ class NotificationService
       )
     end
 
+    def notify_invoice_partially_paid(invoice, counterparty_user, actor = nil, payment = nil)
+      return unless counterparty_user
+
+      target_invoice = resolve_invoice_for_recipient(invoice, counterparty_user)
+      amount_str = payment ? payment.formatted_amount : "a payment"
+      method_str = payment ? " via #{payment.payment_method}" : ""
+
+      notify(
+        recipient: counterparty_user,
+        actor: actor,
+        notifiable: target_invoice,
+        category: :invoices,
+        action: "invoice_partially_paid",
+        title: "Partial Payment Recorded",
+        message: "Invoice ##{invoice.invoice_number} received #{amount_str}#{method_str} and is marked as Partially Paid.",
+        target_url: "/invoices/#{target_invoice.id}"
+      )
+    end
+
     def notify_credit_note_created(credit_note, original_invoice, recipient_user, actor = nil)
       return unless recipient_user
 

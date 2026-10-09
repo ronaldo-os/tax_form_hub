@@ -951,5 +951,108 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
       assert_select "#invoicePreviewCard.force-light-mode[data-theme='light'][data-bs-theme='light']"
     end
   end
+
+  test "approve logs approved activity on purchase invoice and counterparty sale invoice" do
+    seller = User.create!(email: "seller_#{Time.now.to_i}@example.com", password: "Password123!@#Secure")
+    seller_company = Company.create!(name: "Seller Co", user: seller)
+    buyer_company = Company.create!(name: "Buyer Co", user: @user)
+
+    sale_inv = Invoice.create!(
+      user: seller,
+      invoice_number: "INV-APP-1",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "sent",
+      sale_from: seller_company,
+      recipient_company: buyer_company
+    )
+
+    purchase_inv = Invoice.create!(
+      user: @user,
+      invoice_number: "INV-APP-1",
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      status: "pending",
+      sale_from: seller_company,
+      recipient_company: buyer_company
+    )
+
+    patch approve_invoice_url(purchase_inv)
+    assert_response :redirect
+
+    purchase_inv.reload
+    sale_inv.reload
+    assert_equal "approved", purchase_inv.status
+    assert_equal "approved", sale_inv.status
+
+    assert purchase_inv.activities.where(action: "approved").exists?
+    assert sale_inv.activities.where(action: "approved").exists?
+  end
+
+  test "reject logs rejected activity on purchase invoice and counterparty sale invoice" do
+    seller = User.create!(email: "seller_rej_#{Time.now.to_i}@example.com", password: "Password123!@#Secure")
+    seller_company = Company.create!(name: "Seller Rej Co", user: seller)
+    buyer_company = Company.create!(name: "Buyer Rej Co", user: @user)
+
+    sale_inv = Invoice.create!(
+      user: seller,
+      invoice_number: "INV-REJ-1",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "sent",
+      sale_from: seller_company,
+      recipient_company: buyer_company
+    )
+
+    purchase_inv = Invoice.create!(
+      user: @user,
+      invoice_number: "INV-REJ-1",
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      status: "pending",
+      sale_from: seller_company,
+      recipient_company: buyer_company
+    )
+
+    patch reject_invoice_url(purchase_inv)
+    assert_response :redirect
+
+    purchase_inv.reload
+    sale_inv.reload
+    assert_equal "rejected", purchase_inv.status
+    assert_equal "rejected", sale_inv.status
+
+    assert purchase_inv.activities.where(action: "rejected").exists?
+    assert sale_inv.activities.where(action: "rejected").exists?
+  end
+
+  test "create_and_send logs invoice_created and invoice_sent activities" do
+    recipient_user = User.create!(email: "client_#{Time.now.to_i}@example.com", password: "Password123!@#Secure")
+    recipient_company = Company.create!(name: "Client Co", user: recipient_user)
+    my_company = Company.create!(name: "My Co", user: @user)
+
+    post create_and_send_invoices_url, params: {
+      invoice: {
+        invoice_number: "INV-CAS-1",
+        invoice_type: "sale",
+        invoice_category: "standard",
+        recipient_company_id: recipient_company.id,
+        issue_date: Date.current,
+        due_date: Date.current + 30.days
+      }
+    }
+    assert_response :redirect
+
+    invoice = @user.invoices.find_by(invoice_number: "INV-CAS-1")
+    assert_not_nil invoice
+    assert_equal "sent", invoice.status
+    assert invoice.activities.where(action: "invoice_created").exists?
+    assert invoice.activities.where(action: "invoice_sent").exists?
+
+    purchase_inv = Invoice.find_by(user_id: recipient_user.id, invoice_number: "INV-CAS-1", invoice_type: "purchase")
+    assert_not_nil purchase_inv
+    assert purchase_inv.activities.where(action: "invoice_created").exists?
+    assert purchase_inv.activities.where(action: "invoice_sent").exists?
+  end
 end
 

@@ -16,6 +16,7 @@ class Invoice < ApplicationRecord
   belongs_to :tax_representative_location, class_name: "Location", optional: true
   has_many :credit_notes, class_name: "Invoice", foreign_key: :credit_note_original_invoice_id
   has_many :tax_submissions
+  has_many :payments, dependent: :destroy
   has_many :activities, as: :trackable, dependent: :destroy
   has_many_attached :attachments
 
@@ -52,6 +53,46 @@ class Invoice < ApplicationRecord
 
   def currency_symbol
     User.currency_symbol(currency)
+  end
+
+  def total_paid
+    if payments.loaded?
+      payments.sum(&:amount).to_f
+    elsif payments.any?
+      payments.sum(:amount).to_f
+    elsif status == "paid"
+      grand_total
+    else
+      0.0
+    end
+  end
+
+  def remaining_balance
+    if status == "paid"
+      0.0
+    else
+      [grand_total - total_paid, 0.0].max.round(2)
+    end
+  end
+
+  def partially_paid?
+    status == "partially_paid"
+  end
+
+  def fully_paid?
+    status == "paid"
+  end
+
+  def payment_status_badge_class
+    case status
+    when "paid"           then "bg-info-subtle text-info"
+    when "partially_paid" then "bg-warning-subtle text-warning-emphasis"
+    when "sent"           then "bg-primary-subtle text-primary"
+    when "approved"       then "bg-success-subtle text-success"
+    when "rejected"       then "bg-danger-subtle text-danger"
+    when "draft"          then "bg-secondary-subtle text-body"
+    else                       "bg-light text-muted"
+    end
   end
 
   # Generate next invoice number for user

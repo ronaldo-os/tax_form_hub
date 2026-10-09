@@ -801,6 +801,16 @@ function initInvoicePage() {
     });
 }
 
+// Handle 'Pay Full Balance' button in payment modals
+$(document).on('click', '.fill-full-balance-btn', function (e) {
+    e.preventDefault();
+    const targetSelector = $(this).data('target');
+    const balance = $(this).data('balance');
+    if (targetSelector && balance !== undefined) {
+        $(targetSelector).val(balance).trigger('change');
+    }
+});
+
 document.addEventListener("turbo:load", initInvoicePage);
 document.addEventListener("DOMContentLoaded", initInvoicePage);
 window.addEventListener("popstate", function () {

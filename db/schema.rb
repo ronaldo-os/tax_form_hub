@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_10_08_160000) do
+ActiveRecord::Schema[7.2].define(version: 2026_10_09_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -219,6 +219,21 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_08_160000) do
     t.index ["recipient_id"], name: "index_notifications_on_recipient_id"
   end
 
+  create_table "payments", force: :cascade do |t|
+    t.bigint "invoice_id", null: false
+    t.bigint "user_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, null: false
+    t.string "payment_method", null: false
+    t.string "reference_number", null: false
+    t.date "payment_date", null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["invoice_id", "payment_date"], name: "index_payments_on_invoice_id_and_payment_date"
+    t.index ["invoice_id"], name: "index_payments_on_invoice_id"
+    t.index ["user_id"], name: "index_payments_on_user_id"
+  end
+
   create_table "recommendations", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "company_id", null: false
@@ -337,6 +352,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_10_08_160000) do
   add_foreign_key "networks", "users"
   add_foreign_key "notifications", "users", column: "actor_id"
   add_foreign_key "notifications", "users", column: "recipient_id"
+  add_foreign_key "payments", "invoices"
+  add_foreign_key "payments", "users"
   add_foreign_key "recommendations", "companies"
   add_foreign_key "recommendations", "users"
   add_foreign_key "subscriptions", "companies", column: "recipient_company_id"

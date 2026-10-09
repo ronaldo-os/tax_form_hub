@@ -13,14 +13,15 @@
       </h4>
       <span class="badge px-3 py-2 fs-6 
         <%= case invoice.status
-            when "sent"     then "bg-primary-subtle text-primary"
-            when "approved" then "bg-success-subtle text-success"
-            when "rejected" then "bg-danger-subtle text-danger"
-            when "paid"     then "bg-info-subtle text-info"
-            when "draft"    then "bg-secondary-subtle text-muted"
+            when "sent"           then "bg-primary-subtle text-primary"
+            when "approved"       then "bg-success-subtle text-success"
+            when "rejected"       then "bg-danger-subtle text-danger"
+            when "paid"           then "bg-info-subtle text-info"
+            when "partially_paid" then "bg-warning-subtle text-warning-emphasis"
+            when "draft"          then "bg-secondary-subtle text-muted"
             else "bg-light text-muted"
         end %>">
-        <%= invoice.status.to_s.upcase %>
+        <%= invoice.status == 'partially_paid' ? 'PARTIALLY PAID' : invoice.status.to_s.upcase %>
       </span>
     </div>
 
@@ -366,6 +367,22 @@
           <p class="text-muted mb-0 mt-1" style="font-size: 0.8rem;">
             Total taxes <%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
           </p>
+        <% end %>
+        <% if invoice.total_paid.to_f > 0 %>
+          <div class="border-top pt-2 mt-2">
+            <p class="mb-1 text-success fw-semibold">
+              Total Amount Paid
+              <span class="ms-4 fw-bold">
+                <%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total_paid, precision: 2, delimiter: ',') %>
+              </span>
+            </p>
+            <p class="mb-0 fw-bold <%= invoice.remaining_balance > 0 ? 'text-danger' : 'text-muted' %>">
+              Balance Due
+              <span class="ms-4 fw-bold">
+                <%= currency_symbol(invoice) %> <%= number_with_precision(invoice.remaining_balance, precision: 2, delimiter: ',') %>
+              </span>
+            </p>
+          </div>
         <% end %>
       </div>
     </div>

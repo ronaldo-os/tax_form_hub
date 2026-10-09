@@ -1,21 +1,19 @@
-<!-- Activity Timeline Modal (Styled uniformly with Submission Overview modal) -->
+<!-- Activity Timeline Modal (Flat, clearly sectioned layout) -->
 <div class="modal fade" id="activityTimelineModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content">
-      <div class="modal-header border-0">
+    <div class="modal-content atl-modal">
+      <div class="modal-header atl-header">
         <h5 class="modal-title" id="activityTimelineModalLabel">Activity Timeline</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <div class="modal-body" id="activityTimelineModalBody">
+      <div class="modal-body atl-body" id="activityTimelineModalBody">
 
-        <!-- Loading State (Identical to Submission Overview) -->
         <div id="activityTimelineLoading" class="text-center p-5">
           <div class="spinner-border text-primary" role="status"></div>
           <p class="mt-3">Loading...</p>
         </div>
 
-        <!-- Error State -->
-        <div id="activityTimelineError" class="alert alert-danger d-none my-3 d-flex align-items-center justify-content-between rounded-3" role="alert">
+        <div id="activityTimelineError" class="alert alert-danger d-none my-3 d-flex align-items-center justify-content-between" role="alert">
           <div class="d-flex align-items-center gap-2">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <span id="activityTimelineErrorMessage">Failed to load activity history.</span>
@@ -23,67 +21,120 @@
           <button type="button" class="btn btn-sm btn-outline-danger" id="activityRetryBtn">Retry</button>
         </div>
 
-        <!-- Content Container (Hidden while loading) -->
         <div id="activityTimelineContent" class="d-none">
 
-          <!-- Overview Card (Uniform with Submission Overview card) -->
-          <div class="card shadow-sm border-0 mb-4">
-            <div class="card-body p-4">
-              <div class="row g-4">
-                <div class="col-md-3">
-                  <p class="text-muted mb-1">Resource</p>
-                  <p class="fw-semibold fs-6 mb-0" id="activitySummaryTitle">-</p>
+          <!-- Section 1: Overview -->
+          <section class="atl-section">
+            <div class="atl-section-head">
+              <span class="atl-section-title"><i class="fa-solid fa-circle-info"></i> Overview</span>
+            </div>
+            <div class="atl-section-body">
+              <div class="row g-3">
+                <div class="col-6 col-md-3">
+                  <div class="atl-label">Resource</div>
+                  <div class="atl-value" id="activitySummaryTitle">-</div>
                 </div>
-                <div class="col-md-3">
-                  <p class="text-muted mb-1">Type</p>
-                  <p class="fw-semibold fs-6 mb-0" id="activitySummaryType">-</p>
+                <div class="col-6 col-md-3">
+                  <div class="atl-label">Type</div>
+                  <div class="atl-value" id="activitySummaryType">-</div>
                 </div>
-                <div class="col-md-3">
-                  <p class="text-muted mb-1">Total Activities</p>
-                  <p class="fw-semibold fs-6 mb-0" id="activitySummaryCount">-</p>
+                <div class="col-6 col-md-3">
+                  <div class="atl-label">Total Activities</div>
+                  <div class="atl-value" id="activitySummaryCount">-</div>
                 </div>
-                <div class="col-md-3">
-                  <p class="text-muted mb-1">Latest Activity</p>
-                  <p class="fw-semibold fs-6 mb-0" id="activitySummaryLatest">-</p>
+                <div class="col-6 col-md-3">
+                  <div class="atl-label">Latest Activity</div>
+                  <div class="atl-value" id="activitySummaryLatest">-</div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <!-- Activity History Table Card -->
-          <div class="card shadow-sm border-0">
-            <div class="card-header bg-light border-0 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-              <h6 class="fw-bold mb-0">Activity History</h6>
-              <div class="d-flex align-items-center gap-2">
-                <input type="text" class="form-control form-control-sm" id="activitySearchInput" placeholder="Filter activities..." style="max-width: 220px;">
+          <!-- Section 2: Payment Receipts (Invoices only) -->
+          <section id="activityPaymentSection" class="atl-section d-none">
+            <div class="atl-section-head">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="atl-section-title"><i class="fa-solid fa-receipt"></i> Payment Receipts</span>
+                <span class="badge" id="activityPaymentStatusBadge">Sent</span>
+                <span class="atl-muted small" id="activityPaymentSubtext"></span>
+              </div>
+              <button type="button" class="btn btn-sm btn-primary d-none" id="activityRecordPaymentBtn">
+                <i class="fa-solid fa-plus"></i>
+                <span id="activityRecordPaymentBtnText">Add Payment</span>
+              </button>
+            </div>
+            <div class="atl-section-body">
+              <div class="atl-metrics">
+                <div class="atl-metric">
+                  <div class="atl-label">Invoice Total</div>
+                  <div class="atl-value" id="activityPaymentGrandTotal">-</div>
+                </div>
+                <div class="atl-metric">
+                  <div class="atl-label">Total Paid</div>
+                  <div class="atl-value">
+                    <span class="text-success" id="activityPaymentTotalPaid">-</span>
+                  </div>
+                </div>
+                <div class="atl-metric">
+                  <div class="atl-label">Remaining Balance</div>
+                  <div class="atl-value" id="activityPaymentRemainingBalance">-</div>
+                </div>
+              </div>
+              <div class="progress atl-progress">
+                <div class="progress-bar" id="activityPaymentProgressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+
+              <div id="activityPaymentTableWrapper" class="d-none mt-3">
+                <div class="table-responsive">
+                  <table class="table atl-table align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th style="width: 25%;">Date &amp; Details</th>
+                        <th style="width: 20%;">Method</th>
+                        <th style="width: 20%;">Reference</th>
+                        <th style="width: 15%;" class="text-end">Amount</th>
+                        <th style="width: 15%;">Recorded By</th>
+                        <th style="width: 5%;" class="text-center" id="activityPaymentActionsHeader"></th>
+                      </tr>
+                    </thead>
+                    <tbody id="activityPaymentList"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div id="activityPaymentEmpty" class="atl-empty mt-3 d-none">
+                <span class="small atl-muted">No payment transactions recorded yet.</span>
+                <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-decoration-none d-none" id="activityPaymentEmptyRecordBtn">+ Mark as Partially Paid</button>
               </div>
             </div>
-            <div class="card-body p-0">
+          </section>
+
+          <!-- Section 3: Activity History -->
+          <section class="atl-section mb-0">
+            <div class="atl-section-head">
+              <span class="atl-section-title"><i class="fa-solid fa-clock-rotate-left"></i> Activity History</span>
+            </div>
+            <div class="atl-section-body p-0">
               <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="activityTimelineTable">
-                  <thead class="table-light">
+                <table class="table atl-table align-middle mb-0" id="activityTimelineTable">
+                  <thead>
                     <tr>
-                      <th style="width: 22%;" class="ps-4">Date &amp; Time</th>
-                      <th style="width: 22%;">Company</th>
-                      <th style="width: 16%;">Action</th>
-                      <th style="width: 40%;" class="pe-4">Description &amp; Details</th>
+                      <th style="width: 20%;" class="ps-3">Date &amp; Time</th>
+                      <th style="width: 18%;">Company</th>
+                      <th style="width: 14%;">Action</th>
+                      <th style="width: 48%;" class="pe-3">Description &amp; Details</th>
                     </tr>
                   </thead>
-                  <tbody id="activityTimelineList">
-                    <!-- Rows dynamically inserted safely via JavaScript -->
-                  </tbody>
+                  <tbody id="activityTimelineList"></tbody>
                 </table>
               </div>
-
-              <!-- Empty State -->
               <div id="activityTimelineEmpty" class="text-center py-5 d-none">
-                <p class="text-muted mb-0">No activities recorded yet.</p>
+                <p class="atl-muted mb-0">No activities recorded yet.</p>
               </div>
             </div>
-          </div>
+          </section>
 
         </div>
-
       </div>
     </div>
   </div>

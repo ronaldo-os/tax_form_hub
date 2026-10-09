@@ -241,3 +241,13 @@ $(document).on('click', '#download_button', function () {
         $('#pdf-loading-overlay').hide();
     });
 });
+
+// Handle 'Pay Full Balance' button in payment modals on view page
+$(document).on('click', '.fill-full-balance-btn', function (e) {
+    e.preventDefault();
+    const targetSelector = $(this).data('target');
+    const balance = $(this).data('balance');
+    if (targetSelector && balance !== undefined) {
+        $(targetSelector).val(balance).trigger('change');
+    }
+});

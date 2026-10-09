@@ -62,6 +62,14 @@ class Activity < ApplicationRecord
       { icon: "fa-solid fa-file-invoice", color_class: "timeline-icon-info", badge_class: "bg-info-subtle text-info border border-info-subtle", label: "Tax Submitted" }
     when "marked_as_paid", "invoice_paid"
       { icon: "fa-solid fa-circle-check", color_class: "timeline-icon-success", badge_class: "bg-success-subtle text-success border border-success-subtle", label: "Paid" }
+    when "payment_recorded"
+      { icon: "fa-solid fa-receipt", color_class: "timeline-icon-success", badge_class: "bg-success-subtle text-success border border-success-subtle", label: "Payment" }
+    when "payment_removed"
+      { icon: "fa-solid fa-trash-can", color_class: "timeline-icon-danger", badge_class: "bg-danger-subtle text-danger border border-danger-subtle", label: "Payment Removed" }
+    when "approved"
+      { icon: "fa-solid fa-circle-check", color_class: "timeline-icon-success", badge_class: "bg-success-subtle text-success border border-success-subtle", label: "Approved" }
+    when "rejected"
+      { icon: "fa-solid fa-circle-xmark", color_class: "timeline-icon-danger", badge_class: "bg-danger-subtle text-danger border border-danger-subtle", label: "Rejected" }
     when "amount_updated"
       { icon: "fa-solid fa-pen-to-square", color_class: "timeline-icon-warning", badge_class: "bg-warning-subtle text-warning border border-warning-subtle", label: "Amount Updated" }
     when "invoice_created"

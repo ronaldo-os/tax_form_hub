@@ -141,7 +141,7 @@ class InvoiceDatatable < BaseDatatable
     # Apply column-specific status filter if present
     status_filter = column_search_value('status') || column_search_value('6') || column_search_value('5') || params[:status]
     if status_filter.present?
-      clean_status = status_filter.to_s.gsub(/[\^\$]/, '').downcase
+      clean_status = status_filter.to_s.gsub(/[\^\$]/, '').strip.downcase.tr(' ', '_')
       scope = scope.where(status: clean_status) if clean_status.present?
     end
 
@@ -331,6 +331,8 @@ class InvoiceDatatable < BaseDatatable
   def format_status(invoice)
     if invoice.quote? && invoice.invoice_type == 'purchase' && invoice.status == 'sent'
       'Received'
+    elsif invoice.status == 'partially_paid'
+      'Partially Paid'
     else
       invoice.status.to_s.capitalize
     end
@@ -382,7 +384,13 @@ class InvoiceDatatable < BaseDatatable
       ''
     end
 
-    dropdown + modal
+    payment_modal = if invoice.invoice_type == 'sale' && %w[sent approved partially_paid].include?(invoice.status) && !is_purchase_table? && !is_received_quotes_table? && !invoice.has_associated_credit_note?
+      view.render(partial: 'invoices/partials/record_payment_modal', formats: [:html], locals: { invoice: invoice })
+    else
+      ''
+    end
+
+    dropdown + modal + payment_modal
   end
 
   def build_action_items(invoice)
@@ -417,8 +425,20 @@ class InvoiceDatatable < BaseDatatable
       end
     end
 
+    # Mark as Partially Paid
+    if invoice.invoice_type == 'sale' && %w[sent approved partially_paid].include?(invoice.status) && !is_purchase_table? && !is_received_quotes_table? && !invoice.has_associated_credit_note?
+      items << content_tag(:li) do
+        link_to('Mark as Partially Paid', '#',
+          class: 'dropdown-item',
+          data: {
+            'bs-toggle' => 'modal',
+            'bs-target' => "#recordPaymentModal-#{invoice.id}"
+          })
+      end
+    end
+
     # Mark as Paid (only seller/issuer of sale invoice can mark as paid)
-    if invoice.invoice_type == 'sale' && %w[approved sent].include?(invoice.status) && !is_purchase_table? && !is_received_quotes_table?
+    if invoice.invoice_type == 'sale' && %w[approved sent partially_paid].include?(invoice.status) && !is_purchase_table? && !is_received_quotes_table? && !invoice.has_associated_credit_note?
       items << content_tag(:li) do
         link_to('Mark as Paid',
           url_helpers.mark_as_paid_invoice_path(invoice, tab: active_tab),
@@ -428,7 +448,7 @@ class InvoiceDatatable < BaseDatatable
     end
 
     # Create Credit Note
-    if invoice.standard? && invoice.invoice_type == 'sale' && %w[sent approved paid].include?(invoice.status)
+    if invoice.standard? && invoice.invoice_type == 'sale' && %w[sent approved partially_paid paid].include?(invoice.status)
       items << content_tag(:li) do
         link_to('Create Credit Note',
           url_helpers.new_invoice_path(original_invoice_id: invoice.id, category: 'credit_note', tab: active_tab),

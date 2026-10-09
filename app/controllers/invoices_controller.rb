@@ -413,6 +413,8 @@ class InvoicesController < ApplicationController
           end
 
           if duplicated_invoice.save
+            ActivityLogger.log_invoice_created(duplicated_invoice, current_user)
+            ActivityLogger.log_invoice_sent(duplicated_invoice, current_user)
             unless duplicated_invoice.recurring_sub_invoice?
               @invoice.attachments.each do |attachment|
                 duplicated_invoice.attachments.attach(
@@ -490,6 +492,8 @@ class InvoicesController < ApplicationController
     end
 
     if @invoice.save
+      ActivityLogger.log_invoice_created(@invoice, current_user)
+      ActivityLogger.log_invoice_sent(@invoice, current_user)
       recipient_company_id = @invoice.recipient_company_id
       recipient_user = Company.find_by(id: recipient_company_id)&.user
 
@@ -518,6 +522,8 @@ class InvoicesController < ApplicationController
       end
 
       if duplicated_invoice.save
+        ActivityLogger.log_invoice_created(duplicated_invoice, current_user)
+        ActivityLogger.log_invoice_sent(duplicated_invoice, current_user)
         unless duplicated_invoice.recurring_sub_invoice?
           @invoice.attachments.each do |attachment|
             duplicated_invoice.attachments.attach(
@@ -646,6 +652,10 @@ class InvoicesController < ApplicationController
         duplicated_invoice.update(status: "sent")
         original.update(status: "sent")
 
+        ActivityLogger.log_invoice_created(duplicated_invoice, current_user)
+        ActivityLogger.log_invoice_sent(duplicated_invoice, current_user)
+        ActivityLogger.log_invoice_sent(original, current_user)
+
         InvoiceMailer.invoice_sent(duplicated_invoice, recipient_user).deliver_later
         category_name = original.standard? ? "Invoice" : original.invoice_category.humanize
         redirect_to invoice_path(original), notice: "#{category_name} sent successfully."
@@ -685,7 +695,9 @@ class InvoicesController < ApplicationController
       return
     end
 
+    prev_status = invoice.status
     if invoice.update(status: "approved")
+      ActivityLogger.log_invoice_status_changed(invoice, current_user, prev_status, "approved")
       update_original_sale_status(invoice, "approved")
       # For purchase invoices, the actual sender is associated with sale_from company
       # For sale invoices, the sender is the invoice owner (but approval shouldn't happen on sale)
@@ -710,7 +722,9 @@ class InvoicesController < ApplicationController
       return
     end
 
+    prev_status = invoice.status
     if invoice.update(status: "rejected")
+      ActivityLogger.log_invoice_status_changed(invoice, current_user, prev_status, "rejected")
       update_original_sale_status(invoice, "rejected")
       # For purchase invoices, the actual sender is associated with sale_from company
       # For sale invoices, the sender is the invoice owner (but rejection shouldn't happen on sale)
@@ -792,6 +806,98 @@ class InvoicesController < ApplicationController
     else
       tab = params[:tab] || "sales-invoices"
       redirect_to invoices_path(tab: tab), status: :see_other, alert: "Failed to update invoice."
+    end
+  end
+
+  def record_payment
+    invoice = current_user.invoices.find(params[:id])
+    if invoice.invoice_type != "sale"
+      tab = params[:tab] || "sales-invoices"
+      redirect_back fallback_location: invoices_path(tab: tab), status: :see_other,
+                    alert: "Receiver of invoice cannot log payments. Only the issuer can log payments."
+      return
+    end
+
+    if invoice.has_associated_credit_note?
+      tab = params[:tab] || "sales-invoices"
+      redirect_back fallback_location: invoices_path(tab: tab), status: :see_other,
+                    alert: "Cannot log payments on an invoice with an associated credit note."
+      return
+    end
+
+    if invoice.status == "draft" || invoice.quote?
+      tab = params[:tab] || "sales-invoices"
+      redirect_back fallback_location: invoices_path(tab: tab), status: :see_other,
+                    alert: "Draft invoices and quotes cannot receive payments."
+      return
+    end
+
+    payment_params = params.require(:payment).permit(:payment_method, :reference_number, :payment_date, :amount, :notes)
+    payment = invoice.payments.build(payment_params)
+    payment.user = current_user
+
+    ActiveRecord::Base.transaction do
+      if payment.save
+        new_total_paid = invoice.payments.sum(:amount).to_f
+        is_fully_paid = (new_total_paid >= invoice.grand_total - 0.001)
+        new_status = is_fully_paid ? "paid" : "partially_paid"
+        invoice.update!(status: new_status)
+
+        # Synchronize counterpart purchase invoice
+        sale_company_id = invoice.user.company&.id || invoice.user.companies.first&.id
+        purchase_invoice = Invoice.find_by(
+          invoice_number: invoice.invoice_number,
+          invoice_type: "purchase",
+          invoice_category: invoice.invoice_category,
+          sale_from_id: sale_company_id,
+          recipient_company_id: invoice.recipient_company_id
+        )
+        if purchase_invoice
+          purchase_invoice.update!(status: new_status)
+          counter_payment = purchase_invoice.payments.build(
+            payment_method: payment.payment_method,
+            reference_number: payment.reference_number,
+            payment_date: payment.payment_date,
+            amount: payment.amount,
+            notes: payment.notes
+          )
+          counter_payment.user = purchase_invoice.user
+          counter_payment.save(validate: false)
+          ActivityLogger.log_invoice_payment_recorded(purchase_invoice, current_user, payment)
+        end
+
+        ActivityLogger.log_invoice_payment_recorded(invoice, current_user, payment)
+
+        counterparty = invoice.recipient_company&.user
+        if counterparty
+          if is_fully_paid
+            NotificationService.notify_invoice_paid(invoice, counterparty, current_user)
+          else
+            NotificationService.notify_invoice_partially_paid(invoice, counterparty, current_user, payment)
+          end
+        end
+
+        tab = params[:tab] || "sales-invoices"
+        status_label = is_fully_paid ? "Paid" : "Partially Paid"
+        target_path = params[:redirect_url].presence || (params[:from_show] == "true" ? invoice_path(invoice, tab: tab) : invoices_path(tab: tab))
+        redirect_to target_path, status: :see_other,
+                    notice: "Payment of #{payment.formatted_amount} recorded via #{payment.payment_method}. Invoice marked as #{status_label}."
+      else
+        tab = params[:tab] || "sales-invoices"
+        target_path = params[:redirect_url].presence || (params[:from_show] == "true" ? invoice_path(invoice, tab: tab) : invoices_path(tab: tab))
+        redirect_to target_path, status: :see_other,
+                    alert: "Failed to record payment: #{payment.errors.full_messages.join(', ')}"
+      end
+    end
+  end
+
+  def mark_as_partially_paid
+    if params[:payment].present?
+      record_payment
+    else
+      invoice = current_user.invoices.find(params[:id])
+      tab = params[:tab] || "sales-invoices"
+      redirect_to invoice_path(invoice, tab: tab, open_payment_modal: true), status: :see_other
     end
   end
 
@@ -1009,7 +1115,7 @@ class InvoicesController < ApplicationController
   private
 
   def build_invoice_trends(relation)
-    statuses = %w[total draft sent paid pending]
+    statuses = %w[total draft sent partially_paid paid pending]
     trends = {}
 
     six_months_ago = 5.months.ago.beginning_of_month.to_date
@@ -1044,7 +1150,7 @@ class InvoicesController < ApplicationController
   end
 
   def build_invoice_stats(relation, current_range, last_range)
-    statuses = %w[draft sent paid pending]
+    statuses = %w[draft sent partially_paid paid pending]
     stats = {}
 
     relation_unscoped = relation.unscope(:order)
@@ -1207,7 +1313,12 @@ class InvoicesController < ApplicationController
       inv.user&.company_id == purchase_invoice.sale_from_id || inv.user&.companies&.exists?(id: purchase_invoice.sale_from_id)
     end
 
-    original_sale_invoice&.update(status: status)
+    if original_sale_invoice
+      prev_status = original_sale_invoice.status
+      if original_sale_invoice.update(status: status)
+        ActivityLogger.log_invoice_status_changed(original_sale_invoice, current_user, prev_status, status)
+      end
+    end
   end
 
   # Options for InvoiceDatatable based on request parameters

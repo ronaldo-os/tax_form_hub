@@ -144,4 +144,103 @@ class ActivitiesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match /Jane submitted/, tax_act["description"]
     assert_equal "Client Buyer Corp", tax_act["company_name"]
   end
+
+  test "returns payment summary and payment receipts for invoice" do
+    sign_in @user
+    @invoice.update!(status: "sent")
+
+    payment = @invoice.payments.create!(
+      user: @user,
+      payment_method: "Bank Transfer",
+      reference_number: "TRN-TEST-123",
+      payment_date: Date.current,
+      amount: 500.0,
+      notes: "First installment"
+    )
+
+    get activities_url, params: { trackable_type: "Invoice", trackable_id: @invoice.id }
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    assert_equal true, json["success"]
+    assert_not_nil json["payment_summary"]
+
+    summary = json["payment_summary"]
+    assert_equal 1250.0, summary["grand_total"]
+    assert_equal 500.0, summary["total_paid"]
+    assert_equal 750.0, summary["remaining_balance"]
+    assert_equal 40, summary["percent_paid"]
+    assert_equal 1, summary["payments_count"]
+    assert_equal true, summary["can_record_payment"]
+
+    first_payment = summary["payments"].first
+    assert_equal payment.id, first_payment["id"]
+    assert_equal "Bank Transfer", first_payment["payment_method"]
+    assert_equal "TRN-TEST-123", first_payment["reference_number"]
+    assert_equal 500.0, first_payment["amount"]
+    assert_equal "First installment", first_payment["notes"]
+  end
+
+  test "timeline retains created and sent milestones even when payment activity is logged in DB" do
+    sign_in @user
+    @invoice.update!(status: "partially_paid")
+
+    # Simulate only a payment activity being logged in the DB
+    payment = @invoice.payments.create!(
+      user: @user,
+      payment_method: "GCash",
+      reference_number: "GCASH-999",
+      payment_date: Date.current,
+      amount: 250.0
+    )
+    ActivityLogger.log_invoice_payment_recorded(@invoice, @user, payment)
+
+    get activities_url, params: { trackable_type: "Invoice", trackable_id: @invoice.id }
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    assert_equal true, json["success"]
+    activities = json["activities"]
+
+    actions = activities.map { |a| a["action"] }
+    assert_includes actions, "invoice_created", "Created milestone must be present"
+    assert_includes actions, "invoice_sent", "Sent milestone must be present for partially_paid invoice"
+    assert_includes actions, "payment_recorded", "Payment recorded event must be present"
+
+    # Verify chronological order (most recent first)
+    assert_equal "payment_recorded", activities.first["action"]
+    assert_equal "invoice_created", activities.last["action"]
+  end
+
+  test "timeline includes approved milestone for approved invoices" do
+    sign_in @user
+    @invoice.update!(status: "approved")
+
+    get activities_url, params: { trackable_type: "Invoice", trackable_id: @invoice.id }
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    assert_equal true, json["success"]
+    actions = json["activities"].map { |a| a["action"] }
+
+    assert_includes actions, "invoice_created"
+    assert_includes actions, "invoice_sent"
+    assert_includes actions, "approved"
+  end
+
+  test "timeline includes rejected milestone for rejected invoices" do
+    sign_in @user
+    @invoice.update!(status: "rejected")
+
+    get activities_url, params: { trackable_type: "Invoice", trackable_id: @invoice.id }
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    assert_equal true, json["success"]
+    actions = json["activities"].map { |a| a["action"] }
+
+    assert_includes actions, "invoice_created"
+    assert_includes actions, "invoice_sent"
+    assert_includes actions, "rejected"
+  end
 end

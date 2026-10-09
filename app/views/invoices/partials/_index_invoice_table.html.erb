@@ -131,14 +131,19 @@
                 </li>
               <% end %>
 
-              <% if invoice.invoice_type == "sale" && (invoice.status == "approved" || invoice.status == "sent") && !["purchases-table", "purchases-archived-table", "received-quotes-table", "received-quotes-archived-table"].include?(table_id) && !invoice.has_associated_credit_note? %>
+              <% if invoice.invoice_type == "sale" && (invoice.status == "approved" || invoice.status == "sent" || invoice.status == "partially_paid") && !["purchases-table", "purchases-archived-table", "received-quotes-table", "received-quotes-archived-table"].include?(table_id) && !invoice.has_associated_credit_note? %>
+                <li>
+                  <a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#recordPaymentModal-<%= invoice.id %>">
+                    Mark as Partially Paid
+                  </a>
+                </li>
                 <li>
                   <%= link_to "Mark as Paid", mark_as_paid_invoice_path(invoice, tab: local_assigns[:active_tab]),
                       data: { turbo_method: :patch, turbo_confirm: "Mark this invoice as paid?" },
                       class: "dropdown-item" %>
                 </li>
 
-                <% if invoice.standard? && invoice.invoice_type == "sale" && ["sent", "approved", "paid"].include?(invoice.status) %>
+                <% if invoice.standard? && invoice.invoice_type == "sale" && ["sent", "approved", "partially_paid", "paid"].include?(invoice.status) %>
                   <li>
                     <%= link_to "Create Credit Note", 
                         new_invoice_path(original_invoice_id: invoice.id, category: "credit_note", tab: local_assigns[:active_tab]), 
@@ -195,6 +200,9 @@
           </div>
           <% if table_id == "purchases-table" && invoice.status == "approved" %>
             <%= render partial: 'invoices/partials/submit_tax_documents_modal', locals: { invoice: invoice } %>
+          <% end %>
+          <% if invoice.invoice_type == "sale" && ["approved", "sent", "partially_paid"].include?(invoice.status) && !invoice.has_associated_credit_note? %>
+            <%= render partial: 'invoices/partials/record_payment_modal', locals: { invoice: invoice } %>
           <% end %>
         </td>
 

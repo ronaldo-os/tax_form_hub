@@ -736,6 +736,7 @@
                                    end
                     chip_class = case inv["status"]
                                  when "paid" then "bento-chip-paid"
+                                 when "partially_paid" then "bento-chip-partially_paid"
                                  when "approved" then "bento-chip-approved"
                                  when "sent" then "bento-chip-sent"
                                  when "pending" then "bento-chip-pending"
@@ -798,6 +799,7 @@
                                end
                 chip_class = case inv["status"]
                              when "paid" then "bento-chip-paid"
+                             when "partially_paid" then "bento-chip-partially_paid"
                              when "approved" then "bento-chip-approved"
                              when "sent" then "bento-chip-sent"
                              when "pending" then "bento-chip-pending"

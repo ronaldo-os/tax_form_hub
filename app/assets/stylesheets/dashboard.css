@@ -454,6 +454,11 @@
   background: rgba(245, 158, 11, 0.12);
 }
 
+.bento-chip-partially_paid {
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.15);
+}
+
 .bento-chip-draft {
   color: var(--text-muted);
   background: var(--bg-secondary);
@@ -484,6 +489,11 @@
 [data-theme="dark"] .bento-chip-pending {
   color: #fbbf24;
   background: rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="dark"] .bento-chip-partially_paid {
+  color: #fcd34d;
+  background: rgba(245, 158, 11, 0.25);
 }
 
 [data-theme="dark"] .bento-chip-rejected {

@@ -19,6 +19,7 @@ class User < ApplicationRecord
   has_many :connected_companies, through: :networks, source: :company
   has_many :recommendations, dependent: :destroy
   has_many :invoices
+  has_many :payments, dependent: :destroy
   has_many :tax_submissions, through: :invoices
   has_many :subscriptions, dependent: :destroy
   has_many :locations, dependent: :destroy

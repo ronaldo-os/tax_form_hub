@@ -1,0 +1,172 @@
+<%# Payment Receipts and Transaction History Partial %>
+<% 
+  payments = invoice.payments.recent.to_a
+  sym = invoice.currency_symbol
+  grand_total = invoice.grand_total
+  total_paid = invoice.total_paid
+  remaining = invoice.remaining_balance
+  pct_paid = grand_total > 0 ? [((total_paid / grand_total) * 100).round, 100].min : 0
+  can_record_payment = invoice.invoice_type == "sale" && %w[sent approved partially_paid].include?(invoice.status) && !invoice.has_associated_credit_note?
+%>
+
+<div class="payment-receipts-card card border-0 shadow-sm rounded-4 mb-4 mt-3 overflow-hidden" id="payment_receipts_section">
+  <!-- Card Header -->
+  <div class="card-header bg-body-tertiary border-bottom px-4 py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2">
+      <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle text-primary" style="width: 32px; height: 32px;">
+        <i class="fa-solid fa-receipt fs-6"></i>
+      </div>
+      <div>
+        <h5 class="fw-bold mb-0 text-body fs-6">Payment Receipts & History</h5>
+        <span class="extra-small text-muted">
+          <%= payments.any? ? "#{pluralize(payments.size, 'payment transaction')} recorded" : "No payment transactions recorded" %>
+        </span>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <!-- Status Badge -->
+      <span class="badge rounded-pill px-3 py-1.5 fw-semibold extra-small <%= invoice.payment_status_badge_class %>">
+        <%= invoice.status.to_s.titleize %>
+      </span>
+
+      <!-- Record Payment Button -->
+      <% if can_record_payment %>
+        <button type="button" 
+                class="btn btn-sm btn-primary rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-xs"
+                data-bs-toggle="modal" 
+                data-bs-target="#recordPaymentModal-<%= invoice.id %>">
+          <i class="fa-solid fa-plus fs-7"></i>
+          <span><%= payments.any? ? "Add Payment" : "Mark as Partially Paid" %></span>
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Card Body -->
+  <div class="card-body p-4">
+    
+    <!-- Balance & Progress Summary Grid -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4">
+        <div class="p-3 bg-light-subtle border rounded-3 text-center h-100">
+          <span class="extra-small text-muted text-uppercase fw-semibold d-block mb-1">Invoice Total</span>
+          <span class="fs-5 fw-bold text-body"><%= sym %> <%= number_with_precision(grand_total, precision: 2, delimiter: ',') %></span>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="p-3 bg-light-subtle border rounded-3 text-center h-100">
+          <span class="extra-small text-muted text-uppercase fw-semibold d-block mb-1">Total Paid</span>
+          <span class="fs-5 fw-bold text-success"><%= sym %> <%= number_with_precision(total_paid, precision: 2, delimiter: ',') %></span>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="p-3 bg-light-subtle border rounded-3 text-center h-100">
+          <span class="extra-small text-muted text-uppercase fw-semibold d-block mb-1">Remaining Balance</span>
+          <span class="fs-5 fw-bold <%= remaining > 0 ? 'text-danger' : 'text-muted' %>">
+            <%= sym %> <%= number_with_precision(remaining, precision: 2, delimiter: ',') %>
+          </span>
+        </div>
+      </div>
+
+      <!-- Payment Progress Bar -->
+      <div class="col-12 mt-2">
+        <div class="d-flex justify-content-between align-items-center extra-small text-muted mb-1">
+          <span>Overall Payment Fulfillment</span>
+          <span class="fw-bold <%= pct_paid == 100 ? 'text-success' : 'text-primary' %>"><%= pct_paid %>% Paid</span>
+        </div>
+        <div class="progress" style="height: 7px;">
+          <div class="progress-bar progress-bar-striped <%= pct_paid == 100 ? 'bg-success' : 'bg-primary' %>" 
+               role="progressbar" 
+               style="width: <%= pct_paid %>%;" 
+               aria-valuenow="<%= pct_paid %>" 
+               aria-valuemin="0" 
+               aria-valuemax="100">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Receipts Table / List -->
+    <% if payments.any? %>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0 extra-small">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width: 50px;">#</th>
+              <th scope="col">Payment Date</th>
+              <th scope="col">Payment Method</th>
+              <th scope="col">Reference Number</th>
+              <th scope="col" class="text-end">Amount Paid</th>
+              <th scope="col">Recorded By</th>
+              <% if invoice.invoice_type == "sale" && !invoice.has_associated_credit_note? %>
+                <th scope="col" class="text-center" style="width: 50px;">Actions</th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% payments.each_with_index do |payment, idx| %>
+              <tr>
+                <td class="fw-semibold text-muted"><%= idx + 1 %></td>
+                <td class="fw-semibold text-body">
+                  <%= payment.payment_date.strftime("%b %d, %Y") %>
+                </td>
+                <td>
+                  <span class="badge <%= payment.payment_method_badge_class %> rounded-pill px-2.5 py-1">
+                    <i class="<%= payment.payment_method_icon %> me-1"></i>
+                    <%= payment.payment_method %>
+                  </span>
+                </td>
+                <td>
+                  <code class="text-dark bg-light px-2 py-1 rounded border"><%= payment.reference_number %></code>
+                </td>
+                <td class="text-end fw-bold text-success fs-7">
+                  <%= payment.formatted_amount %>
+                </td>
+                <td class="text-muted">
+                  <%= payment.user&.email || "System" %>
+                </td>
+                <% if invoice.invoice_type == "sale" && !invoice.has_associated_credit_note? %>
+                  <td class="text-center">
+                    <%= button_to invoice_payment_path(invoice, payment), 
+                        method: :delete, 
+                        class: "btn btn-link btn-xs text-danger p-0", 
+                        data: { turbo_confirm: "Are you sure you want to remove this payment receipt?" },
+                        title: "Remove receipt" do %>
+                      <i class="fa-solid fa-trash-can"></i>
+                    <% end %>
+                  </td>
+                <% end %>
+              </tr>
+              <% if payment.notes.present? %>
+                <tr class="table-light">
+                  <td></td>
+                  <td colspan="<%= (invoice.invoice_type == "sale" && !invoice.has_associated_credit_note?) ? 6 : 5 %>" class="py-1 text-muted fst-italic">
+                    <i class="fa-regular fa-note-sticky me-1 text-secondary"></i> <%= payment.notes %>
+                  </td>
+                </tr>
+              <% end %>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div class="text-center py-4 bg-light-subtle rounded-3 border border-dashed">
+        <i class="fa-solid fa-receipt text-muted fs-3 mb-2 opacity-50"></i>
+        <h6 class="fw-semibold text-secondary mb-1">No payments recorded yet</h6>
+        <p class="extra-small text-muted mb-3">
+          Track partial or full payments by logging receipts with transaction reference numbers.
+        </p>
+        <% if can_record_payment %>
+          <button type="button" 
+                  class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1.5 fw-semibold"
+                  data-bs-toggle="modal" 
+                  data-bs-target="#recordPaymentModal-<%= invoice.id %>">
+            <i class="fa-solid fa-plus me-1"></i> Mark as Partially Paid
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+
+  </div>
+</div>

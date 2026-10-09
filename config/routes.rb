@@ -58,9 +58,12 @@ Rails.application.routes.draw do
       patch :archive
       patch :unarchive
       patch :mark_as_paid
+      patch :mark_as_partially_paid
+      post  :record_payment
       post  :duplicate_as_purchase
       get   :pdf_partial
     end
+    resources :payments, only: [:index, :create, :destroy]
   end
 
 

@@ -29,76 +29,143 @@ export function ensureTimelineModalElement() {
 
   modalEl.innerHTML = `
     <div class="modal-dialog modal-dialog-centered modal-xl">
-      <div class="modal-content">
-        <div class="modal-header border-0">
-          <h5 class="modal-title" id="activityTimelineModalLabel">Activity Timeline</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div class="modal-content atl-modal">
+      <div class="modal-header atl-header">
+        <h5 class="modal-title" id="activityTimelineModalLabel">Activity Timeline</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body atl-body" id="activityTimelineModalBody">
+
+        <div id="activityTimelineLoading" class="text-center p-5">
+          <div class="spinner-border text-primary" role="status"></div>
+          <p class="mt-3">Loading...</p>
         </div>
-        <div class="modal-body" id="activityTimelineModalBody">
-          <div id="activityTimelineLoading" class="text-center p-5">
-            <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-3">Loading...</p>
+
+        <div id="activityTimelineError" class="alert alert-danger d-none my-3 d-flex align-items-center justify-content-between" role="alert">
+          <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span id="activityTimelineErrorMessage">Failed to load activity history.</span>
           </div>
-          <div id="activityTimelineError" class="alert alert-danger d-none my-3 d-flex align-items-center justify-content-between rounded-3" role="alert">
-            <div class="d-flex align-items-center gap-2">
-              <i class="fa-solid fa-triangle-exclamation"></i>
-              <span id="activityTimelineErrorMessage">Failed to load activity history.</span>
+          <button type="button" class="btn btn-sm btn-outline-danger" id="activityRetryBtn">Retry</button>
+        </div>
+
+        <div id="activityTimelineContent" class="d-none">
+
+          <!-- Section 1: Overview -->
+          <section class="atl-section">
+            <div class="atl-section-head">
+              <span class="atl-section-title"><i class="fa-solid fa-circle-info"></i> Overview</span>
             </div>
-            <button type="button" class="btn btn-sm btn-outline-danger" id="activityRetryBtn">Retry</button>
-          </div>
-          <div id="activityTimelineContent" class="d-none">
-            <div class="card shadow-sm border-0 mb-4">
-              <div class="card-body p-4">
-                <div class="row g-4">
-                  <div class="col-md-3">
-                    <p class="text-muted mb-1">Resource</p>
-                    <p class="fw-semibold fs-6 mb-0" id="activitySummaryTitle">-</p>
-                  </div>
-                  <div class="col-md-3">
-                    <p class="text-muted mb-1">Type</p>
-                    <p class="fw-semibold fs-6 mb-0" id="activitySummaryType">-</p>
-                  </div>
-                  <div class="col-md-3">
-                    <p class="text-muted mb-1">Total Activities</p>
-                    <p class="fw-semibold fs-6 mb-0" id="activitySummaryCount">-</p>
-                  </div>
-                  <div class="col-md-3">
-                    <p class="text-muted mb-1">Latest Activity</p>
-                    <p class="fw-semibold fs-6 mb-0" id="activitySummaryLatest">-</p>
-                  </div>
+            <div class="atl-section-body">
+              <div class="row g-3">
+                <div class="col-6 col-md-3">
+                  <div class="atl-label">Resource</div>
+                  <div class="atl-value" id="activitySummaryTitle">-</div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="atl-label">Type</div>
+                  <div class="atl-value" id="activitySummaryType">-</div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="atl-label">Total Activities</div>
+                  <div class="atl-value" id="activitySummaryCount">-</div>
+                </div>
+                <div class="col-6 col-md-3">
+                  <div class="atl-label">Latest Activity</div>
+                  <div class="atl-value" id="activitySummaryLatest">-</div>
                 </div>
               </div>
             </div>
-            <div class="card shadow-sm border-0">
-              <div class="card-header bg-light border-0 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <h6 class="fw-bold mb-0">Activity History</h6>
-                <div class="d-flex align-items-center gap-2">
-                  <input type="text" class="form-control form-control-sm" id="activitySearchInput" placeholder="Filter activities..." style="max-width: 220px;">
+          </section>
+
+          <!-- Section 2: Payment Receipts (Invoices only) -->
+          <section id="activityPaymentSection" class="atl-section d-none">
+            <div class="atl-section-head">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="atl-section-title"><i class="fa-solid fa-receipt"></i> Payment Receipts</span>
+                <span class="badge" id="activityPaymentStatusBadge">Sent</span>
+                <span class="atl-muted small" id="activityPaymentSubtext"></span>
+              </div>
+              <button type="button" class="btn btn-sm btn-primary d-none" id="activityRecordPaymentBtn">
+                <i class="fa-solid fa-plus"></i>
+                <span id="activityRecordPaymentBtnText">Add Payment</span>
+              </button>
+            </div>
+            <div class="atl-section-body">
+              <div class="atl-metrics">
+                <div class="atl-metric">
+                  <div class="atl-label">Invoice Total</div>
+                  <div class="atl-value" id="activityPaymentGrandTotal">-</div>
+                </div>
+                <div class="atl-metric">
+                  <div class="atl-label">Total Paid</div>
+                  <div class="atl-value">
+                    <span class="text-success" id="activityPaymentTotalPaid">-</span>
+                  </div>
+                </div>
+                <div class="atl-metric">
+                  <div class="atl-label">Remaining Balance</div>
+                  <div class="atl-value" id="activityPaymentRemainingBalance">-</div>
                 </div>
               </div>
-              <div class="card-body p-0">
+              <div class="progress atl-progress">
+                <div class="progress-bar" id="activityPaymentProgressBar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+
+              <div id="activityPaymentTableWrapper" class="d-none mt-3">
                 <div class="table-responsive">
-                  <table class="table table-hover align-middle mb-0" id="activityTimelineTable">
-                    <thead class="table-light">
+                  <table class="table atl-table align-middle mb-0">
+                    <thead>
                       <tr>
-                        <th style="width: 22%;" class="ps-4">Date &amp; Time</th>
-                        <th style="width: 22%;">Company</th>
-                        <th style="width: 16%;">Action</th>
-                        <th style="width: 40%;" class="pe-4">Description &amp; Details</th>
+                        <th style="width: 25%;">Date &amp; Details</th>
+                        <th style="width: 20%;">Method</th>
+                        <th style="width: 20%;">Reference</th>
+                        <th style="width: 15%;" class="text-end">Amount</th>
+                        <th style="width: 15%;">Recorded By</th>
+                        <th style="width: 5%;" class="text-center" id="activityPaymentActionsHeader"></th>
                       </tr>
                     </thead>
-                    <tbody id="activityTimelineList"></tbody>
+                    <tbody id="activityPaymentList"></tbody>
                   </table>
                 </div>
-                <div id="activityTimelineEmpty" class="text-center py-5 d-none">
-                  <p class="text-muted mb-0">No activities recorded yet.</p>
-                </div>
+              </div>
+
+              <div id="activityPaymentEmpty" class="atl-empty mt-3 d-none">
+                <span class="small atl-muted">No payment transactions recorded yet.</span>
+                <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-decoration-none d-none" id="activityPaymentEmptyRecordBtn">+ Mark as Partially Paid</button>
               </div>
             </div>
-          </div>
+          </section>
+
+          <!-- Section 3: Activity History -->
+          <section class="atl-section mb-0">
+            <div class="atl-section-head">
+              <span class="atl-section-title"><i class="fa-solid fa-clock-rotate-left"></i> Activity History</span>
+            </div>
+            <div class="atl-section-body p-0">
+              <div class="table-responsive">
+                <table class="table atl-table align-middle mb-0" id="activityTimelineTable">
+                  <thead>
+                    <tr>
+                      <th style="width: 20%;" class="ps-3">Date &amp; Time</th>
+                      <th style="width: 18%;">Company</th>
+                      <th style="width: 14%;">Action</th>
+                      <th style="width: 48%;" class="pe-3">Description &amp; Details</th>
+                    </tr>
+                  </thead>
+                  <tbody id="activityTimelineList"></tbody>
+                </table>
+              </div>
+              <div id="activityTimelineEmpty" class="text-center py-5 d-none">
+                <p class="atl-muted mb-0">No activities recorded yet.</p>
+              </div>
+            </div>
+          </section>
+
         </div>
       </div>
     </div>
+  </div>
   `;
 
   document.body.appendChild(modalEl);
@@ -177,13 +244,13 @@ function hideTimelineModal(modalEl) {
         instance.hide();
       }
     }
-  } catch (err) {}
+  } catch (err) { }
 
   try {
     if (window.$ && typeof window.$(modalEl).modal === 'function') {
       window.$(modalEl).modal('hide');
     }
-  } catch (err) {}
+  } catch (err) { }
 
   modalEl.classList.remove('show');
   modalEl.style.display = 'none';
@@ -212,14 +279,6 @@ function bindModalControls(modalEl) {
     }
   });
 
-  // Search input filter inside modal
-  const searchInput = modalEl.querySelector('#activitySearchInput');
-  if (searchInput && !searchInput.dataset.filterBound) {
-    searchInput.dataset.filterBound = 'true';
-    searchInput.addEventListener('input', function () {
-      filterActivitiesTable(this.value.trim().toLowerCase());
-    });
-  }
 
   // Retry button
   const retryBtn = modalEl.querySelector('#activityRetryBtn');
@@ -252,8 +311,6 @@ export function openTimelineModal(trackableType, trackableId, resourceTitle) {
     modalTitle.textContent = `Activity Timeline - ${resourceTitle || 'Resource'}`;
   }
 
-  const searchInput = modalEl.querySelector('#activitySearchInput');
-  if (searchInput) searchInput.value = '';
 
   showTimelineModal(modalEl);
   fetchAndRenderActivities(trackableType, trackableId, resourceTitle);
@@ -318,6 +375,14 @@ function fetchAndRenderActivities(trackableType, trackableId, resourceTitle) {
         summaryLatest.textContent = currentActivities[0]?.formatted_date || currentActivities[0]?.time_ago || 'No activity';
       }
 
+      // Populate Payment Receipts & History Section (Only for Invoices)
+      if (data.payment_summary) {
+        renderPaymentSummary(data.payment_summary, modalEl, trackableType, trackableId, resourceTitle);
+      } else {
+        const paymentSection = modalEl.querySelector('#activityPaymentSection');
+        if (paymentSection) paymentSection.classList.add('d-none');
+      }
+
       if (contentEl) contentEl.classList.remove('d-none');
 
       if (totalCount === 0) {
@@ -340,6 +405,277 @@ function fetchAndRenderActivities(trackableType, trackableId, resourceTitle) {
         errorEl.classList.remove('d-none');
       }
     });
+}
+
+/**
+ * Retrieves CSRF token from document meta tag.
+ */
+function getCsrfToken() {
+  const meta = document.querySelector('meta[name="csrf-token"]');
+  return meta ? meta.getAttribute('content') : '';
+}
+
+/**
+ * Handles opening record payment modal from within activity timeline modal.
+ */
+function triggerRecordPaymentModal(invoiceId) {
+  const modalEl = document.getElementById('activityTimelineModal');
+  if (modalEl) {
+    hideTimelineModal(modalEl);
+  }
+
+  // Look for target modal in DOM
+  const targetModalId = `recordPaymentModal-${invoiceId}`;
+  const paymentModal = document.getElementById(targetModalId);
+
+  if (paymentModal) {
+    showBootstrapOrFallbackModal(paymentModal);
+  } else {
+    // If not in current DOM, navigate to invoice show view
+    window.location.href = `/invoices/${invoiceId}`;
+  }
+}
+
+/**
+ * Shows modal using Bootstrap 5, jQuery, or DOM fallback.
+ */
+function showBootstrapOrFallbackModal(el) {
+  if (!el) return;
+  try {
+    const bs = (typeof bootstrap !== 'undefined' && bootstrap?.Modal)
+      ? bootstrap
+      : (window.bootstrap?.Modal ? window.bootstrap : null);
+    if (bs && bs.Modal) {
+      const inst = bs.Modal.getOrCreateInstance ? bs.Modal.getOrCreateInstance(el) : new bs.Modal(el);
+      inst.show();
+      return;
+    }
+  } catch (e) { }
+
+  if (window.$ && typeof window.$(el).modal === 'function') {
+    window.$(el).modal('show');
+    return;
+  }
+
+  el.classList.add('show');
+  el.style.display = 'block';
+  el.removeAttribute('aria-hidden');
+  document.body.classList.add('modal-open');
+}
+
+/**
+ * Renders the Payment Receipts and History summary section inside the Activity Timeline Modal.
+ */
+function renderPaymentSummary(summary, modalEl, trackableType, trackableId, resourceTitle) {
+  if (!modalEl || !summary) return;
+
+  const paymentSection = modalEl.querySelector('#activityPaymentSection');
+  if (!paymentSection) return;
+
+  // 1. Subtext
+  const subtextEl = modalEl.querySelector('#activityPaymentSubtext');
+  if (subtextEl) {
+    const count = summary.payments_count || 0;
+    subtextEl.textContent = count > 0
+      ? (count === 1 ? '• 1 transaction' : `• ${count} transactions`)
+      : '';
+  }
+
+  // 2. Status Badge
+  const statusBadge = modalEl.querySelector('#activityPaymentStatusBadge');
+  if (statusBadge) {
+    statusBadge.textContent = summary.status_title || summary.status || '';
+    statusBadge.className = `badge rounded-pill px-2.5 py-1 fw-semibold extra-small ${summary.status_badge_class || 'bg-secondary'}`;
+  }
+
+  // 3. Action Buttons (+ Mark as Partially Paid / Add Payment)
+  const recordBtn = modalEl.querySelector('#activityRecordPaymentBtn');
+  const recordBtnText = modalEl.querySelector('#activityRecordPaymentBtnText');
+  const emptyRecordBtn = modalEl.querySelector('#activityPaymentEmptyRecordBtn');
+
+  if (summary.can_record_payment) {
+    if (recordBtn) {
+      recordBtn.classList.remove('d-none');
+      if (recordBtnText) {
+        recordBtnText.textContent = (summary.payments_count > 0) ? 'Add Payment' : 'Mark as Partially Paid';
+      }
+      recordBtn.onclick = (e) => {
+        e.preventDefault();
+        triggerRecordPaymentModal(summary.invoice_id);
+      };
+    }
+    if (emptyRecordBtn) {
+      emptyRecordBtn.classList.remove('d-none');
+      emptyRecordBtn.onclick = (e) => {
+        e.preventDefault();
+        triggerRecordPaymentModal(summary.invoice_id);
+      };
+    }
+  } else {
+    if (recordBtn) recordBtn.classList.add('d-none');
+    if (emptyRecordBtn) emptyRecordBtn.classList.add('d-none');
+  }
+
+  // 4. Minimalist Metric Strip
+  const grandTotalEl = modalEl.querySelector('#activityPaymentGrandTotal');
+  const totalPaidEl = modalEl.querySelector('#activityPaymentTotalPaid');
+  const remainingBalanceEl = modalEl.querySelector('#activityPaymentRemainingBalance');
+
+  if (grandTotalEl) grandTotalEl.textContent = summary.formatted_grand_total || '-';
+  if (totalPaidEl) totalPaidEl.textContent = summary.formatted_total_paid || '-';
+  if (remainingBalanceEl) {
+    remainingBalanceEl.textContent = summary.formatted_remaining_balance || '-';
+    remainingBalanceEl.className = `fw-bold fs-6 ${summary.remaining_balance > 0 ? 'text-danger' : 'text-muted'}`;
+  }
+
+  // 5. Fulfillment Progress Bar & Badge
+  const percentLabelEl = modalEl.querySelector('#activityPaymentPercentLabel');
+  const progressBarEl = modalEl.querySelector('#activityPaymentProgressBar');
+  const pct = Math.min(Math.max(summary.percent_paid || 0, 0), 100);
+
+  if (percentLabelEl) {
+    percentLabelEl.textContent = `${pct}%`;
+    percentLabelEl.className = `badge ${pct === 100 ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary'} extra-small px-1.5 py-0.5 rounded-pill`;
+  }
+  if (progressBarEl) {
+    progressBarEl.style.width = `${pct}%`;
+    progressBarEl.setAttribute('aria-valuenow', String(pct));
+    progressBarEl.className = `progress-bar rounded-pill ${pct === 100 ? 'bg-success' : 'bg-primary'}`;
+  }
+
+  // 6. Payments Table vs Empty State
+  const tableWrapper = modalEl.querySelector('#activityPaymentTableWrapper');
+  const emptyWrapper = modalEl.querySelector('#activityPaymentEmpty');
+  const listEl = modalEl.querySelector('#activityPaymentList');
+
+  const payments = summary.payments || [];
+  if (payments.length > 0) {
+    if (tableWrapper) tableWrapper.classList.remove('d-none');
+    if (emptyWrapper) emptyWrapper.classList.add('d-none');
+    if (listEl) {
+      renderPaymentReceiptsTable(payments, listEl, summary.can_record_payment, trackableType, trackableId, resourceTitle);
+    }
+  } else {
+    if (tableWrapper) tableWrapper.classList.add('d-none');
+    if (emptyWrapper) emptyWrapper.classList.remove('d-none');
+    if (listEl) listEl.replaceChildren();
+  }
+
+  // Reveal the section
+  paymentSection.classList.remove('d-none');
+}
+
+/**
+ * Safely renders payment receipts list into table rows without XSS risks.
+ */
+function renderPaymentReceiptsTable(payments, tbody, canRecord, trackableType, trackableId, resourceTitle) {
+  tbody.replaceChildren();
+
+  payments.forEach((payment) => {
+    const tr = document.createElement('tr');
+
+    // 1. Date & Details (with inline note if present)
+    const tdDate = document.createElement('td');
+    tdDate.className = 'py-2';
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'fw-medium text-body';
+    dateDiv.textContent = payment.payment_date || '';
+    tdDate.appendChild(dateDiv);
+
+    if (payment.notes && payment.notes.trim().length > 0) {
+      const noteDiv = document.createElement('div');
+      noteDiv.className = 'extra-small text-muted fst-italic mt-0.5 d-flex align-items-center gap-1';
+      const noteIcon = document.createElement('i');
+      noteIcon.className = 'fa-regular fa-note-sticky text-secondary fs-8';
+      noteDiv.appendChild(noteIcon);
+      const noteText = document.createElement('span');
+      noteText.textContent = payment.notes;
+      noteDiv.appendChild(noteText);
+      tdDate.appendChild(noteDiv);
+    }
+    tr.appendChild(tdDate);
+
+    // 2. Payment Method
+    const tdMethod = document.createElement('td');
+    tdMethod.className = 'py-2';
+    const badge = document.createElement('span');
+    badge.className = `badge ${payment.payment_method_badge_class || 'bg-light text-dark'} rounded-pill px-2 py-0.5 extra-small`;
+    const icon = document.createElement('i');
+    icon.className = `${payment.payment_method_icon || 'fa-solid fa-receipt'} me-1`;
+    badge.appendChild(icon);
+    badge.appendChild(document.createTextNode(payment.payment_method || ''));
+    tdMethod.appendChild(badge);
+    tr.appendChild(tdMethod);
+
+    // 3. Reference Number
+    const tdRef = document.createElement('td');
+    tdRef.className = 'py-2';
+    const code = document.createElement('code');
+    code.className = 'font-monospace text-body bg-light-subtle px-1.5 py-0.5 rounded border border-secondary-subtle extra-small';
+    code.textContent = payment.reference_number || '—';
+    tdRef.appendChild(code);
+    tr.appendChild(tdRef);
+
+    // 4. Amount Paid
+    const tdAmount = document.createElement('td');
+    tdAmount.className = 'py-2 text-end fw-semibold text-success fs-7';
+    tdAmount.textContent = payment.formatted_amount || '';
+    tr.appendChild(tdAmount);
+
+    // 5. Recorded By
+    const tdUser = document.createElement('td');
+    tdUser.className = 'py-2 text-muted extra-small';
+    tdUser.textContent = payment.user_email || 'System';
+    tr.appendChild(tdUser);
+
+    // 6. Actions (Delete button)
+    const tdAction = document.createElement('td');
+    tdAction.className = 'py-2 text-center';
+    if (payment.can_delete && payment.delete_path) {
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'btn btn-link btn-xs text-danger p-0';
+      delBtn.title = 'Remove payment receipt';
+      const trashIcon = document.createElement('i');
+      trashIcon.className = 'fa-solid fa-trash-can';
+      delBtn.appendChild(trashIcon);
+
+      delBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!confirm('Are you sure you want to remove this payment receipt?')) return;
+
+        delBtn.disabled = true;
+        const csrfToken = getCsrfToken();
+        fetch(payment.delete_path, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRF-Token': csrfToken,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+          .then((res) => {
+            if (res.ok) {
+              fetchAndRenderActivities(trackableType, trackableId, resourceTitle);
+            } else {
+              alert('Failed to remove payment receipt.');
+              delBtn.disabled = false;
+            }
+          })
+          .catch(() => {
+            alert('An error occurred while removing payment receipt.');
+            delBtn.disabled = false;
+          });
+      });
+
+      tdAction.appendChild(delBtn);
+    } else {
+      tdAction.textContent = '';
+    }
+    tr.appendChild(tdAction);
+
+    tbody.appendChild(tr);
+  });
 }
 
 /**
@@ -428,19 +764,36 @@ function renderActivitiesTable(activities, container) {
 function getActionBadgeClass(action) {
   switch (action) {
     case 'invoice_paid':
+    case 'marked_as_paid':
     case 'tax_processed':
+    case 'processed':
     case 'invoice_unarchived':
+    case 'unarchived':
+    case 'approved':
       return 'bg-success';
     case 'tax_submitted':
     case 'invoice_sent':
-    case 'invoice_status_changed':
-      return 'bg-info text-dark';
+    case 'quote_sent':
+    case 'reviewed':
     case 'tax_status_updated':
+      return 'bg-info text-dark';
+    case 'invoice_status_changed':
+    case 'status_changed':
+      return 'bg-primary';
+    case 'payment_recorded':
+      return 'bg-success text-white';
+    case 'payment_removed':
+    case 'rejected':
+      return 'bg-danger text-white';
     case 'invoice_amount_updated':
+    case 'amount_updated':
+    case 'credit_note_created':
       return 'bg-warning text-dark';
     case 'invoice_created':
       return 'bg-primary';
+    case 'invoice_updated':
     case 'invoice_archived':
+    case 'archived':
     default:
       return 'bg-secondary';
   }
@@ -537,6 +890,48 @@ function buildMetadataDetails(metadata, action) {
     hasContent = true;
   }
 
+  // Case D: Payment Recorded Details
+  if (action === 'payment_recorded' && (metadata.amount_paid !== undefined || metadata.reference_number)) {
+    const row = document.createElement('div');
+    row.className = 'd-flex flex-wrap align-items-center gap-2';
+
+    if (metadata.payment_method) {
+      const methodBadge = document.createElement('span');
+      methodBadge.className = 'badge bg-light text-dark border px-2 py-1';
+      methodBadge.textContent = metadata.payment_method;
+      row.appendChild(methodBadge);
+    }
+
+    if (metadata.reference_number) {
+      const refSpan = document.createElement('code');
+      refSpan.className = 'font-monospace text-body bg-light-subtle px-1.5 py-0.5 rounded border border-secondary-subtle extra-small';
+      refSpan.textContent = `Ref: ${metadata.reference_number}`;
+      row.appendChild(refSpan);
+    }
+
+    if (metadata.amount_paid !== undefined && metadata.amount_paid !== null) {
+      const amtSpan = document.createElement('span');
+      amtSpan.className = 'text-success fw-bold';
+      amtSpan.textContent = formatCurrency(metadata.amount_paid, metadata.currency || 'PHP');
+      row.appendChild(amtSpan);
+    }
+
+    container.appendChild(row);
+    hasContent = true;
+  }
+
+  // Case E: Invoice Created Initial Total
+  if (action === 'invoice_created' && metadata.total !== undefined && metadata.total !== null) {
+    const row = document.createElement('div');
+    row.className = 'd-flex align-items-center gap-2';
+    const totalSpan = document.createElement('span');
+    totalSpan.className = 'text-muted';
+    totalSpan.textContent = `Invoice Total: ${formatCurrency(metadata.total, metadata.currency || 'PHP')}`;
+    row.appendChild(totalSpan);
+    container.appendChild(row);
+    hasContent = true;
+  }
+
   return hasContent ? container : null;
 }
 
@@ -547,14 +942,28 @@ function formatActionLabel(action) {
   const map = {
     invoice_created: 'Created',
     invoice_paid: 'Paid',
+    marked_as_paid: 'Paid',
+    payment_recorded: 'Payment',
+    payment_removed: 'Payment Removed',
+    approved: 'Approved',
+    rejected: 'Rejected',
     invoice_amount_updated: 'Amount Change',
+    amount_updated: 'Amount Change',
     invoice_status_changed: 'Status Update',
+    status_changed: 'Status Update',
     invoice_sent: 'Sent',
+    quote_sent: 'Sent',
+    invoice_updated: 'Updated',
     tax_submitted: 'Submitted',
-    tax_status_updated: 'Reviewed',
+    tax_status_updated: 'Status Update',
+    reviewed: 'Reviewed',
     tax_processed: 'Processed',
+    processed: 'Processed',
     invoice_archived: 'Archived',
-    invoice_unarchived: 'Restored'
+    archived: 'Archived',
+    invoice_unarchived: 'Restored',
+    unarchived: 'Restored',
+    credit_note_created: 'Credit Note'
   };
   return map[action] || action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
@@ -568,31 +977,6 @@ function formatCurrency(amount, currency = 'PHP') {
   return `${currency} ${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-/**
- * Filters visible table rows by keyword.
- */
-function filterActivitiesTable(query) {
-  const modalEl = document.getElementById('activityTimelineModal');
-  if (!modalEl) return;
-
-  const rows = modalEl.querySelectorAll('#activityTimelineList .activity-row');
-  let visibleCount = 0;
-
-  rows.forEach((row) => {
-    const text = row.textContent.toLowerCase();
-    if (!query || text.includes(query)) {
-      row.classList.remove('d-none');
-      visibleCount++;
-    } else {
-      row.classList.add('d-none');
-    }
-  });
-
-  const summaryCount = modalEl.querySelector('#activitySummaryCount');
-  if (summaryCount) {
-    summaryCount.textContent = `${visibleCount} ${visibleCount === 1 ? 'event' : 'events'}`;
-  }
-}
 
 function capitalize(str) {
   if (!str) return '';
@@ -645,7 +1029,7 @@ export function initActivityTimeline() {
             openTimelineModal(tType, tId, rTitle);
           }
         });
-    } catch (err) {}
+    } catch (err) { }
   }
 }
 

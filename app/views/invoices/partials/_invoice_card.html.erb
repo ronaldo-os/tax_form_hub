@@ -17,14 +17,15 @@
     <div class="text-end">
       <span class="badge px-3 py-2 fs-6 rounded-pill fw-semibold
         <%= case invoice.status
-            when "sent"     then "bg-primary-subtle text-primary"
-            when "approved" then "bg-success-subtle text-success"
-            when "rejected" then "bg-danger-subtle text-danger"
-            when "paid"     then "bg-info-subtle text-info"
-            when "draft"    then "bg-secondary-subtle text-body"
+            when "sent"           then "bg-primary-subtle text-primary"
+            when "approved"       then "bg-success-subtle text-success"
+            when "rejected"       then "bg-danger-subtle text-danger"
+            when "paid"           then "bg-info-subtle text-info"
+            when "partially_paid" then "bg-warning-subtle text-warning-emphasis"
+            when "draft"          then "bg-secondary-subtle text-body"
             else "bg-light text-muted"
         end %>">
-        <%= invoice.status.to_s.upcase %>
+        <%= invoice.status == 'partially_paid' ? 'PARTIALLY PAID' : invoice.status.to_s.upcase %>
       </span>
     </div>
   </div>
@@ -374,6 +375,7 @@
         </div>
       </div>
     </div>
+
 
     <!-- Payment Terms, Message, Attachments Section -->
     <div class="row g-4 pt-4 border-top border-secondary-subtle pdf-no-break">

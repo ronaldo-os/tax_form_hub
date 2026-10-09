@@ -1,0 +1,183 @@
+<%# Modal for recording partial payments and payment receipts (Flat, clearly sectioned layout uniform with Activity Timeline modal) %>
+<div class="modal fade record-payment-modal" id="recordPaymentModal-<%= invoice.id %>" tabindex="-1" aria-labelledby="recordPaymentModalLabel-<%= invoice.id %>" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content atl-modal">
+      
+      <!-- Modal Header -->
+      <div class="modal-header atl-header">
+        <h5 class="modal-title" id="recordPaymentModalLabel-<%= invoice.id %>">
+          Record Payment Receipt — Invoice #<%= invoice.invoice_number %>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body atl-body">
+        <% 
+          sym = invoice.currency_symbol
+          grand_total = invoice.grand_total
+          total_paid = invoice.total_paid
+          remaining = invoice.remaining_balance
+          is_show_view = defined?(@invoice) && @invoice.present? && @invoice.id == invoice.id
+          default_payment_amount = remaining > 0 ? (remaining / 2.0).round(2) : 0.00
+        %>
+
+        <!-- Section 1: Balance Summary -->
+        <section class="atl-section">
+          <div class="atl-section-head">
+            <span class="atl-section-title"><i class="fa-solid fa-calculator"></i> Invoice Balance Summary</span>
+          </div>
+          <div class="atl-section-body">
+            <div class="atl-metrics">
+              <div class="atl-metric">
+                <div class="atl-label">Invoice Total</div>
+                <div class="atl-value"><%= sym %> <%= number_with_precision(grand_total, precision: 2, delimiter: ',') %></div>
+              </div>
+              <div class="atl-metric">
+                <div class="atl-label">Total Paid</div>
+                <div class="atl-value text-success"><%= sym %> <%= number_with_precision(total_paid, precision: 2, delimiter: ',') %></div>
+              </div>
+              <div class="atl-metric">
+                <div class="atl-label">Balance Due</div>
+                <div class="atl-value <%= remaining > 0 ? 'text-danger' : 'text-muted' %>">
+                  <%= sym %> <%= number_with_precision(remaining, precision: 2, delimiter: ',') %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 2: Payment Entry Form -->
+        <section class="atl-section mb-0">
+          <div class="atl-section-head">
+            <span class="atl-section-title"><i class="fa-solid fa-receipt"></i> Payment Details</span>
+          </div>
+          <div class="atl-section-body">
+            <%= form_with url: record_payment_invoice_path(invoice), method: :post, local: true, class: "needs-validation payment-logging-form" do |f| %>
+              <input type="hidden" name="tab" value="<%= params[:tab] || (invoice.invoice_type == 'purchase' ? 'purchase-invoices' : 'sales-invoices') %>">
+              <input type="hidden" name="from_show" value="<%= is_show_view ? 'true' : 'false' %>">
+              <input type="hidden" name="redirect_url" value="<%= is_show_view ? invoice_path(invoice, tab: params[:tab]) : invoices_path(tab: params[:tab] || 'sales-invoices') %>">
+
+              <div class="row g-3">
+
+                <!-- Payment Method -->
+                <div class="col-md-6">
+                  <label class="atl-label d-block mb-1" for="payment_method_<%= invoice.id %>">
+                    Payment Method <span class="text-danger">*</span>
+                  </label>
+                  <%= f.select "payment[payment_method]", 
+                      options_for_select([
+                        ["Bank Transfer", "Bank Transfer"],
+                        ["Check", "Check"],
+                        ["GCash", "GCash"],
+                        ["Maya", "Maya"]
+                      ], "Bank Transfer"), 
+                      {}, 
+                      { class: "form-select form-select-sm", id: "payment_method_#{invoice.id}", required: true } %>
+                  <div class="form-text small atl-muted mt-1">
+                    Select from supported payment channels.
+                  </div>
+                </div>
+
+                <!-- Reference Transaction Number -->
+                <div class="col-md-6">
+                  <label class="atl-label d-block mb-1" for="payment_ref_<%= invoice.id %>">
+                    Reference Transaction Number <span class="text-danger">*</span>
+                  </label>
+                  <%= f.text_field "payment[reference_number]", 
+                      class: "form-control form-control-sm", 
+                      id: "payment_ref_#{invoice.id}", 
+                      placeholder: "e.g., TRN-9482104 or Ref #88203", 
+                      required: true %>
+                  <div class="form-text small atl-muted mt-1">
+                    Transaction ID, check number, or receipt trace.
+                  </div>
+                </div>
+
+                <!-- Payment Date -->
+                <div class="col-md-6">
+                  <label class="atl-label d-block mb-1" for="payment_date_<%= invoice.id %>">
+                    Payment Date <span class="text-danger">*</span>
+                  </label>
+                  <%= f.date_field "payment[payment_date]", 
+                      class: "form-control form-control-sm", 
+                      id: "payment_date_#{invoice.id}", 
+                      value: Date.current.to_s, 
+                      max: Date.current.to_s,
+                      required: true %>
+                  <div class="form-text small atl-muted mt-1">
+                    Date payment was executed or received.
+                  </div>
+                </div>
+
+                <!-- Amount Paid -->
+                <div class="col-md-6">
+                  <label class="atl-label d-block mb-1" for="payment_amount_<%= invoice.id %>">
+                    Amount Paid (<%= sym %>) <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text"><%= sym %></span>
+                    <%= f.number_field "payment[amount]", 
+                        class: "form-control payment-amount-input", 
+                        id: "payment_amount_#{invoice.id}", 
+                        step: "0.01", 
+                        min: "0.01", 
+                        max: sprintf('%.2f', [remaining, 0.01].max), 
+                        value: sprintf('%.2f', default_payment_amount > 0 ? default_payment_amount : remaining), 
+                        required: true %>
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mt-1">
+                    <span class="form-text small atl-muted">
+                      Max: <%= sym %> <%= number_with_precision(remaining, precision: 2, delimiter: ',') %>
+                    </span>
+                    <button type="button" 
+                            class="btn btn-link btn-xs p-0 text-decoration-none text-primary fw-medium fill-full-balance-btn"
+                            data-target="#payment_amount_<%= invoice.id %>"
+                            data-balance="<%= sprintf('%.2f', remaining) %>">
+                      Pay Full Balance
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Notes / Remarks -->
+                <div class="col-12">
+                  <label class="atl-label d-block mb-1" for="payment_notes_<%= invoice.id %>">
+                    Notes / Remarks <span class="atl-muted fw-normal text-capitalize">(Optional)</span>
+                  </label>
+                  <%= f.text_area "payment[notes]", 
+                      class: "form-control form-control-sm", 
+                      id: "payment_notes_#{invoice.id}", 
+                      rows: 2, 
+                      placeholder: "Optional notes on payment receipt, paying party, or bank branch..." %>
+                </div>
+
+              </div>
+
+              <!-- Notice info note -->
+              <div class="atl-empty mt-3 text-start d-flex align-items-center gap-2">
+                <i class="fa-solid fa-circle-info text-primary flex-shrink-0"></i>
+                <div class="small atl-muted">
+                  Logging an amount less than the balance due sets the invoice status to <strong>Partially Paid</strong>. Logging the full remaining balance marks it as <strong>Paid</strong>.
+                </div>
+              </div>
+
+              <!-- Modal Footer Actions -->
+              <div class="d-flex justify-content-end align-items-center gap-2 mt-3 pt-3 border-top">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal">
+                  Cancel
+                </button>
+                <button type="submit" class="btn btn-sm btn-primary px-3 d-inline-flex align-items-center gap-1" data-disable-with="<i class='fa-solid fa-spinner fa-spin me-1'></i> Recording...">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>Record Payment</span>
+                </button>
+              </div>
+
+            <% end %>
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+  </div>
+</div>
