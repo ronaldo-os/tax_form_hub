@@ -990,7 +990,8 @@ class InvoicesController < ApplicationController
       deleted_count = 0
       skipped_count = 0
       invoices.each do |inv|
-        if inv.credit_notes.exists? || inv.recurring_sub_invoices.exists?
+        # Mirror row Actions dropdown: Delete is only offered for drafts
+        if inv.status != "draft" || inv.credit_notes.exists? || inv.recurring_sub_invoices.exists?
           skipped_count += 1
         else
           begin
@@ -1037,13 +1038,13 @@ class InvoicesController < ApplicationController
         end
 
         # Paid status: only issuer/seller can mark as paid; quotes cannot be paid
-        if target_status == "paid" && (inv.invoice_type != "sale" || inv.quote?)
+        if target_status == "paid" && (inv.invoice_type != "sale" || inv.quote? || !%w[approved sent partially_paid].include?(inv.status))
           skipped_count += 1
           next
         end
 
-        # Approved / Rejected status: only recipient/buyer of purchase invoices can approve or reject
-        if %w[approved rejected].include?(target_status) && inv.invoice_type != "purchase"
+        # Approved / Rejected status: only recipient/buyer of pending purchase invoices can approve or reject
+        if %w[approved rejected].include?(target_status) && (inv.invoice_type != "purchase" || inv.status != "pending")
           skipped_count += 1
           next
         end

@@ -55,6 +55,9 @@ import './network_search';
 // Global action button spamming and double-submit prevention
 import './action_spam_prevention';
 
+// Close other open dropdowns when a DataTable row dropdown is opened (prevents overlap)
+import './datatable_dropdown_fix';
+
 // Activity timeline for audit history
 import { initActivityTimeline } from './activity_timeline';
 

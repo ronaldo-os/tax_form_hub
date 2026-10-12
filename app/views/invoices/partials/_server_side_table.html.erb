@@ -30,7 +30,7 @@
           <% is_sale_invoice = (local_assigns[:invoice_type] == 'sale' && !local_assigns[:quote]) %>
           <% is_purchase = (local_assigns[:invoice_type] == 'purchase') %>
           <% if is_sale_invoice %>
-            <div class="dropdown">
+            <div class="dropdown bulk-status-dropdown">
               <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold dropdown-toggle" type="button" id="bulkStatusDropdown_<%= table_id %>" data-bs-toggle="dropdown" aria-expanded="false">
                 Update Status
               </button>
@@ -43,7 +43,7 @@
               </ul>
             </div>
           <% elsif is_purchase %>
-            <div class="dropdown">
+            <div class="dropdown bulk-status-dropdown">
               <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1.5 fw-semibold dropdown-toggle" type="button" id="bulkStatusDropdown_<%= table_id %>" data-bs-toggle="dropdown" aria-expanded="false">
                 Update Status
               </button>

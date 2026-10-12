@@ -206,7 +206,8 @@ class InvoiceDatatable < BaseDatatable
           invoice_number: invoice.invoice_number,
           status: invoice.status,
           archived: invoice.archived?,
-          invoice_type: invoice.invoice_type
+          invoice_type: invoice.invoice_type,
+          allowed_actions: allowed_bulk_actions(invoice).join(',')
         },
         'aria-label': "Select invoice #{invoice.invoice_number}"
       )
@@ -438,7 +439,7 @@ class InvoiceDatatable < BaseDatatable
     end
 
     # Mark as Paid (only seller/issuer of sale invoice can mark as paid)
-    if invoice.invoice_type == 'sale' && %w[approved sent partially_paid].include?(invoice.status) && !is_purchase_table? && !is_received_quotes_table? && !invoice.has_associated_credit_note?
+    if can_mark_paid?(invoice)
       items << content_tag(:li) do
         link_to('Mark as Paid',
           url_helpers.mark_as_paid_invoice_path(invoice, tab: active_tab),
@@ -457,7 +458,7 @@ class InvoiceDatatable < BaseDatatable
     end
 
     # Approve / Reject (purchase pending)
-    if invoice.invoice_type == 'purchase' && invoice.status == 'pending' && !invoice.has_associated_credit_note?
+    if can_approve_or_reject?(invoice)
       items << content_tag(:li) do
         link_to('Approve',
           url_helpers.approve_invoice_path(invoice, tab: active_tab),
@@ -484,7 +485,7 @@ class InvoiceDatatable < BaseDatatable
     items << content_tag(:li, '', class: 'dropdown-divider') if items.size > 5
 
     # Archive/Unarchive
-    unless invoice.has_associated_credit_note?
+    if can_toggle_archive?(invoice)
       action = invoice.archived? ? 'Unarchive' : 'Archive'
       path = invoice.archived? ?
         url_helpers.unarchive_invoice_path(invoice, tab: active_tab) :
@@ -498,7 +499,7 @@ class InvoiceDatatable < BaseDatatable
     end
 
     # Delete (draft only)
-    if invoice.status == 'draft'
+    if can_delete?(invoice)
       items << content_tag(:li) do
         link_to('Delete',
           url_helpers.invoice_path(invoice, tab: active_tab),
@@ -508,6 +509,36 @@ class InvoiceDatatable < BaseDatatable
     end
 
     items.join.html_safe
+  end
+
+  # Bulk action keys (matching InvoicesController#bulk_action) permitted for this row.
+  # Mirrors the per-row Actions dropdown so bulk options never exceed row options.
+  def allowed_bulk_actions(invoice)
+    actions = []
+    actions << 'mark_paid' if can_mark_paid?(invoice)
+    actions.push('mark_approved', 'mark_rejected') if can_approve_or_reject?(invoice)
+    actions << (invoice.archived? ? 'unarchive' : 'archive') if can_toggle_archive?(invoice)
+    actions << 'destroy' if can_delete?(invoice)
+    actions
+  end
+
+  def can_mark_paid?(invoice)
+    invoice.invoice_type == 'sale' &&
+      %w[approved sent partially_paid].include?(invoice.status) &&
+      !is_purchase_table? && !is_received_quotes_table? &&
+      !invoice.has_associated_credit_note?
+  end
+
+  def can_approve_or_reject?(invoice)
+    invoice.invoice_type == 'purchase' && invoice.status == 'pending' && !invoice.has_associated_credit_note?
+  end
+
+  def can_toggle_archive?(invoice)
+    !invoice.has_associated_credit_note?
+  end
+
+  def can_delete?(invoice)
+    invoice.status == 'draft'
   end
 
   def active_tab

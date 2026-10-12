@@ -10,9 +10,35 @@ import { showInvoiceToast } from './invoices_export';
 
 /**
  * Global map storing selected invoices per table ID:
- * tableId -> Map(invoiceId -> { id, number, status, type })
+ * tableId -> Map(invoiceId -> { id, number, status, type, allowedActions })
  */
 const tableSelections = new Map();
+
+/**
+ * Parses the comma-separated allowed bulk actions from a row checkbox.
+ *
+ * @param {HTMLElement} checkbox
+ * @returns {string[]}
+ */
+function parseAllowedActions(checkbox) {
+  const raw = (checkbox && checkbox.dataset && checkbox.dataset.allowedActions) || '';
+  return raw.split(',').map((s) => s.trim()).filter(Boolean);
+}
+
+/**
+ * Builds a selection entry from a row checkbox element.
+ *
+ * @param {HTMLElement} checkbox
+ */
+function buildSelectionEntry(checkbox) {
+  return {
+    id: checkbox.value,
+    number: checkbox.dataset.invoiceNumber || '',
+    status: checkbox.dataset.status || '',
+    type: checkbox.dataset.invoiceType || '',
+    allowedActions: parseAllowedActions(checkbox)
+  };
+}
 
 /**
  * Loads html2pdf.js dynamically from CDN if not already present.
@@ -553,6 +579,36 @@ export function setupInvoiceBulkActions(tableApi, tableId) {
       masterBulkCheckbox.checked = isAllVisibleSelected;
       masterBulkCheckbox.indeterminate = isIndeterminate;
     }
+
+    updateAllowedBulkActions();
+  }
+
+  /**
+   * Shows a bulk action only if EVERY selected invoice allows it
+   * (i.e. it appears in that invoice's row Actions dropdown).
+   */
+  function updateAllowedBulkActions() {
+    const selected = Array.from(selectionMap.values());
+
+    bulkBar.querySelectorAll('button[name="bulk_action"]').forEach((btn) => {
+      const action = btn.value;
+      const allowed =
+        selected.length > 0 &&
+        selected.every((item) => Array.isArray(item.allowedActions) && item.allowedActions.includes(action));
+
+      // Hide the <li> wrapper for dropdown items, otherwise the button itself
+      const target = btn.closest('li') || btn;
+      target.classList.toggle('d-none', !allowed);
+      btn.disabled = !allowed;
+    });
+
+    // Hide the "Update Status" dropdown entirely if none of its options apply
+    bulkBar.querySelectorAll('.bulk-status-dropdown').forEach((dropdown) => {
+      const hasVisibleOption = Array.from(
+        dropdown.querySelectorAll('button[name="bulk_action"]')
+      ).some((btn) => !btn.disabled);
+      dropdown.classList.toggle('d-none', !hasVisibleOption);
+    });
   }
 
   function toggleAllVisible(isChecked) {
@@ -562,12 +618,7 @@ export function setupInvoiceBulkActions(tableApi, tableId) {
       if ($cb.length) {
         const invId = $cb.val();
         if (isChecked) {
-          selectionMap.set(invId, {
-            id: invId,
-            number: $cb.data('invoice-number') || '',
-            status: $cb.data('status') || '',
-            type: $cb.data('invoice-type') || ''
-          });
+          selectionMap.set(invId, buildSelectionEntry($cb.get(0)));
         } else {
           selectionMap.delete(invId);
         }
@@ -601,12 +652,7 @@ export function setupInvoiceBulkActions(tableApi, tableId) {
   $table.off('change.invoiceCheckbox', '.invoice-row-checkbox').on('change.invoiceCheckbox', '.invoice-row-checkbox', function () {
     const invId = this.value;
     if (this.checked) {
-      selectionMap.set(invId, {
-        id: invId,
-        number: this.dataset.invoiceNumber || $(this).data('invoice-number') || '',
-        status: this.dataset.status || $(this).data('status') || '',
-        type: this.dataset.invoiceType || $(this).data('invoice-type') || ''
-      });
+      selectionMap.set(invId, buildSelectionEntry(this));
     } else {
       selectionMap.delete(invId);
     }
