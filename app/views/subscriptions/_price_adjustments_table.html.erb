@@ -126,7 +126,7 @@
   </div>
   <% subscriptions.each do |invoice| %>
     <% if invoice.subscription_active? %>
-      <%= render "cancel_subscription_modal", subscription: invoice, item_type: "Price Adjustment", item_index: 0 %>
+      <%= render "cancel_subscription_modal", subscription: invoice, item_type: "Price Adjustment" %>
     <% end %>
     <% if invoice.subscription_cancelled? && invoice.cancellation_line_item %>
       <% 

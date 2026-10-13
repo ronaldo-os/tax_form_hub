@@ -465,4 +465,22 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".alert.alert-danger", text: /Invoice generation failed due to invalid tax rate/
     assert_select "form[action='#{retry_invoicing_subscription_path(@sales_subscription)}'] button", text: /Retry Generation/
   end
+
+  test "cancelling a subscription from index page redirects to redirect_to URL" do
+    sign_in @user_seller
+
+    patch cancel_subscription_url(@sales_subscription), params: {
+      item_index: 0,
+      effective_date: Date.current.to_s,
+      billing_option: "none",
+      reason: "Customer requested cancellation",
+      redirect_to: subscriptions_url(tab: "sales")
+    }
+
+    assert_redirected_to subscriptions_url(tab: "sales")
+    assert_equal "Subscription was successfully cancelled.", flash[:notice]
+
+    @sales_subscription.reload
+    assert @sales_subscription.archived? || @sales_subscription.subscription_cancelled?
+  end
 end

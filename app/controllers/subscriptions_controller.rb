@@ -288,6 +288,19 @@ class SubscriptionsController < ApplicationController
         'hidden_on_parent' => true
       }
     }
+    lines = @subscription.line_items_data || []
+    item_index = params[:item_index].presence ? params[:item_index].to_i : nil
+    if item_index && lines[item_index].is_a?(Hash)
+      lines[item_index]['optional_fields'] ||= {}
+      lines[item_index]['optional_fields']['cancelled'] = true
+    else
+      lines.each do |l_item|
+        if l_item.is_a?(Hash) && l_item['optional_fields'].is_a?(Hash) && l_item['optional_fields'].keys.any? { |k| k.to_s.start_with?('subscription') }
+          l_item['optional_fields']['cancelled'] = true
+        end
+      end
+    end
+    @subscription.line_items_data = lines
     @subscription.add_subscription_item!(cancellation_item)
     
     has_custom_items = @subscription.line_items_data.any? do |item|
@@ -296,17 +309,20 @@ class SubscriptionsController < ApplicationController
         item.dig('optional_fields', 'cancellation').blank?
     end
 
+    has_other_active_subscriptions = @subscription.line_items_data.any? do |item|
+      item.is_a?(Hash) &&
+        item.dig('optional_fields', 'subscription').present? &&
+        !item.dig('optional_fields', 'cancelled') &&
+        !item.dig('optional_fields', 'hidden_on_parent')
+    end
+
     is_price_adjustment = !@subscription.has_subscription_line_items?
-    redirect_path = is_price_adjustment ? price_adjustment_path(@subscription) : subscription_path(@subscription)
+    redirect_path = params[:redirect_to].presence || (is_price_adjustment ? price_adjustment_path(@subscription) : subscription_path(@subscription))
     notice_msg = is_price_adjustment ? 'Price adjustment was successfully cancelled.' : 'Subscription was successfully cancelled.'
     alert_msg = is_price_adjustment ? 'Unable to cancel price adjustment.' : 'Unable to cancel subscription.'
 
-    if has_custom_items
-      if @subscription.save
-        redirect_to redirect_path, notice: notice_msg
-      else
-        redirect_to redirect_path, alert: alert_msg
-      end
+    if has_custom_items || has_other_active_subscriptions
+      redirect_to redirect_path, notice: notice_msg
     else
       if @subscription.update(archived: true)
         redirect_to redirect_path, notice: notice_msg

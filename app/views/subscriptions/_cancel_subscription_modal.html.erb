@@ -1,17 +1,19 @@
 <% item_type = local_assigns[:item_type] || "Subscription" %>
 <% lower_item_type = item_type.downcase %>
 <% item_index = local_assigns[:item_index] %>
-<div class="modal fade" id="cancelSubscriptionModal-<%= subscription.id %>-<%= item_index %>" tabindex="-1" aria-labelledby="cancelSubscriptionModalLabel-<%= subscription.id %>-<%= item_index %>" aria-hidden="true">
+<% modal_id = item_index.present? ? "cancelSubscriptionModal-#{subscription.id}-#{item_index}" : "cancelSubscriptionModal-#{subscription.id}" %>
+<div class="modal fade" id="<%= modal_id %>" tabindex="-1" aria-labelledby="<%= modal_id %>Label" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header border-bottom-0 pb-0">
-        <h5 class="modal-title fw-bold text-danger" id="cancelSubscriptionModalLabel-<%= subscription.id %>-<%= item_index %>">
+        <h5 class="modal-title fw-bold text-danger" id="<%= modal_id %>Label">
           <i class="fa-solid fa-triangle-exclamation me-2"></i>Cancel <%= item_type %>
         </h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
-      <%= form_with url: cancel_item_subscription_path(subscription), method: :patch, local: true do |f| %>
-        <%= f.hidden_field :item_index, value: item_index %>
+      <%= form_with url: cancel_subscription_path(subscription), method: :patch, local: true do |f| %>
+        <%= f.hidden_field :item_index, value: item_index if item_index.present? %>
+        <%= f.hidden_field :redirect_to, value: request.fullpath %>
         <div class="modal-body pt-3">
           <p class="text-muted mb-4">
             Are you sure you want to cancel this <%= lower_item_type %>? The <%= lower_item_type %> will be marked as finished and no future regular invoices will be generated.

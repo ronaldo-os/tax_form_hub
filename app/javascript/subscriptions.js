@@ -217,8 +217,13 @@ function initSubscriptionsPage() {
         // Attach capture-phase listener to stop DataTables Responsive from toggling row collapse when interactive elements are clicked
         if (!tableNode.dataset.responsiveFixAttached) {
             tableNode.addEventListener('click', function(e) {
-                if (e.target.closest('a, button, input, select, textarea, .dropdown-toggle, .dropdown-menu, label')) {
-                    e.stopImmediatePropagation();
+                // Allow dropdown items, modal triggers, and turbo actions to bubble normally
+                if (e.target.closest('.dropdown-menu, [data-turbo-method], [data-bs-toggle="modal"], [data-bs-toggle="dropdown"]')) {
+                    return;
+                }
+
+                if (e.target.closest('a, button, input, select, textarea, label')) {
+                    e.stopPropagation();
                 }
             }, true); // true = Capture phase execution
             tableNode.dataset.responsiveFixAttached = 'true';
