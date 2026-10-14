@@ -5,6 +5,38 @@
  * Compliant with Secure Coding Guidelines (strict DOM API, no innerHTML).
  */
 
+/**
+ * Parses the comma-separated allowed bulk actions from a row checkbox,
+ * with a fallback to inspect the row's Actions dropdown if not specified on the dataset.
+ *
+ * @param {HTMLElement} checkbox
+ * @returns {string[]}
+ */
+export function parseAllowedActions(checkbox) {
+  if (checkbox && checkbox.dataset && checkbox.dataset.allowedActions !== undefined) {
+    return checkbox.dataset.allowedActions.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+
+  // Fallback: inspect the row's dropdown menu if data-allowed-actions is not present
+  const actions = [];
+  const row = checkbox && checkbox.closest ? checkbox.closest('tr') : null;
+  if (row) {
+    const dropdown = row.querySelector('.dropdown-menu');
+    if (dropdown) {
+      const text = dropdown.textContent.toLowerCase();
+      if (text.includes('unarchive')) {
+        actions.push('unarchive');
+      } else if (text.includes('archive')) {
+        actions.push('archive');
+      }
+      if (text.includes('delete')) {
+        actions.push('destroy');
+      }
+    }
+  }
+  return actions;
+}
+
 export function setupTaxSubmissionsBulkActions(tableApi, tableId) {
   if (!tableApi) return;
 
@@ -18,6 +50,40 @@ export function setupTaxSubmissionsBulkActions(tableApi, tableId) {
   const masterBulkCheckbox = document.getElementById(`master_bulk_${effectiveTableId}`);
 
   if (!bulkBar || !bulkForm) return;
+
+  /**
+   * Shows a bulk action button only if EVERY selected submission allows it
+   * (i.e. it appears in that submission's row Actions dropdown).
+   */
+  function updateAllowedBulkActions() {
+    const allNodes = tableApi.rows().nodes();
+    const checkedBoxes = $(allNodes).find('.submission-row-checkbox:checked');
+    const count = checkedBoxes.length;
+
+    const checkedEntries = [];
+    checkedBoxes.each(function () {
+      checkedEntries.push(parseAllowedActions(this));
+    });
+
+    bulkBar.querySelectorAll('button[name="bulk_action"]').forEach((btn) => {
+      const action = btn.value;
+      const allowed =
+        count > 0 &&
+        checkedEntries.every((allowedActions) => Array.isArray(allowedActions) && allowedActions.includes(action));
+
+      const target = btn.closest('li') || btn;
+      target.classList.toggle('d-none', !allowed);
+      btn.disabled = !allowed;
+    });
+
+    // If dropdown exists in bulk bar, hide it if none of its options are enabled
+    bulkBar.querySelectorAll('.bulk-status-dropdown, .dropdown').forEach((dropdown) => {
+      const hasVisibleOption = Array.from(
+        dropdown.querySelectorAll('button[name="bulk_action"]')
+      ).some((btn) => !btn.disabled);
+      dropdown.classList.toggle('d-none', !hasVisibleOption);
+    });
+  }
 
   function updateBulkBar() {
     const allNodes = tableApi.rows().nodes();
@@ -57,6 +123,9 @@ export function setupTaxSubmissionsBulkActions(tableApi, tableId) {
       masterBulkCheckbox.checked = isAllSelected;
       masterBulkCheckbox.indeterminate = isIndeterminate;
     }
+
+    // Restrict bulk actions based on available actions in the dropdown for selected rows
+    updateAllowedBulkActions();
   }
 
   function toggleAll(isChecked) {
@@ -87,13 +156,19 @@ export function setupTaxSubmissionsBulkActions(tableApi, tableId) {
     updateBulkBar();
   });
 
+  function clearAllSelections() {
+    const allNodes = tableApi.rows().nodes();
+    $(allNodes).find('.submission-row-checkbox').prop('checked', false);
+    updateBulkBar();
+  }
+
   // Clear selection button
   const clearBtn = bulkBar.querySelector('.clear-selection-btn');
   if (clearBtn && !clearBtn.dataset.bulkBound) {
     clearBtn.dataset.bulkBound = 'true';
     clearBtn.addEventListener('click', function (e) {
       e.preventDefault();
-      toggleAll(false);
+      clearAllSelections();
     });
   }
 
@@ -101,6 +176,11 @@ export function setupTaxSubmissionsBulkActions(tableApi, tableId) {
   if (bulkForm && !bulkForm.dataset.bulkFormBound) {
     bulkForm.dataset.bulkFormBound = 'true';
     bulkForm.addEventListener('submit', function (e) {
+      if (e.submitter && e.submitter.disabled) {
+        e.preventDefault();
+        return;
+      }
+
       // Remove previously appended hidden inputs
       bulkForm.querySelectorAll('input[name="tax_submission_ids[]"]').forEach(el => el.remove());
 
@@ -119,8 +199,19 @@ export function setupTaxSubmissionsBulkActions(tableApi, tableId) {
         hiddenInput.setAttribute('value', this.value);
         bulkForm.appendChild(hiddenInput);
       });
+
+      // Clear selection after submitting action so container does not linger
+      clearAllSelections();
+    });
+
+    bulkForm.addEventListener('turbo:submit-end', function () {
+      clearAllSelections();
     });
   }
+
+  document.addEventListener('turbo:before-cache', function () {
+    clearAllSelections();
+  });
 
   // When DataTable is redrawn (page change, search, sort), re-evaluate state
   tableApi.off('draw.taxBulk').on('draw.taxBulk', function () {

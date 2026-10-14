@@ -99,7 +99,12 @@
               data-archived="<%= archived_table ? 'Archived' : 'Active' %>">
             <td class="text-center">
               <div class="form-check d-flex justify-content-center mb-0">
-                <input class="form-check-input submission-row-checkbox" type="checkbox" value="<%= submission.id %>" data-table-id="<%= table_id %>">
+                <% allowed_actions = allowed_tax_submission_bulk_actions(submission, archived_table, true) %>
+                <input class="form-check-input submission-row-checkbox"
+                       type="checkbox"
+                       value="<%= submission.id %>"
+                       data-table-id="<%= table_id %>"
+                       data-allowed-actions="<%= allowed_actions.join(',') %>">
               </div>
             </td>
             <!-- ID -->

@@ -130,14 +130,18 @@ function setupLocationsBulkActions(tableApi) {
         }
     });
 
+    function clearSelections() {
+        selectedIds.clear();
+        updateBulkBar();
+    }
+
     // Clear selection button
     const clearBtn = bulkBar.querySelector('.clear-selection-btn');
     if (clearBtn && !clearBtn.dataset.bulkBound) {
         clearBtn.dataset.bulkBound = 'true';
         clearBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            selectedIds.clear();
-            updateBulkBar();
+            clearSelections();
         });
     }
 
@@ -160,8 +164,19 @@ function setupLocationsBulkActions(tableApi) {
                 hiddenInput.setAttribute('value', locId.toString());
                 bulkForm.appendChild(hiddenInput);
             });
+
+            // Clear selection after submitting action so container does not linger
+            clearSelections();
+        });
+
+        bulkForm.addEventListener('turbo:submit-end', function () {
+            clearSelections();
         });
     }
+
+    document.addEventListener('turbo:before-cache', function () {
+        clearSelections();
+    });
 
     // When DataTable is redrawn (page change, search, sort), re-synchronize state
     tableApi.off('draw.locationBulk').on('draw.locationBulk', function () {

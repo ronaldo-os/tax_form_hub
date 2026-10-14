@@ -1003,6 +1003,23 @@ document.addEventListener("turbo:before-cache", function () {
   document.body.style.removeProperty('overflow');
   document.body.style.removeProperty('padding-right');
 
+  // Reset and hide all bulk action bars and checkboxes before caching
+  document.querySelectorAll('.invoice-bulk-bar, .tax-submissions-bulk-bar, .locations-bulk-bar, .subscriptions-bulk-bar, .notification-bulk-bar, [id^="bulk_action_bar_"]').forEach(el => {
+    el.classList.add('d-none');
+    const countSpan = el.querySelector('.selected-count');
+    if (countSpan) countSpan.textContent = '0';
+  });
+  document.querySelectorAll('.master-bulk-checkbox, .invoice-master-checkbox, .subscription-master-checkbox, .location-master-checkbox, .table-header-checkbox, [id^="master_bulk_"], [id^="header_checkbox_"], #master_select_all').forEach(cb => {
+    cb.checked = false;
+    cb.indeterminate = false;
+  });
+  document.querySelectorAll('.invoice-row-checkbox, .subscription-row-checkbox, .location-row-checkbox, .submission-row-checkbox, .notification-select-checkbox').forEach(cb => {
+    cb.checked = false;
+  });
+  document.querySelectorAll('.row-selected, .table-active').forEach(row => {
+    row.classList.remove('row-selected', 'table-active');
+  });
+
   if (typeof $ !== 'undefined' && $.fn.DataTable) {
     $('.dataTable, .submissionsTable, #taxSubmissionsTableActive, #taxSubmissionsTableArchived').each(function () {
       if ($.fn.DataTable.isDataTable(this)) {

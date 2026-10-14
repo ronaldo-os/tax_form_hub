@@ -262,14 +262,37 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div.tax-submissions-bulk-bar"
     assert_select "form.bulk-submissions-form[action='#{bulk_action_tax_submissions_path}']"
 
-    # Verify checkboxes
+    # Verify checkboxes and allowed actions
     assert_select "input.master-bulk-checkbox"
     assert_select "input.table-header-checkbox"
-    assert_select "input.submission-row-checkbox[value='#{tax_submission.id}']"
+    assert_select "input.submission-row-checkbox[value='#{tax_submission.id}'][data-allowed-actions='archive,destroy']"
 
     # Verify action buttons
     assert_select "button[value='archive']"
     assert_select "button[value='destroy']"
+  end
+
+  test "home page renders data-allowed-actions on row checkbox restricting delete when reviewed or processed" do
+    other_user = User.create!(email: "target_user_restrict_#{Time.now.to_i}@example.com", password: "Password123!@#Secure", password_confirmation: "Password123!@#Secure")
+    target_company = Company.create!(name: "Target Vendor Restrict", user: other_user)
+    
+    # 1. Pending submission allows archive and destroy
+    sub_pending = TaxSubmission.create!(company: target_company, invoice: @invoice, email: @user.email, details: "Pending Sub")
+
+    # 2. Reviewed submission allows only archive (destroy restricted)
+    invoice2 = Invoice.create!(user: @user, recipient_company: @company, invoice_type: "sale", invoice_category: "standard", status: "paid")
+    sub_reviewed = TaxSubmission.create!(company: target_company, invoice: invoice2, email: @user.email, details: "Reviewed Sub", reviewed: true)
+
+    # 3. Processed submission allows only archive (destroy restricted)
+    invoice3 = Invoice.create!(user: @user, recipient_company: @company, invoice_type: "sale", invoice_category: "standard", status: "paid")
+    sub_processed = TaxSubmission.create!(company: target_company, invoice: invoice3, email: @user.email, details: "Processed Sub", processed: true)
+
+    get tax_submissions_home_url
+    assert_response :success
+
+    assert_select "input.submission-row-checkbox[value='#{sub_pending.id}'][data-allowed-actions='archive,destroy']"
+    assert_select "input.submission-row-checkbox[value='#{sub_reviewed.id}'][data-allowed-actions='archive']"
+    assert_select "input.submission-row-checkbox[value='#{sub_processed.id}'][data-allowed-actions='archive']"
   end
 
   test "index page renders checkboxes and bulk action bar for incoming submissions" do

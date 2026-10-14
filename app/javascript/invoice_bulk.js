@@ -486,6 +486,7 @@ export async function exportSelectedInvoicesToZip(tableId) {
           'success'
         );
       }
+      clearInvoiceSelections(tableId);
     }, 400);
   } catch (zipErr) {
     console.error('Error generating ZIP archive:', zipErr);
@@ -504,6 +505,54 @@ export async function exportSelectedInvoicesToZip(tableId) {
       const _ = window.getComputedStyle(noTransitionStyle).opacity;
       document.head.removeChild(noTransitionStyle);
     }
+  }
+}
+
+/**
+ * Clears selected invoices for a specific table or all tables,
+ * updating the UI and resetting checkbox states.
+ *
+ * @param {string} [tableId] - Optional table ID. If omitted, clears selections for all tables.
+ */
+export function clearInvoiceSelections(tableId) {
+  if (tableId) {
+    if (tableSelections.has(tableId)) {
+      tableSelections.get(tableId).clear();
+    }
+    const bulkBar = document.getElementById(`bulk_action_bar_${tableId}`);
+    if (bulkBar) {
+      bulkBar.classList.add('d-none');
+      const countSpan = bulkBar.querySelector('.selected-count');
+      if (countSpan) countSpan.textContent = '0';
+      const masterBulkCheckbox = document.getElementById(`master_bulk_${tableId}`);
+      if (masterBulkCheckbox) {
+        masterBulkCheckbox.checked = false;
+        masterBulkCheckbox.indeterminate = false;
+      }
+    }
+    const headerCheckbox = document.getElementById(`header_checkbox_${tableId}`);
+    if (headerCheckbox) {
+      headerCheckbox.checked = false;
+      headerCheckbox.indeterminate = false;
+    }
+    const $table = $(`#${tableId}`);
+    if ($table.length) {
+      $table.find('.invoice-row-checkbox').prop('checked', false);
+      $table.find('tr').removeClass('row-selected table-active');
+    }
+  } else {
+    tableSelections.forEach((map) => map.clear());
+    document.querySelectorAll('.invoice-bulk-bar').forEach((bulkBar) => {
+      bulkBar.classList.add('d-none');
+      const countSpan = bulkBar.querySelector('.selected-count');
+      if (countSpan) countSpan.textContent = '0';
+    });
+    document.querySelectorAll('.invoice-master-checkbox, .invoice-header-checkbox').forEach((cb) => {
+      cb.checked = false;
+      cb.indeterminate = false;
+    });
+    $('.invoice-row-checkbox').prop('checked', false);
+    $('.invoice-datatable tr').removeClass('row-selected table-active');
   }
 }
 
@@ -628,8 +677,8 @@ export function setupInvoiceBulkActions(tableApi, tableId) {
   }
 
   function clearAllSelections() {
-    selectionMap.clear();
-    updateBulkBar();
+    clearInvoiceSelections(effectiveTableId);
+    updateAllowedBulkActions();
   }
 
   // Header checkbox toggle
@@ -726,6 +775,13 @@ export function setupInvoiceBulkActions(tableApi, tableId) {
         hiddenInput.setAttribute('value', invId.toString());
         bulkForm.appendChild(hiddenInput);
       });
+
+      // Clear selection after submitting action so container does not linger
+      clearAllSelections();
+    });
+
+    bulkForm.addEventListener('turbo:submit-end', function () {
+      clearAllSelections();
     });
   }
 
@@ -737,3 +793,8 @@ export function setupInvoiceBulkActions(tableApi, tableId) {
   // Initial synchronization
   updateBulkBar();
 }
+
+// Global teardown listener for Turbo caching
+document.addEventListener('turbo:before-cache', function () {
+  clearInvoiceSelections();
+});
