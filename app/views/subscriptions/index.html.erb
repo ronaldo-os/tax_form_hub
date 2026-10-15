@@ -130,7 +130,7 @@
         <div class="tab-pane fade show active" id="sales-active-pa" role="tabpanel" aria-labelledby="sales-active-pa-tab">
           <div class="card mb-4">
             <div class="card-body p-3">
-              <%= render "price_adjustments_table", subscriptions: @active_sales_price_adjustments, is_purchase: false %>
+              <%= render "price_adjustments_table", subscriptions: @active_sales_price_adjustments, is_purchase: false, table_id: "salesActivePriceAdjustmentsTable", can_bulk_cancel: true %>
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@
         <div class="tab-pane fade" id="sales-finished-pa" role="tabpanel" aria-labelledby="sales-finished-pa-tab">
           <div class="card mb-4">
             <div class="card-body p-3">
-              <%= render "price_adjustments_table", subscriptions: @finished_sales_price_adjustments, is_purchase: false %>
+              <%= render "price_adjustments_table", subscriptions: @finished_sales_price_adjustments, is_purchase: false, table_id: "salesFinishedPriceAdjustmentsTable", can_bulk_cancel: false %>
             </div>
           </div>
         </div>
@@ -146,7 +146,7 @@
         <div class="tab-pane fade" id="sales-cancelled-pa" role="tabpanel" aria-labelledby="sales-cancelled-pa-tab">
           <div class="card">
             <div class="card-body p-3">
-              <%= render "price_adjustments_table", subscriptions: @cancelled_sales_price_adjustments, is_purchase: false %>
+              <%= render "price_adjustments_table", subscriptions: @cancelled_sales_price_adjustments, is_purchase: false, table_id: "salesCancelledPriceAdjustmentsTable", can_bulk_cancel: false %>
             </div>
           </div>
         </div>
@@ -239,7 +239,7 @@
         <div class="tab-pane fade show active" id="purchases-active-pa" role="tabpanel" aria-labelledby="purchases-active-pa-tab">
           <div class="card mb-4">
             <div class="card-body p-3">
-              <%= render "price_adjustments_table", subscriptions: @active_purchase_price_adjustments, is_purchase: true %>
+              <%= render "price_adjustments_table", subscriptions: @active_purchase_price_adjustments, is_purchase: true, table_id: "purchasesActivePriceAdjustmentsTable", can_bulk_cancel: true %>
             </div>
           </div>
         </div>
@@ -247,7 +247,7 @@
         <div class="tab-pane fade" id="purchases-finished-pa" role="tabpanel" aria-labelledby="purchases-finished-pa-tab">
           <div class="card mb-4">
             <div class="card-body p-3">
-              <%= render "price_adjustments_table", subscriptions: @finished_purchase_price_adjustments, is_purchase: true %>
+              <%= render "price_adjustments_table", subscriptions: @finished_purchase_price_adjustments, is_purchase: true, table_id: "purchasesFinishedPriceAdjustmentsTable", can_bulk_cancel: false %>
             </div>
           </div>
         </div>
@@ -255,7 +255,7 @@
         <div class="tab-pane fade" id="purchases-cancelled-pa" role="tabpanel" aria-labelledby="purchases-cancelled-pa-tab">
           <div class="card">
             <div class="card-body p-3">
-              <%= render "price_adjustments_table", subscriptions: @cancelled_purchase_price_adjustments, is_purchase: true %>
+              <%= render "price_adjustments_table", subscriptions: @cancelled_purchase_price_adjustments, is_purchase: true, table_id: "purchasesCancelledPriceAdjustmentsTable", can_bulk_cancel: false %>
             </div>
           </div>
         </div>

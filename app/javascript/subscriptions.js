@@ -11,6 +11,44 @@ function fixEmptyRowColspan(api) {
     }
 }
 
+/**
+ * Parses the comma-separated allowed bulk actions from a row checkbox,
+ * with a fallback to inspect the row's Actions dropdown if not specified on the dataset.
+ *
+ * @param {HTMLElement} checkbox
+ * @returns {string[]}
+ */
+export function parseAllowedActions(checkbox) {
+    if (checkbox && checkbox.dataset && checkbox.dataset.allowedActions !== undefined) {
+        return checkbox.dataset.allowedActions.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+
+    // Fallback: inspect the row's dropdown menu if data-allowed-actions is not present
+    const actions = [];
+    const row = checkbox && checkbox.closest ? checkbox.closest('tr') : null;
+    if (row) {
+        const dropdown = row.querySelector('.dropdown-menu');
+        if (dropdown) {
+            const actionItems = dropdown.querySelectorAll('.dropdown-item, button, a');
+            actionItems.forEach((item) => {
+                const text = (item.textContent || '').toLowerCase().trim();
+                const targetModal = item.getAttribute('data-bs-target') || '';
+                if (targetModal.includes('cancelSubscriptionModal') ||
+                    text.includes('cancel subscription') ||
+                    text.includes('cancel price adjustment')) {
+                    if (!actions.includes('cancel')) {
+                        actions.push('cancel');
+                    }
+                    if (!actions.includes('cancel_subscription')) {
+                        actions.push('cancel_subscription');
+                    }
+                }
+            });
+        }
+    }
+    return actions;
+}
+
 function setupSubscriptionsBulkActions(tableApi, tableId) {
     if (!tableApi) return;
 
@@ -26,10 +64,44 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
 
     if (!bulkBar || !bulkForm) return;
 
-    const selectedIds = new Set();
+    const selectionMap = new Map();
+
+    /**
+     * Shows a bulk action button only if EVERY selected subscription/price adjustment allows it
+     * (i.e. it appears in that row's Actions dropdown).
+     */
+    function updateAllowedBulkActions() {
+        const selected = Array.from(selectionMap.values());
+        const count = selected.length;
+
+        bulkBar.querySelectorAll('button[name="bulk_action"]').forEach((btn) => {
+            const action = btn.value;
+            const allowed =
+                count > 0 &&
+                selected.every((item) => {
+                    if (!Array.isArray(item.allowedActions)) return false;
+                    if (item.allowedActions.includes(action)) return true;
+                    if (action === 'cancel' && item.allowedActions.includes('cancel_subscription')) return true;
+                    if (action === 'cancel_subscription' && item.allowedActions.includes('cancel')) return true;
+                    return false;
+                });
+
+            const target = btn.closest('li') || btn;
+            target.classList.toggle('d-none', !allowed);
+            btn.disabled = !allowed;
+        });
+
+        // If dropdown exists in bulk bar, hide it if none of its options are enabled
+        bulkBar.querySelectorAll('.bulk-status-dropdown, .dropdown').forEach((dropdown) => {
+            const hasVisibleOption = Array.from(
+                dropdown.querySelectorAll('button[name="bulk_action"]')
+            ).some((btn) => !btn.disabled);
+            dropdown.classList.toggle('d-none', !hasVisibleOption);
+        });
+    }
 
     function updateBulkBar() {
-        const count = selectedIds.size;
+        const count = selectionMap.size;
         const countSpan = bulkBar.querySelector('.selected-count');
         if (countSpan) {
             countSpan.textContent = count.toString();
@@ -41,13 +113,13 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
             bulkBar.classList.add('d-none');
         }
 
-        // Synchronize checkboxes in current DOM page with selectedIds
+        // Synchronize checkboxes in current DOM page with selectionMap
         const allRowNodes = tableApi.rows().nodes();
         $(allRowNodes).each(function () {
             const $cb = $(this).find('.subscription-row-checkbox');
             if ($cb.length) {
                 const subId = $cb.val();
-                const isSelected = selectedIds.has(subId);
+                const isSelected = selectionMap.has(subId);
                 $cb.prop('checked', isSelected);
                 $(this).toggleClass('row-selected table-active', isSelected);
             }
@@ -61,7 +133,7 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
             const $cb = $(this).find('.subscription-row-checkbox');
             if ($cb.length) {
                 activeTotal++;
-                if (selectedIds.has($cb.val())) {
+                if (selectionMap.has($cb.val())) {
                     activeSelected++;
                 }
             }
@@ -79,6 +151,9 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
             masterBulkCheckbox.checked = isAllSelected;
             masterBulkCheckbox.indeterminate = isIndeterminate;
         }
+
+        // Restrict bulk actions based on available actions in the dropdown for selected rows
+        updateAllowedBulkActions();
     }
 
     function toggleAllVisible(isChecked) {
@@ -88,9 +163,9 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
             if ($cb.length) {
                 const subId = $cb.val();
                 if (isChecked) {
-                    selectedIds.add(subId);
+                    selectionMap.set(subId, { id: subId, allowedActions: parseAllowedActions($cb.get(0)) });
                 } else {
-                    selectedIds.delete(subId);
+                    selectionMap.delete(subId);
                 }
             }
         });
@@ -117,9 +192,9 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
     $table.off('change.subscriptionCheckbox', '.subscription-row-checkbox').on('change.subscriptionCheckbox', '.subscription-row-checkbox', function () {
         const subId = this.value;
         if (this.checked) {
-            selectedIds.add(subId);
+            selectionMap.set(subId, { id: subId, allowedActions: parseAllowedActions(this) });
         } else {
-            selectedIds.delete(subId);
+            selectionMap.delete(subId);
         }
         updateBulkBar();
     });
@@ -134,7 +209,7 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
     });
 
     function clearSelections() {
-        selectedIds.clear();
+        selectionMap.clear();
         updateBulkBar();
     }
 
@@ -152,15 +227,20 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
     if (bulkForm && !bulkForm.dataset.bulkFormBound) {
         bulkForm.dataset.bulkFormBound = 'true';
         bulkForm.addEventListener('submit', function (e) {
-            // Remove previously appended hidden inputs
-            bulkForm.querySelectorAll('input[name="subscription_ids[]"]').forEach((el) => el.remove());
-
-            if (selectedIds.size === 0) {
+            if (e.submitter && e.submitter.disabled) {
                 e.preventDefault();
                 return;
             }
 
-            selectedIds.forEach((subId) => {
+            // Remove previously appended hidden inputs
+            bulkForm.querySelectorAll('input[name="subscription_ids[]"]').forEach((el) => el.remove());
+
+            if (selectionMap.size === 0) {
+                e.preventDefault();
+                return;
+            }
+
+            selectionMap.forEach((entry, subId) => {
                 const hiddenInput = document.createElement('input');
                 hiddenInput.setAttribute('type', 'hidden');
                 hiddenInput.setAttribute('name', 'subscription_ids[]');

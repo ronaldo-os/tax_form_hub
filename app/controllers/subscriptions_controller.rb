@@ -479,20 +479,28 @@ class SubscriptionsController < ApplicationController
         end
       end
 
+      item_type_label = if subscriptions.all? { |s| s.has_recurring_price_adjustments? && !s.has_subscription_line_items? }
+                          "price adjustment"
+                        elsif subscriptions.all?(&:has_subscription_line_items?)
+                          "subscription"
+                        else
+                          "item"
+                        end
+
       if cancelled_count > 0 && skipped_count > 0
-        notice = "Successfully cancelled #{cancelled_count} #{'subscription'.pluralize(cancelled_count)}. #{skipped_count} #{'subscription'.pluralize(skipped_count)} skipped (already finished, cancelled, or encountered an error)."
+        notice = "Successfully cancelled #{cancelled_count} #{item_type_label.pluralize(cancelled_count)}. #{skipped_count} #{item_type_label.pluralize(skipped_count)} skipped (already finished, cancelled, or encountered an error)."
         respond_to do |format|
           format.html { redirect_to subscriptions_path(tab: tab), status: :see_other, notice: notice }
           format.json { render json: { notice: notice, cancelled_count: cancelled_count, skipped_count: skipped_count }, status: :ok }
         end
       elsif cancelled_count > 0
-        notice = "Successfully cancelled #{cancelled_count} #{'subscription'.pluralize(cancelled_count)}."
+        notice = "Successfully cancelled #{cancelled_count} #{item_type_label.pluralize(cancelled_count)}."
         respond_to do |format|
           format.html { redirect_to subscriptions_path(tab: tab), status: :see_other, notice: notice }
           format.json { render json: { notice: notice, cancelled_count: cancelled_count }, status: :ok }
         end
       else
-        alert = "Could not cancel the selected subscriptions."
+        alert = "Could not cancel the selected #{item_type_label.pluralize}."
         respond_to do |format|
           format.html { redirect_to subscriptions_path(tab: tab), status: :see_other, alert: alert }
           format.json { render json: { alert: alert }, status: :unprocessable_entity }

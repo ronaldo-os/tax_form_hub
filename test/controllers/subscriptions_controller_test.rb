@@ -483,4 +483,279 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     @sales_subscription.reload
     assert @sales_subscription.archived? || @sales_subscription.subscription_cancelled?
   end
+
+  test "subscriptions index page renders bulk action bar and row checkboxes for active sales price adjustments" do
+    pa_sales = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-SALE-001",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Recurring Maintenance Fee",
+          "description_edit" => "Recurring Maintenance Fee",
+          "frequency" => "monthly",
+          "amount" => "30.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Service Fee", "quantity" => "1", "price" => "100.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "130.00" }
+    )
+
+    sign_in @user_seller
+
+    get subscriptions_url
+    assert_response :success
+
+    assert_select "#bulk_action_bar_salesActivePriceAdjustmentsTable"
+    assert_select "form.bulk-subscriptions-form#bulk_form_salesActivePriceAdjustmentsTable[action='#{bulk_action_subscriptions_path}']"
+    assert_select "input.subscription-master-checkbox[data-table-id='salesActivePriceAdjustmentsTable']"
+    assert_select "input.table-header-checkbox[data-table-id='salesActivePriceAdjustmentsTable']"
+    assert_select "input.subscription-row-checkbox[data-table-id='salesActivePriceAdjustmentsTable'][value='#{pa_sales.id}']"
+    assert_select "input.subscription-row-checkbox[data-table-id='salesActivePriceAdjustmentsTable'][data-allowed-actions='cancel']"
+    assert_select "#bulk_action_bar_salesActivePriceAdjustmentsTable button[name='bulk_action'][value='cancel']"
+  end
+
+  test "subscriptions index page renders bulk action bar and row checkboxes for active purchase price adjustments" do
+    pa_purchase = Invoice.create!(
+      user: @user_buyer,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-PURCH-001",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Supplier Recurring Discount",
+          "description_edit" => "Supplier Recurring Discount",
+          "frequency" => "monthly",
+          "amount" => "15.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Material Cost", "quantity" => "1", "price" => "150.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "135.00" }
+    )
+
+    sign_in @user_buyer
+
+    get subscriptions_url, params: { tab: "purchases" }
+    assert_response :success
+
+    assert_select "#bulk_action_bar_purchasesActivePriceAdjustmentsTable"
+    assert_select "form.bulk-subscriptions-form#bulk_form_purchasesActivePriceAdjustmentsTable[action='#{bulk_action_subscriptions_path}']"
+    assert_select "input.subscription-master-checkbox[data-table-id='purchasesActivePriceAdjustmentsTable']"
+    assert_select "input.table-header-checkbox[data-table-id='purchasesActivePriceAdjustmentsTable']"
+    assert_select "input.subscription-row-checkbox[data-table-id='purchasesActivePriceAdjustmentsTable'][value='#{pa_purchase.id}']"
+    assert_select "input.subscription-row-checkbox[data-table-id='purchasesActivePriceAdjustmentsTable'][data-allowed-actions='cancel']"
+    assert_select "#bulk_action_bar_purchasesActivePriceAdjustmentsTable button[name='bulk_action'][value='cancel']"
+  end
+
+  test "bulk cancel active sales price adjustments successfully cancels them" do
+    pa1 = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-SALE-101",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Adjustment 1",
+          "frequency" => "monthly",
+          "amount" => "20.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Item 1", "quantity" => "1", "price" => "100.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "120.00" }
+    )
+
+    pa2 = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-SALE-102",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Adjustment 2",
+          "frequency" => "monthly",
+          "amount" => "30.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Item 2", "quantity" => "1", "price" => "200.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "230.00" }
+    )
+
+    sign_in @user_seller
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [pa1.id, pa2.id],
+      bulk_action: "cancel",
+      tab: "sales"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "sales")
+    assert_equal "Successfully cancelled 2 price adjustments.", flash[:notice]
+
+    pa1.reload
+    pa2.reload
+
+    assert pa1.archived? || pa1.subscription_cancelled?
+    assert pa2.archived? || pa2.subscription_cancelled?
+    assert_not pa1.subscription_active?
+    assert_not pa2.subscription_active?
+  end
+
+  test "bulk cancel active purchase price adjustments successfully cancels them" do
+    pa_purch1 = Invoice.create!(
+      user: @user_buyer,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-PURCH-101",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Purch Adj 1",
+          "frequency" => "monthly",
+          "amount" => "10.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Purch Item 1", "quantity" => "1", "price" => "50.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "40.00" }
+    )
+
+    pa_purch2 = Invoice.create!(
+      user: @user_buyer,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-PURCH-102",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Purch Adj 2",
+          "frequency" => "monthly",
+          "amount" => "15.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Purch Item 2", "quantity" => "1", "price" => "60.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "45.00" }
+    )
+
+    sign_in @user_buyer
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [pa_purch1.id, pa_purch2.id],
+      bulk_action: "cancel",
+      tab: "purchases"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "purchases")
+    assert_equal "Successfully cancelled 2 price adjustments.", flash[:notice]
+
+    pa_purch1.reload
+    pa_purch2.reload
+
+    assert pa_purch1.archived? || pa_purch1.subscription_cancelled?
+    assert pa_purch2.archived? || pa_purch2.subscription_cancelled?
+    assert_not pa_purch1.subscription_active?
+    assert_not pa_purch2.subscription_active?
+  end
+
+  test "subscriptions and price adjustments render data-allowed-actions reflecting active status" do
+    cancelled_sub = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "SUB-CANCELLED",
+      currency: "USD",
+      archived: true,
+      line_items_data: [
+        {
+          "description" => "Cancelled Plan",
+          "quantity" => "1",
+          "price" => "100.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "billing_cycle" => "monthly",
+              "start_date" => (Date.current - 2.months).to_s,
+              "end_date" => (Date.current + 10.months).to_s
+            },
+            "cancelled" => true
+          }
+        }
+      ],
+      total: { "grand_total" => "100.00" }
+    )
+
+    sign_in @user_seller
+
+    get subscriptions_url
+    assert_response :success
+
+    # Active subscription row checkbox has cancel allowed
+    assert_select "input.subscription-row-checkbox[value='#{@sales_subscription.id}'][data-allowed-actions='cancel']"
+
+    # Helper directly verifies active vs cancelled
+    active_wrapper = SubscriptionItemWrapper.new(@sales_subscription, @sales_subscription.line_items_data[0], 0)
+    cancelled_wrapper = SubscriptionItemWrapper.new(cancelled_sub, cancelled_sub.line_items_data[0], 0)
+
+    helper = Object.new.extend(SubscriptionsHelper)
+    assert_equal ["cancel"], helper.allowed_subscription_bulk_actions(active_wrapper)
+    assert_equal [], helper.allowed_subscription_bulk_actions(cancelled_wrapper)
+    assert_equal ["cancel"], helper.allowed_subscription_bulk_actions(@sales_subscription)
+    assert_equal [], helper.allowed_subscription_bulk_actions(cancelled_sub)
+  end
 end

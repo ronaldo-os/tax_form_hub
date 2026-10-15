@@ -70,7 +70,14 @@
             <% if can_bulk_cancel %>
               <td class="text-center">
                 <div class="form-check d-flex justify-content-center mb-0">
-                  <input class="form-check-input subscription-row-checkbox" type="checkbox" name="subscription_ids[]" value="<%= invoice.id %>" data-table-id="<%= table_id %>" data-item-index="<%= item_index %>" title="Select <%= item['description'].presence || 'Subscription Service' %>">
+                  <input class="form-check-input subscription-row-checkbox"
+                         type="checkbox"
+                         name="subscription_ids[]"
+                         value="<%= invoice.id %>"
+                         data-table-id="<%= table_id %>"
+                         data-item-index="<%= item_index %>"
+                         data-allowed-actions="<%= allowed_subscription_bulk_actions(wrapper).join(',') %>"
+                         title="Select <%= item['description'].presence || 'Subscription Service' %>">
                 </div>
               </td>
             <% end %>
