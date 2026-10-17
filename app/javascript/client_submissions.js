@@ -11,6 +11,25 @@ function fixEmptyRowColspan(tableApi) {
     }
 }
 
+export function syncTaxSubmissionRedirectUrl() {
+    const $redirectInput = $('#tax_submission_redirect_url');
+    if ($redirectInput.length === 0) return;
+
+    try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('open_modal');
+        url.searchParams.delete('open_submit_modal');
+        url.searchParams.delete('invoice_id');
+        url.searchParams.delete('company_id');
+        const targetUrl = url.pathname + (url.search ? url.search : '');
+        if (targetUrl) {
+            $redirectInput.val(targetUrl);
+        }
+    } catch (e) {
+        // Fallback to existing server-rendered value
+    }
+}
+
 function initClientSubmissionsPage() {
     // This script targets the home page where the user can submit documents
     if ($('.submissionsTable').length === 0 && !window.location.pathname.includes("/tax_submissions")) {
@@ -414,8 +433,16 @@ function initClientSubmissionsPage() {
         }, 500);
     }
 
+    // Keep redirect_url in sync with current table page, tab, and filters
+    syncTaxSubmissionRedirectUrl();
+    const submitModalEl = document.getElementById('submitDocsModal');
+    if (submitModalEl) {
+        $(submitModalEl).off('show.bs.modal.redirectSync').on('show.bs.modal.redirectSync', syncTaxSubmissionRedirectUrl);
+    }
+
     // Form validation before submission
     $(document).off("submit", "#submitDocsModal form").on("submit", "#submitDocsModal form", function (e) {
+        syncTaxSubmissionRedirectUrl();
         const companyId = $("#company_select").val();
         const invoiceId = $("#invoice_select").val();
 

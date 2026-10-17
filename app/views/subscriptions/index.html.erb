@@ -24,21 +24,35 @@
       </ul>
     </div>
 
-    <!-- Create Invoice buttons aligned right / stacked on mobile -->
+    <!-- Create Document dropdown aligned right / stacked on mobile -->
     <% active_invoice_tab = @active_tab == 'purchases' ? 'purchase-invoices' : 'sales-invoices' %>
     <div class="invoice-action-buttons d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
-      <%= link_to new_invoice_path(category: 'quote', tab: active_invoice_tab), class: 'btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2' do %>
-        <i class="fa-solid fa-quote-left fs-8"></i>
-        <span>Create Quote</span>
-      <% end %>
-      <%= link_to new_invoice_path(category: 'credit_note', tab: active_invoice_tab), class: 'btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2' do %>
-        <i class="fa-solid fa-receipt fs-8"></i>
-        <span>Create Credit Note</span>
-      <% end %>
-      <%= link_to new_invoice_path(tab: active_invoice_tab), class: 'btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2' do %>
-        <i class="fa-solid fa-plus fs-8"></i>
-        <span>Create Invoice</span>
-      <% end %>
+      <div class="dropdown flex-fill flex-sm-grow-0">
+        <button class="btn btn-primary btn-sm dropdown-toggle w-100 text-nowrap d-inline-flex align-items-center justify-content-center" type="button" id="createDocumentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="fa-solid fa-plus fs-8"></i>
+          <span>Create Document</span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" aria-labelledby="createDocumentDropdown">
+          <li>
+            <%= link_to new_invoice_path(tab: active_invoice_tab), class: 'dropdown-item d-flex align-items-center gap-2 py-2' do %>
+              <i class="fa-solid fa-file-invoice text-primary"></i>
+              <span>Create Invoice</span>
+            <% end %>
+          </li>
+          <li>
+            <%= link_to new_invoice_path(category: 'quote', tab: active_invoice_tab), class: 'dropdown-item d-flex align-items-center gap-2 py-2' do %>
+              <i class="fa-solid fa-quote-left text-info"></i>
+              <span>Create Quote</span>
+            <% end %>
+          </li>
+          <li>
+            <%= link_to new_invoice_path(category: 'credit_note', tab: active_invoice_tab), class: 'dropdown-item d-flex align-items-center gap-2 py-2' do %>
+              <i class="fa-solid fa-receipt text-secondary"></i>
+              <span>Create Credit Note</span>
+            <% end %>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 

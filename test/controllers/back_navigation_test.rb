@@ -100,11 +100,10 @@ class BackNavigationTest < ActionDispatch::IntegrationTest
     assert_select "a[data-behavior='back-button'][href=?]", referrer_url
   end
 
-  test "tax submissions home back button uses stored referrer when present" do
-    referrer_url = root_url
-    get tax_submissions_home_url, headers: { "HTTP_REFERER" => referrer_url }
+  test "tax submissions home does not render back button" do
+    get tax_submissions_home_url
     assert_response :success
-    assert_select "a[data-behavior='back-button'][href=?]", referrer_url
+    assert_select "a[data-behavior='back-button']", count: 0
   end
 
   test "self-referencing referrer is ignored to prevent loops" do

@@ -344,4 +344,88 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
     inv_activity = @invoice.activities.recent.first
     assert_match /submitted Form 2307/, inv_activity.description
   end
+
+  test "create retains current page and query params from redirect_url" do
+    target_page_url = "/tax_submissions/home?page=2&status=Pending&tab=archived"
+    post tax_submissions_url, params: {
+      redirect_url: target_page_url,
+      tax_submission: {
+        invoice_id: @invoice.id,
+        details: "Form 2307 on page 2",
+        email: @user.email
+      }
+    }
+
+    assert_response :redirect
+    assert_redirected_to target_page_url
+    assert_equal "Tax documents submitted successfully.", flash[:notice]
+  end
+
+  test "create strips modal and prefill params while retaining page and filters" do
+    url_with_modal = "/tax_submissions/home?open_modal=true&invoice_id=99&company_id=88&page=3&status=Reviewed"
+    post tax_submissions_url, params: {
+      redirect_url: url_with_modal,
+      tax_submission: {
+        invoice_id: @invoice.id,
+        details: "Form 2307 Filing",
+        email: @user.email
+      }
+    }
+
+    assert_response :redirect
+    assert_redirected_to "/tax_submissions/home?page=3&status=Reviewed"
+  end
+
+  test "create falls back to referer retaining current page when redirect_url is omitted" do
+    referrer_url = "http://www.example.com/tax_submissions/home?page=4&tab=active"
+    post tax_submissions_url, params: {
+      tax_submission: {
+        invoice_id: @invoice.id,
+        details: "Form 2307 Filing",
+        email: @user.email
+      }
+    }, headers: { "HTTP_REFERER" => referrer_url }
+
+    assert_response :redirect
+    assert_redirected_to "/tax_submissions/home?page=4&tab=active"
+  end
+
+  test "create falls back to tax_submissions_home_path when no redirect_url or referer is provided" do
+    post tax_submissions_url, params: {
+      tax_submission: {
+        invoice_id: @invoice.id,
+        details: "Form 2307 Filing",
+        email: @user.email
+      }
+    }
+
+    assert_response :redirect
+    assert_redirected_to tax_submissions_home_path
+  end
+
+  test "create sanitizes external redirect_url to prevent open redirect" do
+    post tax_submissions_url, params: {
+      redirect_url: "https://evil.example.com/phishing",
+      tax_submission: {
+        invoice_id: @invoice.id,
+        details: "Form 2307 Filing",
+        email: @user.email
+      }
+    }
+
+    assert_response :redirect
+    assert_redirected_to tax_submissions_home_path
+  end
+
+  test "home page renders hidden redirect_url input in submit docs modal preserving query parameters" do
+    get tax_submissions_home_url(page: 2, tab: "archived")
+    assert_response :success
+
+    assert_select "input#tax_submission_redirect_url" do |inputs|
+      assert_equal 1, inputs.length
+      value = inputs.first["value"]
+      assert_includes value, "page=2"
+      assert_includes value, "tab=archived"
+    end
+  end
 end

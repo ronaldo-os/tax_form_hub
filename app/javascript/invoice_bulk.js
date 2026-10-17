@@ -252,12 +252,51 @@ function renderInvoiceToPdfBlob(invoiceId) {
   });
 }
 
+let zipExportIsDark = false;
+
+function applyOverlayTheme(overlay, isDarkMode) {
+  if (!overlay) return;
+  overlay.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+  overlay.setAttribute('data-bs-theme', isDarkMode ? 'dark' : 'light');
+
+  const card = overlay.querySelector('.zip-progress-card');
+  const title = overlay.querySelector('.zip-overlay-title');
+  const statusMsg = overlay.querySelector('.zip-overlay-status');
+  const progressWrap = overlay.querySelector('.zip-overlay-progress-wrap');
+  const subtext = overlay.querySelector('.zip-overlay-subtext');
+
+  if (isDarkMode) {
+    if (card) {
+      card.style.backgroundColor = '#212529';
+      card.style.color = '#f8f9fa';
+      card.style.border = '1px solid #495057';
+    }
+    if (title) title.style.color = '#f8f9fa';
+    if (statusMsg) statusMsg.style.color = '#adb5bd';
+    if (progressWrap) progressWrap.style.backgroundColor = '#2c3034';
+    if (subtext) subtext.style.color = '#adb5bd';
+  } else {
+    if (card) {
+      card.style.backgroundColor = '#ffffff';
+      card.style.color = '#212529';
+      card.style.border = 'none';
+    }
+    if (title) title.style.color = '#212529';
+    if (statusMsg) statusMsg.style.color = '#6c757d';
+    if (progressWrap) progressWrap.style.backgroundColor = '#e9ecef';
+    if (subtext) subtext.style.color = '#6c757d';
+  }
+}
+
 /**
  * Creates or gets the progress overlay modal for ZIP export.
  */
-function getOrCreateZipProgressOverlay() {
+function getOrCreateZipProgressOverlay(isDarkMode = zipExportIsDark) {
   let overlay = document.getElementById('zip-export-overlay');
-  if (overlay) return overlay;
+  if (overlay) {
+    applyOverlayTheme(overlay, isDarkMode);
+    return overlay;
+  }
 
   overlay = document.createElement('div');
   overlay.id = 'zip-export-overlay';
@@ -278,8 +317,6 @@ function getOrCreateZipProgressOverlay() {
   card.className = 'card border-0 shadow-lg p-4 text-center rounded-4 zip-progress-card';
   card.style.maxWidth = '460px';
   card.style.width = '100%';
-  card.style.backgroundColor = '#ffffff';
-  card.style.color = '#212529';
 
   const spinner = document.createElement('div');
   spinner.className = 'spinner-border text-primary mx-auto mb-3';
@@ -292,11 +329,11 @@ function getOrCreateZipProgressOverlay() {
   title.textContent = 'Exporting Invoices as ZIP...';
 
   const statusMsg = document.createElement('p');
-  statusMsg.className = 'text-muted small mb-3 zip-overlay-status';
+  statusMsg.className = 'small mb-3 zip-overlay-status';
   statusMsg.textContent = 'Initializing PDF generator...';
 
   const progressWrap = document.createElement('div');
-  progressWrap.className = 'progress mb-2';
+  progressWrap.className = 'progress mb-2 zip-overlay-progress-wrap';
   progressWrap.style.height = '8px';
 
   const progressBar = document.createElement('div');
@@ -309,7 +346,7 @@ function getOrCreateZipProgressOverlay() {
   progressWrap.appendChild(progressBar);
 
   const subtext = document.createElement('small');
-  subtext.className = 'text-muted opacity-75';
+  subtext.className = 'opacity-75 zip-overlay-subtext';
   subtext.textContent = 'Please keep this tab open while generating PDFs and bundling archive.';
 
   card.appendChild(spinner);
@@ -321,6 +358,8 @@ function getOrCreateZipProgressOverlay() {
   overlay.appendChild(card);
   document.body.appendChild(overlay);
 
+  applyOverlayTheme(overlay, isDarkMode);
+
   return overlay;
 }
 
@@ -328,7 +367,7 @@ function getOrCreateZipProgressOverlay() {
  * Updates the ZIP progress overlay status and progress percentage.
  */
 function updateZipProgress(percent, statusText) {
-  const overlay = getOrCreateZipProgressOverlay();
+  const overlay = getOrCreateZipProgressOverlay(zipExportIsDark);
   const bar = overlay.querySelector('.zip-overlay-bar');
   const status = overlay.querySelector('.zip-overlay-status');
 
@@ -351,6 +390,7 @@ function hideZipProgress() {
   if (overlay && overlay.parentNode) {
     overlay.parentNode.removeChild(overlay);
   }
+  zipExportIsDark = false;
 }
 
 /**
@@ -371,6 +411,7 @@ export async function exportSelectedInvoicesToZip(tableId) {
   const htmlElement = document.documentElement;
   const originalDataTheme = htmlElement.getAttribute('data-theme');
   const originalBSTheme = htmlElement.getAttribute('data-bs-theme');
+  zipExportIsDark = originalDataTheme === 'dark' || originalBSTheme === 'dark';
 
   // Disable transitions temporarily during bulk export to prevent animation jitter
   const noTransitionStyle = document.createElement('style');
@@ -391,7 +432,7 @@ export async function exportSelectedInvoicesToZip(tableId) {
   htmlElement.setAttribute('data-theme', 'light');
   htmlElement.setAttribute('data-bs-theme', 'light');
 
-  getOrCreateZipProgressOverlay();
+  getOrCreateZipProgressOverlay(zipExportIsDark);
   updateZipProgress(5, `Preparing to generate ${total} ${total === 1 ? 'invoice' : 'invoices'}...`);
 
   const zip = new JSZip();

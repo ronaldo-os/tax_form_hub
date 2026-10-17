@@ -29,10 +29,6 @@
 
     <!-- Action buttons aligned right / stacked/full-width on mobile -->
     <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
-      <%= link_to session[:tax_submissions_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 flex-fill flex-sm-grow-0 text-nowrap", data: { behavior: "back-button" } do %>
-        <i class="fa-solid fa-arrow-left me-1.5"></i>
-        <span>Back</span>
-      <% end %>
       <% if current_user.company_id.present? %>
         <%= link_to tax_submissions_path, class: "btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" do %>
           <i class="fa-solid fa-inbox me-1.5"></i>
@@ -72,6 +68,21 @@
 
       <div class="modal-body p-4 pt-0">
         <%= form_with model: @tax_submission, url: tax_submissions_path, local: true, html: { multipart: true } do |f| %>
+          <%
+            clean_redirect_path = begin
+              uri = URI.parse(request.fullpath)
+              params_hash = Rack::Utils.parse_nested_query(uri.query)
+              params_hash.delete("open_modal")
+              params_hash.delete("open_submit_modal")
+              params_hash.delete("invoice_id")
+              params_hash.delete("company_id")
+              new_query = params_hash.to_query
+              new_query.present? ? "#{uri.path}?#{new_query}" : uri.path
+            rescue StandardError
+              tax_submissions_home_path
+            end
+          %>
+          <%= hidden_field_tag :redirect_url, clean_redirect_path, id: "tax_submission_redirect_url" %>
           <% if @tax_submission.errors.any? %>
             <div class="alert alert-danger py-2 small mb-3">
               <ul class="mb-0">

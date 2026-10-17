@@ -811,6 +811,41 @@ $(document).on('click', '.fill-full-balance-btn', function (e) {
     }
 });
 
+// Synchronize redirect_url for Submit Tax Documents modal on invoices page
+$(document).on('show.bs.modal', 'div[id^="submitTaxModal-"]', function () {
+    const $modal = $(this);
+    const $redirectInput = $modal.find('input[name="redirect_url"]');
+    if ($redirectInput.length) {
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('open_modal');
+            url.searchParams.delete('open_submit_modal');
+            const currentTab = getUrlParam('tab');
+            if (currentTab) {
+                url.searchParams.set('tab', currentTab);
+            }
+            $redirectInput.val(url.pathname + (url.search ? url.search : ''));
+        } catch (e) {}
+    }
+});
+
+$(document).on('submit', 'div[id^="submitTaxModal-"] form', function () {
+    const $form = $(this);
+    const $redirectInput = $form.find('input[name="redirect_url"]');
+    if ($redirectInput.length) {
+        try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('open_modal');
+            url.searchParams.delete('open_submit_modal');
+            const currentTab = getUrlParam('tab');
+            if (currentTab) {
+                url.searchParams.set('tab', currentTab);
+            }
+            $redirectInput.val(url.pathname + (url.search ? url.search : ''));
+        } catch (e) {}
+    }
+});
+
 document.addEventListener("turbo:load", initInvoicePage);
 document.addEventListener("DOMContentLoaded", initInvoicePage);
 window.addEventListener("popstate", function () {

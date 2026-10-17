@@ -758,4 +758,17 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal ["cancel"], helper.allowed_subscription_bulk_actions(@sales_subscription)
     assert_equal [], helper.allowed_subscription_bulk_actions(cancelled_sub)
   end
+
+  test "subscriptions index page renders single Create Document dropdown containing invoice, quote, and credit note options" do
+    sign_in @user_seller
+    get subscriptions_url
+    assert_response :success
+
+    assert_select "button#createDocumentDropdown", text: /Create Document/
+    assert_select "ul.dropdown-menu[aria-labelledby='createDocumentDropdown']" do
+      assert_select "a[href*='/invoices/new']", text: /Create Invoice/
+      assert_select "a[href*='category=quote']", text: /Create Quote/
+      assert_select "a[href*='category=credit_note']", text: /Create Credit Note/
+    end
+  end
 end

@@ -2,7 +2,6 @@ class TaxSubmissionsController < ApplicationController
   before_action :authenticate_user!
   before_action :set_tax_submission, only: [ :show, :update, :destroy ]
   before_action -> { store_back_url(:tax_submissions_incoming_back_url) }, only: [:index]
-  before_action -> { store_back_url(:tax_submissions_back_url) }, only: [:home]
 
   def index
     Rails.logger.info "DEBUG: TaxSubmissionsController#index executing"
@@ -40,7 +39,7 @@ class TaxSubmissionsController < ApplicationController
 
         respond_to do |format|
           format.html { render :home }
-          format.turbo_stream { redirect_back fallback_location: root_path, alert: "Please select an invoice number." }
+          format.turbo_stream { redirect_back fallback_location: tax_submissions_home_path, alert: "Please select an invoice number." }
         end
         return
       end
@@ -48,7 +47,7 @@ class TaxSubmissionsController < ApplicationController
       invoice = Invoice.find_by(id: tax_submission_params[:invoice_id])
 
       unless invoice
-        redirect_back fallback_location: root_path, alert: "The selected invoice could not be found. Please try again."
+        redirect_back fallback_location: tax_submissions_home_path, alert: "The selected invoice could not be found. Please try again."
         raise ActiveRecord::Rollback
       end
 
@@ -78,7 +77,7 @@ class TaxSubmissionsController < ApplicationController
         rescue StandardError => e
           Rails.logger.error "Notification/Mailer Error in TaxSubmissionsController#create: #{e.message}"
         end
-        redirect_to params[:redirect_url].presence || root_path, status: :see_other, notice: "Tax documents submitted successfully."
+        redirect_to determine_redirect_target, status: :see_other, notice: "Tax documents submitted successfully."
       else
         error_message = @tax_submission.errors.full_messages.join(", ")
         @companies = companies_with_approved_invoices
@@ -86,7 +85,7 @@ class TaxSubmissionsController < ApplicationController
 
         respond_to do |format|
           format.html { render :home }
-          format.turbo_stream { redirect_back fallback_location: root_path, status: :see_other, alert: "Failed to submit tax documents: #{error_message}" }
+          format.turbo_stream { redirect_back fallback_location: tax_submissions_home_path, status: :see_other, alert: "Failed to submit tax documents: #{error_message}" }
         end
         raise ActiveRecord::Rollback
       end
@@ -310,5 +309,56 @@ class TaxSubmissionsController < ApplicationController
 
   def tax_submission_params
     params.require(:tax_submission).permit(:reviewed, :processed, :archived, :company_id, :invoice_id, :details, :email, :form_2307, deposit_slip: [])
+  end
+
+  def determine_redirect_target
+    raw_target = params[:redirect_url].presence || request.referer.presence || tax_submissions_home_path
+    sanitize_redirect_url(raw_target)
+  end
+
+  def sanitize_redirect_url(url_string)
+    return tax_submissions_home_path if url_string.blank?
+
+    begin
+      uri = URI.parse(url_string.to_s.strip)
+
+      # Prevent open redirect: if host is present, ensure it matches current request host
+      if uri.host.present? && uri.host != request.host
+        return tax_submissions_home_path
+      end
+
+      # Reject protocol-relative URLs (e.g. "//attacker.com")
+      if url_string.to_s.strip.start_with?("//")
+        return tax_submissions_home_path
+      end
+
+      path = uri.path.presence || tax_submissions_home_path
+      query = uri.query
+
+      if query.present?
+        params_hash = Rack::Utils.parse_nested_query(query)
+        # Strip modal opening or prefill query parameters so modal does not reopen
+        params_hash.delete("open_modal")
+        params_hash.delete("open_submit_modal")
+        params_hash.delete("invoice_id")
+        params_hash.delete("company_id")
+
+        if path.include?("/invoices") && !params_hash.key?("tab") && @tax_submission&.invoice.present?
+          params_hash["tab"] = (@tax_submission.invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+        end
+
+        new_query = params_hash.to_query
+        new_query.present? ? "#{path}?#{new_query}" : path
+      else
+        if path.include?("/invoices") && @tax_submission&.invoice.present?
+          tab = (@tax_submission.invoice.invoice_type == "purchase" ? "purchase-invoices" : "sales-invoices")
+          "#{path}?tab=#{tab}"
+        else
+          path
+        end
+      end
+    rescue URI::InvalidURIError
+      tax_submissions_home_path
+    end
   end
 end
