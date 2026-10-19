@@ -61,6 +61,9 @@ import './datatable_dropdown_fix';
 // Activity timeline for audit history
 import { initActivityTimeline } from './activity_timeline';
 
+// Edit profile unsaved changes and interactions
+import './edit_profile';
+
 // Ensure any legacy service workers are unregistered on load.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
@@ -78,11 +81,34 @@ import { Turbo } from "@hotwired/turbo-rails";
 
 window.isInvoiceFormDirty = false;
 window.isNavigatingConfirmed = false;
+window.isUnsavedModalActive = false;
+window.pendingNavigation = null;
+
+// Unified dirty state checker across all supported forms (Invoice, Edit Profile, etc.)
+window.hasUnsavedChanges = function () {
+  if (window.isInvoiceFormDirty) return true;
+  if (typeof window.isProfileDirty === 'function') {
+    return window.isProfileDirty();
+  }
+  return false;
+};
+
+// Discards unsaved modifications across forms and purges Turbo cached snapshots
+window.discardAllUnsavedChanges = function () {
+  window.isInvoiceFormDirty = false;
+  if (typeof window.discardProfileChanges === 'function') {
+    window.discardProfileChanges();
+  }
+  if (typeof Turbo !== 'undefined' && Turbo.cache && typeof Turbo.cache.clear === 'function') {
+    Turbo.cache.clear();
+  }
+};
 
 window.showUnsavedChangesModal = function ({
   title = "Unsaved Changes",
-  message = "You have unsaved changes. If you continue, your changes will be lost. Are you sure you want to proceed?",
-  confirmText = "Continue"
+  message = "You have unsaved changes. Are you sure you want to discard them?",
+  confirmText = "Yes, Discard",
+  cancelText = "Cancel"
 } = {}) {
   return new Promise((resolve) => {
     // Remove any leftover modal elements or backdrops
@@ -107,8 +133,8 @@ window.showUnsavedChangesModal = function ({
               <p class="mb-0">${message}</p>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="turboConfirmCancel">Cancel</button>
-              <button type="button" class="btn btn-danger" id="turboConfirmAccept">${confirmText}</button>
+              <button type="button" class="btn btn-back px-3" data-bs-dismiss="modal" id="turboConfirmCancel">${cancelText}</button>
+              <button type="button" class="btn btn-danger px-3" id="turboConfirmAccept">${confirmText}</button>
             </div>
           </div>
         </div>
@@ -135,7 +161,7 @@ window.showUnsavedChangesModal = function ({
       console.warn("Bootstrap not found, falling back to native confirm");
       const userConfirmed = window.confirm(message);
       if (userConfirmed) {
-        window.isInvoiceFormDirty = false;
+        window.discardAllUnsavedChanges();
         window.isNavigatingConfirmed = true;
       }
       cleanupModal();
@@ -150,7 +176,7 @@ window.showUnsavedChangesModal = function ({
       console.error(e);
       const userConfirmed = window.confirm(message);
       if (userConfirmed) {
-        window.isInvoiceFormDirty = false;
+        window.discardAllUnsavedChanges();
         window.isNavigatingConfirmed = true;
       }
       cleanupModal();
@@ -163,7 +189,7 @@ window.showUnsavedChangesModal = function ({
       acceptBtn.addEventListener('click', () => {
         if (!resolved) {
           resolved = true;
-          window.isInvoiceFormDirty = false;
+          window.discardAllUnsavedChanges();
           window.isNavigatingConfirmed = true;
           try { modal.hide(); } catch (e) {}
           cleanupModal();
@@ -202,6 +228,7 @@ const handleCustomConfirm = (message, element) => {
   let finalMessage = message;
   let title = "Confirmation";
   let confirmText = "OK";
+  let cancelText = "Cancel";
 
   let isLogout = false;
   let isDiscard = false;
@@ -210,7 +237,8 @@ const handleCustomConfirm = (message, element) => {
     if (element) {
       isLogout = element.id === 'logout-btn' ||
         element.id === 'mobile-logout-btn' ||
-        (typeof element.closest === 'function' && element.closest('#logout-btn, #mobile-logout-btn') !== null) ||
+        element.id === 'header_logout_btn' ||
+        (typeof element.closest === 'function' && element.closest('#logout-btn, #mobile-logout-btn, #header_logout_btn') !== null) ||
         message.toLowerCase().includes('log out');
 
       isDiscard = element.classList?.contains('discard-btn') ||
@@ -225,13 +253,13 @@ const handleCustomConfirm = (message, element) => {
     console.error(e);
   }
 
-  if (window.isInvoiceFormDirty && (isLogout || isDiscard)) {
+  if (window.hasUnsavedChanges() && (isLogout || isDiscard)) {
     title = "Unsaved Changes";
-    finalMessage = "You have unsaved changes. If you continue, your changes will be lost. Are you sure you want to proceed?";
-    confirmText = isLogout ? "Continue" : "Discard";
+    finalMessage = "You have unsaved changes. Are you sure you want to discard them?";
+    confirmText = isLogout ? "Continue" : "Yes, Discard";
   }
 
-  return window.showUnsavedChangesModal({ title, message: finalMessage, confirmText });
+  return window.showUnsavedChangesModal({ title, message: finalMessage, confirmText, cancelText });
 };
 
 if (typeof Turbo !== "undefined" && Turbo.setConfirmMethod) {
@@ -243,29 +271,43 @@ if (typeof Turbo !== "undefined" && Turbo.config && Turbo.config.forms) {
 
 // Intercept Turbo navigation when form contains unsaved changes
 document.addEventListener("turbo:before-visit", (event) => {
-  if (window.isInvoiceFormDirty && !window.isNavigatingConfirmed) {
+  if (window.hasUnsavedChanges() && !window.isNavigatingConfirmed) {
     event.preventDefault();
     const targetUrl = event.detail.url;
     const action = event.detail.action || "advance";
-    const currentUrl = window.location.href;
+    const currentUrl = window.currentProfileUrl || window.location.href;
+
+    // If confirmation modal is already actively displayed, update intended destination and avoid duplicate pop-up
+    if (window.isUnsavedModalActive) {
+      window.pendingNavigation = { url: targetUrl, action, currentUrl };
+      return;
+    }
+
+    window.pendingNavigation = { url: targetUrl, action, currentUrl };
+    window.isUnsavedModalActive = true;
 
     window.showUnsavedChangesModal({
       title: "Unsaved Changes",
-      message: "You have unsaved changes. If you continue, your changes will be lost. Are you sure you want to proceed?",
-      confirmText: "Continue"
+      message: "You have unsaved changes. Are you sure you want to discard them?",
+      confirmText: "Yes, Discard",
+      cancelText: "Cancel"
     }).then((confirmed) => {
+      window.isUnsavedModalActive = false;
+      const intended = window.pendingNavigation || { url: targetUrl, action, currentUrl };
+      window.pendingNavigation = null;
+
       if (confirmed) {
-        window.isInvoiceFormDirty = false;
+        window.discardAllUnsavedChanges();
         window.isNavigatingConfirmed = true;
         if (typeof Turbo !== "undefined" && Turbo.visit) {
-          Turbo.visit(targetUrl, { action });
+          Turbo.visit(intended.url, { action: intended.action });
         } else {
-          window.location.href = (typeof targetUrl === "string") ? targetUrl : targetUrl.href;
+          window.location.href = (typeof intended.url === "string") ? intended.url : intended.url.href;
         }
       } else {
         window.isNavigatingConfirmed = false;
-        if (window.location.href !== currentUrl) {
-          window.history.pushState(null, '', currentUrl);
+        if (window.location.href !== intended.currentUrl) {
+          window.history.pushState(null, '', intended.currentUrl);
         }
       }
     });
@@ -274,7 +316,7 @@ document.addEventListener("turbo:before-visit", (event) => {
 
 // Intercept non-Turbo internal link clicks when form is dirty
 document.addEventListener("click", (event) => {
-  if (!window.isInvoiceFormDirty || window.isNavigatingConfirmed) return;
+  if (!window.hasUnsavedChanges() || window.isNavigatingConfirmed) return;
 
   const link = event.target.closest("a[href]");
   if (!link) return;
@@ -286,17 +328,34 @@ document.addEventListener("click", (event) => {
   if (link.dataset.bsToggle || link.dataset.bsDismiss) return;
   if (link.target === "_blank") return;
 
-  if (link.dataset.turbo === "false") {
+  // If modal is already displayed, preserve newest intended destination and avoid duplicate pop-up
+  if (window.isUnsavedModalActive) {
     event.preventDefault();
+    event.stopPropagation();
+    window.pendingNavigation = { url: link.href, action: "advance", currentUrl: window.currentProfileUrl || window.location.href };
+    return;
+  }
+
+  if (link.dataset.turbo === "false" || link.getAttribute("data-turbo") === "false") {
+    event.preventDefault();
+    const currentUrl = window.currentProfileUrl || window.location.href;
+    window.pendingNavigation = { url: link.href, action: "advance", currentUrl };
+    window.isUnsavedModalActive = true;
+
     window.showUnsavedChangesModal({
       title: "Unsaved Changes",
-      message: "You have unsaved changes. If you continue, your changes will be lost. Are you sure you want to proceed?",
-      confirmText: "Continue"
+      message: "You have unsaved changes. Are you sure you want to discard them?",
+      confirmText: "Yes, Discard",
+      cancelText: "Cancel"
     }).then((confirmed) => {
+      window.isUnsavedModalActive = false;
+      const intended = window.pendingNavigation || { url: link.href, currentUrl };
+      window.pendingNavigation = null;
+
       if (confirmed) {
-        window.isInvoiceFormDirty = false;
+        window.discardAllUnsavedChanges();
         window.isNavigatingConfirmed = true;
-        window.location.href = link.href;
+        window.location.href = (typeof intended.url === "string") ? intended.url : intended.url.href;
       } else {
         window.isNavigatingConfirmed = false;
       }
@@ -304,9 +363,47 @@ document.addEventListener("click", (event) => {
   }
 }, true);
 
+// Browser Back/Forward navigation listener for where supported
+window.addEventListener("popstate", () => {
+  if (window.hasUnsavedChanges && window.hasUnsavedChanges() && !window.isNavigatingConfirmed) {
+    if (window.isUnsavedModalActive) return;
+
+    const currentUrl = window.currentProfileUrl || window.location.href;
+    const targetUrl = window.location.href;
+    window.isUnsavedModalActive = true;
+    window.pendingNavigation = { url: targetUrl, action: "restore", currentUrl };
+
+    window.showUnsavedChangesModal({
+      title: "Unsaved Changes",
+      message: "You have unsaved changes. Are you sure you want to discard them?",
+      confirmText: "Yes, Discard",
+      cancelText: "Cancel"
+    }).then((confirmed) => {
+      window.isUnsavedModalActive = false;
+      const intended = window.pendingNavigation || { url: targetUrl, action: "restore", currentUrl };
+      window.pendingNavigation = null;
+
+      if (confirmed) {
+        window.discardAllUnsavedChanges();
+        window.isNavigatingConfirmed = true;
+        if (typeof Turbo !== "undefined" && Turbo.visit) {
+          Turbo.visit(intended.url, { action: intended.action || "restore" });
+        } else {
+          window.location.href = (typeof intended.url === "string") ? intended.url : intended.url.href;
+        }
+      } else {
+        window.isNavigatingConfirmed = false;
+        if (window.location.href !== intended.currentUrl) {
+          window.history.pushState(null, '', intended.currentUrl);
+        }
+      }
+    });
+  }
+});
+
 // Browser tab reload / close / external navigation alert
 window.addEventListener("beforeunload", (event) => {
-  if (window.isInvoiceFormDirty && !window.isNavigatingConfirmed) {
+  if (window.hasUnsavedChanges() && !window.isNavigatingConfirmed) {
     event.preventDefault();
     event.returnValue = "";
     return "";
@@ -853,6 +950,8 @@ function initApplication() {
 // Bind to Turbo Load
 document.addEventListener("turbo:load", () => {
   window.isNavigatingConfirmed = false;
+  window.isUnsavedModalActive = false;
+  window.pendingNavigation = null;
   // Clear any cached company selector state on page load to ensure fresh data
   const input = document.getElementById('company_search_input');
   if (input) {
@@ -861,6 +960,9 @@ document.addEventListener("turbo:load", () => {
 
   initApplication();
   loadPageSpecificModules();
+  if (typeof window.initEditProfile === 'function') {
+    window.initEditProfile();
+  }
 
   // Force full reload for companies page to prevent cache issues
   if (window.location.pathname.includes("/companies")) {
@@ -922,14 +1024,24 @@ document.addEventListener("turbo:before-render", (event) => {
 // Specifically handle Turbo render
 document.addEventListener("turbo:render", () => {
   window.isNavigatingConfirmed = false;
+  window.isUnsavedModalActive = false;
+  window.pendingNavigation = null;
   initApplication();
   loadPageSpecificModules();
+  if (typeof window.initEditProfile === 'function') {
+    window.initEditProfile();
+  }
 });
 // Also bind to DOMContentLoaded for initial non-Turbo load if any
 document.addEventListener("DOMContentLoaded", () => {
   window.isNavigatingConfirmed = false;
+  window.isUnsavedModalActive = false;
+  window.pendingNavigation = null;
   initApplication();
   loadPageSpecificModules();
+  if (typeof window.initEditProfile === 'function') {
+    window.initEditProfile();
+  }
 });
 
 // Clear cached data on logout
@@ -994,6 +1106,8 @@ window.addEventListener('pageshow', function (event) {
 // Global Teardown for DataTables and Modals to fix Turbo Caching issues
 document.addEventListener("turbo:before-cache", function () {
   window.isNavigatingConfirmed = false;
+  window.isUnsavedModalActive = false;
+  window.pendingNavigation = null;
   const confirmModal = document.getElementById('turboConfirmModal');
   if (confirmModal) {
     confirmModal.remove();
@@ -1166,7 +1280,7 @@ document.addEventListener('click', function (e) {
   if (backBtn.target === '_blank') return;
 
   // If form has unsaved changes and confirmation hasn't occurred yet, let dirty form handler manage it
-  if (window.isInvoiceFormDirty && !window.isNavigatingConfirmed) return;
+  if (window.hasUnsavedChanges && window.hasUnsavedChanges() && !window.isNavigatingConfirmed) return;
 
   const referrer = document.referrer;
   const isInternalReferrer = referrer && referrer.includes(window.location.host);

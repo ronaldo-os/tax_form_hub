@@ -2,6 +2,9 @@
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "profile", media: "all" %>
 <% end %>
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
+<% end %>
 
 <div class="container py-4 py-md-3 profile-edit-container">
   
@@ -56,13 +59,14 @@
       <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
         Click avatar to upload photo
       </small>
+      <div id="avatar_error_msg" class="text-danger small mt-1" style="display: none;"></div>
     </div>
 
     <!-- Main Form -->
     <%= form_for(resource,
          as: resource_name,
          url: profile_path,
-         html: { method: :put, multipart: true }) do |f| %>
+         html: { method: :put, multipart: true, id: "edit_profile_form", class: "profile-edit-form" }) do |f| %>
 
       <%= f.file_field :profile_image,
         accept: "image/*",
@@ -78,6 +82,8 @@
                 autofocus: true,
                 autocomplete: "email",
                 required: true,
+                id: "user_email",
+                data: { initial_value: resource.email.to_s.strip },
                 class: "form-control #{'is-invalid' if resource.errors[:email].any?}" %>
           <% if resource.errors[:email].any? %>
             <div class="text-danger small mt-1">
@@ -95,6 +101,7 @@
                   ["#{symbol} — #{clean_name} (#{code})", code]
                 },
                 { selected: resource.currency.presence || "PHP" },
+                data: { initial_value: resource.currency.presence || "PHP" },
                 class: "form-select #{'is-invalid' if resource.errors[:currency].any?}",
                 id: "user_currency_select" %>
           <small class="text-muted d-block mt-1" style="font-size: 0.8rem;">
@@ -170,7 +177,7 @@
         </div>
         <div class="input-group flex-nowrap <%= 'has-validation' if resource.errors[:current_password].any? %>">
           <%= f.password_field :current_password,
-                autocomplete: "current-password",
+                autocomplete: "new-password",
                 class: "form-control toggle-password-input #{'is-invalid' if resource.errors[:current_password].any?}",
                 id: "current_password",
                 placeholder: "Enter current password (if changing password)" %>
