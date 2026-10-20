@@ -259,7 +259,7 @@ class InvoiceDatatable < BaseDatatable
       label = file_count > 1 ? "#{file_count} Files" : 'Files'
       button = content_tag(:button,
         "<i class=\"fa-solid fa-paperclip me-1\"></i>#{label}".html_safe,
-        class: 'btn btn-xs btn-outline-primary rounded-pill px-2 py-0.5 extra-small fw-medium text-nowrap',
+        class: 'btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 extra-small fw-medium text-nowrap',
         data: {
           'bs-toggle' => 'modal',
           'bs-target' => "#attachmentModal-#{invoice.id}"
@@ -274,14 +274,24 @@ class InvoiceDatatable < BaseDatatable
 
       modal = content_tag(:div, class: 'modal fade attachment-modal', id: "attachmentModal-#{invoice.id}", tabindex: '-1', 'aria-labelledby': "attachmentModalLabel-#{invoice.id}", 'aria-hidden': 'true') do
         content_tag(:div, class: 'modal-dialog modal-dialog-centered modal-md') do
-          content_tag(:div, class: 'modal-content shadow-sm border-0 rounded-4') do
-            header = content_tag(:div, class: 'modal-header border-0 pb-2 pt-4 px-4 d-flex align-items-center justify-content-between') do
-              title = content_tag(:h5, 'Attachments', class: 'modal-title fw-semibold text-main fs-5 mb-0', id: "attachmentModalLabel-#{invoice.id}")
+          content_tag(:div, class: 'modal-content shadow-lg border-0 rounded-4 overflow-hidden') do
+            header = content_tag(:div, class: 'modal-header border-0 pb-3 pt-4 px-4 d-flex align-items-center justify-content-between') do
+              title_wrap = content_tag(:div, class: 'd-flex align-items-center gap-2.5') do
+                icon_badge = content_tag(:div, class: 'attachment-modal-header-icon rounded-3 d-flex align-items-center justify-content-center text-primary flex-shrink-0') do
+                  content_tag(:i, '', class: 'fa-solid fa-paperclip')
+                end
+                text_group = content_tag(:div) do
+                  title_el = content_tag(:h5, 'Attachments', class: 'modal-title fw-bold text-main fs-5 mb-0', id: "attachmentModalLabel-#{invoice.id}")
+                  subtitle_el = content_tag(:div, "#{file_count} #{file_count == 1 ? 'file' : 'files'} attached to this invoice", class: 'text-muted extra-small mt-0.5')
+                  title_el + subtitle_el
+                end
+                icon_badge + text_group
+              end
               close_btn = content_tag(:button, '', type: 'button', class: 'btn-close', data: { 'bs-dismiss': 'modal' }, 'aria-label': 'Close')
-              title + close_btn
+              title_wrap + close_btn
             end
-            body = content_tag(:div, class: 'modal-body p-4 pt-2') do
-              content_tag(:div, modal_items.html_safe, class: 'attachment-list d-flex flex-column gap-2.5', style: 'max-height: 65vh; overflow-y: auto;')
+            body = content_tag(:div, class: 'modal-body p-4 pt-1') do
+              content_tag(:div, modal_items.html_safe, class: 'attachment-list d-flex flex-column gap-3', style: 'max-height: 65vh; overflow-y: auto;')
             end
             header + body
           end
@@ -305,65 +315,82 @@ class InvoiceDatatable < BaseDatatable
     download_url = view.rails_blob_path(file, disposition: 'attachment')
 
     if content_type.start_with?("image/")
-      content_tag(:div, class: 'col-12 mb-3') do
-        content_tag(:div, class: 'd-flex flex-column align-items-center justify-content-center bg-light border rounded p-2', style: 'min-height: 200px;') do
+      content_tag(:div, class: 'attachment-card p-3 rounded-3 border mb-1') do
+        content_tag(:div, class: 'd-flex flex-column align-items-center justify-content-center bg-light border rounded-3 p-2 mb-3', style: 'min-height: 200px;') do
           img_link = link_to(file_url, target: "_blank", class: 'd-block text-center w-100 mb-2') do
             tag.img(src: file_url, class: 'img-fluid rounded shadow-sm', style: 'max-height: 70vh; object-fit: contain;', alt: 'Attachment', loading: 'lazy')
           end
-          info_box = content_tag(:div, class: 'w-100 d-flex align-items-center justify-content-between pt-2 border-top gap-2', style: 'min-width: 0;') do
-            name_and_meta = content_tag(:div, class: 'min-w-0 flex-grow-1 text-start me-2', style: 'min-width: 0;') do
-              name_span = content_tag(:div, filename, class: 'text-truncate small text-muted text-start flex-grow-1 me-2', style: 'min-width: 0;', title: filename)
-              meta_items = []
-              meta_items << (content_type.split('/').last.upcase.presence || 'IMAGE')
-              meta_items << formatted_size if formatted_size.present?
-              meta_items << uploaded_date if uploaded_date.present?
-              meta_span = content_tag(:div, meta_items.join(' • '), class: 'extra-small text-muted mt-0.5')
-              name_span + meta_span
+          img_link
+        end +
+        content_tag(:div, class: 'w-100 d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2.5 pt-1') do
+          name_and_meta = content_tag(:div, class: 'min-w-0 flex-grow-1 text-start me-2', style: 'min-width: 0;') do
+            name_span = content_tag(:div, filename, class: 'attachment-filename fw-semibold text-truncate text-main', style: 'min-width: 0;', title: filename)
+            type_label = (content_type.split('/').last.upcase.presence || 'IMAGE')
+            meta_div = content_tag(:div, class: 'attachment-meta small text-muted d-flex align-items-center gap-1.5 flex-wrap mt-0.5') do
+              badge_span = content_tag(:span, type_label, class: 'badge attachment-type-badge attachment-type-image')
+              items = [badge_span]
+              if formatted_size.present?
+                items << content_tag(:span, '•', class: 'text-muted opacity-50')
+                items << content_tag(:span, formatted_size, class: 'attachment-size-text')
+              end
+              if uploaded_date.present?
+                items << content_tag(:span, '•', class: 'text-muted opacity-50')
+                items << content_tag(:span, uploaded_date, class: 'attachment-date-text')
+              end
+              items.join.html_safe
             end
-            action_buttons = content_tag(:div, class: 'd-flex align-items-center gap-2 flex-shrink-0') do
-              view_link = link_to(
-                "<i class=\"fa-solid fa-eye me-1\"></i><span>View</span>".html_safe,
-                file_url,
-                target: '_blank',
-                class: 'btn btn-sm btn-primary rounded-pill px-2.5 py-1 extra-small fw-medium text-nowrap',
-                title: "View #{filename}"
-              )
-              download_link = link_to(
-                "<i class=\"fa-solid fa-download me-1\"></i><span>Download</span>".html_safe,
-                download_url,
-                target: '_blank',
-                download: filename,
-                class: 'btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 extra-small fw-medium text-nowrap',
-                title: "Download #{filename}"
-              )
-              view_link + download_link
-            end
-            name_and_meta + action_buttons
+            name_span + meta_div
           end
-          img_link + info_box
+          action_buttons = content_tag(:div, class: 'attachment-actions d-flex align-items-center gap-2 flex-shrink-0 ms-auto ms-sm-0') do
+            view_link = link_to(
+              "<i class=\"fa-solid fa-eye me-1.5\"></i><span>View</span>".html_safe,
+              file_url,
+              target: '_blank',
+              class: 'btn btn-sm btn-primary attachment-action-view d-inline-flex align-items-center px-3 py-1.5 rounded-3 fw-medium text-nowrap',
+              title: "View #{filename}"
+            )
+            download_link = link_to(
+              "<i class=\"fa-solid fa-download me-1.5\"></i><span>Download</span>".html_safe,
+              download_url,
+              target: '_blank',
+              download: filename,
+              class: 'btn btn-sm btn-outline-secondary attachment-action-download d-inline-flex align-items-center px-3 py-1.5 rounded-3 fw-medium text-nowrap',
+              title: "Download #{filename}"
+            )
+            view_link + download_link
+          end
+          name_and_meta + action_buttons
         end
       end
     else
       is_pdf = content_type == 'application/pdf' || filename.downcase.end_with?('.pdf')
       file_type = is_pdf ? 'PDF' : (filename.split('.').last.upcase.presence || 'FILE')
       icon_class = is_pdf ? 'fa-file-pdf' : 'fa-file-lines'
-      icon_bg_class = is_pdf ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary'
+      icon_box_class = is_pdf ? 'attachment-icon-pdf' : 'attachment-icon-generic'
+      type_badge_class = is_pdf ? 'attachment-type-pdf' : 'attachment-type-generic'
 
       content_tag(:div, class: 'attachment-card p-3 rounded-3 border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3') do
         left_box = content_tag(:div, class: 'd-flex align-items-center gap-3 min-w-0 flex-grow-1', style: 'min-width: 0;') do
-          icon_div = content_tag(:div, class: "attachment-icon-box #{icon_bg_class} rounded-3 d-flex align-items-center justify-content-center flex-shrink-0") do
+          icon_div = content_tag(:div, class: "attachment-icon-box #{icon_box_class} rounded-3 d-flex align-items-center justify-content-center flex-shrink-0") do
             content_tag(:i, '', class: "fa-solid #{icon_class} fs-4")
           end
 
           info_div = content_tag(:div, class: 'min-w-0 flex-grow-1 text-start', style: 'min-width: 0;') do
             name_div = content_tag(:div, filename, class: 'attachment-filename fw-semibold text-truncate text-main', title: filename)
 
-            meta_items = []
-            meta_items << file_type
-            meta_items << formatted_size if formatted_size.present?
-            meta_items << uploaded_date if uploaded_date.present?
-
-            meta_div = content_tag(:div, meta_items.join(' • '), class: 'attachment-meta small text-muted mt-0.5')
+            meta_div = content_tag(:div, class: 'attachment-meta small text-muted d-flex align-items-center gap-1.5 flex-wrap mt-1') do
+              badge_span = content_tag(:span, file_type, class: "badge attachment-type-badge #{type_badge_class}")
+              items = [badge_span]
+              if formatted_size.present?
+                items << content_tag(:span, '•', class: 'text-muted opacity-50')
+                items << content_tag(:span, formatted_size, class: 'attachment-size-text')
+              end
+              if uploaded_date.present?
+                items << content_tag(:span, '•', class: 'text-muted opacity-50')
+                items << content_tag(:span, uploaded_date, class: 'attachment-date-text')
+              end
+              items.join.html_safe
+            end
             name_div + meta_div
           end
 
@@ -375,7 +402,7 @@ class InvoiceDatatable < BaseDatatable
             "<i class=\"fa-solid fa-eye me-1.5\"></i><span>View</span>".html_safe,
             view_url,
             target: '_blank',
-            class: 'btn btn-sm btn-primary d-inline-flex align-items-center px-3 py-1.5 rounded-pill fw-medium text-nowrap',
+            class: 'btn btn-sm btn-primary attachment-action-view d-inline-flex align-items-center px-3 py-1.5 rounded-3 fw-medium text-nowrap',
             title: "View #{filename}"
           )
 
@@ -384,7 +411,7 @@ class InvoiceDatatable < BaseDatatable
             download_url,
             target: '_blank',
             download: filename,
-            class: 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center px-3 py-1.5 rounded-pill fw-medium text-nowrap',
+            class: 'btn btn-sm btn-outline-secondary attachment-action-download d-inline-flex align-items-center px-3 py-1.5 rounded-3 fw-medium text-nowrap',
             title: "Download #{filename}"
           )
 

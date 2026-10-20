@@ -2235,27 +2235,59 @@ table.dataTable tbody tr.row-selected,
 }
 
 /* ==========================================================================
-   INVOICE ATTACHMENTS MODAL & FILE CARDS
+   INVOICE ATTACHMENTS MODAL & MODERN FILE CARDS
    ========================================================================== */
 .attachment-modal .modal-content {
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
+  border-radius: 18px !important;
+  border: 1px solid var(--border-color) !important;
   background-color: var(--modal-content-bg);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.22), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+[data-theme="dark"] .attachment-modal .modal-content,
+[data-bs-theme="dark"] .attachment-modal .modal-content {
+  box-shadow: 0 30px 70px -15px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .attachment-modal .modal-header {
   border-bottom: 1px solid var(--border-color) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, transparent 100%);
+}
+
+[data-theme="dark"] .attachment-modal .modal-header,
+[data-bs-theme="dark"] .attachment-modal .modal-header {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+}
+
+.attachment-modal-header-icon {
+  width: 38px;
+  height: 38px;
+  background: rgba(0, 174, 255, 0.1);
+  border: 1px solid rgba(0, 174, 255, 0.2);
+}
+
+[data-theme="dark"] .attachment-modal-header-icon,
+[data-bs-theme="dark"] .attachment-modal-header-icon {
+  background: rgba(0, 174, 255, 0.15);
+  border-color: rgba(0, 174, 255, 0.3);
 }
 
 .attachment-modal .btn-close {
-  opacity: 0.6;
-  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  opacity: 0.55;
+  background-size: 11px;
+  padding: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid transparent;
 }
 
 .attachment-modal .btn-close:hover {
   opacity: 1;
-  transform: scale(1.1);
+  background-color: rgba(0, 0, 0, 0.06);
+  transform: rotate(90deg) scale(1.08);
 }
 
 .attachment-modal .btn-close:focus {
@@ -2267,6 +2299,11 @@ table.dataTable tbody tr.row-selected,
 [data-theme="dark"] .attachment-modal .btn-close,
 [data-bs-theme="dark"] .attachment-modal .btn-close {
   filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-theme="dark"] .attachment-modal .btn-close:hover,
+[data-bs-theme="dark"] .attachment-modal .btn-close:hover {
+  background-color: rgba(255, 255, 255, 0.12);
 }
 
 .attachment-list {
@@ -2283,51 +2320,188 @@ table.dataTable tbody tr.row-selected,
   border-radius: 3px;
 }
 
+/* Modern Card Surfaces */
 .attachment-card {
-  background-color: var(--card-bg, #ffffff);
-  border: 1px solid var(--border-color, #e2e5e9) !important;
-  border-radius: 10px;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.attachment-card:hover {
-  border-color: var(--main-color, #00aeff) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  border: 1px solid #e5e7eb !important;
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+  position: relative;
 }
 
 [data-theme="dark"] .attachment-card,
 [data-bs-theme="dark"] .attachment-card {
-  background-color: var(--bg-secondary, #2c3034);
-  border-color: var(--border-color, #495057) !important;
+  background: linear-gradient(180deg, #252a30 0%, #1f2327 100%);
+  border-color: #383f47 !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
 }
 
-[data-theme="dark"] .attachment-card:hover,
-[data-bs-theme="dark"] .attachment-card:hover {
-  border-color: var(--main-color, #00aeff) !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
-}
-
+/* Icon Box Avatars */
 .attachment-icon-box {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 12px;
 }
 
+.attachment-icon-pdf {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626 !important;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12);
+}
+
+[data-theme="dark"] .attachment-icon-pdf,
+[data-bs-theme="dark"] .attachment-icon-pdf {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.3) 100%);
+  color: #f87171 !important;
+  border-color: rgba(239, 68, 68, 0.35);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.attachment-icon-generic {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569 !important;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+[data-theme="dark"] .attachment-icon-generic,
+[data-bs-theme="dark"] .attachment-icon-generic {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.12) 0%, rgba(148, 163, 184, 0.22) 100%);
+  color: #cbd5e1 !important;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* Typography & Meta */
 .attachment-filename {
-  font-size: 0.925rem;
+  font-size: 0.935rem;
+  font-weight: 600;
   line-height: 1.35;
   color: var(--text-main);
+  letter-spacing: -0.01em;
   max-width: 100%;
 }
 
 .attachment-meta {
   font-size: 0.775rem;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
+.attachment-type-badge {
+  font-size: 0.675rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.attachment-type-pdf {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626 !important;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+[data-theme="dark"] .attachment-type-pdf,
+[data-bs-theme="dark"] .attachment-type-pdf {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.attachment-type-image {
+  background: rgba(0, 174, 255, 0.1);
+  color: #0284c7 !important;
+  border: 1px solid rgba(0, 174, 255, 0.2);
+}
+
+[data-theme="dark"] .attachment-type-image,
+[data-bs-theme="dark"] .attachment-type-image {
+  background: rgba(0, 174, 255, 0.18);
+  color: #7dd3fc !important;
+  border-color: rgba(0, 174, 255, 0.35);
+}
+
+.attachment-type-generic {
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569 !important;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+[data-theme="dark"] .attachment-type-generic,
+[data-bs-theme="dark"] .attachment-type-generic {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8 !important;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.attachment-size-text,
+.attachment-date-text {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+/* Modern Action Buttons */
 .attachment-actions .btn {
   font-size: 0.8125rem;
-  letter-spacing: 0.01em;
+  font-weight: 500;
+  letter-spacing: 0.015em;
   white-space: nowrap;
+  border-radius: 9px !important;
+  padding: 7px 15px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.attachment-actions .attachment-action-view {
+  background: linear-gradient(135deg, #00aeff 0%, #0092e6 100%) !important;
+  border: 1px solid rgba(0, 174, 255, 0.3) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(0, 174, 255, 0.28);
+}
+
+.attachment-actions .attachment-action-view:hover {
+  background: linear-gradient(135deg, #1abbff 0%, #00a4ff 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0, 174, 255, 0.45);
+  color: #ffffff !important;
+}
+
+.attachment-actions .attachment-action-view:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.attachment-actions .attachment-action-download {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid #d1d5db !important;
+  color: #374151 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.attachment-actions .attachment-action-download:hover {
+  background: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #111827 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.attachment-actions .attachment-action-download:active {
+  transform: translateY(0) scale(0.98);
+}
+
+[data-theme="dark"] .attachment-actions .attachment-action-download,
+[data-bs-theme="dark"] .attachment-actions .attachment-action-download {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #e5e7eb !important;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .attachment-actions .attachment-action-download:hover,
+[data-bs-theme="dark"] .attachment-actions .attachment-action-download:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
 }
 
