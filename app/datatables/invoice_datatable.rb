@@ -268,55 +268,20 @@ class InvoiceDatatable < BaseDatatable
       )
 
       # Build modal HTML for attachments
-      # Use view's url_for which has access to the request host
-      modal_content = invoice.attachments.map do |file|
-        file_url = view.url_for(file)
-        filename = file.filename.to_s
-        if file.content_type.to_s.start_with?("image/")
-          content_tag(:div, class: 'col-12 mb-3') do
-            content_tag(:div, class: 'd-flex flex-column align-items-center justify-content-center bg-light border rounded p-2', style: 'min-height: 200px;') do
-              img_link = link_to(file_url, target: "_blank", class: 'd-block text-center w-100 mb-2') do
-                tag.img(src: file_url, class: 'img-fluid rounded shadow-sm', style: 'max-height: 70vh; object-fit: contain;', alt: 'Attachment', loading: 'lazy')
-              end
-              info_box = content_tag(:div, class: 'w-100 d-flex align-items-center justify-content-between pt-2 border-top gap-2', style: 'min-width: 0;') do
-                name_span = content_tag(:span, filename, class: 'text-truncate small text-muted text-start flex-grow-1 me-2', style: 'min-width: 0;', title: filename)
-                view_link = link_to('View Image', file_url, target: '_blank', class: 'btn btn-sm btn-outline-secondary flex-shrink-0')
-                name_span + view_link
-              end
-              img_link + info_box
-            end
-          end
-        elsif file.content_type.to_s == 'application/pdf'
-          content_tag(:div, class: 'col-md-6 mb-3') do
-            content_tag(:div, class: 'd-flex align-items-center justify-content-between border p-2 rounded gap-2', style: 'min-width: 0;') do
-              name_span = content_tag(:span, filename, class: 'text-truncate small me-2 flex-grow-1', style: 'min-width: 0;', title: filename)
-              view_link = link_to('View PDF', view.rails_blob_path(file, disposition: 'inline'), target: '_blank', class: 'btn btn-sm btn-outline-secondary flex-shrink-0')
-              name_span + view_link
-            end
-          end
-        else
-          content_tag(:div, class: 'col-md-6 mb-3') do
-            content_tag(:div, class: 'd-flex align-items-center justify-content-between border p-2 rounded gap-2', style: 'min-width: 0;') do
-              name_span = content_tag(:span, filename, class: 'text-truncate small me-2 flex-grow-1', style: 'min-width: 0;', title: filename)
-              view_link = link_to('Download', file_url, class: 'btn btn-sm btn-outline-secondary flex-shrink-0', target: '_blank')
-              name_span + view_link
-            end
-          end
-        end
+      modal_items = invoice.attachments.map do |file|
+        render_attachment_item(file)
       end.join
 
-      modal = content_tag(:div, class: 'modal fade', id: "attachmentModal-#{invoice.id}", tabindex: '-1', 'aria-labelledby': "attachmentModalLabel-#{invoice.id}", 'aria-hidden': 'true') do
-        content_tag(:div, class: 'modal-dialog modal-md modal-dialog-scrollable') do
-          content_tag(:div, class: 'modal-content') do
-            header = content_tag(:div, class: 'modal-header border-0') do
-              title = content_tag(:h5, 'Attachments', class: 'modal-title', id: "attachmentModalLabel-#{invoice.id}")
+      modal = content_tag(:div, class: 'modal fade attachment-modal', id: "attachmentModal-#{invoice.id}", tabindex: '-1', 'aria-labelledby': "attachmentModalLabel-#{invoice.id}", 'aria-hidden': 'true') do
+        content_tag(:div, class: 'modal-dialog modal-dialog-centered modal-md') do
+          content_tag(:div, class: 'modal-content shadow-sm border-0 rounded-4') do
+            header = content_tag(:div, class: 'modal-header border-0 pb-2 pt-4 px-4 d-flex align-items-center justify-content-between') do
+              title = content_tag(:h5, 'Attachments', class: 'modal-title fw-semibold text-main fs-5 mb-0', id: "attachmentModalLabel-#{invoice.id}")
               close_btn = content_tag(:button, '', type: 'button', class: 'btn-close', data: { 'bs-dismiss': 'modal' }, 'aria-label': 'Close')
               title + close_btn
             end
-            body = content_tag(:div, class: 'modal-body') do
-              content_tag(:div, class: 'row') do
-                modal_content.html_safe
-              end
+            body = content_tag(:div, class: 'modal-body p-4 pt-2') do
+              content_tag(:div, modal_items.html_safe, class: 'attachment-list d-flex flex-column gap-2.5', style: 'max-height: 65vh; overflow-y: auto;')
             end
             header + body
           end
@@ -326,6 +291,108 @@ class InvoiceDatatable < BaseDatatable
       button + modal
     else
       content_tag(:span, '—', class: 'text-muted')
+    end
+  end
+
+  def render_attachment_item(file)
+    file_url = view.url_for(file)
+    filename = file.filename.to_s
+    content_type = file.content_type.to_s
+    bytes = file.blob&.byte_size || (file.byte_size rescue nil)
+    formatted_size = (bytes && bytes > 0) ? view.number_to_human_size(bytes) : nil
+    uploaded_date = (file.created_at || file.blob&.created_at)&.strftime('%b %d, %Y')
+    view_url = view.rails_blob_path(file, disposition: 'inline')
+    download_url = view.rails_blob_path(file, disposition: 'attachment')
+
+    if content_type.start_with?("image/")
+      content_tag(:div, class: 'col-12 mb-3') do
+        content_tag(:div, class: 'd-flex flex-column align-items-center justify-content-center bg-light border rounded p-2', style: 'min-height: 200px;') do
+          img_link = link_to(file_url, target: "_blank", class: 'd-block text-center w-100 mb-2') do
+            tag.img(src: file_url, class: 'img-fluid rounded shadow-sm', style: 'max-height: 70vh; object-fit: contain;', alt: 'Attachment', loading: 'lazy')
+          end
+          info_box = content_tag(:div, class: 'w-100 d-flex align-items-center justify-content-between pt-2 border-top gap-2', style: 'min-width: 0;') do
+            name_and_meta = content_tag(:div, class: 'min-w-0 flex-grow-1 text-start me-2', style: 'min-width: 0;') do
+              name_span = content_tag(:div, filename, class: 'text-truncate small text-muted text-start flex-grow-1 me-2', style: 'min-width: 0;', title: filename)
+              meta_items = []
+              meta_items << (content_type.split('/').last.upcase.presence || 'IMAGE')
+              meta_items << formatted_size if formatted_size.present?
+              meta_items << uploaded_date if uploaded_date.present?
+              meta_span = content_tag(:div, meta_items.join(' • '), class: 'extra-small text-muted mt-0.5')
+              name_span + meta_span
+            end
+            action_buttons = content_tag(:div, class: 'd-flex align-items-center gap-2 flex-shrink-0') do
+              view_link = link_to(
+                "<i class=\"fa-solid fa-eye me-1\"></i><span>View</span>".html_safe,
+                file_url,
+                target: '_blank',
+                class: 'btn btn-sm btn-primary rounded-pill px-2.5 py-1 extra-small fw-medium text-nowrap',
+                title: "View #{filename}"
+              )
+              download_link = link_to(
+                "<i class=\"fa-solid fa-download me-1\"></i><span>Download</span>".html_safe,
+                download_url,
+                target: '_blank',
+                download: filename,
+                class: 'btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 extra-small fw-medium text-nowrap',
+                title: "Download #{filename}"
+              )
+              view_link + download_link
+            end
+            name_and_meta + action_buttons
+          end
+          img_link + info_box
+        end
+      end
+    else
+      is_pdf = content_type == 'application/pdf' || filename.downcase.end_with?('.pdf')
+      file_type = is_pdf ? 'PDF' : (filename.split('.').last.upcase.presence || 'FILE')
+      icon_class = is_pdf ? 'fa-file-pdf' : 'fa-file-lines'
+      icon_bg_class = is_pdf ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary'
+
+      content_tag(:div, class: 'attachment-card p-3 rounded-3 border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3') do
+        left_box = content_tag(:div, class: 'd-flex align-items-center gap-3 min-w-0 flex-grow-1', style: 'min-width: 0;') do
+          icon_div = content_tag(:div, class: "attachment-icon-box #{icon_bg_class} rounded-3 d-flex align-items-center justify-content-center flex-shrink-0") do
+            content_tag(:i, '', class: "fa-solid #{icon_class} fs-4")
+          end
+
+          info_div = content_tag(:div, class: 'min-w-0 flex-grow-1 text-start', style: 'min-width: 0;') do
+            name_div = content_tag(:div, filename, class: 'attachment-filename fw-semibold text-truncate text-main', title: filename)
+
+            meta_items = []
+            meta_items << file_type
+            meta_items << formatted_size if formatted_size.present?
+            meta_items << uploaded_date if uploaded_date.present?
+
+            meta_div = content_tag(:div, meta_items.join(' • '), class: 'attachment-meta small text-muted mt-0.5')
+            name_div + meta_div
+          end
+
+          icon_div + info_div
+        end
+
+        actions_div = content_tag(:div, class: 'attachment-actions d-flex align-items-center gap-2 flex-shrink-0 ms-auto ms-sm-0') do
+          view_btn = link_to(
+            "<i class=\"fa-solid fa-eye me-1.5\"></i><span>View</span>".html_safe,
+            view_url,
+            target: '_blank',
+            class: 'btn btn-sm btn-primary d-inline-flex align-items-center px-3 py-1.5 rounded-pill fw-medium text-nowrap',
+            title: "View #{filename}"
+          )
+
+          download_btn = link_to(
+            "<i class=\"fa-solid fa-download me-1.5\"></i><span>Download</span>".html_safe,
+            download_url,
+            target: '_blank',
+            download: filename,
+            class: 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center px-3 py-1.5 rounded-pill fw-medium text-nowrap',
+            title: "Download #{filename}"
+          )
+
+          view_btn + download_btn
+        end
+
+        left_box + actions_div
+      end
     end
   end
 

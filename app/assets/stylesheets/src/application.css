@@ -2233,3 +2233,101 @@ table.dataTable tbody tr.row-selected,
 [data-bs-theme="dark"] #zip-export-overlay .zip-overlay-progress-wrap {
   background-color: #2c3034 !important;
 }
+
+/* ==========================================================================
+   INVOICE ATTACHMENTS MODAL & FILE CARDS
+   ========================================================================== */
+.attachment-modal .modal-content {
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background-color: var(--modal-content-bg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+.attachment-modal .modal-header {
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.attachment-modal .btn-close {
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+}
+
+.attachment-modal .btn-close:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.attachment-modal .btn-close:focus {
+  opacity: 1;
+  box-shadow: 0 0 0 0.25rem rgba(0, 174, 255, 0.25);
+  outline: none;
+}
+
+[data-theme="dark"] .attachment-modal .btn-close,
+[data-bs-theme="dark"] .attachment-modal .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.attachment-list {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.attachment-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.attachment-list::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: 3px;
+}
+
+.attachment-card {
+  background-color: var(--card-bg, #ffffff);
+  border: 1px solid var(--border-color, #e2e5e9) !important;
+  border-radius: 10px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.attachment-card:hover {
+  border-color: var(--main-color, #00aeff) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .attachment-card,
+[data-bs-theme="dark"] .attachment-card {
+  background-color: var(--bg-secondary, #2c3034);
+  border-color: var(--border-color, #495057) !important;
+}
+
+[data-theme="dark"] .attachment-card:hover,
+[data-bs-theme="dark"] .attachment-card:hover {
+  border-color: var(--main-color, #00aeff) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+.attachment-icon-box {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+}
+
+.attachment-filename {
+  font-size: 0.925rem;
+  line-height: 1.35;
+  color: var(--text-main);
+  max-width: 100%;
+}
+
+.attachment-meta {
+  font-size: 0.775rem;
+  line-height: 1.25;
+}
+
+.attachment-actions .btn {
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+

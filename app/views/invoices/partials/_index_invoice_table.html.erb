@@ -43,43 +43,80 @@
         <span class="text-muted">No File</span>
         <% end %>
         <% if !invoice.recurring_sub_invoice? && invoice.attachments.attached? %>
-            <div class="modal fade" id="attachmentModal-<%= invoice.id %>" tabindex="-1" aria-labelledby="attachmentModalLabel-<%= invoice.id %>" aria-hidden="true">
-                <div class="modal-dialog modal-md modal-dialog-scrollable">
-                    <div class="modal-content">
-                    <div class="modal-header border-0">
-                        <h5 class="modal-title" id="attachmentModalLabel-<%= invoice.id %>">Attachments</h5>
+            <div class="modal fade attachment-modal" id="attachmentModal-<%= invoice.id %>" tabindex="-1" aria-labelledby="attachmentModalLabel-<%= invoice.id %>" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-md">
+                    <div class="modal-content shadow-sm border-0 rounded-4">
+                    <div class="modal-header border-0 pb-2 pt-4 px-4 d-flex align-items-center justify-content-between">
+                        <h5 class="modal-title fw-semibold text-main fs-5 mb-0" id="attachmentModalLabel-<%= invoice.id %>">Attachments</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
-                        <div class="row">
+                    <div class="modal-body p-4 pt-2">
+                        <div class="attachment-list d-flex flex-column gap-2.5" style="max-height: 65vh; overflow-y: auto;">
                         <% invoice.attachments.each do |file| %>
-                            <% filename = file.filename.to_s %>
-                            <% if file.content_type.start_with?("image/") %>
+                            <% 
+                              filename = file.filename.to_s
+                              content_type = file.content_type.to_s
+                              bytes = file.blob&.byte_size || (file.byte_size rescue nil)
+                              formatted_size = (bytes && bytes > 0) ? number_to_human_size(bytes) : nil
+                              uploaded_date = (file.created_at || file.blob&.created_at)&.strftime('%b %d, %Y')
+                              view_url = rails_blob_path(file, disposition: "inline")
+                              download_url = rails_blob_path(file, disposition: "attachment")
+                            %>
+                            <% if content_type.start_with?("image/") %>
                                 <div class="col-12 mb-3">
                                   <div class="d-flex flex-column align-items-center justify-content-center bg-light border rounded p-2" style="min-height: 200px;">
                                     <%= link_to url_for(file), target: "_blank", class: "d-block text-center w-100 mb-2" do %>
                                       <img src="<%= url_for(file) %>" class="img-fluid rounded shadow-sm" style="max-height: 70vh; object-fit: contain;" alt="Attachment" loading="lazy">
                                     <% end %>
                                     <div class="w-100 d-flex align-items-center justify-content-between pt-2 border-top gap-2" style="min-width: 0;">
-                                      <span class="text-truncate small text-muted text-start flex-grow-1 me-2" style="min-width: 0;" title="<%= filename %>">
-                                        <%= filename %>
-                                      </span>
-                                      <%= link_to "View Image", url_for(file), target: "_blank", class: "btn btn-sm btn-outline-secondary flex-shrink-0" %>
+                                      <div class="min-w-0 flex-grow-1 text-start me-2" style="min-width: 0;">
+                                        <div class="text-truncate small text-muted text-start flex-grow-1 me-2" style="min-width: 0;" title="<%= filename %>">
+                                          <%= filename %>
+                                        </div>
+                                        <div class="extra-small text-muted mt-0.5">
+                                          <%= [(content_type.split('/').last.upcase.presence || 'IMAGE'), formatted_size, uploaded_date].reject(&:blank?).join(' • ') %>
+                                        </div>
+                                      </div>
+                                      <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                        <%= link_to url_for(file), target: "_blank", class: "btn btn-sm btn-primary rounded-pill px-2.5 py-1 extra-small fw-medium text-nowrap", title: "View #{filename}" do %>
+                                          <i class="fa-solid fa-eye me-1"></i><span>View</span>
+                                        <% end %>
+                                        <%= link_to download_url, target: "_blank", download: filename, class: "btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 extra-small fw-medium text-nowrap", title: "Download #{filename}" do %>
+                                          <i class="fa-solid fa-download me-1"></i><span>Download</span>
+                                        <% end %>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
-                            <% elsif file.content_type == "application/pdf" %>
-                                <div class="col-md-6 mb-3">
-                                  <div class="d-flex align-items-center justify-content-between border p-2 rounded gap-2" style="min-width: 0;">
-                                    <span class="text-truncate small me-2 flex-grow-1" style="min-width: 0;" title="<%= filename %>"><%= filename %></span>
-                                    <%= link_to "View PDF", rails_blob_path(file, disposition: "inline"), target: "_blank", class: "btn btn-sm btn-outline-secondary flex-shrink-0" %>
-                                  </div>
-                                </div>
                             <% else %>
-                                <div class="col-md-6 mb-3">
-                                  <div class="d-flex align-items-center justify-content-between border p-2 rounded gap-2" style="min-width: 0;">
-                                    <span class="text-truncate small me-2 flex-grow-1" style="min-width: 0;" title="<%= filename %>"><%= filename %></span>
-                                    <%= link_to "Download", url_for(file), class: "btn btn-sm btn-outline-secondary flex-shrink-0", target: "_blank" %>
+                                <% 
+                                  is_pdf = content_type == 'application/pdf' || filename.downcase.end_with?('.pdf')
+                                  file_type = is_pdf ? 'PDF' : (filename.split('.').last.upcase.presence || 'FILE')
+                                  icon_class = is_pdf ? 'fa-file-pdf' : 'fa-file-lines'
+                                  icon_bg_class = is_pdf ? 'bg-danger-subtle text-danger' : 'bg-secondary-subtle text-secondary'
+                                  meta_text = [file_type, formatted_size, uploaded_date].reject(&:blank?).join(' • ')
+                                %>
+                                <div class="attachment-card p-3 rounded-3 border d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3">
+                                  <div class="d-flex align-items-center gap-3 min-w-0 flex-grow-1" style="min-width: 0;">
+                                    <div class="attachment-icon-box <%= icon_bg_class %> rounded-3 d-flex align-items-center justify-content-center flex-shrink-0">
+                                      <i class="fa-solid <%= icon_class %> fs-4"></i>
+                                    </div>
+                                    <div class="min-w-0 flex-grow-1 text-start" style="min-width: 0;">
+                                      <div class="attachment-filename fw-semibold text-truncate text-main" title="<%= filename %>">
+                                        <%= filename %>
+                                      </div>
+                                      <div class="attachment-meta small text-muted mt-0.5">
+                                        <%= meta_text %>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="attachment-actions d-flex align-items-center gap-2 flex-shrink-0 ms-auto ms-sm-0">
+                                    <%= link_to view_url, target: "_blank", class: "btn btn-sm btn-primary d-inline-flex align-items-center px-3 py-1.5 rounded-pill fw-medium text-nowrap", title: "View #{filename}" do %>
+                                      <i class="fa-solid fa-eye me-1.5"></i><span>View</span>
+                                    <% end %>
+                                    <%= link_to download_url, target: "_blank", download: filename, class: "btn btn-sm btn-outline-secondary d-inline-flex align-items-center px-3 py-1.5 rounded-pill fw-medium text-nowrap", title: "Download #{filename}" do %>
+                                      <i class="fa-solid fa-download me-1.5"></i><span>Download</span>
+                                    <% end %>
                                   </div>
                                 </div>
                             <% end %>

@@ -58,6 +58,89 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_match /max-height: 70vh/, attachment_html
   end
 
+  test "datatable returns redesigned attachment modal and file cards for PDF attachments" do
+    invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "sent"
+    )
+
+    invoice.attachments.attach(
+      io: StringIO.new("%PDF-1.4 mock content"),
+      filename: "invoice-2025-0036.pdf",
+      content_type: "application/pdf"
+    )
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", format: :json }
+
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    assert_not_empty data
+
+    attachment_html = data.first["attachments"]
+
+    # Modal container and structure
+    assert_match /attachment-modal/, attachment_html
+    assert_match /modal-dialog-centered modal-md/, attachment_html
+    assert_no_match /modal-dialog-scrollable/, attachment_html
+    assert_match /attachment-list/, attachment_html
+    assert_match /btn-close/, attachment_html
+
+    # File Card presentation
+    assert_match /attachment-card/, attachment_html
+    assert_match /attachment-icon-box/, attachment_html
+    assert_match /fa-file-pdf/, attachment_html
+    assert_match /invoice-2025-0036.pdf/, attachment_html
+    assert_match /title="invoice-2025-0036.pdf"/, attachment_html
+    assert_match /attachment-filename fw-semibold text-truncate/, attachment_html
+
+    # Secondary metadata
+    assert_match /attachment-meta/, attachment_html
+    assert_match /PDF/, attachment_html
+
+    # Action buttons: View (primary) and Download (secondary)
+    assert_match /btn-primary.*View/, attachment_html
+    assert_match /fa-eye/, attachment_html
+    assert_match /btn-outline-secondary.*Download/, attachment_html
+    assert_match /fa-download/, attachment_html
+    assert_match /disposition=inline/, attachment_html
+    assert_match /disposition=attachment/, attachment_html
+    assert_match /download="invoice-2025-0036.pdf"/, attachment_html
+  end
+
+  test "datatable returns multiple attachment cards when invoice has multiple attachments" do
+    invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "sent"
+    )
+
+    invoice.attachments.attach(
+      io: StringIO.new("%PDF-1.4 mock content 1"),
+      filename: "invoice-2025-0036.pdf",
+      content_type: "application/pdf"
+    )
+    invoice.attachments.attach(
+      io: StringIO.new("%PDF-1.4 mock content 2"),
+      filename: "supporting-document.pdf",
+      content_type: "application/pdf"
+    )
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", format: :json }
+
+    assert_response :success
+    data = JSON.parse(response.body)["data"]
+    attachment_html = data.first["attachments"]
+
+    assert_match /2 Files/, attachment_html
+    assert_match /invoice-2025-0036.pdf/, attachment_html
+    assert_match /supporting-document.pdf/, attachment_html
+    assert_equal 2, attachment_html.scan(/attachment-card/).count
+  end
+
+
   test "datatable filters records by status column parameter" do
     Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", status: "draft")
     Invoice.create!(user: @user, invoice_type: "sale", invoice_category: "standard", status: "paid")
