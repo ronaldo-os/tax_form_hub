@@ -27,6 +27,7 @@ class User < ApplicationRecord
   has_many :unread_notifications, -> { unread }, class_name: "Notification", foreign_key: :recipient_id
   has_many :activities, dependent: :nullify
   has_one_attached :profile_image
+  include ProfileImageValidatable
 
   # Enums
   enum :role, {

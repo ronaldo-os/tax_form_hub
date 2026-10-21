@@ -1,6 +1,7 @@
 @import "../responsive.css";
 @import "../dashboard.css";
 @import "../notifications.css";
+@import "../avatar_cropper.css";
 
 :root,
 [data-theme="light"] {

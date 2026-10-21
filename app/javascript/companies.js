@@ -1,3 +1,5 @@
+import { handleAvatarSelection } from './avatar_cropper';
+
 function initCompanyPage() {
     if (!window.location.pathname.includes("/companies")) {
         return;
@@ -45,8 +47,8 @@ function initCompanyPage() {
     const $imagePreview = $('#image-preview');
     const $fileInput = $('#profile_image_input');
     const $submitBtn = $('#update-company-btn');
-    const defaultImageSrc = $imagePreview.attr('src');
     const $imagePreviewWrapper = $('#image-preview-wrapper');
+    const $avatarError = $('#avatar_error_msg');
 
     if ($imagePreviewWrapper.length > 0) {
         $imagePreviewWrapper.off('click.companyImg').on('click.companyImg', function (e) {
@@ -58,34 +60,33 @@ function initCompanyPage() {
     }
 
     if ($fileInput.length > 0) {
-        $fileInput.off('change.companyInput').on('change.companyInput', function (e) {
-            const file = e.target.files && e.target.files[0];
-            if (!file) {
-                return;
-            }
+        // Prevent the wrapper's click handler from re-triggering when the input itself is clicked
+        $fileInput.off('click.companyInput').on('click.companyInput', function (e) {
+            e.stopPropagation();
+        });
 
-            if (!file.type.startsWith('image/')) {
-                alert('Please select a valid image file.');
-                $submitBtn.prop('disabled', true);
-                $imagePreview.css('border', '2px solid red');
-                e.target.value = '';
-                return;
-            }
-
-            $submitBtn.prop('disabled', false);
-            $imagePreview.css('border', '');
-
-            const reader = new FileReader();
-            reader.onload = function (loadEvent) {
-                $imagePreview.attr('src', loadEvent.target.result).css('display', 'block').show();
-                $('#initials-preview').attr('style', 'display: none !important');
-            };
-            reader.onerror = function () {
-                alert('Failed to read the file. Please try another one.');
-                $imagePreview.attr('src', defaultImageSrc);
-                e.target.value = '';
-            };
-            reader.readAsDataURL(file);
+        // Validate -> crop/position modal -> preview. The cropped file stays in the
+        // file input and is only saved when the company form is submitted.
+        $fileInput.off('change.companyInput').on('change.companyInput', function () {
+            handleAvatarSelection(this, {
+                title: 'Adjust Company Logo',
+                subtitle: 'Drag to reposition. Scroll, pinch, or use the slider to zoom. The circle shows exactly what will be visible.',
+                applyLabel: 'Apply',
+                onError: function (message) {
+                    if ($avatarError.length) {
+                        $avatarError.text(message).show();
+                    } else if (typeof showFlashMessage === 'function') {
+                        showFlashMessage(message, 'danger');
+                    }
+                },
+                onApply: function (file, previewUrl) {
+                    $avatarError.text('').hide();
+                    $submitBtn.prop('disabled', false);
+                    $imagePreview.css('border', '');
+                    $imagePreview.attr('src', previewUrl).css('display', 'block').show();
+                    $('#initials-preview').attr('style', 'display: none !important');
+                }
+            });
         });
     }
 

@@ -1,3 +1,5 @@
+import { handleAvatarSelection, clearAvatarSelection } from './avatar_cropper';
+
 (function() {
     let initialProfileState = {
         email: '',
@@ -8,41 +10,34 @@
     window._profileAvatarDirty = false;
     window.isProfileSubmitting = false;
 
-    // We use a shared function to handle the preview logic
-    function handleImagePreview(file, $previewElement, $submitBtn) {
+    // Validates the selected image, opens the shared crop/position modal and,
+    // on Apply, shows the cropped result as the new avatar preview. The cropped
+    // file stays in the form's file input and is only saved on "Save Changes".
+    function handleImageSelection(input) {
         const $errorMsg = $('#avatar_error_msg');
-        if (!file) {
-            window._profileAvatarDirty = false;
-            return;
-        }
+        const $previewElement = $('#image-preview');
+        const $submitBtn = $('#update-profile-btn');
 
-        if (!file.type.startsWith('image/')) {
-            if ($errorMsg.length) {
-                $errorMsg.text("Please select a valid image file.").show();
+        handleAvatarSelection(input, {
+            title: 'Adjust Profile Photo',
+            subtitle: 'Drag to reposition. Scroll, pinch, or use the slider to zoom. The circle shows exactly what will be visible.',
+            applyLabel: 'Apply',
+            onError: function (message) {
+                if ($errorMsg.length) {
+                    $errorMsg.stop(true, true).text(message).show();
+                }
+            },
+            onApply: function (file, previewUrl) {
+                if ($errorMsg.length) {
+                    $errorMsg.text('').hide();
+                }
+                $previewElement.attr('src', previewUrl).attr('style', '').css('border', '').show();
+                $('#initials-preview').attr('style', 'display: none !important');
+                if ($submitBtn.length) $submitBtn.prop('disabled', false);
+                $('.text-danger.small').not('#avatar_error_msg').fadeOut(500);
+                window._profileAvatarDirty = true;
             }
-            if ($submitBtn) $submitBtn.prop('disabled', true);
-            $previewElement.css('border', '2px solid red');
-            const fileInput = document.getElementById('profile_image_input');
-            if (fileInput) fileInput.value = '';
-            window._profileAvatarDirty = false;
-            return;
-        }
-
-        if ($errorMsg.length) {
-            $errorMsg.text('').hide();
-        }
-        $previewElement.css('border', '');
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            $previewElement.attr('src', e.target.result).css('display', 'block').show();
-            $previewElement.attr('style', '');
-            $('#initials-preview').attr('style', 'display: none !important');
-            if ($submitBtn) $submitBtn.prop('disabled', false);
-            $('.text-danger.small').not('#avatar_error_msg').fadeOut(500);
-            window._profileAvatarDirty = true;
-        };
-        reader.readAsDataURL(file);
+        });
     }
 
     function initProfileBaseline() {
@@ -62,7 +57,7 @@
         const fileInput = document.getElementById('profile_image_input');
 
         if (fileInput) {
-            fileInput.value = '';
+            clearAvatarSelection(fileInput);
         }
 
         const initialEmail = (
@@ -215,10 +210,10 @@
             delete currentPasswordInput.dataset.userModified;
         }
 
-        // 4. Reset file input
+        // 4. Reset file input (and any applied crop selection)
         const fileInput = document.getElementById('profile_image_input');
         if (fileInput) {
-            fileInput.value = '';
+            clearAvatarSelection(fileInput);
         }
 
         // 5. Reset image preview & initials display
@@ -279,12 +274,9 @@
             e.stopPropagation();
         });
 
-        // Handle image selection
-        doc.off('change.profile', '#profile_image_input').on('change.profile', '#profile_image_input', function (e) {
-            const file = e.target.files ? e.target.files[0] : null;
-            const $imagePreview = $('#image-preview');
-            const $submitBtn = $('#update-profile-btn');
-            handleImagePreview(file, $imagePreview, $submitBtn);
+        // Handle image selection -> crop/position modal before preview
+        doc.off('change.profile', '#profile_image_input').on('change.profile', '#profile_image_input', function () {
+            handleImageSelection(this);
         });
 
         // Clear errors when focusing/typing in any input
