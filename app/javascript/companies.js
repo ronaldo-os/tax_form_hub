@@ -46,7 +46,7 @@ function initCompanyPage() {
 
     const $imagePreview = $('#image-preview');
     const $fileInput = $('#profile_image_input');
-    const $submitBtn = $('#update-company-btn');
+    const $submitBtn = $('.update-company-btn, #update-company-btn, #update-company-btn-top');
     const $imagePreviewWrapper = $('#image-preview-wrapper');
     const $avatarError = $('#avatar_error_msg');
 
@@ -219,8 +219,8 @@ if (document.readyState !== "loading") {
 // Ensure form is properly functional after being restored from cache
 document.addEventListener("turbo:render", function() {
   if (window.location.pathname.includes("/companies")) {
-    const $submitBtn = $('#update-company-btn');
-    if ($submitBtn) {
+    const $submitBtn = $('.update-company-btn, #update-company-btn, #update-company-btn-top');
+    if ($submitBtn.length) {
       $submitBtn.prop('disabled', false);
     }
     

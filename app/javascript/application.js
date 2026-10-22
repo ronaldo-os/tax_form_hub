@@ -970,11 +970,11 @@ document.addEventListener("turbo:load", () => {
     if (companyForm) {
       // Remove any cached form data
       companyForm.reset();
-      // Re-enable submit button
-      const submitBtn = document.getElementById('update-company-btn');
-      if (submitBtn) {
-        submitBtn.disabled = false;
-      }
+      // Re-enable submit buttons
+      const submitBtns = companyForm.querySelectorAll('.update-company-btn, #update-company-btn');
+      submitBtns.forEach(function(btn) {
+        btn.disabled = false;
+      });
     }
   }
 });

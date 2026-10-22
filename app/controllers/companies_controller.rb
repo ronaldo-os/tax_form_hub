@@ -3,8 +3,8 @@ class CompaniesController < ApplicationController
 
   before_action :set_company, only: [ :update, :show ]
   before_action :authorize_show, only: [ :show ]
-  before_action :disable_cache_headers, only: [:index, :show]
-  before_action -> { store_back_url(:company_back_url) }, only: [:index]
+  before_action :disable_cache_headers, only: [ :index, :show, :edit ]
+  before_action -> { store_back_url(:company_back_url) }, only: [ :index ]
 
   def index
     @companies = current_user.companies.with_attached_profile_image
@@ -12,22 +12,38 @@ class CompaniesController < ApplicationController
       redirect_to new_company_path, notice: "Please create your first company."
       return
     end
+
+    if params[:id].present?
+      target_company = Company.find_by(slug: params[:id])
+      if target_company && current_user.companies.exclude?(target_company)
+        redirect_to (current_user.connected_companies.include?(target_company) ? company_path(target_company) : companies_path), alert: "Not authorized. Only the company owner can edit this profile."
+        return
+      end
+    end
+
     # Prioritize company matching the id param, or fallback to user's first company
     @company = if params[:id]
                  @companies.find_by(slug: params[:id]) || @companies.first
-               else
+    else
                  @companies.first
-               end
+    end
 
     if params[:flash_alert] == "visitor_recommendation"
       flash.now[:alert] = "You are currently in visitor view and can't write a recommendation for your own company"
     end
   end
 
-
-
   def show
     @recommendations = @company.recommendations.includes(:user).order(created_at: :desc)
+  end
+
+  def edit
+    target_company = Company.find_by(slug: params[:id]) || Company.find_by(id: params[:id])
+    if target_company && current_user.companies.include?(target_company)
+      redirect_to companies_path(id: target_company.slug)
+    else
+      redirect_to (target_company && current_user.connected_companies.include?(target_company) ? company_path(target_company) : companies_path), alert: "Not authorized. Only the company owner can edit this profile."
+    end
   end
 
   def new
@@ -46,8 +62,8 @@ class CompaniesController < ApplicationController
   end
 
   def update
-    unless @company.user == current_user || current_user.superadmin?
-      return redirect_to companies_path, alert: "Not authorized."
+    unless @company.user == current_user
+      return redirect_to (current_user.connected_companies.include?(@company) ? company_path(@company) : companies_path), alert: "Not authorized. Only the company owner can edit this profile."
     end
 
     if @company.update(company_params)
@@ -59,7 +75,15 @@ class CompaniesController < ApplicationController
   end
 
   def destroy
-    @company = Company.find(params[:id])
+    @company = Company.find_by(slug: params[:id]) || Company.find_by(id: params[:id])
+    unless @company
+      return redirect_to companies_path, alert: "Company not found."
+    end
+
+    unless @company.user == current_user
+      return redirect_to companies_path, alert: "Not authorized. Only the company owner can delete this company."
+    end
+
     @company.destroy
     redirect_to companies_path, notice: "Company deleted successfully.", status: :see_other
   end
