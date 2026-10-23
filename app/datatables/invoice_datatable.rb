@@ -276,16 +276,10 @@ class InvoiceDatatable < BaseDatatable
         content_tag(:div, class: 'modal-dialog modal-dialog-centered modal-md') do
           content_tag(:div, class: 'modal-content shadow-lg border-0 rounded-4 overflow-hidden') do
             header = content_tag(:div, class: 'modal-header border-0 pb-3 pt-4 px-4 d-flex align-items-center justify-content-between') do
-              title_wrap = content_tag(:div, class: 'd-flex align-items-center gap-2.5') do
-                icon_badge = content_tag(:div, class: 'attachment-modal-header-icon rounded-3 d-flex align-items-center justify-content-center text-primary flex-shrink-0') do
-                  content_tag(:i, '', class: 'fa-solid fa-paperclip')
-                end
-                text_group = content_tag(:div) do
-                  title_el = content_tag(:h5, 'Attachments', class: 'modal-title fw-bold text-main fs-5 mb-0', id: "attachmentModalLabel-#{invoice.id}")
-                  subtitle_el = content_tag(:div, "#{file_count} #{file_count == 1 ? 'file' : 'files'} attached to this invoice", class: 'text-muted extra-small mt-0.5')
-                  title_el + subtitle_el
-                end
-                icon_badge + text_group
+              title_wrap = content_tag(:div) do
+                title_el = content_tag(:h5, 'Attachments', class: 'modal-title fw-bold text-main fs-5 mb-0', id: "attachmentModalLabel-#{invoice.id}")
+                subtitle_el = content_tag(:div, "#{file_count} #{file_count == 1 ? 'file' : 'files'} attached to this invoice", class: 'text-muted extra-small mt-0.5')
+                title_el + subtitle_el
               end
               close_btn = content_tag(:button, '', type: 'button', class: 'btn-close', data: { 'bs-dismiss': 'modal' }, 'aria-label': 'Close')
               title_wrap + close_btn

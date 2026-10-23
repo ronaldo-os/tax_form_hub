@@ -47,14 +47,9 @@
                 <div class="modal-dialog modal-dialog-centered modal-md">
                     <div class="modal-content shadow-lg border-0 rounded-4 overflow-hidden">
                     <div class="modal-header border-0 pb-3 pt-4 px-4 d-flex align-items-center justify-content-between">
-                        <div class="d-flex align-items-center gap-2.5">
-                            <div class="attachment-modal-header-icon rounded-3 d-flex align-items-center justify-content-center text-primary flex-shrink-0">
-                                <i class="fa-solid fa-paperclip"></i>
-                            </div>
-                            <div>
-                                <h5 class="modal-title fw-bold text-main fs-5 mb-0" id="attachmentModalLabel-<%= invoice.id %>">Attachments</h5>
-                                <div class="text-muted extra-small mt-0.5"><%= invoice.attachments.count %> <%= invoice.attachments.count == 1 ? 'file' : 'files' %> attached to this invoice</div>
-                            </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-main fs-5 mb-0" id="attachmentModalLabel-<%= invoice.id %>">Attachments</h5>
+                            <div class="text-muted extra-small mt-0.5"><%= invoice.attachments.count %> <%= invoice.attachments.count == 1 ? 'file' : 'files' %> attached to this invoice</div>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>

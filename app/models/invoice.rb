@@ -20,6 +20,7 @@ class Invoice < ApplicationRecord
   has_many :activities, as: :trackable, dependent: :destroy
   has_many_attached :attachments
 
+  attr_accessor :skip_tax_submissions_sync
   after_update :sync_archived_status, if: :saved_change_to_archived?
 
   # Explicitly declare attribute types for enums to prevent 'Undeclared attribute type' errors in some contexts
@@ -1047,6 +1048,8 @@ class Invoice < ApplicationRecord
   end
 
   def sync_archived_status
+    return if skip_tax_submissions_sync
+
     tax_submissions.each do |submission|
       submission.update(archived: archived) if submission.archived != archived
     end

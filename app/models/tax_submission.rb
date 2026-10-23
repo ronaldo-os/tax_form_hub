@@ -17,7 +17,19 @@ class TaxSubmission < ApplicationRecord
   def sync_archived_status
     return unless invoice
 
-    invoice.update(archived: archived) if invoice.archived != archived
+    if archived?
+      # Only archive the invoice if ALL of its tax submissions are archived
+      if invoice.tax_submissions.where(archived: [false, nil]).none?
+        invoice.skip_tax_submissions_sync = true if invoice.respond_to?(:skip_tax_submissions_sync=)
+        invoice.update_columns(archived: true, updated_at: Time.current)
+      end
+    else
+      # If at least one tax submission is unarchived, the invoice should be active
+      if invoice.archived?
+        invoice.skip_tax_submissions_sync = true if invoice.respond_to?(:skip_tax_submissions_sync=)
+        invoice.update_columns(archived: false, updated_at: Time.current)
+      end
+    end
   end
 
   def set_transaction_id

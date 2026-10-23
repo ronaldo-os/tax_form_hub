@@ -184,6 +184,39 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_not invoice2.reload.archived?, "Associated invoice 2 should be unarchived"
   end
 
+  test "bulk archive does not archive unselected tax submissions belonging to the same invoice" do
+    sub1 = TaxSubmission.create!(company: @company, invoice: @invoice, email: @user.email, details: "Sub 1", archived: false)
+    sub2 = TaxSubmission.create!(company: @company, invoice: @invoice, email: @user.email, details: "Sub 2", archived: false)
+
+    post bulk_action_tax_submissions_url, params: {
+      bulk_action: "archive",
+      tax_submission_ids: [sub1.id]
+    }
+
+    assert_response :redirect
+    assert_equal "Successfully archived 1 submission.", flash[:notice]
+    assert sub1.reload.archived?, "Selected sub 1 should be archived"
+    assert_not sub2.reload.archived?, "Unselected sub 2 should NOT be archived"
+    assert_not @invoice.reload.archived?, "Invoice should remain active while sub 2 is active"
+  end
+
+  test "bulk unarchive does not unarchive unselected tax submissions belonging to the same invoice" do
+    sub1 = TaxSubmission.create!(company: @company, invoice: @invoice, email: @user.email, details: "Sub 1", archived: true)
+    sub2 = TaxSubmission.create!(company: @company, invoice: @invoice, email: @user.email, details: "Sub 2", archived: true)
+    @invoice.update_columns(archived: true)
+
+    post bulk_action_tax_submissions_url, params: {
+      bulk_action: "unarchive",
+      tax_submission_ids: [sub1.id]
+    }
+
+    assert_response :redirect
+    assert_equal "Successfully unarchived 1 submission.", flash[:notice]
+    assert_not sub1.reload.archived?, "Selected sub 1 should be unarchived"
+    assert sub2.reload.archived?, "Unselected sub 2 should remain archived"
+    assert_not @invoice.reload.archived?, "Invoice should be unarchived since sub 1 is active"
+  end
+
   test "bulk delete deletes multiple pending tax submissions" do
     sub1 = TaxSubmission.create!(company: @company, invoice: @invoice, email: @user.email, details: "Sub 1")
     invoice2 = Invoice.create!(user: @user, recipient_company: @company, invoice_type: "sale", invoice_category: "standard", status: "paid")
