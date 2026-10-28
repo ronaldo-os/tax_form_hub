@@ -6,14 +6,35 @@ class PriceAdjustmentsController < ApplicationController
   def show
     @invoices = @price_adjustment.recurring_sub_invoices.order(issue_date: :desc).limit(10)
     
-    @adj = @price_adjustment.recurring_price_adjustments.first || {}
+    first_recurring_idx = (@price_adjustment.price_adjustments || []).index do |adj|
+      next false unless adj.is_a?(Hash)
+      freq = adj['frequency'] || adj[:frequency] || (adj['unit'] == 'monthly_charge' || adj[:unit] == 'monthly_charge' ? 'monthly' : nil)
+      %w[monthly annually yearly].include?(freq.to_s)
+    end
+
+    @item_index = if params[:item_index].present?
+                    params[:item_index].to_i
+                  elsif params[:adjustment_index].present?
+                    params[:adjustment_index].to_i
+                  else
+                    first_recurring_idx || 0
+                  end
+
+    @adj = if @item_index && @price_adjustment.price_adjustments.is_a?(Array)
+             @price_adjustment.price_adjustments[@item_index] || @price_adjustment.recurring_price_adjustments.first || {}
+           else
+             @price_adjustment.recurring_price_adjustments.first || {}
+           end
+
     @cycle = case @adj['frequency']
              when 'annually', 'yearly' then 'annual'
              else 'monthly'
              end
-             
+
+    @wrapper = PriceAdjustmentItemWrapper.new(@price_adjustment, @adj, @item_index)
+
     start_date = @adj['charge_start_date']
-    if start_date.present? && @price_adjustment.subscription_active?
+    if start_date.present? && @wrapper.subscription_active?
       start_d = Date.parse(start_date) rescue nil
       if start_d
         current_sequence = @price_adjustment.recurring_sub_invoices.count + 1

@@ -28,10 +28,13 @@
           <div class="row g-4">
             <div class="col-sm-6 col-md-4">
               <div class="text-muted small fw-semibold text-uppercase mb-1">Status</div>
-              <% is_active = @price_adjustment.subscription_active? %>
-              <% is_cancelled = @price_adjustment.subscription_cancelled? %>
-              <% status_class = is_active ? 'bg-success' : (is_cancelled ? 'bg-danger' : 'bg-secondary') %>
-              <% status_text = is_active ? 'Active' : (is_cancelled ? 'Cancelled' : 'Finished') %>
+              <% 
+                wrapper = @wrapper || PriceAdjustmentItemWrapper.new(@price_adjustment, @adj, @item_index || 0)
+                is_active = wrapper.subscription_active?
+                is_cancelled = wrapper.subscription_cancelled?
+                status_class = is_active ? 'bg-success' : (is_cancelled ? 'bg-danger' : 'bg-secondary')
+                status_text = is_active ? 'Active' : (is_cancelled ? 'Cancelled' : 'Finished')
+              %>
               <span class="badge <%= status_class %> fs-6 px-3 py-2">
                 <%= status_text %>
               </span>

@@ -100,6 +100,13 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
         });
     }
 
+    function getCheckboxKey(cb) {
+        const $cb = $(cb);
+        const subId = $cb.val();
+        const itemIdx = $cb.data('item-index');
+        return (itemIdx !== undefined && itemIdx !== null && itemIdx !== '') ? `${subId}:${itemIdx}` : subId.toString();
+    }
+
     function updateBulkBar() {
         const count = selectionMap.size;
         const countSpan = bulkBar.querySelector('.selected-count');
@@ -118,7 +125,7 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
         $(allRowNodes).each(function () {
             const $cb = $(this).find('.subscription-row-checkbox');
             if ($cb.length) {
-                const subId = $cb.val();
+                const subId = getCheckboxKey($cb);
                 const isSelected = selectionMap.has(subId);
                 $cb.prop('checked', isSelected);
                 $(this).toggleClass('row-selected table-active', isSelected);
@@ -133,7 +140,7 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
             const $cb = $(this).find('.subscription-row-checkbox');
             if ($cb.length) {
                 activeTotal++;
-                if (selectionMap.has($cb.val())) {
+                if (selectionMap.has(getCheckboxKey($cb))) {
                     activeSelected++;
                 }
             }
@@ -161,7 +168,7 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
         $(activeRows).each(function () {
             const $cb = $(this).find('.subscription-row-checkbox');
             if ($cb.length) {
-                const subId = $cb.val();
+                const subId = getCheckboxKey($cb);
                 if (isChecked) {
                     selectionMap.set(subId, { id: subId, allowedActions: parseAllowedActions($cb.get(0)) });
                 } else {
@@ -190,7 +197,7 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
 
     // Row checkbox change (delegated to table node for dynamic / paginated rows)
     $table.off('change.subscriptionCheckbox', '.subscription-row-checkbox').on('change.subscriptionCheckbox', '.subscription-row-checkbox', function () {
-        const subId = this.value;
+        const subId = getCheckboxKey(this);
         if (this.checked) {
             selectionMap.set(subId, { id: subId, allowedActions: parseAllowedActions(this) });
         } else {
@@ -253,6 +260,79 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
         });
 
         bulkForm.addEventListener('turbo:submit-end', function () {
+            clearSelections();
+        });
+    }
+
+    // Modal and form submission for bulk cancellation
+    const cancelModal = document.getElementById(`cancelSubscriptionModal-bulk-${effectiveTableId}`);
+    const bulkCancelForm = document.getElementById(`bulk_cancel_form_${effectiveTableId}`);
+
+    if (cancelModal && !cancelModal.dataset.bulkBound) {
+        cancelModal.dataset.bulkBound = 'true';
+        cancelModal.addEventListener('show.bs.modal', function (e) {
+            const count = selectionMap.size;
+            if (count === 0) {
+                e.preventDefault();
+                return;
+            }
+            const countEl = cancelModal.querySelector('.bulk-cancel-count');
+            if (countEl) countEl.textContent = count.toString();
+
+            const isSingle = count === 1;
+            const singleType = cancelModal.dataset.itemType || 'Subscription';
+            const pluralType = cancelModal.dataset.itemTypePlural || `${singleType}s`;
+            const lowerSingleType = singleType.toLowerCase();
+            const lowerPluralType = pluralType.toLowerCase();
+
+            const titleEl = cancelModal.querySelector('.bulk-cancel-title-type');
+            if (titleEl) titleEl.textContent = isSingle ? singleType : pluralType;
+
+            const bodyTypeEl = cancelModal.querySelector('.bulk-cancel-body-type');
+            if (bodyTypeEl) bodyTypeEl.textContent = isSingle ? lowerSingleType : lowerPluralType;
+
+            const bodyTargetEl = cancelModal.querySelector('.bulk-cancel-body-type-target');
+            if (bodyTargetEl) bodyTargetEl.textContent = isSingle ? `This ${lowerSingleType}` : `The ${lowerPluralType}`;
+
+            const keepBtn = cancelModal.querySelector('.bulk-cancel-keep-btn');
+            if (keepBtn) keepBtn.textContent = `Keep ${isSingle ? singleType : pluralType}`;
+
+            const submitLabel = cancelModal.querySelector('.bulk-cancel-submit-label');
+            if (submitLabel) submitLabel.textContent = isSingle ? singleType : pluralType;
+        });
+    }
+
+    if (bulkCancelForm && !bulkCancelForm.dataset.bulkFormBound) {
+        bulkCancelForm.dataset.bulkFormBound = 'true';
+        bulkCancelForm.addEventListener('submit', function (e) {
+            // Remove previously appended hidden inputs
+            bulkCancelForm.querySelectorAll('input[name="subscription_ids[]"]').forEach((el) => el.remove());
+
+            if (selectionMap.size === 0) {
+                e.preventDefault();
+                return;
+            }
+
+            selectionMap.forEach((entry, subId) => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.setAttribute('type', 'hidden');
+                hiddenInput.setAttribute('name', 'subscription_ids[]');
+                hiddenInput.setAttribute('value', subId.toString());
+                bulkCancelForm.appendChild(hiddenInput);
+            });
+
+            // Dismiss modal before submitting if bootstrap is available
+            if (cancelModal && window.bootstrap && window.bootstrap.Modal) {
+                const modalInstance = window.bootstrap.Modal.getInstance(cancelModal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+            }
+
+            clearSelections();
+        });
+
+        bulkCancelForm.addEventListener('turbo:submit-end', function () {
             clearSelections();
         });
     }

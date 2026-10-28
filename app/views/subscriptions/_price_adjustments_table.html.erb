@@ -1,6 +1,24 @@
 <% is_purchase = local_assigns.fetch(:is_purchase, false) %>
 <% table_id = local_assigns[:table_id] || (is_purchase ? "purchasesPriceAdjustmentsTable" : "salesPriceAdjustmentsTable") %>
 <% can_bulk_cancel = local_assigns.fetch(:can_bulk_cancel, false) %>
+<% 
+  normalized_items = []
+  subscriptions.each do |record|
+    if record.respond_to?(:adjustment)
+      normalized_items << record
+    elsif record.respond_to?(:price_adjustments) && record.price_adjustments.is_a?(Array)
+      record.price_adjustments.each_with_index do |adj, idx|
+        next unless adj.is_a?(Hash)
+        freq = adj['frequency'] || adj[:frequency] || (adj['unit'] == 'monthly_charge' || adj[:unit] == 'monthly_charge' ? 'monthly' : nil)
+        if %w[monthly annually yearly].include?(freq.to_s)
+          normalized_items << PriceAdjustmentItemWrapper.new(record, adj, idx)
+        end
+      end
+    else
+      normalized_items << record
+    end
+  end
+%>
 
 <% if can_bulk_cancel %>
   <!-- Bulk Action Bar -->
@@ -22,7 +40,7 @@
           </div>
 
           <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end align-items-center">
-            <button type="submit" name="bulk_action" value="cancel" class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-action-btn" data-turbo-confirm="Are you sure you want to cancel the selected price adjustments?">
+            <button type="button" name="bulk_action" value="cancel" class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-action-btn" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-bulk-<%= table_id %>">
               <i class="fa-solid fa-ban"></i>
               <span>Cancel Price Adjustment</span>
             </button>
@@ -35,6 +53,8 @@
       <% end %>
     </div>
   </div>
+
+  <%= render "bulk_cancel_subscription_modal", table_id: table_id, is_purchase: is_purchase, item_type: "Price Adjustment" %>
 <% end %>
 
 <div class="table-responsive overflow-visible">
@@ -59,9 +79,23 @@
         </tr>
       </thead>
       <tbody>
-        <% subscriptions.each do |invoice| %>
+        <% normalized_items.each do |item| %>
           <% 
-            adj = invoice.recurring_price_adjustments.first || {}
+            if item.respond_to?(:adjustment)
+              invoice = item.invoice
+              adj = item.adjustment
+              item_index = item.index
+              is_active = item.subscription_active?
+              is_cancelled = item.subscription_cancelled?
+              is_finished = item.subscription_finished?
+            else
+              invoice = item
+              adj = invoice.recurring_price_adjustments.first || {}
+              item_index = 0
+              is_active = invoice.subscription_active?
+              is_cancelled = invoice.subscription_cancelled?
+              is_finished = invoice.subscription_finished?
+            end
             cycle = case adj['frequency']
                     when 'annually', 'yearly' then 'annual'
                     else 'monthly'
@@ -75,7 +109,7 @@
             amount_display = adj['unit'] == '%' ? "#{amount_val}%" : number_to_currency(amount_val, unit: unit_val)
             counterparty_name = is_purchase ? (invoice.sale_from&.name || "Unknown Supplier") : (invoice.recipient_company&.name || "Unknown Company")
           %>
-          <tr data-subscription-id="<%= invoice.id %>">
+          <tr data-subscription-id="<%= invoice.id %>" data-item-index="<%= item_index %>">
             <% if can_bulk_cancel %>
               <td class="text-center">
                 <div class="form-check d-flex justify-content-center mb-0">
@@ -84,13 +118,14 @@
                          name="subscription_ids[]"
                          value="<%= invoice.id %>"
                          data-table-id="<%= table_id %>"
-                         data-allowed-actions="<%= allowed_subscription_bulk_actions(invoice).join(',') %>"
+                         data-item-index="<%= item_index %>"
+                         data-allowed-actions="<%= allowed_subscription_bulk_actions(item).join(',') %>"
                          title="Select <%= description %>">
                 </div>
               </td>
             <% end %>
             <td class="<%= 'ps-4' unless can_bulk_cancel %> fw-medium">
-              <%= link_to counterparty_name, price_adjustment_path(invoice), class: "text-decoration-none" %>
+              <%= link_to counterparty_name, price_adjustment_path(invoice, item_index: item_index), class: "text-decoration-none" %>
             </td>
             <td>
               <span class="text-truncate d-inline-block" style="max-width: 200px;">
@@ -109,16 +144,16 @@
               </span>
             </td>
             <td>
-              <% if invoice.subscription_active? %>
+              <% if is_active %>
                 <span class="badge bg-success">Active</span>
-              <% elsif invoice.subscription_cancelled? %>
+              <% elsif is_cancelled %>
                 <span class="badge bg-danger">Cancelled</span>
               <% else %>
                 <span class="badge bg-secondary">Finished</span>
               <% end %>
             </td>
             <td>
-              <% if invoice.subscription_active? && start_date.present? %>
+              <% if is_active && start_date.present? %>
                 <% 
                   start_d = Date.parse(start_date) rescue nil
                   if start_d
@@ -151,25 +186,25 @@
             </td>
             <td class="pe-4 text-end">
               <div class="dropdown text-center">
-                <button class="btn btn-sm btn-action-dropdown text-muted" type="button" id="actionsDropdown_<%= invoice.id %>" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-sm btn-action-dropdown text-muted" type="button" id="actionsDropdown_<%= invoice.id %>_<%= item_index %>" data-bs-toggle="dropdown" aria-expanded="false">
                   <i class="fa-solid fa-ellipsis-vertical"></i>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="actionsDropdown_<%= invoice.id %>">
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0" aria-labelledby="actionsDropdown_<%= invoice.id %>_<%= item_index %>">
                   <li>
-                    <%= link_to "View Details", price_adjustment_path(invoice), class: "dropdown-item" %>
+                    <%= link_to "View Details", price_adjustment_path(invoice, item_index: item_index), class: "dropdown-item" %>
                   </li>
-                  <% if invoice.subscription_active? %>
+                  <% if is_active %>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-<%= invoice.id %>">
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-<%= invoice.id %>-<%= item_index %>">
                         Cancel Price Adjustment
                       </button>
                     </li>
                   <% end %>
-                  <% if invoice.subscription_cancelled? %>
+                  <% if is_cancelled %>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelledDetailsModal-<%= invoice.id %>">
+                      <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal" data-bs-target="#cancelledDetailsModal-<%= invoice.id %>-<%= item_index %>">
                         View Cancellation Details
                       </button>
                     </li>
@@ -182,17 +217,37 @@
       </tbody>
     </table>
   </div>
-  <% subscriptions.each do |invoice| %>
-    <% if invoice.subscription_active? %>
-      <%= render "cancel_subscription_modal", subscription: invoice, item_type: "Price Adjustment" %>
+  <% normalized_items.each do |item| %>
+    <% 
+      if item.respond_to?(:adjustment)
+        invoice = item.invoice
+        item_index = item.index
+        is_active = item.subscription_active?
+        is_cancelled = item.subscription_cancelled?
+      else
+        invoice = item
+        item_index = 0
+        is_active = invoice.subscription_active?
+        is_cancelled = invoice.subscription_cancelled?
+      end
+    %>
+    <% if is_active %>
+      <%= render "cancel_subscription_modal", subscription: invoice, item_type: "Price Adjustment", item_index: item_index %>
     <% end %>
-    <% if invoice.subscription_cancelled? && invoice.cancellation_line_item %>
+    <% if is_cancelled %>
       <% 
+        c_item = invoice.cancellation_line_item || {
+          'description' => 'Subscription Cancelled',
+          'optional_fields' => {
+            'effective_date' => (invoice.updated_at || Date.current).to_date.to_s,
+            'billing_option' => 'none'
+          }
+        }
         cancel_item = {
-          index: invoice.id,
+          index: "#{invoice.id}-#{item_index}",
           is_cancellation: true,
-          item: invoice.cancellation_line_item,
-          description: invoice.cancellation_line_item['description']
+          item: c_item,
+          description: c_item['description']
         }
       %>
       <%= render "cancelled_details_modal", item: cancel_item %>

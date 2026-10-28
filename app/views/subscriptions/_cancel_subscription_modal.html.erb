@@ -12,6 +12,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <%= form_with url: cancel_subscription_path(subscription), method: :patch, local: true do |f| %>
+        <%= f.hidden_field :item_type, value: item_type if local_assigns[:item_type].present? %>
         <%= f.hidden_field :item_index, value: item_index if item_index.present? %>
         <%= f.hidden_field :redirect_to, value: request.fullpath %>
         <div class="modal-body pt-3">

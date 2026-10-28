@@ -22,7 +22,7 @@
           </div>
 
           <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end align-items-center">
-            <button type="submit" name="bulk_action" value="cancel" class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-action-btn" data-turbo-confirm="Are you sure you want to cancel the selected subscriptions?">
+            <button type="button" name="bulk_action" value="cancel" class="btn btn-danger btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 bulk-action-btn" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal-bulk-<%= table_id %>">
               <i class="fa-solid fa-ban"></i>
               <span>Cancel Subscription</span>
             </button>
@@ -35,6 +35,8 @@
       <% end %>
     </div>
   </div>
+
+  <%= render "bulk_cancel_subscription_modal", table_id: table_id, is_purchase: is_purchase, item_type: "Subscription" %>
 <% end %>
 
 <div class="table-responsive overflow-visible">

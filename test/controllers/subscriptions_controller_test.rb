@@ -771,4 +771,370 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "a[href*='category=credit_note']", text: /Create Credit Note/
     end
   end
+
+  test "subscriptions index page renders multiple recurring price adjustments from one invoice as separate rows" do
+    pa_multiple = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-MULTI-001",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Cloud Storage Support",
+          "description_edit" => "Cloud Storage Support",
+          "frequency" => "monthly",
+          "amount" => "25.00",
+          "unit" => "USD",
+          "type" => "charge",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        },
+        {
+          "description" => "Priority SLA Discount",
+          "description_edit" => "Priority SLA Discount",
+          "frequency" => "annually",
+          "amount" => "10.00",
+          "unit" => "%",
+          "type" => "discount",
+          "charge_start_date" => (Date.current - 2.months).to_s,
+          "charge_end_date" => (Date.current + 10.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Base Enterprise Package", "quantity" => "1", "price" => "500.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "475.00" }
+    )
+
+    sign_in @user_seller
+
+    get subscriptions_url
+    assert_response :success
+
+    # Verify both rows are rendered under salesActivePriceAdjustmentsTable
+    assert_select "#salesActivePriceAdjustmentsTable tbody tr[data-subscription-id='#{pa_multiple.id}']", count: 2
+    assert_select "#salesActivePriceAdjustmentsTable tbody tr[data-subscription-id='#{pa_multiple.id}'][data-item-index='0']" do
+      assert_select "td", text: /Cloud Storage Support/
+      assert_select "td", text: /Monthly/
+      assert_select "td", text: /25\.00/
+      assert_select "a[href*='item_index=0']"
+      assert_select "input.subscription-row-checkbox[data-item-index='0']"
+    end
+
+    assert_select "#salesActivePriceAdjustmentsTable tbody tr[data-subscription-id='#{pa_multiple.id}'][data-item-index='1']" do
+      assert_select "td", text: /Priority SLA Discount/
+      assert_select "td", text: /Annual/
+      assert_select "td", text: /10\.0%/
+      assert_select "a[href*='item_index=1']"
+      assert_select "input.subscription-row-checkbox[data-item-index='1']"
+    end
+  end
+
+  test "subscriptions index page separates active and finished recurring price adjustments from the same invoice" do
+    pa_mixed = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-MIXED-001",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Still Active Recurring Adjustment",
+          "frequency" => "monthly",
+          "amount" => "40.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 6.months).to_s
+        },
+        {
+          "description" => "Already Finished Adjustment",
+          "frequency" => "monthly",
+          "amount" => "10.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 12.months).to_s,
+          "charge_end_date" => (Date.current - 1.month).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Core Service", "quantity" => "1", "price" => "200.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "230.00" }
+    )
+
+    sign_in @user_seller
+
+    get subscriptions_url
+    assert_response :success
+
+    # Active table has the active adjustment
+    assert_select "#salesActivePriceAdjustmentsTable tbody tr[data-subscription-id='#{pa_mixed.id}'][data-item-index='0']" do
+      assert_select "td", text: /Still Active Recurring Adjustment/
+    end
+
+    # Finished table has the finished adjustment
+    assert_select "#salesFinishedPriceAdjustmentsTable tbody tr[data-subscription-id='#{pa_mixed.id}'][data-item-index='1']" do
+      assert_select "td", text: /Already Finished Adjustment/
+    end
+  end
+
+  test "price adjustments show page displays specific adjustment details when item_index is specified" do
+    pa = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-SHOW-001",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "First Fee",
+          "frequency" => "monthly",
+          "amount" => "35.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 5.months).to_s
+        },
+        {
+          "description" => "Second Discount",
+          "frequency" => "yearly",
+          "amount" => "50.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 2.months).to_s,
+          "charge_end_date" => (Date.current + 10.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Platform License", "quantity" => "1", "price" => "300.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "285.00" }
+    )
+
+    sign_in @user_seller
+
+    get price_adjustment_url(pa, item_index: 1)
+    assert_response :success
+    assert_select ".card-body", text: /Second Discount/
+    assert_select ".card-body", text: /Annual/
+  end
+
+  test "cancelling a single price adjustment from an invoice with multiple adjustments only cancels that specific adjustment" do
+    pa = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-CANCEL-001",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Cancel This Fee",
+          "frequency" => "monthly",
+          "amount" => "20.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        },
+        {
+          "description" => "Keep This Fee Active",
+          "frequency" => "monthly",
+          "amount" => "40.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Standard Membership", "quantity" => "1", "price" => "100.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "160.00" }
+    )
+
+    sign_in @user_seller
+
+    patch cancel_subscription_url(pa), params: {
+      item_type: "Price Adjustment",
+      item_index: 0,
+      effective_date: Date.current.to_s,
+      billing_option: "none",
+      reason: "No longer needed",
+      redirect_to: subscriptions_url(tab: "sales")
+    }
+
+    assert_redirected_to subscriptions_url(tab: "sales")
+    assert_equal "Price adjustment was successfully cancelled.", flash[:notice]
+
+    pa.reload
+    assert_not pa.archived?, "Invoice should not be archived while other active adjustments exist"
+    assert pa.price_adjustments[0]["cancelled"], "Targeted adjustment should be cancelled"
+    assert_not pa.price_adjustments[1]["cancelled"], "Untargeted adjustment should remain active"
+  end
+
+  test "subscriptions index page renders bulk cancel subscription modal with proper form elements" do
+    sign_in @user_seller
+
+    get subscriptions_url
+    assert_response :success
+
+    assert_select "#cancelSubscriptionModal-bulk-salesActiveSubscriptionsTable"
+    assert_select "form#bulk_cancel_form_salesActiveSubscriptionsTable[action='#{bulk_action_subscriptions_path}']"
+    assert_select "#bulkEffectiveDate-salesActiveSubscriptionsTable"
+    assert_select "#bulkBillingNone-salesActiveSubscriptionsTable"
+    assert_select "#bulkBillingProrate-salesActiveSubscriptionsTable"
+    assert_select "#bulkBillingFull-salesActiveSubscriptionsTable"
+    assert_select "#bulkCancellationReason-salesActiveSubscriptionsTable"
+  end
+
+  test "bulk cancel active sales subscriptions with prorate option generates final invoices and records cancellation" do
+    sub1 = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "SUB-PRORATE-001",
+      currency: "USD",
+      line_items_data: [
+        {
+          "description" => "Plan 1",
+          "quantity" => "1",
+          "price" => "100.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "billing_cycle" => "monthly",
+              "start_date" => (Date.current - 10.days).to_s,
+              "end_date" => (Date.current + 11.months).to_s
+            }
+          }
+        }
+      ],
+      total: { "grand_total" => "100.00" }
+    )
+
+    sales_sub2 = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "SUB-PRORATE-002",
+      currency: "USD",
+      line_items_data: [
+        {
+          "description" => "Team Subscription Plan",
+          "quantity" => "1",
+          "price" => "100.00",
+          "tax" => "0",
+          "optional_fields" => {
+            "subscription" => {
+              "billing_cycle" => "monthly",
+              "start_date" => (Date.current - 10.days).to_s,
+              "end_date" => (Date.current + 11.months).to_s
+            }
+          }
+        }
+      ],
+      total: { "grand_total" => "100.00" }
+    )
+
+    sign_in @user_seller
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: [sub1.id, sales_sub2.id],
+      bulk_action: "cancel",
+      tab: "sales",
+      billing_option: "prorate",
+      effective_date: Date.current.to_s,
+      reason: "Bulk cancellation test with prorate"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "sales")
+    assert_equal "Successfully cancelled 2 subscriptions.", flash[:notice]
+
+    sub1.reload
+    sales_sub2.reload
+
+    assert sub1.archived? || sub1.subscription_cancelled?
+    assert sales_sub2.archived? || sales_sub2.subscription_cancelled?
+
+    # Verify cancellation line item recorded the reason and billing option
+    c1 = sub1.cancellation_line_item
+    assert_not_nil c1
+    assert_equal "prorate", c1.dig("optional_fields", "billing_option")
+    assert_includes c1["description"], "Bulk cancellation test with prorate"
+
+    # Verify final immediate sub-invoices were created
+    mid_invoices = @user_seller.invoices.where(recurring_parent_invoice_id: [sub1.id, sales_sub2.id])
+    assert_operator mid_invoices.count, :>=, 1
+  end
+
+  test "bulk cancel active sales price adjustments with item index format cancels only targeted adjustments" do
+    pa = Invoice.create!(
+      user: @user_seller,
+      sale_from: @company_seller,
+      recipient_company: @company_buyer,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      issue_date: Date.current,
+      invoice_number: "PA-BULK-TARGET-001",
+      currency: "USD",
+      price_adjustments: [
+        {
+          "description" => "Targeted PA",
+          "frequency" => "monthly",
+          "amount" => "25.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        },
+        {
+          "description" => "Retained PA",
+          "frequency" => "monthly",
+          "amount" => "35.00",
+          "unit" => "USD",
+          "charge_start_date" => (Date.current - 1.month).to_s,
+          "charge_end_date" => (Date.current + 11.months).to_s
+        }
+      ],
+      line_items_data: [
+        { "description" => "Standard Item", "quantity" => "1", "price" => "100.00", "tax" => "0" }
+      ],
+      total: { "grand_total" => "160.00" }
+    )
+
+    sign_in @user_seller
+
+    post bulk_action_subscriptions_url, params: {
+      subscription_ids: ["#{pa.id}:0"],
+      bulk_action: "cancel",
+      tab: "sales",
+      item_type: "Price Adjustment",
+      billing_option: "none",
+      effective_date: Date.current.to_s,
+      reason: "Bulk cancelled price adjustment 0"
+    }
+
+    assert_response :redirect
+    assert_redirected_to subscriptions_path(tab: "sales")
+    assert_equal "Successfully cancelled 1 price adjustment.", flash[:notice]
+
+    pa.reload
+    assert_not pa.archived?, "Should not archive invoice while other price adjustment is active"
+    assert pa.price_adjustments[0]["cancelled"], "Index 0 price adjustment should be cancelled"
+    assert_not pa.price_adjustments[1]["cancelled"], "Index 1 price adjustment should remain active"
+  end
 end
