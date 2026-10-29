@@ -46,8 +46,12 @@ class SubscriptionsController < ApplicationController
     @finished_purchase_price_adjustments = @purchase_price_adjustments.select(&:subscription_finished?)
     @cancelled_purchase_price_adjustments = @purchase_price_adjustments.select(&:subscription_cancelled?)
 
-    # Active tab parameter (defaults to 'sales', or 'purchases')
+    # Active tab and inner status parameters (defaults to 'sales' and 'active')
     @active_tab = %w[sales purchases].include?(params[:tab]) ? params[:tab] : 'sales'
+    raw_status = (params[:status].presence || params[:subtab].presence).to_s.downcase
+    @active_status = %w[active finished cancelled].include?(raw_status) ? raw_status : 'active'
+    raw_pa_status = params[:pa_status].to_s.downcase
+    @active_pa_status = %w[active finished cancelled].include?(raw_pa_status) ? raw_pa_status : 'active'
 
     # Backward compatibility
     @subscriptions = @sales_subscriptions + @purchase_subscriptions

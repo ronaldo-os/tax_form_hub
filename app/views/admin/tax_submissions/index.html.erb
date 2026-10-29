@@ -1,13 +1,14 @@
 <% content_for :page_title, "Client Submissions" %>
+<% is_archived_tab = (@active_tab || params[:tab].to_s.downcase) == "archived" %>
 <div class="tax-submissions-page container py-2 py-md-3">
   <ul class="custom_nav_tabs nav nav-tabs mb-3" id="submissionTabs" role="tablist">
     <li class="nav-item" role="presentation">
-      <button class="nav-link active" id="active-tab" data-bs-toggle="tab" data-bs-target="#activeSubmissions" type="button" role="tab" aria-controls="activeSubmissions" aria-selected="true">
+      <button class="nav-link <%= 'active' unless is_archived_tab %>" id="active-tab" data-bs-toggle="tab" data-bs-target="#activeSubmissions" type="button" role="tab" aria-controls="activeSubmissions" aria-selected="<%= !is_archived_tab %>">
         Active Submissions
       </button>
     </li>
     <li class="nav-item" role="presentation">
-      <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archivedSubmissions" type="button" role="tab" aria-controls="archivedSubmissions" aria-selected="false">
+      <button class="nav-link <%= 'active' if is_archived_tab %>" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archivedSubmissions" type="button" role="tab" aria-controls="archivedSubmissions" aria-selected="<%= is_archived_tab %>">
         Archived Submissions
       </button>
     </li>
@@ -15,12 +16,12 @@
 
   <div class="tab-content" id="submissionTabsContent">
     <!-- Active Tab -->
-    <div class="tab-pane fade show active" id="activeSubmissions" role="tabpanel" aria-labelledby="active-tab">
+    <div class="tab-pane fade <%= 'show active' unless is_archived_tab %>" id="activeSubmissions" role="tabpanel" aria-labelledby="active-tab">
       <%= render partial: "submission_table", locals: { submissions: @unarchived_submissions, table_id: "taxSubmissionsTableActive", archived_table: false } %>
     </div>
 
     <!-- Archived Tab -->
-    <div class="tab-pane fade" id="archivedSubmissions" role="tabpanel" aria-labelledby="archived-tab">
+    <div class="tab-pane fade <%= 'show active' if is_archived_tab %>" id="archivedSubmissions" role="tabpanel" aria-labelledby="archived-tab">
       <%= render partial: "submission_table", locals: { submissions: @archived_submissions, table_id: "taxSubmissionsTableArchived", archived_table: true } %>
     </div>
   </div>

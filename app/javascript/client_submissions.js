@@ -1,6 +1,6 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
 import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
-import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { getInitialTableState, updateUrlParams, activateTabElement, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
 
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
@@ -32,7 +32,7 @@ export function syncTaxSubmissionRedirectUrl() {
 
 function initClientSubmissionsPage() {
     // This script targets the home page where the user can submit documents
-    if ($('.submissionsTable').length === 0 && !window.location.pathname.includes("/tax_submissions")) {
+    if ($('.submissionsTable').length === 0 && $('#submitDocsModal').length === 0) {
         return;
     }
 
@@ -41,20 +41,24 @@ function initClientSubmissionsPage() {
     // Tab restoration based on URL parameter or sessionStorage fallback
     if (initial.tab === 'archived') {
         const archivedTab = document.getElementById('archived-tab');
-        if (archivedTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-            bootstrap.Tab.getOrCreateInstance(archivedTab).show();
+        if (archivedTab) {
+            activateTabElement(archivedTab);
+            sessionStorage.setItem('activeClientSubmissionsTabId', 'archived-tab');
         }
     } else if (initial.tab === 'active' || initial.tab === 'unarchived') {
         const activeTab = document.getElementById('unarchived-tab') || document.getElementById('active-tab');
-        if (activeTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-            bootstrap.Tab.getOrCreateInstance(activeTab).show();
+        if (activeTab) {
+            activateTabElement(activeTab);
+            sessionStorage.setItem('activeClientSubmissionsTabId', activeTab.id);
         }
     } else {
         const savedTabId = sessionStorage.getItem('activeClientSubmissionsTabId');
         if (savedTabId && document.getElementById(savedTabId)) {
             const tabEl = document.getElementById(savedTabId);
-            if (tabEl && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-                bootstrap.Tab.getOrCreateInstance(tabEl).show();
+            if (tabEl) {
+                activateTabElement(tabEl);
+                const isArchived = savedTabId === 'archived-tab';
+                updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
             }
         }
     }
@@ -239,19 +243,24 @@ function initClientSubmissionsPage() {
     });
 
     // Tab persistence and table adjustment
-    $('button[data-bs-toggle="tab"]').off('shown.bs.tab.client').on('shown.bs.tab.client', function (e) {
-        const targetId = $(e.target).attr('id') || '';
-        const isArchived = targetId.includes('archived');
-        sessionStorage.setItem('activeClientSubmissionsTabId', targetId);
-        updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
-        tables.forEach(function (table) {
-            table.columns.adjust().responsive.recalc();
-            fixEmptyRowColspan(table);
-            setTimeout(function() {
-                fixEmptyRowColspan(table);
-            }, 50);
+    $('#submissionTabs button[data-bs-toggle="tab"]')
+        .off('click.client shown.bs.tab.client')
+        .on('click.client shown.bs.tab.client', function (e) {
+            const targetId = $(e.currentTarget).attr('id') || '';
+            const isArchived = targetId === 'archived-tab' || (targetId.includes('archived') && !targetId.includes('unarchived'));
+            sessionStorage.setItem('activeClientSubmissionsTabId', targetId);
+            updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
+            syncTaxSubmissionRedirectUrl();
+            if (e.type === 'shown') {
+                tables.forEach(function (table) {
+                    table.columns.adjust().responsive.recalc();
+                    fixEmptyRowColspan(table);
+                    setTimeout(function() {
+                        fixEmptyRowColspan(table);
+                    }, 50);
+                });
+            }
         });
-    });
 
     // Show file previews (thumbnails for images, icons for PDFs)
     function updateFileList(inputSelector, listSelector, multiple = true) {

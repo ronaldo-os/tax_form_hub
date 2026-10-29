@@ -282,45 +282,77 @@ class UrlSynchronizedFiltersTest < ActionDispatch::IntegrationTest
   end
 
   test "subscriptions index handles tab and query parameters" do
-    # Default tab: sales
+    # Default tab: sales, active inner tabs
     get subscriptions_path
     assert_response :success
     assert_select "#sales-tab.active"
-    assert_select "#sales-pane.active"
+    assert_select "#sales-pane.show.active"
+    assert_select "#sales-active-tab.active"
+    assert_select "#sales-active.show.active"
+    assert_select "#sales-active-pa-tab.active"
+    assert_select "#sales-active-pa.show.active"
 
-    # Purchases tab
-    get subscriptions_path(tab: "purchases")
+    # Purchases tab with cancelled subscription sub-tab and finished price adjustment sub-tab
+    get subscriptions_path(tab: "purchases", status: "cancelled", pa_status: "finished")
     assert_response :success
     assert_select "#purchases-tab.active"
-    assert_select "#purchases-pane.active"
+    assert_select "#purchases-pane.show.active"
+    assert_select "#sales-tab:not(.active)"
+    assert_select "#sales-pane:not(.active)"
+    assert_select "#purchases-cancelled-tab.active"
+    assert_select "#purchases-cancelled.show.active"
+    assert_select "#purchases-active-tab:not(.active)"
+    assert_select "#purchases-active:not(.active)"
+    assert_select "#purchases-finished-pa-tab.active"
+    assert_select "#purchases-finished-pa.show.active"
+    assert_select "#purchases-active-pa-tab:not(.active)"
+    assert_select "#purchases-active-pa:not(.active)"
 
-    # With status, search, and page query params
-    get subscriptions_path(tab: "sales", status: "finished", search: "Consulting", page: 1)
+    # Sales tab with finished subscription sub-tab and cancelled price adjustment sub-tab
+    get subscriptions_path(tab: "sales", status: "finished", pa_status: "cancelled", search: "Consulting", page: 1)
     assert_response :success
+    assert_select "#sales-tab.active"
+    assert_select "#sales-pane.show.active"
+    assert_select "#sales-finished-tab.active"
+    assert_select "#sales-finished.show.active"
+    assert_select "#sales-cancelled-pa-tab.active"
+    assert_select "#sales-cancelled-pa.show.active"
     assert_select "#salesActiveSubscriptionsTable"
   end
 
   test "tax_submissions index handles tab, status, and search query parameters" do
     get tax_submissions_path
     assert_response :success
-    assert_select "#active-tab"
+    assert_select "#active-tab.active"
+    assert_select "#activeSubmissions.show.active"
+    assert_select "#archived-tab:not(.active)"
+    assert_select "#archivedSubmissions:not(.active)"
     assert_select "#taxSubmissionsTableActive"
 
     # Archived tab with query params
     get tax_submissions_path(tab: "archived", status: "Pending", search: "Form 2307")
     assert_response :success
-    assert_select "#archived-tab"
+    assert_select "#archived-tab.active"
+    assert_select "#archivedSubmissions.show.active"
+    assert_select "#active-tab:not(.active)"
+    assert_select "#activeSubmissions:not(.active)"
     assert_select "#taxSubmissionsTableArchived"
   end
 
   test "tax_submissions home handles tab and query parameters" do
     get tax_submissions_home_path
     assert_response :success
-    assert_select "#unarchived-tab"
+    assert_select "#unarchived-tab.active"
+    assert_select "#unarchived.show.active"
+    assert_select "#archived-tab:not(.active)"
+    assert_select "#archived:not(.active)"
 
     get tax_submissions_home_path(tab: "archived", status: "Processed", search: "October")
     assert_response :success
-    assert_select "#archived-tab"
+    assert_select "#archived-tab.active"
+    assert_select "#archived.show.active"
+    assert_select "#unarchived-tab:not(.active)"
+    assert_select "#unarchived:not(.active)"
   end
 
   test "locations index renders DataTable and handles query parameters" do

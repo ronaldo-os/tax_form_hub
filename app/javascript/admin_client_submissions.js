@@ -1,6 +1,6 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
 import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
-import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { getInitialTableState, updateUrlParams, activateTabElement, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
 
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
@@ -12,8 +12,8 @@ function fixEmptyRowColspan(tableApi) {
 }
 
 function initSubmissionTables() {
-    // Check if we are on the admin or user submissions page
-    if (!window.location.pathname.match(/(\/admin\/tax_submissions|\/tax_submissions)/)) {
+    // Check if we are on the admin or user incoming submissions page
+    if ($('#taxSubmissionsTableActive').length === 0 && $('#taxSubmissionsTableArchived').length === 0) {
         return;
     }
 
@@ -22,19 +22,25 @@ function initSubmissionTables() {
     // Tab restoration based on URL parameter or sessionStorage fallback
     if (initial.tab === 'archived') {
         const archivedTab = document.getElementById('archived-tab');
-        if (archivedTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-            bootstrap.Tab.getOrCreateInstance(archivedTab).show();
+        if (archivedTab) {
+            activateTabElement(archivedTab);
+            sessionStorage.setItem('activeIncomingSubmissionsTab', 'archived-tab');
         }
-    } else if (initial.tab === 'active') {
+    } else if (initial.tab === 'active' || initial.tab === 'unarchived') {
         const activeTab = document.getElementById('active-tab');
-        if (activeTab && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-            bootstrap.Tab.getOrCreateInstance(activeTab).show();
+        if (activeTab) {
+            activateTabElement(activeTab);
+            sessionStorage.setItem('activeIncomingSubmissionsTab', 'active-tab');
         }
     } else {
         const activeTabId = sessionStorage.getItem('activeIncomingSubmissionsTab');
         if (activeTabId && document.getElementById(activeTabId)) {
-            const tabTrigger = bootstrap.Tab.getOrCreateInstance(document.getElementById(activeTabId));
-            tabTrigger.show();
+            const tabEl = document.getElementById(activeTabId);
+            if (tabEl) {
+                activateTabElement(tabEl);
+                const isArchived = activeTabId === 'archived-tab';
+                updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
+            }
         }
     }
 
@@ -218,19 +224,23 @@ function initSubmissionTables() {
     });
 
     // Tab persistence and table adjustment
-    $('button[data-bs-toggle="tab"]').off('shown.bs.tab').on('shown.bs.tab', function (e) {
-        const targetId = $(e.target).attr('id') || '';
-        const isArchived = targetId.includes('archived');
-        sessionStorage.setItem('activeIncomingSubmissionsTab', targetId);
-        updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
-        submissionTables.forEach(function (table) {
-            table.columns.adjust().responsive.recalc();
-            fixEmptyRowColspan(table);
-            setTimeout(function() {
-                fixEmptyRowColspan(table);
-            }, 50);
+    $('#submissionTabs button[data-bs-toggle="tab"]')
+        .off('click.incoming shown.bs.tab.incoming')
+        .on('click.incoming shown.bs.tab.incoming', function (e) {
+            const targetId = $(e.currentTarget).attr('id') || '';
+            const isArchived = targetId === 'archived-tab' || (targetId.includes('archived') && !targetId.includes('unarchived'));
+            sessionStorage.setItem('activeIncomingSubmissionsTab', targetId);
+            updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
+            if (e.type === 'shown') {
+                submissionTables.forEach(function (table) {
+                    table.columns.adjust().responsive.recalc();
+                    fixEmptyRowColspan(table);
+                    setTimeout(function() {
+                        fixEmptyRowColspan(table);
+                    }, 50);
+                });
+            }
         });
-    });
 
 
     $('.auto-submit').off('change.auto-submit').on('change.auto-submit', function () {

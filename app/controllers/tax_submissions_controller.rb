@@ -215,6 +215,7 @@ class TaxSubmissionsController < ApplicationController
   private
 
   def load_incoming_submissions
+    @active_tab = params[:tab].to_s.downcase == "archived" ? "archived" : "active"
     my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
     scope = submission_scope
 
@@ -228,6 +229,7 @@ class TaxSubmissionsController < ApplicationController
   end
 
   def load_sent_submissions
+    @active_tab = params[:tab].to_s.downcase == "archived" ? "archived" : "active"
     my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
     scope = submission_scope
 

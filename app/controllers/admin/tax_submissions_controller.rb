@@ -5,6 +5,7 @@ class Admin::TaxSubmissionsController < ApplicationController
 
 
   def index
+    @active_tab = params[:tab].to_s.downcase == "archived" ? "archived" : "active"
     scope = TaxSubmission.includes(:company, :invoice)
                          .with_attached_form_2307
                          .with_attached_deposit_slip

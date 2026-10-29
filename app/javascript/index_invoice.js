@@ -4,12 +4,48 @@ import { setupInvoiceBulkActions } from './invoice_bulk';
 import { 
     getInitialTableState, 
     updateUrlParams, 
+    activateTabElement,
     bindSearchInputSync, 
     bindPaginationSync, 
     resolveSortOrder, 
     bindOrderSync, 
     getUrlParam 
 } from './table_url_sync';
+
+const VALID_INVOICE_TABS = ['sales-invoices', 'purchase-invoices', 'sent-quotes', 'received-quotes'];
+
+function getStoredInvoiceSubTab(tabId) {
+    try {
+        const val = sessionStorage.getItem(`invoice_subtab_${tabId}`);
+        return val === 'archived' ? 'archived' : 'active';
+    } catch (e) {
+        return 'active';
+    }
+}
+
+function setStoredInvoiceSubTab(tabId, subtab) {
+    if (!VALID_INVOICE_TABS.includes(tabId)) return;
+    try {
+        sessionStorage.setItem(`invoice_subtab_${tabId}`, subtab === 'archived' ? 'archived' : 'active');
+    } catch (e) {
+        // Ignore storage errors
+    }
+}
+
+function syncInvoiceDropdownLinks(tabId) {
+    if (!VALID_INVOICE_TABS.includes(tabId)) return;
+    const dropdownMenu = document.querySelector('#createDocumentDropdown + .dropdown-menu');
+    if (!dropdownMenu) return;
+    dropdownMenu.querySelectorAll('a.dropdown-item').forEach((link) => {
+        try {
+            const url = new URL(link.href, window.location.origin);
+            url.searchParams.set('tab', tabId);
+            link.href = url.pathname + url.search;
+        } catch (err) {
+            // Ignore malformed URLs
+        }
+    });
+}
 
 function loadHtml2Pdf() {
     if (typeof html2pdf !== 'undefined') {
@@ -54,22 +90,27 @@ function initInvoicePage() {
     const initial = getInitialTableState();
 
     // Restore active tab if specified in URL and not already active
-    const targetTab = initial.tab || 'sales-invoices';
+    const targetTab = VALID_INVOICE_TABS.includes(initial.tab) ? initial.tab : 'sales-invoices';
     const mainTabBtn = document.getElementById(`${targetTab}-tab`);
-    if (mainTabBtn && !mainTabBtn.classList.contains('active') && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-        bootstrap.Tab.getOrCreateInstance(mainTabBtn).show();
+    if (mainTabBtn) {
+        activateTabElement(mainTabBtn);
+        syncInvoiceDropdownLinks(targetTab);
     }
 
-    // Restore subtab (Active vs Archived) in the active tab
-    const $targetMainPane = $(`#${targetTab}`);
-    if ($targetMainPane.length && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-        const isArchived = initial.subtab === 'archived';
+    // Restore subtab (Active vs Archived) in the active tab and background tabs
+    const isTargetArchived = initial.subtab === 'archived';
+    setStoredInvoiceSubTab(targetTab, isTargetArchived ? 'archived' : 'active');
+
+    VALID_INVOICE_TABS.forEach((tabId) => {
+        const $pane = $(`#${tabId}`);
+        if (!$pane.length) return;
+        const isArchived = tabId === targetTab ? isTargetArchived : (getStoredInvoiceSubTab(tabId) === 'archived');
         const subTabSelector = isArchived ? '.invoice-sub-tabs button[id$="-archived-tab"]' : '.invoice-sub-tabs button[id$="-active-tab"]';
-        const subTabBtn = $targetMainPane.find(subTabSelector)[0];
-        if (subTabBtn && !subTabBtn.classList.contains('active')) {
-            bootstrap.Tab.getOrCreateInstance(subTabBtn).show();
+        const subTabBtn = $pane.find(subTabSelector)[0];
+        if (subTabBtn) {
+            activateTabElement(subTabBtn);
         }
-    }
+    });
 
     // Synchronize status card selection across tabs
     syncCardFilterState(initial.status);
@@ -327,60 +368,81 @@ function initInvoicePage() {
     const $initialActiveMainPane = $('#invoiceTabsContent > .tab-pane.active, #invoiceTabsContent > .tab-pane.show.active').first();
     initVisibleTableInPane($initialActiveMainPane);
 
-    // Handle tab switch - initialize tables for newly activated tab on demand
-    $('button[data-bs-toggle="tab"]').off('shown.bs.tab.invoice').on('shown.bs.tab.invoice', function (e) {
-        const tabId = $(e.target).attr('id').replace('-tab', '');
-        const targetPaneSelector = $(e.target).data('bs-target') || `#${tabId}`;
-        const $targetPane = $(targetPaneSelector);
+    // Handle main tab switch - immediately update URL on click and initialize tables on shown
+    $('#submissionTabs button[data-bs-toggle="tab"]')
+        .off('click.invoicetab shown.bs.tab.invoice')
+        .on('click.invoicetab shown.bs.tab.invoice', function (e) {
+            const tabId = ($(e.currentTarget).attr('id') || '').replace('-tab', '');
+            if (!VALID_INVOICE_TABS.includes(tabId)) return;
 
-        // Find which subtab is active in the newly shown tab
-        const $activeSubTab = $targetPane.find('.invoice-sub-tabs button.active');
-        const isArchived = $activeSubTab.attr('id') && $activeSubTab.attr('id').includes('archived');
-        updateUrlParams({ tab: tabId, subtab: isArchived ? 'archived' : null });
+            const targetPaneSelector = $(e.currentTarget).data('bs-target') || `#${tabId}`;
+            const $targetPane = $(targetPaneSelector);
 
-        // Synchronize card-filter active state in newly activated tab
-        const currentStatus = getUrlParam('status') || '';
-        syncCardFilterState(currentStatus);
+            // Find which subtab is active in the newly shown tab
+            const $activeSubTab = $targetPane.find('.invoice-sub-tabs button.active');
+            const isArchived = ($activeSubTab.attr('id') && $activeSubTab.attr('id').includes('archived')) || getStoredInvoiceSubTab(tabId) === 'archived';
+            updateUrlParams({ tab: tabId, subtab: isArchived ? 'archived' : null });
+            syncInvoiceDropdownLinks(tabId);
 
-        // Initialize ONLY the visible subtab table in this pane
-        initVisibleTableInPane($targetPane);
+            if (e.type === 'shown') {
+                // Synchronize card-filter active state in newly activated tab
+                const currentStatus = getUrlParam('status') || '';
+                syncCardFilterState(currentStatus);
 
-        setTimeout(function () {
-            $.fn.dataTable
-                .tables({ visible: true, api: true })
-                .columns.adjust()
-                .responsive.recalc();
-        }, 150);
-    });
+                // Initialize ONLY the visible subtab table in this pane
+                initVisibleTableInPane($targetPane);
 
-    // Click on subtab buttons immediately updates URL subtab param
-    $(document).off('click.invoicesub', 'button[data-bs-toggle="pill"], .invoice-sub-tabs button').on('click.invoicesub', 'button[data-bs-toggle="pill"], .invoice-sub-tabs button', function () {
-        const targetId = $(this).attr('id') || '';
-        const isArchived = targetId.includes('archived');
-        updateUrlParams({ subtab: isArchived ? 'archived' : null });
-    });
+                setTimeout(function () {
+                    $.fn.dataTable
+                        .tables({ visible: true, api: true })
+                        .columns.adjust()
+                        .responsive.recalc();
+                }, 150);
+            }
+        });
+
+    // Click on subtab buttons immediately updates URL subtab param and session storage
+    $(document)
+        .off('click.invoicesub', '.invoice-sub-tabs button[data-bs-toggle="pill"], .invoice-sub-tabs button')
+        .on('click.invoicesub', '.invoice-sub-tabs button[data-bs-toggle="pill"], .invoice-sub-tabs button', function () {
+            const targetId = $(this).attr('id') || '';
+            const isArchived = targetId.includes('archived');
+            const $mainPane = $(this).closest('#invoiceTabsContent > .tab-pane');
+            const mainTabId = $mainPane.attr('id');
+            if (mainTabId) {
+                setStoredInvoiceSubTab(mainTabId, isArchived ? 'archived' : 'active');
+            }
+            updateUrlParams({ subtab: isArchived ? 'archived' : null });
+        });
 
     // Handle sub-tab switch (Active vs Archived) inside invoice table cards
-    $(document).off('shown.bs.tab.invoicesub').on('shown.bs.tab.invoicesub', 'button[data-bs-toggle="pill"], .invoice-sub-tabs button', function (e) {
-        const targetId = $(e.target).attr('id') || '';
-        const isArchived = targetId.includes('archived');
-        updateUrlParams({ subtab: isArchived ? 'archived' : null });
-
-        const targetPaneSelector = $(e.target).data('bs-target');
-        if (targetPaneSelector) {
-            const $subPane = $(targetPaneSelector);
-            const $table = $subPane.find('table[data-server-side="true"]');
-            if ($table.length) {
-                initSingleDataTable($table);
+    $(document)
+        .off('shown.bs.tab.invoicesub')
+        .on('shown.bs.tab.invoicesub', '.invoice-sub-tabs button[data-bs-toggle="pill"], .invoice-sub-tabs button', function (e) {
+            const targetId = $(e.target).attr('id') || '';
+            const isArchived = targetId.includes('archived');
+            const $mainPane = $(e.target).closest('#invoiceTabsContent > .tab-pane');
+            const mainTabId = $mainPane.attr('id');
+            if (mainTabId) {
+                setStoredInvoiceSubTab(mainTabId, isArchived ? 'archived' : 'active');
             }
-        }
-        setTimeout(function () {
-            $.fn.dataTable
-                .tables({ visible: true, api: true })
-                .columns.adjust()
-                .responsive.recalc();
-        }, 100);
-    });
+            updateUrlParams({ subtab: isArchived ? 'archived' : null });
+
+            const targetPaneSelector = $(e.target).data('bs-target');
+            if (targetPaneSelector) {
+                const $subPane = $(targetPaneSelector);
+                const $table = $subPane.find('table[data-server-side="true"]');
+                if ($table.length) {
+                    initSingleDataTable($table);
+                }
+            }
+            setTimeout(function () {
+                $.fn.dataTable
+                    .tables({ visible: true, api: true })
+                    .columns.adjust()
+                    .responsive.recalc();
+            }, 100);
+        });
 
     // Window resize
     $(window).off('resize.invoice').on('resize.invoice', function () {

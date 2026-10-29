@@ -1,4 +1,60 @@
-import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { getInitialTableState, updateUrlParams, getUrlParam, activateTabElement, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+
+const VALID_TOP_TABS = ['sales', 'purchases'];
+const VALID_SUB_STATUSES = ['active', 'finished', 'cancelled'];
+
+function getStoredSubStatus(topTab, isPriceAdjustment) {
+    try {
+        const key = `subscriptions_${topTab}_${isPriceAdjustment ? 'pa_status' : 'status'}`;
+        const val = sessionStorage.getItem(key);
+        return VALID_SUB_STATUSES.includes(val) ? val : null;
+    } catch (e) {
+        return null;
+    }
+}
+
+function setStoredSubStatus(topTab, isPriceAdjustment, status) {
+    if (!VALID_TOP_TABS.includes(topTab) || !VALID_SUB_STATUSES.includes(status)) return;
+    try {
+        const key = `subscriptions_${topTab}_${isPriceAdjustment ? 'pa_status' : 'status'}`;
+        sessionStorage.setItem(key, status);
+    } catch (e) {
+        // Ignore storage errors
+    }
+}
+
+function parseSubStatusFromTabId(tabBtnId) {
+    if (!tabBtnId) return null;
+    if (tabBtnId.includes('-active-')) return 'active';
+    if (tabBtnId.includes('-finished-')) return 'finished';
+    if (tabBtnId.includes('-cancelled-')) return 'cancelled';
+    return null;
+}
+
+function getActivePaneSubStatuses(topTab) {
+    const activeSubBtn = document.querySelector(`#${topTab}SubscriptionTabs button.active, #${topTab}SubscriptionTabs button[aria-selected="true"]`);
+    const activePaBtn = document.querySelector(`#${topTab}PriceAdjustmentTabs button.active, #${topTab}PriceAdjustmentTabs button[aria-selected="true"]`);
+
+    const subStatus = (activeSubBtn && parseSubStatusFromTabId(activeSubBtn.id)) || getStoredSubStatus(topTab, false) || 'active';
+    const paStatus = (activePaBtn && parseSubStatusFromTabId(activePaBtn.id)) || getStoredSubStatus(topTab, true) || 'active';
+
+    return { subStatus, paStatus };
+}
+
+function syncSubscriptionsDropdownLinks(topTab) {
+    const dropdownMenu = document.querySelector('#createDocumentDropdown + .dropdown-menu');
+    if (!dropdownMenu) return;
+    const invoiceTab = topTab === 'purchases' ? 'purchase-invoices' : 'sales-invoices';
+    dropdownMenu.querySelectorAll('a.dropdown-item').forEach((link) => {
+        try {
+            const url = new URL(link.href, window.location.origin);
+            url.searchParams.set('tab', invoiceTab);
+            link.href = url.pathname + url.search;
+        } catch (err) {
+            // Ignore malformed URLs
+        }
+    });
+}
 
 function fixEmptyRowColspan(api) {
     const table = api.table ? api.table().node() : api;
@@ -361,24 +417,64 @@ function initSubscriptionsPage() {
 
     const initial = getInitialTableState();
 
-    // Restore top-level tab (sales vs purchases)
-    if (initial.tab) {
-        const topTabBtn = document.getElementById(`${initial.tab}-tab`);
-        if (topTabBtn && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-            bootstrap.Tab.getOrCreateInstance(topTabBtn).show();
-        }
+    // Determine and restore top-level tab (sales vs purchases)
+    const rawTopTab = (initial.tab || '').toLowerCase();
+    const purchasesBtn = document.getElementById('purchases-tab');
+    const currentTopTab = VALID_TOP_TABS.includes(rawTopTab)
+        ? rawTopTab
+        : (purchasesBtn && purchasesBtn.classList.contains('active') ? 'purchases' : 'sales');
+
+    const topTabBtn = document.getElementById(`${currentTopTab}-tab`);
+    if (topTabBtn) {
+        activateTabElement(topTabBtn);
+        syncSubscriptionsDropdownLinks(currentTopTab);
     }
 
-    // Restore inner status tab (active, finished, cancelled)
-    const statusParam = initial.status || initial.subtab;
-    if (statusParam) {
-        const currentTopTab = (initial.tab && ['sales', 'purchases'].includes(initial.tab)) ? initial.tab : 'sales';
-        const innerTabId = `${currentTopTab}-${statusParam}-tab`;
-        const innerTabBtn = document.getElementById(innerTabId);
-        if (innerTabBtn && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
-            bootstrap.Tab.getOrCreateInstance(innerTabBtn).show();
-        }
+    // Restore inner subscription status tab (active, finished, cancelled) for active top tab
+    const rawStatusParam = (initial.status || initial.subtab || '').toLowerCase();
+    let currentSubStatus = 'active';
+    if (VALID_SUB_STATUSES.includes(rawStatusParam)) {
+        currentSubStatus = rawStatusParam;
+        setStoredSubStatus(currentTopTab, false, currentSubStatus);
+    } else if (initial.tab || initial.status || initial.subtab) {
+        currentSubStatus = 'active';
+        setStoredSubStatus(currentTopTab, false, 'active');
+    } else {
+        const activeSubBtn = document.querySelector(`#${currentTopTab}SubscriptionTabs button.active`);
+        currentSubStatus = (activeSubBtn && parseSubStatusFromTabId(activeSubBtn.id)) || 'active';
     }
+    const innerSubTabBtn = document.getElementById(`${currentTopTab}-${currentSubStatus}-tab`);
+    if (innerSubTabBtn) {
+        activateTabElement(innerSubTabBtn);
+    }
+
+    // Restore inner price adjustment status tab (active, finished, cancelled) for active top tab
+    const rawPaStatusParam = (initial.pa_status || '').toLowerCase();
+    let currentPaStatus = 'active';
+    if (VALID_SUB_STATUSES.includes(rawPaStatusParam)) {
+        currentPaStatus = rawPaStatusParam;
+        setStoredSubStatus(currentTopTab, true, currentPaStatus);
+    } else if (initial.pa_status) {
+        currentPaStatus = 'active';
+        setStoredSubStatus(currentTopTab, true, 'active');
+    } else {
+        const activePaBtn = document.querySelector(`#${currentTopTab}PriceAdjustmentTabs button.active`);
+        currentPaStatus = (activePaBtn && parseSubStatusFromTabId(activePaBtn.id)) || 'active';
+    }
+    const innerPaTabBtn = document.getElementById(`${currentTopTab}-${currentPaStatus}-pa-tab`);
+    if (innerPaTabBtn) {
+        activateTabElement(innerPaTabBtn);
+    }
+
+    // Also restore stored inner tabs for the inactive top-level tab in the background
+    // so switching between Sales and Purchases after a refresh preserves each pane's inner tab state
+    const otherTopTab = currentTopTab === 'sales' ? 'purchases' : 'sales';
+    const otherSubStatus = getStoredSubStatus(otherTopTab, false) || 'active';
+    const otherPaStatus = getStoredSubStatus(otherTopTab, true) || 'active';
+    const otherSubBtn = document.getElementById(`${otherTopTab}-${otherSubStatus}-tab`);
+    const otherPaBtn = document.getElementById(`${otherTopTab}-${otherPaStatus}-pa-tab`);
+    if (otherSubBtn) activateTabElement(otherSubBtn);
+    if (otherPaBtn) activateTabElement(otherPaBtn);
 
     $('.subscription-table').each(function() {
         const tableNode = this;
@@ -526,37 +622,69 @@ function initSubscriptionsPage() {
     });
 
     // Handle top-level tab switch (Sales vs Purchases)
-    $('#subscriptionTypeTabs button[data-bs-toggle="tab"]').off('shown.bs.tab.subs').on('shown.bs.tab.subs', function (e) {
-        const tabId = $(e.target).attr('id').replace('-tab', '');
-        updateUrlParams({ tab: tabId });
+    $('#subscriptionTypeTabs button[data-bs-toggle="tab"]')
+        .off('click.subs shown.bs.tab.subs')
+        .on('click.subs shown.bs.tab.subs', function (e) {
+            const tabId = ($(e.currentTarget).attr('id') || '').replace('-tab', '');
+            if (!VALID_TOP_TABS.includes(tabId)) return;
 
-        setTimeout(function () {
-            $.fn.dataTable
-                .tables({ visible: true, api: true })
-                .columns.adjust()
-                .responsive.recalc();
-        }, 150);
-    });
+            const { subStatus, paStatus } = getActivePaneSubStatuses(tabId);
+            updateUrlParams({
+                tab: tabId,
+                status: subStatus === 'active' ? null : subStatus,
+                pa_status: paStatus === 'active' ? null : paStatus
+            });
+            syncSubscriptionsDropdownLinks(tabId);
 
-    // Also recalculate when inner status tabs are clicked and sync status param
-    $('.subscriptions-page button[data-bs-toggle="tab"]').off('shown.bs.tab.subs_inner').on('shown.bs.tab.subs_inner', function (e) {
-        const tabBtnId = $(e.target).attr('id') || '';
-        let status = null;
-        if (tabBtnId.includes('-active-tab')) status = 'active';
-        else if (tabBtnId.includes('-finished-tab')) status = 'finished';
-        else if (tabBtnId.includes('-cancelled-tab')) status = 'cancelled';
+            if (e.type === 'shown') {
+                setTimeout(function () {
+                    $.fn.dataTable
+                        .tables({ visible: true, api: true })
+                        .columns.adjust()
+                        .responsive.recalc();
+                }, 150);
+            }
+        });
 
-        if (status) {
-            updateUrlParams({ status: status === 'active' ? null : status }, { clearPage: true });
-        }
+    // Also recalculate when inner status tabs (subscriptions or price adjustments) are clicked and sync URL params
+    const innerTabsSelector = '#salesSubscriptionTabs button[data-bs-toggle="tab"], #salesPriceAdjustmentTabs button[data-bs-toggle="tab"], #purchasesSubscriptionTabs button[data-bs-toggle="tab"], #purchasesPriceAdjustmentTabs button[data-bs-toggle="tab"]';
+    $(innerTabsSelector)
+        .off('click.subs_inner shown.bs.tab.subs_inner')
+        .on('click.subs_inner shown.bs.tab.subs_inner', function (e) {
+            const tabBtnId = $(e.currentTarget).attr('id') || '';
+            const topTab = tabBtnId.startsWith('purchases-') ? 'purchases' : 'sales';
+            const isPa = tabBtnId.endsWith('-pa-tab');
+            const status = parseSubStatusFromTabId(tabBtnId);
 
-        setTimeout(function () {
-            $.fn.dataTable
-                .tables({ visible: true, api: true })
-                .columns.adjust()
-                .responsive.recalc();
-        }, 100);
-    });
+            if (status) {
+                setStoredSubStatus(topTab, isPa, status);
+                const paramKey = isPa ? 'pa_status' : 'status';
+                const currentTabParam = getUrlParam('tab');
+                updateUrlParams({
+                    tab: topTab === 'purchases' ? 'purchases' : (currentTabParam === 'sales' ? 'sales' : null),
+                    [paramKey]: status === 'active' ? null : status
+                }, { clearPage: true });
+            }
+
+            if (e.type === 'shown') {
+                setTimeout(function () {
+                    $.fn.dataTable
+                        .tables({ visible: true, api: true })
+                        .columns.adjust()
+                        .responsive.recalc();
+                }, 100);
+            }
+        });
+
+    // Ensure single-item cancel modals redirect back to the current tab/subtab URL state
+    $('div[id^="cancelSubscriptionModal-"]')
+        .off('show.bs.modal.subs_cancel')
+        .on('show.bs.modal.subs_cancel', function () {
+            const redirectInput = this.querySelector('input[name="redirect_to"]');
+            if (redirectInput) {
+                redirectInput.value = window.location.pathname + window.location.search;
+            }
+        });
 }
 
 document.addEventListener("turbo:load", initSubscriptionsPage);

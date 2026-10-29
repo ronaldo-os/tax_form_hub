@@ -23,8 +23,11 @@ function loadPageSpecificModules() {
   }
 
   if (path.includes('/tax_submissions')) {
-    import(/* webpackChunkName: "client_submissions" */ './client_submissions');
-    import(/* webpackChunkName: "admin_client_submissions" */ './admin_client_submissions');
+    if (path.includes('/tax_submissions/home')) {
+      import(/* webpackChunkName: "client_submissions" */ './client_submissions');
+    } else {
+      import(/* webpackChunkName: "admin_client_submissions" */ './admin_client_submissions');
+    }
   }
 
   if (path.includes('/admin')) {

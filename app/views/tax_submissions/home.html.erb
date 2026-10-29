@@ -11,16 +11,17 @@
 
 <div class="tax-submissions-page container-fluid px-2 px-sm-3 px-md-4 py-2.5 mt-3">
   <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3">
+    <% is_archived_tab = (@active_tab || params[:tab].to_s.downcase) == "archived" %>
     <!-- Tab Navigation Container -->
     <div class="tabs-scroll-container">
       <ul class="custom_nav_tabs nav nav-tabs mb-0 border-0" id="submissionTabs" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active" id="unarchived-tab" data-bs-toggle="tab" data-bs-target="#unarchived" type="button" role="tab" aria-controls="unarchived" aria-selected="true">
+          <button class="nav-link <%= 'active' unless is_archived_tab %>" id="unarchived-tab" data-bs-toggle="tab" data-bs-target="#unarchived" type="button" role="tab" aria-controls="unarchived" aria-selected="<%= !is_archived_tab %>">
             Active Submissions
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archived" type="button" role="tab" aria-controls="archived" aria-selected="false">
+          <button class="nav-link <%= 'active' if is_archived_tab %>" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archived" type="button" role="tab" aria-controls="archived" aria-selected="<%= is_archived_tab %>">
             Archived Submissions
           </button>
         </li>
@@ -47,10 +48,10 @@
   </div>
 
   <div class="tab-content">
-    <div class="tab-pane fade show active" id="unarchived">
+    <div class="tab-pane fade <%= 'show active' unless is_archived_tab %>" id="unarchived">
       <%= render partial: 'submission_table', locals: { submissions: @unarchived_submissions, archived_table: false } %>
     </div>
-    <div class="tab-pane fade" id="archived">
+    <div class="tab-pane fade <%= 'show active' if is_archived_tab %>" id="archived">
       <%= render partial: 'submission_table', locals: { submissions: @archived_submissions, archived_table: true } %>
     </div>
   </div>

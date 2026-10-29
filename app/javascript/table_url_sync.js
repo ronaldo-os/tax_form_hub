@@ -77,6 +77,7 @@ export function getInitialTableState() {
         tab: params.get('tab') || null,
         subtab: params.get('subtab') || null,
         status: params.get('status') || null,
+        pa_status: params.get('pa_status') || null,
         search: params.get('search') || null,
         page: page,
         type: params.get('type') || null,
@@ -84,6 +85,60 @@ export function getInitialTableState() {
         sort: sort,
         dir: dir
     };
+}
+
+/**
+ * Synchronously activates a Bootstrap tab/pill button and its target .tab-pane,
+ * avoiding initial 150ms fade transition delays on page load/refresh while keeping
+ * Bootstrap's internal Tab instance in sync.
+ *
+ * @param {HTMLElement|null} tabBtn
+ */
+export function activateTabElement(tabBtn) {
+    if (!tabBtn) return;
+
+    const tabList = tabBtn.closest('[role="tablist"], .nav, .nav-tabs, .nav-pills');
+    if (tabList) {
+        tabList.querySelectorAll('[data-bs-toggle="tab"], [data-bs-toggle="pill"], .nav-link').forEach((btn) => {
+            if (btn === tabBtn) {
+                btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
+            } else {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+            }
+        });
+    } else {
+        tabBtn.classList.add('active');
+        tabBtn.setAttribute('aria-selected', 'true');
+    }
+
+    const targetSelector = tabBtn.getAttribute('data-bs-target') || tabBtn.getAttribute('href');
+    if (targetSelector && targetSelector.startsWith('#')) {
+        const targetPane = document.getElementById(targetSelector.slice(1));
+        if (targetPane) {
+            const tabContent = targetPane.parentElement;
+            if (tabContent) {
+                Array.from(tabContent.children).forEach((child) => {
+                    if (child.classList && child.classList.contains('tab-pane')) {
+                        if (child === targetPane) {
+                            child.classList.add('show', 'active');
+                        } else {
+                            child.classList.remove('show', 'active');
+                        }
+                    }
+                });
+            } else {
+                targetPane.classList.add('show', 'active');
+            }
+        }
+    }
+
+    if (typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+        try {
+            bootstrap.Tab.getOrCreateInstance(tabBtn).show();
+        } catch (e) {}
+    }
 }
 
 /**
