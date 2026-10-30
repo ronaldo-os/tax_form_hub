@@ -950,11 +950,28 @@ function initApplication() {
   });
 }
 
-// Bind to Turbo Load
-document.addEventListener("turbo:load", () => {
+function runPageInitialization() {
   window.isNavigatingConfirmed = false;
   window.isUnsavedModalActive = false;
   window.pendingNavigation = null;
+
+  // Skip heavy DataTables and module initialization on transient Turbo cache previews
+  if (document.documentElement.hasAttribute('data-turbo-preview')) {
+    const metaTheme = document.querySelector('meta[name="user-theme"]')?.getAttribute('content');
+    const docTheme = document.documentElement.getAttribute('data-theme');
+    const savedTheme = metaTheme || docTheme || 'light';
+    updateThemeUI(savedTheme);
+    return;
+  }
+
+  // Prevent redundant back-to-back initialization on the same DOM (e.g. DOMContentLoaded + turbo:load or turbo:render + turbo:load)
+  if (document.body && document.body.dataset.appInitialized === 'true') {
+    return;
+  }
+  if (document.body) {
+    document.body.dataset.appInitialized = 'true';
+  }
+
   // Clear any cached company selector state on page load to ensure fresh data
   const input = document.getElementById('company_search_input');
   if (input) {
@@ -980,10 +997,18 @@ document.addEventListener("turbo:load", () => {
       });
     }
   }
+}
+
+// Bind to Turbo Load
+document.addEventListener("turbo:load", () => {
+  runPageInitialization();
 });
 // Ensure incoming pages during Turbo navigation preserve active theme without flashing previous theme
 document.addEventListener("turbo:before-render", (event) => {
   const newBody = event.detail && event.detail.newBody;
+  if (newBody && newBody.dataset) {
+    delete newBody.dataset.appInitialized;
+  }
   const incomingTheme = newBody?.getAttribute('data-theme') || document.documentElement.getAttribute('data-theme') || 'light';
   document.documentElement.setAttribute('data-theme', incomingTheme);
   document.documentElement.setAttribute('data-bs-theme', incomingTheme);
@@ -1024,27 +1049,13 @@ document.addEventListener("turbo:before-render", (event) => {
   }
 });
 
-// Specifically handle Turbo render
+// Specifically handle Turbo render (e.g. 422 form validation errors)
 document.addEventListener("turbo:render", () => {
-  window.isNavigatingConfirmed = false;
-  window.isUnsavedModalActive = false;
-  window.pendingNavigation = null;
-  initApplication();
-  loadPageSpecificModules();
-  if (typeof window.initEditProfile === 'function') {
-    window.initEditProfile();
-  }
+  runPageInitialization();
 });
 // Also bind to DOMContentLoaded for initial non-Turbo load if any
 document.addEventListener("DOMContentLoaded", () => {
-  window.isNavigatingConfirmed = false;
-  window.isUnsavedModalActive = false;
-  window.pendingNavigation = null;
-  initApplication();
-  loadPageSpecificModules();
-  if (typeof window.initEditProfile === 'function') {
-    window.initEditProfile();
-  }
+  runPageInitialization();
 });
 
 // Clear cached data on logout
@@ -1111,6 +1122,9 @@ document.addEventListener("turbo:before-cache", function () {
   window.isNavigatingConfirmed = false;
   window.isUnsavedModalActive = false;
   window.pendingNavigation = null;
+  if (document.body && document.body.dataset) {
+    delete document.body.dataset.appInitialized;
+  }
   const confirmModal = document.getElementById('turboConfirmModal');
   if (confirmModal) {
     confirmModal.remove();
@@ -1273,6 +1287,33 @@ function filterCommandItems(query) {
   });
 }
 
+// Lazy-hydrate deferred modal PDF embeds and images only when a modal is opened
+function hydrateLazyModalMedia(container) {
+  if (!container) return;
+  container.querySelectorAll('embed[data-src], img[data-src]').forEach(el => {
+    const deferredSrc = el.getAttribute('data-src');
+    if (deferredSrc && !el.getAttribute('src')) {
+      el.setAttribute('src', deferredSrc);
+    }
+    el.removeAttribute('data-src');
+  });
+}
+
+document.addEventListener('show.bs.modal', function (e) {
+  hydrateLazyModalMedia(e.target);
+});
+
+document.addEventListener('click', function (e) {
+  const trigger = e.target.closest('[data-bs-toggle="modal"][data-bs-target]');
+  if (!trigger) return;
+  const targetSelector = trigger.getAttribute('data-bs-target');
+  if (!targetSelector) return;
+  try {
+    const modalEl = document.querySelector(targetSelector);
+    hydrateLazyModalMedia(modalEl);
+  } catch (err) {}
+});
+
 // Smart Back Button Navigation Handler
 document.addEventListener('click', function (e) {
   const backBtn = e.target.closest('a.btn-back, a[data-behavior="back-button"]');
@@ -1285,6 +1326,27 @@ document.addEventListener('click', function (e) {
   // If form has unsaved changes and confirmation hasn't occurred yet, let dirty form handler manage it
   if (window.hasUnsavedChanges && window.hasUnsavedChanges() && !window.isNavigatingConfirmed) return;
 
+  const rawHref = (backBtn.getAttribute('href') || '').trim();
+  const hasExplicitHref =
+    rawHref !== '' &&
+    rawHref !== '#' &&
+    !rawHref.toLowerCase().startsWith('javascript:');
+
+  // When the server rendered an explicit back destination (e.g. session[:..._back_url]),
+  // navigate directly to that URL rather than calling history.back(), which can loop
+  // through intermediate post-action redirects on the current page.
+  if (hasExplicitHref) {
+    try {
+      const targetUrl = new URL(backBtn.href, window.location.origin);
+      const currentUrl = new URL(window.location.href);
+      if (targetUrl.pathname !== currentUrl.pathname || targetUrl.search !== currentUrl.search) {
+        return;
+      }
+    } catch (err) {
+      return;
+    }
+  }
+
   const referrer = document.referrer;
   const isInternalReferrer = referrer && referrer.includes(window.location.host);
   const isAuthPage = referrer && (
@@ -1293,7 +1355,7 @@ document.addEventListener('click', function (e) {
     referrer.includes('/users/password')
   );
 
-  // If we came from an internal page within the app (excluding auth/sign-in flows)
+  // Fallback to history.back() only when no distinct href target was provided
   if (window.history.length > 1 && isInternalReferrer && !isAuthPage) {
     e.preventDefault();
     window.history.back();

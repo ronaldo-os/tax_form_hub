@@ -199,11 +199,17 @@ export default class extends Controller {
 
   markItemRead(event) {
     const item = event.currentTarget.closest(".notification-item");
-    if (!item || item.dataset.markingRead === "true") return;
+    if (!item) return;
+    if (item.dataset.markingRead === "true") {
+      if (event) event.preventDefault();
+      return;
+    }
     item.dataset.markingRead = "true";
 
     const notifId = item.dataset.notificationId;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const href = (item.getAttribute("href") || "").trim();
+    const isClickRedirectLink = item.tagName === "A" && href.includes("/click");
 
     if (item.classList.contains("unread")) {
       item.classList.remove("unread");
@@ -258,7 +264,9 @@ export default class extends Controller {
         `;
       }
 
-      if (notifId && csrfToken) {
+      // Skip redundant PATCH /mark_as_read when navigating via /notifications/:id/click,
+      // which already marks the notification as read server-side before redirecting.
+      if (notifId && csrfToken && !isClickRedirectLink) {
         fetch(`/notifications/${notifId}/mark_as_read`, {
           method: "PATCH",
           headers: {

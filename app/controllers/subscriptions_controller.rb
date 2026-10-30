@@ -14,7 +14,7 @@ class SubscriptionsController < ApplicationController
     # We load all invoices that could be parents and filter in ruby since 
     # the recurring elements logic relies on JSON/Ruby parsing.
     all_parent_invoices = current_user.invoices
-                                      .includes(:recipient_company, :sale_from)
+                                      .includes(:recipient_company, :sale_from, :recurring_sub_invoices)
                                       .where(recurring_parent_invoice_id: nil)
                                       .order(created_at: :desc)
     

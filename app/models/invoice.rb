@@ -127,7 +127,7 @@ class Invoice < ApplicationRecord
     raise "Cannot generate sub-invoice number for non-parent invoice" unless parent_invoice.recurring_parent_invoice_id.nil?
 
     # Count existing sub-invoices to determine sequence number
-    sub_invoice_count = parent_invoice.recurring_sub_invoices.count + 1
+    sub_invoice_count = parent_invoice.recurring_sub_invoices.size + 1
     parent_number = parent_invoice.invoice_number
     
     "#{parent_number}-#{sub_invoice_count.to_s.rjust(2, '0')}"
@@ -209,7 +209,7 @@ class Invoice < ApplicationRecord
 
     total_expected = calculate_total_expected_child_invoices
     if total_expected && total_expected > 0
-      return false if recurring_sub_invoices.count >= (total_expected - 1)
+      return false if recurring_sub_invoices.size >= (total_expected - 1)
     end
 
     active_sub = subscription_line_items.any? do |item|
@@ -278,7 +278,7 @@ class Invoice < ApplicationRecord
     
     total_expected = calculate_total_expected_child_invoices
     if total_expected
-      return false if recurring_sub_invoices.count >= (total_expected - 1)
+      return false if recurring_sub_invoices.size >= (total_expected - 1)
     end
 
     primary_item = primary_recurring_item
@@ -291,7 +291,7 @@ class Invoice < ApplicationRecord
     start_d = Date.parse(start_d_str) rescue nil
     return false unless start_d
     
-    current_sequence = recurring_sub_invoices.count + 1
+    current_sequence = recurring_sub_invoices.size + 1
     
     next_billing_date = start_d
     current_sequence.times do

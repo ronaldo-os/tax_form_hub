@@ -187,8 +187,17 @@ function setupLocationsBulkActions(tableApi) {
     updateBulkBar();
 }
 
-function initLocationsPage() {
+function initLocationsPage(eventOrForce = false) {
     if (!window.location.pathname.includes("/locations") || $('#location-table').length === 0) return;
+    if (document.documentElement.hasAttribute('data-turbo-preview')) return;
+
+    const forceReinit =
+        eventOrForce === true ||
+        Boolean(eventOrForce && eventOrForce.type === 'popstate');
+
+    if (!forceReinit && typeof $ !== 'undefined' && $.fn.DataTable && $.fn.DataTable.isDataTable('#location-table')) {
+        return;
+    }
 
     const initial = getInitialTableState();
 

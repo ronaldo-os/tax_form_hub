@@ -128,6 +128,7 @@ class DashboardsController < ApplicationController
     # Only add recurring invoices calculation if the recurring invoices are sent to them (received/purchase recurring invoices),
     # not when they are the one who send it (outgoing sales).
     all_parents = current_user.invoices
+                              .includes(:recurring_sub_invoices)
                               .where(recurring_parent_invoice_id: nil)
                               .where(archived: [false, nil])
                               .where(invoice_type: "purchase")

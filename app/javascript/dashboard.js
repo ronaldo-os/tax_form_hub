@@ -1,8 +1,11 @@
 // Compact Bento Grid (Clean, High-Density & Modular) Dashboard Module
+import { registerBackgroundFetchController, unregisterBackgroundFetchController } from './action_spam_prevention';
 
 let performanceTrendChart = null;
 let statusDonutChart = null;
 let taxComplianceChart = null;
+let themeObserverInitialized = false;
+let analyticsAbortController = null;
 
 let currentDashboardData = null;
 let currentSeriesFilter = 'all';
@@ -60,8 +63,20 @@ function formatCurrency(amount, currency = 'PHP') {
 }
 
 export function initAnalyticsDashboard() {
+  if (document.documentElement.hasAttribute('data-turbo-preview')) return;
+
   const container = document.getElementById('analytics_dashboard_container');
   if (!container) return;
+
+  const trendCanvas = document.getElementById('performanceTrendChart');
+  if (
+    container.dataset.eventsAttached === 'true' &&
+    container.dataset.chartsInitialized === 'true' &&
+    performanceTrendChart &&
+    performanceTrendChart.canvas === trendCanvas
+  ) {
+    return;
+  }
 
   const rawData = container.getAttribute('data-initial-data');
   if (rawData) {
@@ -80,6 +95,7 @@ export function initAnalyticsDashboard() {
   if (currentDashboardData) {
     try {
       renderDashboardCharts(currentDashboardData);
+      container.dataset.chartsInitialized = 'true';
     } catch (e) {
       console.error('Failed to render dashboard charts:', e);
     }
@@ -476,29 +492,41 @@ function setupDashboardEventListeners() {
     });
   }
 
-  // 7. Theme Change Listener
-  window.addEventListener('themeChanged', function () {
-    if (currentDashboardData) {
-      renderDashboardCharts(currentDashboardData);
-    }
-  });
-
-  const observer = new MutationObserver(function (mutations) {
-    mutations.forEach(function (mutation) {
-      if (mutation.attributeName === 'data-theme' || mutation.attributeName === 'data-bs-theme') {
-        if (currentDashboardData) {
-          renderDashboardCharts(currentDashboardData);
-        }
+  // 7. Theme Change Listener (register once globally)
+  if (!themeObserverInitialized) {
+    themeObserverInitialized = true;
+    window.addEventListener('themeChanged', function () {
+      if (currentDashboardData && document.getElementById('analytics_dashboard_container')) {
+        renderDashboardCharts(currentDashboardData);
       }
     });
-  });
-  observer.observe(document.documentElement, { attributes: true });
+
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        if (mutation.attributeName === 'data-theme' || mutation.attributeName === 'data-bs-theme') {
+          if (currentDashboardData && document.getElementById('analytics_dashboard_container')) {
+            renderDashboardCharts(currentDashboardData);
+          }
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+  }
 }
 
 let isFetchingAnalytics = false;
 
 function fetchUpdatedAnalyticsData(timeFrame, currency) {
-  if (isFetchingAnalytics) return;
+  if (analyticsAbortController) {
+    try {
+      analyticsAbortController.abort();
+    } catch (e) {}
+    unregisterBackgroundFetchController(analyticsAbortController);
+  }
+
+  const controller = new AbortController();
+  analyticsAbortController = controller;
+  registerBackgroundFetchController(controller);
   isFetchingAnalytics = true;
 
   const loader = document.getElementById('trend_chart_loader');
@@ -507,6 +535,7 @@ function fetchUpdatedAnalyticsData(timeFrame, currency) {
   const url = `/dashboards/analytics_data?time_frame=${encodeURIComponent(timeFrame)}&currency=${encodeURIComponent(currency)}`;
 
   fetch(url, {
+    signal: controller.signal,
     headers: {
       'Accept': 'application/json',
       'X-Requested-With': 'XMLHttpRequest'
@@ -545,17 +574,22 @@ function fetchUpdatedAnalyticsData(timeFrame, currency) {
       }
     })
     .catch(error => {
+      if (error && error.name === 'AbortError') return;
       console.error('Error fetching analytics data:', error);
     })
     .finally(() => {
-      isFetchingAnalytics = false;
-      if (loader) loader.classList.remove('active');
-      const icon = document.getElementById('btn_refresh_icon');
-      if (icon) icon.classList.remove('fa-spin');
-      const refreshBtn = document.getElementById('btn_refresh_dashboard');
-      if (refreshBtn) {
-        refreshBtn.disabled = false;
-        refreshBtn.classList.remove('disabled');
+      unregisterBackgroundFetchController(controller);
+      if (analyticsAbortController === controller) {
+        analyticsAbortController = null;
+        isFetchingAnalytics = false;
+        if (loader) loader.classList.remove('active');
+        const icon = document.getElementById('btn_refresh_icon');
+        if (icon) icon.classList.remove('fa-spin');
+        const refreshBtn = document.getElementById('btn_refresh_dashboard');
+        if (refreshBtn) {
+          refreshBtn.disabled = false;
+          refreshBtn.classList.remove('disabled');
+        }
       }
     });
 }

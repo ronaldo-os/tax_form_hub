@@ -76,10 +76,48 @@ class ActionSpamPreventionTest < ActionDispatch::IntegrationTest
     assert_redirected_to invoices_path
   end
 
-  test "application layout includes compiled assets" do
+  test "application layout includes compiled assets and disables turbo hover prefetching" do
     get root_path
     assert_response :success
     assert_select "script[type='module']"
     assert_select "link[rel='stylesheet'][href*='application']"
+    assert_select "meta[name='turbo-prefetch'][content='false']"
+  end
+
+  test "action_spam_prevention coordinates simultaneous action buttons, turbo submit events, and page redirects" do
+    js_source = File.read(Rails.root.join("app/javascript/action_spam_prevention.js"))
+
+    assert_includes js_source, "pageActionInFlight"
+    assert_includes js_source, "setPageActionInFlight"
+    assert_includes js_source, "abortPendingBackgroundRequests"
+    assert_includes js_source, "closeOpenDropdownMenus"
+    assert_includes js_source, "navigationInFlightUrl"
+    assert_includes js_source, "turbo:submit-start"
+    assert_includes js_source, "turbo:before-visit"
+    refute_includes js_source, "if (event.defaultPrevented) {\n        resetFormSubmitting(form);"
+  end
+
+  test "tax submission modals defer PDF embed loading via data-src until modal open" do
+    partial_paths = [
+      Rails.root.join("app/views/tax_submissions/_submission_table.html.erb"),
+      Rails.root.join("app/views/tax_submissions/_submission_table_incoming.html.erb"),
+      Rails.root.join("app/views/admin/tax_submissions/_submission_table.html.erb")
+    ]
+
+    partial_paths.each do |path|
+      content = File.read(path)
+      assert_includes content, '<embed data-src="<%= url_for(', "Expected #{path} to defer PDF embed loading with data-src"
+      refute_includes content, '<embed src="<%= url_for(', "Expected #{path} not to eagerly load PDFs in hidden modals"
+    end
+
+    app_js = File.read(Rails.root.join("app/javascript/application.js"))
+    assert_includes app_js, "hydrateLazyModalMedia"
+    assert_includes app_js, "show.bs.modal"
+  end
+
+  test "smart back button handler respects explicit href targets instead of history.back loops" do
+    app_js = File.read(Rails.root.join("app/javascript/application.js"))
+    assert_includes app_js, "hasExplicitHref"
+    assert_includes app_js, "targetUrl.pathname !== currentUrl.pathname || targetUrl.search !== currentUrl.search"
   end
 end

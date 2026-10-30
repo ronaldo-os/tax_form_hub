@@ -118,7 +118,7 @@ class InvoiceDatatable < BaseDatatable
 
   def base_scope
     scope = current_user.invoices
-      .includes(:recipient_company, :sale_from)
+      .includes(:recipient_company, :sale_from, :payments)
       .left_joins(:recipient_company, :sale_from)
       .with_attached_attachments
       .where(archived: @archived)

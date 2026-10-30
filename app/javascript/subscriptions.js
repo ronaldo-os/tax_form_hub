@@ -406,14 +406,19 @@ function setupSubscriptionsBulkActions(tableApi, tableId) {
     updateBulkBar();
 }
 
-function initSubscriptionsPage() {
+function initSubscriptionsPage(eventOrForce = false) {
     if (!window.location.pathname.includes("/subscriptions")) return;
+    if (document.documentElement.hasAttribute('data-turbo-preview')) return;
 
     if (typeof $ === 'undefined' || !$.fn.DataTable) {
         console.warn("DataTables not loaded yet, deferring initialization.");
         setTimeout(initSubscriptionsPage, 100);
         return;
     }
+
+    const forceReinit =
+        eventOrForce === true ||
+        Boolean(eventOrForce && eventOrForce.type === 'popstate');
 
     const initial = getInitialTableState();
 
@@ -481,6 +486,9 @@ function initSubscriptionsPage() {
         const tableId = $(tableNode).attr('id');
 
         if ($.fn.DataTable.isDataTable(tableNode)) {
+            if (!forceReinit) {
+                return;
+            }
             const dt = $(tableNode).DataTable();
             dt.destroy();
         }
@@ -579,6 +587,9 @@ function initSubscriptionsPage() {
     $('.generated-invoices-table').each(function() {
         const tableNode = this;
         if ($.fn.DataTable.isDataTable(tableNode)) {
+            if (!forceReinit) {
+                return;
+            }
             $(tableNode).DataTable().destroy();
         }
 

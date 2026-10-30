@@ -117,7 +117,7 @@ class PriceAdjustmentItemWrapper
             curr = @invoice.calculate_next_period_date(curr, cycle)
             count += 1
           end
-          if count > 1 && @invoice.recurring_sub_invoices.count >= (count - 1)
+          if count > 1 && @invoice.recurring_sub_invoices.size >= (count - 1)
             return 'finished'
           end
         end

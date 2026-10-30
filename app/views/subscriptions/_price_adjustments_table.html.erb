@@ -157,7 +157,7 @@
                 <% 
                   start_d = Date.parse(start_date) rescue nil
                   if start_d
-                    current_sequence = invoice.recurring_sub_invoices.count + 1
+                    current_sequence = invoice.recurring_sub_invoices.size + 1
                     next_date = start_d
                     current_sequence.times { next_date = invoice.calculate_next_period_date(next_date, cycle) }
                     

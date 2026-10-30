@@ -1,10 +1,10 @@
 <%
   u = local_assigns[:user] || (defined?(current_user) ? current_user : nil)
   if u
-    recent_notifications = u.notifications.recent.limit(30).to_a
-    unread_notifications = u.notifications.unread.recent.limit(30).to_a
-    taxes_notifications = u.notifications.where(category: "taxes").recent.limit(30).to_a
-    invoices_notifications = u.notifications.where(category: "invoices").recent.limit(30).to_a
+    recent_notifications = u.notifications.recent.limit(20).to_a
+    unread_notifications = u.notifications.unread.recent.limit(20).to_a
+    taxes_notifications = recent_notifications.select { |n| n.category == "taxes" }
+    invoices_notifications = recent_notifications.select { |n| n.category == "invoices" }
     unread_count = u.unread_notifications.count
     total_count = u.notifications.count
   else

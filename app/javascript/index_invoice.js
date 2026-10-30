@@ -302,6 +302,9 @@ function initInvoicePage() {
                     return $.extend({}, d, ajaxData);
                 },
                 error: function (xhr, error, thrown) {
+                    if (error === 'abort' || (xhr && xhr.status === 0)) {
+                        return;
+                    }
                     console.error('DataTables server-side error:', xhr.status, error, thrown);
                     if (xhr.status === 500) {
                         console.error('Server error - check Rails logs for details');

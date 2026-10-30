@@ -28,9 +28,9 @@ threads_count = ENV.fetch("RAILS_MAX_THREADS") do
   when "production"
     5
   when "staging"
-    4
+    5
   else
-    3
+    5
   end
 end
 
