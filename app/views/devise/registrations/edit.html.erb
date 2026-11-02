@@ -64,9 +64,9 @@
     <div data-password-validation-target="matchError" class="invalid-feedback"></div>
   </div>
 
-  <div class="field">
+  <div class="field mb-3">
     <%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i><br />
-    <%= f.password_field :current_password, autocomplete: "current-password", required: true %>
+    <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control", required: true %>
   </div>
 
   <div class="actions">

@@ -100,32 +100,44 @@
   color: var(--text-main, #212529);
 }
 
-.profile-edit-card .form-control {
-  background-color: var(--input-bg, #ffffff);
-  color: var(--input-text, #212529);
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
-  border-radius: 0.65rem;
-  padding: 0.65rem 0.9rem;
-  font-size: 0.95rem;
+.profile-edit-card .form-control,
+.profile-edit-card .form-select {
+  background-color: var(--form-field-bg, var(--input-bg, #ffffff));
+  color: var(--form-field-text, var(--input-text, #212529));
+  border: 1px solid var(--form-field-border, var(--border-color, #cbd5e1));
+  border-radius: var(--form-field-radius, 0.5rem) !important;
+  min-height: var(--form-field-height, 2.5rem);
+  font-size: var(--form-field-font-size, 0.9375rem);
 }
 
-.profile-edit-card .form-control:focus {
-  background-color: var(--input-bg, #ffffff);
-  color: var(--input-text, #212529);
-  border-color: var(--main-color, #00aeff);
-  box-shadow: 0 0 0 0.2rem rgba(0, 174, 255, 0.2);
+.profile-edit-card .form-control:focus,
+.profile-edit-card .form-select:focus {
+  background-color: var(--form-field-bg, var(--input-bg, #ffffff));
+  color: var(--form-field-text, var(--input-text, #212529));
+  border-color: var(--form-field-focus-border, var(--main-color, #00aeff)) !important;
+  box-shadow: var(--form-field-focus-ring, 0 0 0 0.2rem rgba(0, 174, 255, 0.2)) !important;
 }
 
 .profile-edit-card .input-group-text {
-  background-color: var(--bg-secondary, #f8f9fa);
-  color: var(--text-muted, #6c757d);
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
-  border-radius: 0.65rem;
+  background-color: var(--form-field-addon-bg, var(--bg-secondary, #f8f9fa));
+  color: var(--form-field-addon-text, var(--text-muted, #6c757d));
+  border: 1px solid var(--form-field-border, var(--border-color, #cbd5e1));
+  border-radius: var(--form-field-radius, 0.5rem);
+}
+
+.profile-edit-card .input-group > .form-control:first-child {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.profile-edit-card .input-group > .input-group-text:last-child {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
 }
 
 [data-theme="dark"] .profile-edit-card .input-group-text {
-  background-color: var(--bg-tertiary, #25292d);
-  color: var(--text-main, #f8f9fa);
+  background-color: var(--form-field-addon-bg, var(--bg-tertiary, #25292d));
+  color: var(--form-field-addon-text, var(--text-main, #f8f9fa));
 }
 
 /* Minimalist Security Card Box */

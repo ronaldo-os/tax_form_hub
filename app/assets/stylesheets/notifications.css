@@ -606,9 +606,9 @@
 .notification-search-bar {
   display: flex;
   align-items: center;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  background: var(--form-field-bg, var(--bg-tertiary));
+  border: 1px solid var(--form-field-border, var(--border-color));
+  border-radius: var(--form-field-radius, 0.5rem);
   height: 36px;
   padding: 0 12px;
   gap: 8px;
@@ -616,10 +616,14 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
+.notification-search-bar:hover:not(:focus-within) {
+  border-color: var(--form-field-hover-border, var(--border-color));
+}
+
 .notification-search-bar:focus-within {
-  border-color: var(--main-color);
-  background: var(--bg-sidebar);
-  box-shadow: 0 0 0 3px rgba(0, 174, 255, 0.15);
+  border-color: var(--form-field-focus-border, var(--main-color));
+  background: var(--form-field-bg, var(--bg-sidebar));
+  box-shadow: var(--form-field-focus-ring, 0 0 0 0.2rem rgba(0, 174, 255, 0.2));
 }
 
 .notification-search-icon {

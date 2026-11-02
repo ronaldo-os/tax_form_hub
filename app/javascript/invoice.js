@@ -1659,7 +1659,7 @@ const initInvoiceForm = () => {
         groupHtml += `<h6>${f.label}</h6>`;
 
         if (f.type === "select" && f.selectOptions) {
-          groupHtml += `<select class="form-control optional-input" data-field-name="${f.fullKey}">`;
+          groupHtml += `<select class="form-select optional-input" data-field-name="${f.fullKey}">`;
           f.selectOptions.forEach(opt => {
             const selected = (opt.toLowerCase() === f.value.toLowerCase()) ? "selected" : "";
             groupHtml += `<option value="${opt}" ${selected}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`;
@@ -1685,7 +1685,7 @@ const initInvoiceForm = () => {
           groupHtml += `<label class="form-label">${field.label}</label>`;
 
           if (field.type === "select" && field.selectOptions) {
-            groupHtml += `<select class="form-control optional-input" data-field-name="${field.fullKey}">`;
+            groupHtml += `<select class="form-select optional-input" data-field-name="${field.fullKey}">`;
             field.selectOptions.forEach(opt => {
               const selected = (opt.toLowerCase() === field.value.toLowerCase()) ? "selected" : "";
               groupHtml += `<option value="${opt}" ${selected}>${opt.charAt(0).toUpperCase() + opt.slice(1)}</option>`;

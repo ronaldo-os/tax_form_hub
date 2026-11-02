@@ -225,9 +225,13 @@
   .invoice-form-page .form-control,
   .invoice-form-page .form-select {
     min-height: 44px;
-    border-radius: 10px !important;
+    border-radius: var(--form-field-radius, 0.5rem) !important;
     padding: 8px 12px !important;
     font-size: 0.9rem !important;
+  }
+
+  .invoice-form-page .form-select {
+    padding-right: 2.25rem !important;
   }
 
   .invoice-table-scroll-container {
@@ -378,9 +382,13 @@
 
   .companies-page .form-control,
   .companies-page .form-select {
-    border-radius: 10px !important;
+    border-radius: var(--form-field-radius, 0.5rem) !important;
     padding: 10px 14px !important;
     font-size: 0.9rem !important;
+  }
+
+  .companies-page .form-select {
+    padding-right: 2.25rem !important;
   }
 
   .companies-page .icon-fixed {
@@ -652,16 +660,16 @@
     width: 100% !important;
     max-width: 100% !important;
     margin-left: 0 !important;
-    border-radius: 12px !important;
+    border-radius: var(--form-field-radius, 0.5rem) !important;
     padding: 10px 16px 10px 42px !important;
-    border: 1px solid var(--border-color) !important;
-    background-color: var(--input-bg) !important;
+    border: 1px solid var(--form-field-border, var(--border-color)) !important;
+    background-color: var(--form-field-bg, var(--input-bg)) !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
     background-repeat: no-repeat !important;
     background-position: 14px center !important;
     background-size: 16px 16px !important;
     font-size: 0.925rem !important;
-    color: var(--input-text) !important;
+    color: var(--form-field-text, var(--input-text)) !important;
     box-shadow: none !important;
     outline: none !important;
     transition: all 0.2s ease;
@@ -672,9 +680,9 @@
   .locations-page div.dataTables_filter input:focus,
   .subscriptions-page div.dataTables_filter input:focus,
   .invoices-page div.dataTables_filter input:focus {
-    border-color: var(--main-color) !important;
-    background-color: var(--input-bg) !important;
-    box-shadow: 0 0 0 3px rgba(0, 174, 255, 0.15) !important;
+    border-color: var(--form-field-focus-border, var(--main-color)) !important;
+    background-color: var(--form-field-bg, var(--input-bg)) !important;
+    box-shadow: var(--form-field-focus-ring, 0 0 0 3px rgba(0, 174, 255, 0.15)) !important;
   }
 
   /* Styled per-page, company, and type dropdowns in a single flex row */
@@ -1209,19 +1217,19 @@
 
   /* Touch friendly inputs and buttons for mobile & tablets */
   .auth-page-container .form-control {
-    background-color: var(--input-bg);
-    color: var(--input-text);
-    border-color: var(--border-color);
+    background-color: var(--form-field-bg, var(--input-bg));
+    color: var(--form-field-text, var(--input-text));
+    border-color: var(--form-field-border, var(--border-color));
     min-height: 48px;
     height: 48px;
-    border-radius: 10px !important;
+    border-radius: var(--form-field-radius, 0.5rem) !important;
   }
 
   .auth-page-container .form-control:focus {
-    border-color: var(--main-color);
-    box-shadow: 0 0 0 3px rgba(0, 174, 255, 0.18);
-    background-color: var(--input-bg);
-    color: var(--input-text);
+    border-color: var(--form-field-focus-border, var(--main-color));
+    box-shadow: var(--form-field-focus-ring, 0 0 0 3px rgba(0, 174, 255, 0.18));
+    background-color: var(--form-field-bg, var(--input-bg));
+    color: var(--form-field-text, var(--input-text));
   }
 
   /* Input group matching for password input and toggle eye icon span */
@@ -1234,8 +1242,8 @@
   .auth-page-container .input-group .form-control {
     border-top-right-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
-    border-top-left-radius: 10px !important;
-    border-bottom-left-radius: 10px !important;
+    border-top-left-radius: var(--form-field-radius, 0.5rem) !important;
+    border-bottom-left-radius: var(--form-field-radius, 0.5rem) !important;
   }
 
   .auth-page-container .input-group-text {
@@ -1245,10 +1253,10 @@
     align-items: center;
     justify-content: center;
     padding: 0 1rem;
-    border-color: var(--border-color);
+    border-color: var(--form-field-border, var(--border-color));
     color: var(--text-muted);
-    border-top-right-radius: 10px !important;
-    border-bottom-right-radius: 10px !important;
+    border-top-right-radius: var(--form-field-radius, 0.5rem) !important;
+    border-bottom-right-radius: var(--form-field-radius, 0.5rem) !important;
     border-top-left-radius: 0 !important;
     border-bottom-left-radius: 0 !important;
     background-color: transparent !important;
@@ -1356,15 +1364,16 @@
 .networks-page .search-input-group {
   display: flex !important;
   align-items: center !important;
-  border-radius: 12px !important;
+  border-radius: var(--form-field-radius, 0.5rem) !important;
   overflow: hidden;
-  background-color: var(--input-bg, var(--bg-secondary, #ffffff));
-  border: 1px solid var(--border-color, #dee2e6) !important;
+  background-color: var(--form-field-bg, var(--input-bg, #ffffff));
+  border: 1px solid var(--form-field-border, var(--border-color, #cbd5e1)) !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .networks-page .search-input-group .input-group-text {
   border: none !important;
+  border-radius: 0 !important;
   background: transparent !important;
   display: flex !important;
   align-items: center !important;
@@ -1378,9 +1387,10 @@
 
 .networks-page .search-input-group .form-control {
   border: none !important;
+  border-radius: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
-  color: var(--input-text, inherit) !important;
+  color: var(--form-field-text, var(--input-text, inherit)) !important;
   display: flex !important;
   align-items: center !important;
   padding-top: 0.75rem !important;
@@ -1388,9 +1398,13 @@
   height: 100% !important;
 }
 
+.networks-page .search-input-group:hover:not(:focus-within) {
+  border-color: var(--form-field-hover-border, var(--border-color)) !important;
+}
+
 .networks-page .search-input-group:focus-within {
-  border-color: var(--main-color, #0d6efd) !important;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15) !important;
+  border-color: var(--form-field-focus-border, var(--main-color, #00aeff)) !important;
+  box-shadow: var(--form-field-focus-ring, 0 0 0 0.2rem rgba(0, 174, 255, 0.2)) !important;
 }
 
 .networks-page .network-autocomplete-popover {

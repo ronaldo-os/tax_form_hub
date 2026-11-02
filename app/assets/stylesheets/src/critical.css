@@ -21,6 +21,39 @@
   --modal-content-bg: #ffffff;
   --modal-content-color: #212529;
   --text-muted: #6c757d;
+
+  /* Standardized Form Field Design Tokens */
+  --bs-border-radius-md: 0.5rem;
+  --form-field-radius: 0.5rem;
+  --form-field-height: 2.5rem;
+  --form-field-height-sm: 2.125rem;
+  --form-field-height-lg: 2.75rem;
+  --form-field-padding-y: 0.4375rem;
+  --form-field-padding-x: 0.75rem;
+  --form-field-padding-y-sm: 0.25rem;
+  --form-field-padding-x-sm: 0.625rem;
+  --form-field-padding-y-lg: 0.5rem;
+  --form-field-padding-x-lg: 0.875rem;
+  --form-field-font-size: 0.9375rem;
+  --form-field-font-size-sm: 0.8125rem;
+  --form-field-font-size-lg: 1rem;
+  --form-field-bg: var(--input-bg);
+  --form-field-text: var(--input-text);
+  --form-field-border: #cbd5e1;
+  --form-field-hover-border: #94a3b8;
+  --form-field-placeholder: #6c757d;
+  --form-field-focus-border: var(--main-color);
+  --form-field-focus-ring: 0 0 0 0.2rem rgba(0, 174, 255, 0.2);
+  --form-field-disabled-bg: #f1f5f9;
+  --form-field-disabled-text: #64748b;
+  --form-field-disabled-border: #e2e8f0;
+  --form-field-readonly-bg: #f8fafc;
+  --form-field-readonly-text: #475569;
+  --form-field-readonly-border: #cbd5e1;
+  --form-field-error-border: #dc3545;
+  --form-field-error-ring: 0 0 0 0.2rem rgba(220, 53, 69, 0.2);
+  --form-field-addon-bg: #f8f9fa;
+  --form-field-addon-text: #495057;
 }
 
 [data-theme="dark"] {
@@ -41,6 +74,27 @@
   --modal-content-bg: #212529;
   --modal-content-color: #f8f9fa;
   --text-muted: #adb5bd;
+
+  /* Standardized Form Field Design Tokens (Dark Mode) */
+  --bs-border-radius-md: 0.5rem;
+  --form-field-radius: 0.5rem;
+  --form-field-bg: var(--input-bg);
+  --form-field-text: var(--input-text);
+  --form-field-border: #495057;
+  --form-field-hover-border: #6c757d;
+  --form-field-placeholder: #9ca3af;
+  --form-field-focus-border: var(--main-color);
+  --form-field-focus-ring: 0 0 0 0.2rem rgba(0, 174, 255, 0.25);
+  --form-field-disabled-bg: #212529;
+  --form-field-disabled-text: #868e96;
+  --form-field-disabled-border: #343a40;
+  --form-field-readonly-bg: #25292d;
+  --form-field-readonly-text: #ced4da;
+  --form-field-readonly-border: #495057;
+  --form-field-error-border: #f87171;
+  --form-field-error-ring: 0 0 0 0.2rem rgba(248, 113, 113, 0.25);
+  --form-field-addon-bg: #25292d;
+  --form-field-addon-text: #dee2e6;
 }
 
 /* Base layout - critical for initial render */

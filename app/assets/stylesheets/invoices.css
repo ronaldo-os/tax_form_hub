@@ -1935,14 +1935,14 @@
 }
 
 .invoices-page .dataTables_length select.form-select {
-  font-size: 0.785rem !important;
+  font-size: 0.8125rem !important;
   padding: 0.25rem 1.6rem 0.25rem 0.5rem !important;
-  height: 30px !important;
+  height: var(--form-field-height-sm, 2.125rem) !important;
   min-width: 65px !important;
-  border-radius: 6px !important;
-  border-color: var(--border-color) !important;
-  background-color: var(--card-bg) !important;
-  color: var(--text-main) !important;
+  border-radius: var(--form-field-radius, 0.5rem) !important;
+  border-color: var(--form-field-border, var(--border-color)) !important;
+  background-color: var(--form-field-bg, var(--input-bg)) !important;
+  color: var(--form-field-text, var(--input-text)) !important;
 }
 
 .invoices-page .dataTables_filter label {
@@ -1954,19 +1954,19 @@
 }
 
 .invoices-page .dataTables_filter input.form-control {
-  font-size: 0.785rem !important;
+  font-size: 0.8125rem !important;
   padding: 0.25rem 0.65rem !important;
-  height: 30px !important;
+  height: var(--form-field-height-sm, 2.125rem) !important;
   min-width: 200px !important;
-  border-radius: 6px !important;
-  border: 1px solid var(--border-color) !important;
-  background-color: var(--card-bg) !important;
-  color: var(--text-main) !important;
+  border-radius: var(--form-field-radius, 0.5rem) !important;
+  border: 1px solid var(--form-field-border, var(--border-color)) !important;
+  background-color: var(--form-field-bg, var(--input-bg)) !important;
+  color: var(--form-field-text, var(--input-text)) !important;
 }
 
 .invoices-page .dataTables_filter input.form-control:focus {
-  border-color: var(--main-color) !important;
-  box-shadow: 0 0 0 0.15rem rgba(0, 174, 255, 0.18) !important;
+  border-color: var(--form-field-focus-border, var(--main-color)) !important;
+  box-shadow: var(--form-field-focus-ring, 0 0 0 0.2rem rgba(0, 174, 255, 0.2)) !important;
 }
 
 /* DataTables Footer (Info & Pagination) */
