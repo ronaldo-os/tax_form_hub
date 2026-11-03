@@ -210,11 +210,11 @@ export function initCompanySelector() {
 
         const companyIdStr = company.company_id_number || '-';
         const companyIdType = company.company_id_type || '';
-        document.getElementById('company_number').textContent = `Company ${companyIdType} number : ${companyIdStr}`;
+        document.getElementById('company_number').textContent = `Company ${companyIdType} Number: ${companyIdStr}`;
 
         const taxIdStr = company.tax_id_number || '-';
         const taxIdType = company.tax_id_type || '';
-        document.getElementById('company_tax_number').textContent = `Tax ${taxIdType} number : ${taxIdStr}`;
+        document.getElementById('company_tax_number').textContent = `Tax ${taxIdType} Number: ${taxIdStr}`;
     }
 
     if (changeBtn && !changeBtn.dataset.listenerAttached) {

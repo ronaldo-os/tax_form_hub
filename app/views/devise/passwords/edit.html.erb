@@ -17,7 +17,7 @@
 
           <!-- New Password Field -->
           <div class="mb-3">
-            <%= f.label :password, "New password", class: "form-label fw-semibold" %>
+            <%= f.label :password, "New Password", class: "form-label fw-semibold" %>
             <div class="input-group">
               <%= f.password_field :password, id: "password", autofocus: true, autocomplete: "new-password", class: "form-control form-control-lg fs-6 border-end-0", required: true, data: { password_validation_target: "password", action: "input->password-validation#validatePassword" } %>
               <span class="input-group-text bg-transparent border-start-0">
@@ -46,7 +46,7 @@
 
           <!-- Confirm Password Field -->
           <div class="mb-3">
-            <%= f.label :password_confirmation, "Confirm new password", class: "form-label fw-semibold" %>
+            <%= f.label :password_confirmation, "Confirm New Password", class: "form-label fw-semibold" %>
             <div class="input-group">
               <%= f.password_field :password_confirmation, id: "confirmPassword", autocomplete: "new-password", class: "form-control form-control-lg fs-6 border-end-0", required: true, data: { password_validation_target: "confirmation", action: "input->password-validation#validateConfirmation" } %>
               <span class="input-group-text bg-transparent border-start-0">

@@ -335,7 +335,7 @@
       <div class="col-sm-6 col-md-5">
         <div class="pt-2">
           <div class="d-flex justify-content-between align-items-center mb-2 small text-secondary">
-            <span>Subtotal excl. taxes:</span>
+            <span>Subtotal Excl. Taxes:</span>
             <strong class="text-body"><%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("subtotal").to_f, precision: 2, delimiter: ',') %></strong>
           </div>
 
@@ -356,7 +356,7 @@
             <% end %>
           <% else %>
             <div class="d-flex justify-content-between align-items-center mb-2 small text-secondary">
-              <span>Total taxes:</span>
+              <span>Total Taxes:</span>
               <strong class="text-body"><%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %></strong>
             </div>
           <% end %>
@@ -369,7 +369,7 @@
           </div>
           <% if invoice.total.dig("tax").to_f != 0 || invoice.total["tax_breakdown"].present? %>
             <p class="text-muted text-end extra-small mb-0 mt-1">
-              Incl. taxes <%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
+              Incl. Taxes <%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
             </p>
           <% end %>
         </div>

@@ -50,11 +50,11 @@
                 <%= current_recipient&.country.presence || (current_recipient&.address.present? ? "Philippines" : "No country selected") %>
               </p>
               <hr>
-              <p class="mb-1 small"><strong id="company_number">Company <%= current_recipient&.company_id_type %> number : <%= current_recipient&.company_id_number || '-' %></strong></p>
-              <p class="mb-0 small"><strong id="company_tax_number">Tax <%= current_recipient&.tax_id_type %> number : <%= current_recipient&.tax_id_number || '-' %></strong></p>
+              <p class="mb-1 small"><strong id="company_number">Company <%= current_recipient&.company_id_type %> Number: <%= current_recipient&.company_id_number || '-' %></strong></p>
+              <p class="mb-0 small"><strong id="company_tax_number">Tax <%= current_recipient&.tax_id_type %> Number: <%= current_recipient&.tax_id_number || '-' %></strong></p>
 
               <a href="#" class="text-primary small d-block mt-2" id="change-recipient">
-                Change recipient
+                Change Recipient
               </a>
             </div>
           </div>
@@ -63,7 +63,7 @@
           <div class="col-md-6">
 
 
-            <%= f.label invoice.quote? ? :quote_number : (invoice.credit_note? ? :credit_note_number : :invoice_number), class: "form-label" %>
+            <%= f.label invoice.quote? ? :quote_number : (invoice.credit_note? ? :credit_note_number : :invoice_number), invoice.quote? ? "Quote Number" : (invoice.credit_note? ? "Credit Note Number" : "Invoice Number"), class: "form-label" %>
             <%= f.text_field :invoice_number, class: "form-control", required: true %>
             <% if @suggested_invoice_number.present? && @invoice.new_record? %>
                 <div class="form-text">
@@ -95,13 +95,13 @@
 
             <div class="row mt-3">
               <div class="col-md-6 mb-3 mb-md-0">
-                <%= f.label :issue_date, class: "form-label" %>
+                <%= f.label :issue_date, "Issue Date", class: "form-label" %>
                 <%= f.date_field :issue_date, class: "form-control", value: f.object.issue_date || Date.today %>
               </div>
 
 
               <div class="col-md-6">
-                <%= f.label :currency, class: "form-label" %>
+                <%= f.label :currency, "Currency", class: "form-label" %>
                 <%= f.select :currency, 
                   options_for_select(
                     User::SUPPORTED_CURRENCIES.map { |code, name|
@@ -127,7 +127,7 @@
                     <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
                     <div class="row">
                       <div class="col-md-12">
-                        <%= f.label :payment_due_date, class: "form-label" %>
+                        <%= f.label :payment_due_date, "Payment Due Date", class: "form-label" %>
                         <%= f.date_field :payment_due_date, name: "Payment_Due_Date.pament_due_date.date.12", class: "form-control" %>
                       </div>
                     </div>
@@ -139,7 +139,7 @@
                     <button type="button" class="btn btn-sm btn-outline-danger rounded position-absolute top-0 end-0 m-2 remove-group">×</button>
                     <div class="row">
                       <div class="col-md-12">
-                        <%= f.label :delivery_date, class: "form-label" %>
+                        <%= f.label :delivery_date, "Delivery Date", class: "form-label" %>
                         <%= f.date_field :delivery_date, name: "Delivery_Date.delivery_date.date.12", class: "form-control" %>
                       </div>
                     </div>
@@ -168,7 +168,7 @@
                 <th>Description</th>
                 <th>Quantity</th>
                 <th>Unit</th>
-                <th>Price per unit</th>
+                <th>Price Per Unit</th>
                 <th>Tax (%)</th>
                 <th>Total</th>
                 <th></th>
@@ -249,7 +249,7 @@
       <!-- Totals -->
       <div class="card border-0 shadow-sm p-3 p-md-4 text-end mb-3 invoice-totals-summary">
         <p class="mb-1 text-muted">
-          Subtotal excl. taxes
+          Subtotal Excl. Taxes
           <span class="ms-3 ms-md-4 fw-bold text-main subtotal-amount">0.00</span>
         </p>
         <p class="mb-1 charge-line text-muted" style="display:none;">
@@ -265,7 +265,7 @@
             <span class="ms-3 ms-md-1 grand-total-amount text-primary">0.00</span>
           </h4>
           <p class="text-muted mb-0 mt-1" id="total-taxes-row" style="font-size: 0.875rem;">
-            Total taxes <span class="currency_type"><%= User.currency_symbol(f.object.currency.presence || current_user.currency.presence || "PHP") %></span> <span class="total-tax-amount">0.00</span> 
+            Total Taxes <span class="currency_type"><%= User.currency_symbol(f.object.currency.presence || current_user.currency.presence || "PHP") %></span> <span class="total-tax-amount">0.00</span> 
           </p>
         </div>
       </div>
@@ -279,8 +279,8 @@
             <div id="payment_terms_parent_div">
             </div>
             <select name="payment_terms_select" id="payment_terms_select" class="form-select mb-3" data-optional-group="0">
-              <option value="">Add payment terms and means</option>
-              <option value="cash">Cash payment</option>
+              <option value="">Add Payment Terms and Means</option>
+              <option value="cash">Cash Payment</option>
               <option value="check">Check</option>
               <option value="bank">Bank Account</option>
               <option value="bank_card">Bank Card</option>
@@ -292,7 +292,7 @@
                     class: "form-check-input",
                     id: "invoice_save_payment_terms_for_future",
                     checked: ( @save_payment_terms_for_future || @invoice.save_payment_terms_for_future? ) %>
-              <%= f.label :save_payment_terms_for_future, "Save payment terms and means for future invoices", class: "form-check-label", for: "invoice_save_payment_terms_for_future", style: "cursor: pointer;" %>
+              <%= f.label :save_payment_terms_for_future, "Save Payment Terms and Means for Future Invoices", class: "form-check-label", for: "invoice_save_payment_terms_for_future", style: "cursor: pointer;" %>
             </div>
             <% end %>
 
@@ -309,7 +309,7 @@
 
             <div class="collapse mt-3 border rounded p-3 pt-3" id="delivery_details_parent_div">
               <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0">Delivery details</h5>
+                <h5 class="mb-0">Delivery Details</h5>
               </div>
 
               <div class="row">
@@ -319,7 +319,7 @@
                     <% if @invoice&.delivery_details_country.present? %>
                       <option value="<%= @invoice.delivery_details_country %>" selected><%= @invoice.delivery_details_country %></option>
                     <% else %>
-                      <option value="">Select country</option>
+                      <option value="">Select Country</option>
                     <% end %>
                   </select>
                 </div>
@@ -340,7 +340,7 @@
                 </div>
 
                 <div class="col-md-6 mb-3">
-                  <label class="form-label">Locality name</label>
+                  <label class="form-label">Locality Name</label>
                   <input type="text" name="invoice[delivery_details_locality_name]" class="form-control" value="<%= @invoice&.delivery_details_locality_name %>">
                 </div>
 
@@ -426,7 +426,7 @@
           </div>
           <div class="<%= @invoice.quote? ? 'col-md-12 mt-4' : 'col-md-6' %>">
             <div class="mb-3 mob-mt-2">
-              <%= f.label :recipient_note, "Write a message to the recipient", class: "form-label" %>
+              <%= f.label :recipient_note, "Message to Recipient", class: "form-label" %>
               <%= f.text_area :recipient_note, class: "form-control", rows: 5, placeholder: "Enter your message...", value: @recipient_note.presence || @invoice&.recipient_note %>
             </div>
 
@@ -438,12 +438,12 @@
                       @invoice.save_notes_for_future? ||
                       (!@invoice.persisted? && @recipient_note.present? && @save_notes_for_future.nil?)
                     ) %>
-              <%= f.label :save_notes_for_future, "Save notes for future Invoices", class: "form-check-label", for: "invoice_save_notes_for_future", style: "cursor: pointer;" %>
+              <%= f.label :save_notes_for_future, "Save Notes for Future Invoices", class: "form-check-label", for: "invoice_save_notes_for_future", style: "cursor: pointer;" %>
             </div>
 
             <% unless @invoice.recurring_sub_invoice? %>
               <div class="mb-3">
-                <%= f.label :attachments, class: "form-label" %>
+                <%= f.label :attachments, "Attachments", class: "form-label" %>
                 <div id="new_attachments_preview" class="mt-3"></div>
                 <%= f.file_field :attachments, 
                       class: "form-control", 
@@ -593,12 +593,12 @@
     <% unless @invoice.quote? || @invoice.credit_note? %>
     <div class="card-footer pb-3">
         <button type="button" class="btn btn-primary btn-sm add-footer-toggle-btn mt-3">
-          + Add footer notes
+          + Add Footer Notes
         </button>
 
         <div id="footer_wrapper_parent_div" class="mt-3" style="display:none">
           <div class="mb-3">
-              <%= f.label :footer_notes, class: "form-label" %>
+              <%= f.label :footer_notes, "Footer Notes", class: "form-label" %>
               <%= f.text_area :footer_notes, class: "form-control", rows: 5, placeholder: "Enter your message...", value: @footer_notes.presence || @invoice&.footer_notes %>
             </div>
 
@@ -610,7 +610,7 @@
                       @invoice.save_footer_notes_for_future? ||
                       (!@invoice.persisted? && defined?(@footer_notes) && @footer_notes.present? && @save_footer_notes_for_future.nil?)
                     ) %>
-              <%= f.label :save_footer_notes_for_future, "Save footer notes for future Invoices", class: "form-check-label", for: "invoice_save_footer_notes_for_future", style: "cursor: pointer;" %>
+              <%= f.label :save_footer_notes_for_future, "Save Footer Notes for Future Invoices", class: "form-check-label", for: "invoice_save_footer_notes_for_future", style: "cursor: pointer;" %>
             </div>
         </div>
     </div>

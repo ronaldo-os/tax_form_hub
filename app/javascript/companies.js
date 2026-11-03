@@ -29,8 +29,9 @@ function initCompanyPage() {
         var $label = $(labelId);
 
         function setLabel() {
-            var selectedText = $select.find("option:selected").text();
-            if (selectedText) {
+            var selectedVal = $select.val();
+            var selectedText = $select.find("option:selected").text().trim();
+            if (selectedVal && selectedText) {
                 $label.text(selectedText + " Number");
             } else {
                 $label.text(defaultText);

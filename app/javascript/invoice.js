@@ -119,7 +119,7 @@ const initInvoiceForm = () => {
         <tr class="dropdown_per_line hidden" data-line-index="${index}">
           <td colspan="3">
             <select name="additional_field_${index}" id="additional_field_${index}" class="no-label form-select optional-type">
-              <option value="">Add optional field</option>
+              <option value="">Add Optional Field</option>
               ${buildOptions(OPTIONAL_FIELDS)}
             </select>
           </td>
@@ -267,27 +267,27 @@ const initInvoiceForm = () => {
       { name: "customsDeclarations.reference_number_of_customs_from_No_2.text.12", label: "Reference Number of Customs Form No.2", type: "text", cols: 12, class: "mb-3" },
     ],
     "taxExchangeRateFields": [
-      { name: "taxExchangeRateFields.exchange_rate.text.7", label: "Exchange rate", type: "text", cols: 7, class: "mb-3" },
+      { name: "taxExchangeRateFields.exchange_rate.text.7", label: "Exchange Rate", type: "text", cols: 7, class: "mb-3" },
       { name: "taxExchangeRateFields.currency.select(php,usd,eur,jpy).5", label: "Currency", type: "select", cols: 5, options: ["PHP", "USD", "EUR", "GBP", "JPY", "SGD", "CAD", "AUD"], class: "mb-3" },
-      { name: "taxExchangeRateFields.date_of_exchange_rate.text.7", label: "Date of exchange rate", type: "date", cols: 7, class: "mb-3" },
-      { name: "taxExchangeRateFields.converted_tax_total.text.5", label: "Converted tax total", type: "text", cols: 5, class: "mb-3" },
-      { name: "taxExchangeRateFields.converted_document_total_(incl taxes).text.12", label: "Converted Document Total (incl taxes)", type: "text", cols: 12, class: "mb-3" },
-      { name: "taxExchangeRateFields.converted_document_total_(excl taxes).text.12", label: "Converted Document Total (excl taxes)", type: "text", cols: 12, class: "mb-3" },
+      { name: "taxExchangeRateFields.date_of_exchange_rate.text.7", label: "Date of Exchange Rate", type: "date", cols: 7, class: "mb-3" },
+      { name: "taxExchangeRateFields.converted_tax_total.text.5", label: "Converted Tax Total", type: "text", cols: 5, class: "mb-3" },
+      { name: "taxExchangeRateFields.converted_document_total_(incl taxes).text.12", label: "Converted Document Total (Incl. Taxes)", type: "text", cols: 12, class: "mb-3" },
+      { name: "taxExchangeRateFields.converted_document_total_(excl taxes).text.12", label: "Converted Document Total (Excl. Taxes)", type: "text", cols: 12, class: "mb-3" },
     ],
     "transactionVatType": [
       { name: "transactionVatType.transaction_vat_type.select(collection,debit).12", label: "Transaction VAT Type", type: "select", cols: 12, options: ["Collection", "Debit"], class: "mb-3" }
     ],
     "orderReferenceId": [
-      { name: "orderReferenceId.purchase_order_number.text.12", label: "Purchase order number", type: "text", cols: 12, class: "mb-3" }
+      { name: "orderReferenceId.purchase_order_number.text.12", label: "Purchase Order Number", type: "text", cols: 12, class: "mb-3" }
     ],
     "orderReferenceIssueDate": [
-      { name: "orderReferenceIssueDate.purchase_order_issue_date.date.12", label: "Purchase order issue date", type: "date", cols: 12, class: "mb-3" }
+      { name: "orderReferenceIssueDate.purchase_order_issue_date.date.12", label: "Purchase Order Issue Date", type: "date", cols: 12, class: "mb-3" }
     ],
     "billingReferenceId": [
-      { name: "billingReferenceId.billing_reference.text.12", label: "Billing reference", type: "text", cols: 12, class: "mb-3" }
+      { name: "billingReferenceId.billing_reference.text.12", label: "Billing Reference", type: "text", cols: 12, class: "mb-3" }
     ],
     "contractDocumentReferenceId": [
-      { name: "contractDocumentReferenceId.contract_number.text.12", label: "Contract number", type: "text", cols: 12, class: "mb-3" }
+      { name: "contractDocumentReferenceId.contract_number.text.12", label: "Contract Number", type: "text", cols: 12, class: "mb-3" }
     ],
     "despatchDocumentReference.id": [
       { name: "despatchDocumentReference.shipping_notice_reference.text.12", label: "Shipping Notice Reference", type: "text", cols: 12, class: "mb-3" }
@@ -302,10 +302,10 @@ const initInvoiceForm = () => {
       { name: "receiptDocumentReference.goods_receipt_issue_date.date.12", label: "Goods Receipt Issue Date", type: "date", cols: 12, class: "mb-3" }
     ],
     "accountingCost": [
-      { name: "accountingCost.cost_center.text.12", label: "Cost center", type: "text", cols: 12, class: "mb-3" }
+      { name: "accountingCost.cost_center.text.12", label: "Cost Center", type: "text", cols: 12, class: "mb-3" }
     ],
     "customerPartyContactName": [
-      { name: "customerPartyContactName.person_reference.text.12", label: "Person reference", type: "text", cols: 12, class: "mb-3" }
+      { name: "customerPartyContactName.person_reference.text.12", label: "Person Reference", type: "text", cols: 12, class: "mb-3" }
     ],
     "transportReference": [
       { name: "transport_reference.text.12", label: "Transport Reference", type: "text", cols: 12, class: "mb-3" }
@@ -314,19 +314,19 @@ const initInvoiceForm = () => {
       { name: "transport_reference_issue_date.date.12", label: "Transport Reference Issue Date", type: "date", cols: 12, class: "mb-3" }
     ],
     "FileID": [
-      { name: "FileID.file_id.text.12", label: "File Id", type: "text", cols: 12, class: "mb-3" }
+      { name: "FileID.file_id.text.12", label: "File ID", type: "text", cols: 12, class: "mb-3" }
     ],
     "customerAssignedId": [
-      { name: "customerAssignedId.customer_account_id.text.12", label: "Customer account ID", type: "text", cols: 12, class: "mb-3" }
+      { name: "customerAssignedId.customer_account_id.text.12", label: "Customer Account ID", type: "text", cols: 12, class: "mb-3" }
     ],
     "taxPointDate": [
-      { name: "taxPointDate.tax_point_date.date.12", label: "Tax point date", type: "date", cols: 12, class: "mb-3" }
+      { name: "taxPointDate.tax_point_date.date.12", label: "Tax Point Date", type: "date", cols: 12, class: "mb-3" }
     ],
     "supplierCommissionNumber": [
-      { name: "supplierCommissionNumber.commision_number_of_seller.text.12", label: "Commission number of seller", type: "text", cols: 12, class: "mb-3" }
+      { name: "supplierCommissionNumber.commision_number_of_seller.text.12", label: "Commission Number of Seller", type: "text", cols: 12, class: "mb-3" }
     ],
     "supplierPhysicalLocationValue": [
-      { name: "supplierPhysicalLocationValue.data_universal_numbering_system.text.12", label: "Data universal numbering system", type: "text", cols: 12, class: "mb-3" }
+      { name: "supplierPhysicalLocationValue.data_universal_numbering_system.text.12", label: "Data Universal Numbering System", type: "text", cols: 12, class: "mb-3" }
     ],
     "deliveryTerms": [
       { name: "deliveryTerms.delivery_terms.text.12", label: "Delivery Terms", type: "text", cols: 12, class: "mb-3" }
@@ -341,7 +341,7 @@ const initInvoiceForm = () => {
       { name: "PaymentReference.payment_reference.text.12", label: "Payment Reference", type: "text", cols: 12, class: "mb-3" }
     ],
     "promisedDeliveryPeriod": [
-      { name: "promisedDeliveryPeriod.delivery_period.text.12", label: "Delivery period", type: "text", cols: 12, class: "mb-3" }
+      { name: "promisedDeliveryPeriod.delivery_period.text.12", label: "Delivery Period", type: "text", cols: 12, class: "mb-3" }
     ],
     "ClearanceClave": [
       { name: "ClearanceClave.clearance_clave.text.12", label: "Clearance Clave", type: "text", cols: 12, class: "mb-3" }
@@ -447,42 +447,42 @@ const initInvoiceForm = () => {
       { name: "check.check.text_only.12", label: "Check Payment", type: "text_only", cols: 12 },
     ],
     bank: [
-      { name: "bank.name.text.12", label: "Bank name", type: "text", cols: 12 },
+      { name: "bank.name.text.12", label: "Bank Name", type: "text", cols: 12 },
       { name: "bank.sortcode.text.6", label: "Sort Code", type: "text", cols: 6 },
-      { name: "bank.account_number.text.6", label: "Account number", type: "text", cols: 6 },
-      { name: "bank.account_holder_name.text.12", label: "Account holder name (optional) ", type: "text", cols: 12 },
-      { name: "bank.street_name.text.12", label: "Street name (optional)", type: "text", cols: 12 },
-      { name: "bank.additional_street_name.text.12", label: "Additional street name (optional)", type: "text", cols: 12 },
-      { name: "bank.building_number.text.6", label: "Building number (optional)", type: "text", cols: 6 },
-      { name: "bank.city.text.6", label: "City (optional)", type: "text", cols: 6 },
-      { name: "bank.zip_code.text.12", label: "Postal/Zip code (optional)", type: "text", cols: 12 },
-      { name: "bank.state.text.12", label: "State/Region (optional)", type: "text", cols: 12 },
-      { name: "bank.address_line.text.12", label: "Address line (optional)", type: "text", cols: 12 },
-      { name: "bank.country.text.12", label: "Country (optional)", type: "text", cols: 12 },
-      { name: "bank.note.text.12", label: "Payment note", type: "text", cols: 12 },
+      { name: "bank.account_number.text.6", label: "Account Number", type: "text", cols: 6 },
+      { name: "bank.account_holder_name.text.12", label: "Account Holder Name (Optional)", type: "text", cols: 12 },
+      { name: "bank.street_name.text.12", label: "Street Name (Optional)", type: "text", cols: 12 },
+      { name: "bank.additional_street_name.text.12", label: "Additional Street Name (Optional)", type: "text", cols: 12 },
+      { name: "bank.building_number.text.6", label: "Building Number (Optional)", type: "text", cols: 6 },
+      { name: "bank.city.text.6", label: "City (Optional)", type: "text", cols: 6 },
+      { name: "bank.zip_code.text.12", label: "Postal/ZIP Code (Optional)", type: "text", cols: 12 },
+      { name: "bank.state.text.12", label: "State/Region (Optional)", type: "text", cols: 12 },
+      { name: "bank.address_line.text.12", label: "Address Line (Optional)", type: "text", cols: 12 },
+      { name: "bank.country.text.12", label: "Country (Optional)", type: "text", cols: 12 },
+      { name: "bank.note.text.12", label: "Payment Note", type: "text", cols: 12 },
     ],
     bank_card: [
       { name: "bank_card.bank_card.text_only.6", label: "Bank Card", type: "text_only", cols: 6 },
     ],
     debit: [
-      { name: "debit.name.text.12", label: "Bank name", type: "text", cols: 12 },
+      { name: "debit.name.text.12", label: "Bank Name", type: "text", cols: 12 },
       { name: "debit.sortcode.text.6", label: "Sort Code", type: "text", cols: 6 },
-      { name: "debit.account_number.text.6", label: "Account number", type: "text", cols: 6 },
-      { name: "debit.account_holder_name.text.12", label: "Account holder name (optional) ", type: "text", cols: 12 },
-      { name: "debit.street_name.text.12", label: "Street name (optional)", type: "text", cols: 12 },
-      { name: "debit.additional_street_name.text.12", label: "Additional street name (optional)", type: "text", cols: 12 },
-      { name: "debit.building_number.text.6", label: "Building number (optional)", type: "text", cols: 6 },
-      { name: "debit.city.text.6", label: "City (optional)", type: "text", cols: 6 },
-      { name: "debit.zip_code.text.12", label: "Postal/Zip code (optional)", type: "text", cols: 12 },
-      { name: "debit.state.text.12", label: "State/Region (optional)", type: "text", cols: 12 },
-      { name: "debit.address_line.text.12", label: "Address line (optional)", type: "text", cols: 12 },
-      { name: "debit.country.text.12", label: "Country (optional)", type: "text", cols: 12 },
-      { name: "debit.note.text.12", label: "Payment note", type: "text", cols: 12 },
+      { name: "debit.account_number.text.6", label: "Account Number", type: "text", cols: 6 },
+      { name: "debit.account_holder_name.text.12", label: "Account Holder Name (Optional)", type: "text", cols: 12 },
+      { name: "debit.street_name.text.12", label: "Street Name (Optional)", type: "text", cols: 12 },
+      { name: "debit.additional_street_name.text.12", label: "Additional Street Name (Optional)", type: "text", cols: 12 },
+      { name: "debit.building_number.text.6", label: "Building Number (Optional)", type: "text", cols: 6 },
+      { name: "debit.city.text.6", label: "City (Optional)", type: "text", cols: 6 },
+      { name: "debit.zip_code.text.12", label: "Postal/ZIP Code (Optional)", type: "text", cols: 12 },
+      { name: "debit.state.text.12", label: "State/Region (Optional)", type: "text", cols: 12 },
+      { name: "debit.address_line.text.12", label: "Address Line (Optional)", type: "text", cols: 12 },
+      { name: "debit.country.text.12", label: "Country (Optional)", type: "text", cols: 12 },
+      { name: "debit.note.text.12", label: "Payment Note", type: "text", cols: 12 },
     ],
     bic_iban: [
       { name: "bic_iban.bic_swift.text.4", label: "BIC/SWIFT", type: "text", cols: 4 },
       { name: "bic_iban.iban.text.8", label: "IBAN", type: "text", cols: 8 },
-      { name: "bic_iban.note.text.12", label: "Payment note", type: "text", cols: 12 },
+      { name: "bic_iban.note.text.12", label: "Payment Note", type: "text", cols: 12 },
     ],
   };
 
@@ -633,7 +633,7 @@ const initInvoiceForm = () => {
         const details = $(`#${type}_details`);
         details.find('.location_name').text(data.location_name || '');
         details.find('.company_name').text(data.company_name || '');
-        details.find('.tax_number').text(data.tax_number ? `Tax number : ${data.tax_number}` : '');
+        details.find('.tax_number').text(data.tax_number ? `Tax Number: ${data.tax_number}` : '');
         details.find('.street').text(data.street || '');
         details.find('.city').text(data.city || '');
         details.find('.country').text(data.country || '');
@@ -658,10 +658,10 @@ const initInvoiceForm = () => {
 
     if (notesVal.trim() !== '') {
       $target.show();
-      $button.text('− Remove footer notes');
+      $button.text('− Remove Footer Notes');
     } else {
       $target.hide();
-      $button.text('+ Add footer notes');
+      $button.text('+ Add Footer Notes');
     }
 
     // Toggle action - Use off().on() to prevent duplicate bindings if not using document delegation, 
@@ -669,7 +669,7 @@ const initInvoiceForm = () => {
     $button.off('click').on('click', function () {
       $target.slideToggle(300, function () {
         const isVisible = $target.is(':visible');
-        $button.text(isVisible ? '− Remove footer notes' : '+ Add footer notes');
+        $button.text(isVisible ? '− Remove Footer Notes' : '+ Add Footer Notes');
       });
     });
   })();
@@ -737,15 +737,15 @@ const initInvoiceForm = () => {
 
     window.discount_fieldTypeMap = {
       discount: [
-        { name: "discount.discount_type.select(DISCOUNT_OPTIONS).2", label: "Discount type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
-        { name: "discount.edit_type_(if needed).text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
+        { name: "discount.discount_type.select(DISCOUNT_OPTIONS).2", label: "Discount Type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
+        { name: "discount.edit_type_(if needed).text.4", label: "Edit Type (If Needed)", type: "text", cols: 4 },
         { name: "discount.amount.text.2", label: "Amount", type: "text", cols: 2 },
         { name: "discount.unit.select(php,%).2", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
         { name: "discount.total.text_only.2", label: "Total", type: "text_only", cols: 2 },
       ],
       charge: [
-        { name: "charge.charge_type.select(DISCOUNT_OPTIONS).2", label: "Charge type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
-        { name: "charge.edit_type_(if needed).text.4", label: "Edit type (if needed)", type: "text", cols: 4 },
+        { name: "charge.charge_type.select(DISCOUNT_OPTIONS).2", label: "Charge Type", type: "select", options: DISCOUNT_OPTIONS, cols: 2 },
+        { name: "charge.edit_type_(if needed).text.4", label: "Edit Type (If Needed)", type: "text", cols: 4 },
         { name: "charge.amount.text.2", label: "Amount", type: "text", cols: 2 },
         { name: "charge.unit.select(php,%).2", label: "Unit", type: "select", options: ["PHP", "%"], cols: 2 },
         { name: "charge.total.text_only.2", label: "Total", type: "text_only", cols: 2 },
@@ -757,45 +757,45 @@ const initInvoiceForm = () => {
         { name: "fileid.file_id.text.4", label: "File ID", type: "text", cols: 4 }
       ],
       taxexemptionreason: [
-        { name: "taxexemptionreason.tax_exemption_reason.text.4", label: "Tax exemption reason", type: "text", cols: 4 }
+        { name: "taxexemptionreason.tax_exemption_reason.text.4", label: "Tax Exemption Reason", type: "text", cols: 4 }
       ],
       modelname: [
-        { name: "modelname.model_name.text.4", label: "Model name", type: "text", cols: 4 }
+        { name: "modelname.model_name.text.4", label: "Model Name", type: "text", cols: 4 }
       ],
       hsnsac: [
         { name: "hsnsac.hsn_sac.select(hsn,sac).4", label: "HSN/SAC", type: "select", options: ["HSN", "SAC"], cols: 4 },
         { name: "hsnsac.quantity.text.4", label: "Quantity", type: "text", cols: 4 },
       ],
       documentreference: [
-        { name: "documentreference.purchase_order_number.text.4", label: "Purchase order number", type: "text", cols: 4 }
+        { name: "documentreference.purchase_order_number.text.4", label: "Purchase Order Number", type: "text", cols: 4 }
       ],
       documentlinereference: [
-        { name: "documentlinereference.purchase_order_line_number.text.4", label: "Purchase order line number", type: "text", cols: 4 }
+        { name: "documentlinereference.purchase_order_line_number.text.4", label: "Purchase Order Line Number", type: "text", cols: 4 }
       ],
       accountingcost: [
-        { name: "accountingcost.cost_center.text.4", label: "Cost center", type: "text", cols: 4 }
+        { name: "accountingcost.cost_center.text.4", label: "Cost Center", type: "text", cols: 4 }
       ],
       deliveryaddress: [
         { name: "deliveryaddress.country/region.select(COUNTRY_OPTIONS).4", label: "Country/Region", type: "select", options: COUNTRY_OPTIONS, cols: 4 },
         { name: "deliveryaddress.postbox.text.4", label: "Postbox", type: "text", cols: 4 },
         { name: "deliveryaddress.street.text.4", label: "Street", type: "text", cols: 4 },
         { name: "deliveryaddress.number.text.4", label: "Number", type: "text", cols: 4 },
-        { name: "deliveryaddress.locality_name.text.4", label: "Locality name", type: "text", cols: 4 },
+        { name: "deliveryaddress.locality_name.text.4", label: "Locality Name", type: "text", cols: 4 },
         { name: "deliveryaddress.postal/zipcode.text.4", label: "Postal/ZIP", type: "text", cols: 4 },
         { name: "deliveryaddress.city.text.4", label: "City", type: "text", cols: 4 },
-        { name: "deliveryaddress.location_id.text.4", label: "Location Id", type: "text", cols: 4 },
+        { name: "deliveryaddress.location_id.text.4", label: "Location ID", type: "text", cols: 4 },
       ],
       actualdeliverydate: [
         { name: "actualdeliverydate.delivery_date.date.4", label: "Delivery Date", type: "date", cols: 4 }
       ],
       buyersitemidentification: [
-        { name: "buyersitemidentification.buyer_material_number.text.4", label: "Buyer material number", type: "text", cols: 4 }
+        { name: "buyersitemidentification.buyer_material_number.text.4", label: "Buyer Material Number", type: "text", cols: 4 }
       ],
       origincountry: [
-        { name: "origincountry.country_of_origin.select(COUNTRY_OPTIONS).4", label: "Country of origin", type: "select", options: COUNTRY_OPTIONS, cols: 4 }
+        { name: "origincountry.country_of_origin.select(COUNTRY_OPTIONS).4", label: "Country of Origin", type: "select", options: COUNTRY_OPTIONS, cols: 4 }
       ],
       eccn: [
-        { name: "eccn.commodity_classification:_ECCN.text.4", label: "Commodity classification: ECCN", type: "text", cols: 4 }
+        { name: "eccn.commodity_classification:_ECCN.text.4", label: "Commodity Classification: ECCN", type: "text", cols: 4 }
       ],
       eangtin: [
         { name: "eangtin.ean/gtin.text.4", label: "EAN/GTIN", type: "text", cols: 4 }
@@ -804,13 +804,13 @@ const initInvoiceForm = () => {
         { name: "incoterms.delivery_terms.text.4", label: "Delivery Terms", type: "text", cols: 4 }
       ],
       manufacturename: [
-        { name: "manufacturename.manufacture_name.text.4", label: "Manufacture name", type: "text", cols: 4 }
+        { name: "manufacturename.manufacture_name.text.4", label: "Manufacture Name", type: "text", cols: 4 }
       ],
       trackingid: [
-        { name: "trackingid.freight_order_number.text.4", label: "Freight order number", type: "text", cols: 4 }
+        { name: "trackingid.freight_order_number.text.4", label: "Freight Order Number", type: "text", cols: 4 }
       ],
       serialID: [
-        { name: "serialID.serial_id.text.4", label: "Serial number", type: "text", cols: 4 }
+        { name: "serialID.serial_id.text.4", label: "Serial Number", type: "text", cols: 4 }
       ],
       note: [
         { name: "note.notes.text.4", label: "Notes", type: "text", cols: 4 }
@@ -1067,7 +1067,7 @@ const initInvoiceForm = () => {
         <td class="align-top" colspan="2">
           <input type="text" class="form-control description-edit mb-2" placeholder="Description" data-field="description_edit">
           <select class="form-select reason-code" data-field="description">
-            <option value="" disabled selected>Choose reason code</option>
+            <option value="" disabled selected>Choose Reason Code</option>
             <option value="Bank Charges">Bank Charges</option>
             <option value="Customs Duties">Customs Duties</option>
             <option value="Repair Costs">Repair Costs</option>
@@ -1077,13 +1077,13 @@ const initInvoiceForm = () => {
             <option value="Freight Costs">Freight Costs</option>
             <option value="Reason Unknown">Reason Unknown</option>
             <option value="Price Change">Price Change</option>
-            <option value="Early payment allowance adjustment">Early payment allowance adjustment</option>
+            <option value="Early Payment Allowance Adjustment">Early Payment Allowance Adjustment</option>
             <option value="Quantity Discount">Quantity Discount</option>
             <option value="Pricing Discount">Pricing Discount</option>
             <option value="Volume Discount">Volume Discount</option>
             <option value="Agreed Discount">Agreed Discount</option>
-            <option value="Expediting fee">Expediting fee</option>
-            <option value="Currency exchange differences">Currency exchange differences</option>
+            <option value="Expediting Fee">Expediting Fee</option>
+            <option value="Currency Exchange Differences">Currency Exchange Differences</option>
           </select>
           <div class="frequency-dates mt-2" style="display: none;">
             <label class="form-label small text-muted mb-1 fw-semibold d-block">Start Date</label>
@@ -1225,7 +1225,7 @@ const initInvoiceForm = () => {
     if (baseQuantityVisible) {
       $(this).text('Hide Base Quantity Column');
       $headerCells.eq(5).text('Price');
-      $('<th class="base-quantity-header">Price per Quantity</th>').insertAfter($headerCells.eq(5));
+      $('<th class="base-quantity-header">Price Per Quantity</th>').insertAfter($headerCells.eq(5));
 
       // Add input column to each main line item
       $table.find('tr.line-item').each(function () {
@@ -1244,7 +1244,7 @@ const initInvoiceForm = () => {
       $('.optional-field-row td[colspan]').attr('colspan', 10);
     } else {
       $(this).text('Show Base Quantity Column');
-      $headerCells.eq(5).text('Price per unit');
+      $headerCells.eq(5).text('Price Per Unit');
       $('.base-quantity-header').remove();
       $('.base-quantity-cell').remove();
       $('.empty-added').remove();
@@ -2062,7 +2062,7 @@ const initInvoiceForm = () => {
   }
 
   function formatGroupName(key) {
-    return key === 'bank' ? 'Bank Account' : (key === 'cash' ? 'Cash payment' : key.charAt(0).toUpperCase() + key.slice(1));
+    return key === 'bank' ? 'Bank Account' : (key === 'cash' ? 'Cash Payment' : key.charAt(0).toUpperCase() + key.slice(1));
   }
 
   // Render price adjustments from JSON
@@ -2070,14 +2070,14 @@ const initInvoiceForm = () => {
     const reasonOptions = [
       "Bank Charges", "Customs Duties", "Repair Costs", "Attorney Fees", "Taxes",
       "Late Delivery", "Freight Costs", "Reason Unknown", "Price Change",
-      "Early payment allowance adjustment", "Quantity Discount", "Pricing Discount",
-      "Volume Discount", "Agreed Discount", "Expediting fee", "Currency exchange differences"
+      "Early Payment Allowance Adjustment", "Quantity Discount", "Pricing Discount",
+      "Volume Discount", "Agreed Discount", "Expediting Fee", "Currency Exchange Differences"
     ];
 
     function buildReasonOptions(selected) {
-      let options = '<option value="" disabled>Choose reason code</option>';
+      let options = '<option value="" disabled>Choose Reason Code</option>';
       reasonOptions.forEach(reason => {
-        const isSelected = reason === selected ? ' selected' : '';
+        const isSelected = (reason === selected || reason.toLowerCase() === (selected || '').toLowerCase()) ? ' selected' : '';
         options += `<option value="${reason}"${isSelected}>${reason}</option>`;
       });
       return options;

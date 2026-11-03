@@ -904,7 +904,7 @@ function initApplication() {
     const flashHtml = `
             <div class="custom_tfh_alert alert alert-dismissible show d-flex align-items-start"
                 role="alert"
-                style="position: fixed; top: 20px; right: 20px; z-index: 9999; max-width: 400px; word-wrap: break-word; overflow-wrap: break-word;">
+                style="position: fixed; top: 70px; right: 20px; z-index: 100010; max-width: 400px; word-wrap: break-word; overflow-wrap: break-word;">
                 <i class="fa-solid fa-circle-exclamation me-2 mt-1 alert_text_${type}"></i>
                 <div style="min-width: 0; word-wrap: break-word; overflow-wrap: break-word;">
                     ${messageHtml}

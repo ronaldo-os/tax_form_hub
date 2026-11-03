@@ -37,8 +37,8 @@
             <p class="mb-1 fw-bold"><%= sender.name %></p>
             <p class="mb-1 text-muted"><%= sender.address %></p>
             <p class="mb-1 text-muted"><%= sender.country.presence || 'Philippines' %></p>
-            <p class="mb-1 small">Company <%= sender.company_id_type.presence || '-' %> number: <strong><%= sender.company_id_number.presence || '-' %></strong></p>
-            <p class="mb-0 small">Tax <%= sender.tax_id_type.presence || '-' %> number: <strong><%= sender.tax_id_number.presence || '-' %></strong></p>
+            <p class="mb-1 small">Company <%= sender.company_id_type.presence || '-' %> Number: <strong><%= sender.company_id_number.presence || '-' %></strong></p>
+            <p class="mb-0 small">Tax <%= sender.tax_id_type.presence || '-' %> Number: <strong><%= sender.tax_id_number.presence || '-' %></strong></p>
           </div>
           <hr>
         <% end %>
@@ -49,8 +49,8 @@
             <p class="mb-1 fw-bold"><%= recipient.name %></p>
             <p class="mb-1 text-muted"><%= recipient.address %></p>
             <p class="mb-1 text-muted"><%= recipient.country.presence || 'Philippines' %></p>
-            <p class="mb-1 small">Company <%= recipient.company_id_type.presence || '-' %> number: <strong><%= recipient.company_id_number.presence || '-' %></strong></p>
-            <p class="mb-0 small">Tax <%= recipient.tax_id_type.presence || '-' %> number: <strong><%= recipient.tax_id_number.presence || '-' %></strong></p>
+            <p class="mb-1 small">Company <%= recipient.company_id_type.presence || '-' %> Number: <strong><%= recipient.company_id_number.presence || '-' %></strong></p>
+            <p class="mb-0 small">Tax <%= recipient.tax_id_type.presence || '-' %> Number: <strong><%= recipient.tax_id_number.presence || '-' %></strong></p>
           </div>
         <% end %>
       </div>
@@ -162,7 +162,7 @@
               <th style="width: 300px;">Description</th>
               <th style="width: 100px;">Quantity</th>
               <th style="width: 100px;">Unit</th>
-              <th style="width: 150px;">Price per unit</th>
+              <th style="width: 150px;">Price Per Unit</th>
               <th style="width: 100px;">Tax (%)</th>
               <th style="width: 150px;" class="text-end">Total</th>
             </tr>
@@ -325,7 +325,7 @@
     <!-- Totals -->
     <div class="card border-0 shadow-sm p-4 text-end mb-3">
       <p class="mb-1">
-        Subtotal excl. taxes
+        Subtotal Excl. Taxes
         <span class="ms-4 fw-bold">
           <%= number_with_precision(invoice.total.dig("subtotal").to_f, precision: 2, delimiter: ',') %>
         </span>
@@ -349,7 +349,7 @@
         <% end %>
       <% else %>
         <p class="mb-1">
-          Total taxes
+          Total Taxes
           <span class="ms-4 fw-bold">
             <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
           </span>
@@ -365,7 +365,7 @@
         </h4>
         <% if invoice.total.dig("tax").to_f != 0 || invoice.total["tax_breakdown"].present? %>
           <p class="text-muted mb-0 mt-1" style="font-size: 0.8rem;">
-            Total taxes <%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
+            Total Taxes <%= currency_symbol(invoice) %> <%= number_with_precision(invoice.total.dig("tax").to_f, precision: 2, delimiter: ',') %>
           </p>
         <% end %>
         <% if invoice.total_paid.to_f > 0 %>

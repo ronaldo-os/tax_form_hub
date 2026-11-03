@@ -97,7 +97,7 @@
 
               <!-- Company Name + Website -->
               <h5 class="fw-bold text-center mb-1">
-                <%= @company.name.presence || "No company name" %>
+                <%= @company.name.presence || "No Company Name" %>
               </h5>
 
               <% if @company.website.present? %>
@@ -108,7 +108,7 @@
                   </a>
                 </p>
               <% else %>
-                <p class="text-center mb-4 text-muted small">No website</p>
+                <p class="text-center mb-4 text-muted small">No Website</p>
               <% end %>
 
               <hr class="my-4 opacity-25">
@@ -199,11 +199,11 @@
                   <%= f.text_field :name, class: "form-control" %>
                 </div>
                 <div class="mb-3">
-                  <%= f.label :website, class: "form-label fw-semibold" %>
+                  <%= f.label :website, "Website", class: "form-label fw-semibold" %>
                   <%= f.text_field :website, class: "form-control" %>
                 </div>
                 <div class="mb-3">
-                  <%= f.label :industry, class: "form-label fw-semibold" %>
+                  <%= f.label :industry, "Industry", class: "form-label fw-semibold" %>
                   <%= f.select :industry, Company::INDUSTRIES, {}, class: "form-select" %>
                 </div>
                 <div class="mb-3">
@@ -216,10 +216,10 @@
                 </div>
                 <div class="mb-3">
                   <%= f.label :country, "Country/Region", class: "form-label fw-semibold" %>
-                  <%= f.select :country, Company::COUNTRIES, { prompt: "Select country" }, class: "form-select" %>
+                  <%= f.select :country, Company::COUNTRIES, { prompt: "Select Country" }, class: "form-select" %>
                 </div>
                 <div class="mb-3">
-                  <%= f.label :phone, class: "form-label fw-semibold" %>
+                  <%= f.label :phone, "Phone", class: "form-label fw-semibold" %>
                   <%= f.text_field :phone, class: "form-control" %>
                 </div>
               </div>
@@ -234,7 +234,7 @@
                   <%= f.select :size, Company::SIZES, {}, class: "form-select" %>
                 </div>
                 <div class="mb-3">
-                  <%= f.label :share_capital, class: "form-label fw-semibold" %>
+                  <%= f.label :share_capital, "Share Capital", class: "form-label fw-semibold" %>
                   <div class="input-group input-group-md">
                     <span class="input-group-text">PHP</span>
                     <%= f.text_field :share_capital,
@@ -244,7 +244,7 @@
                   </div>
                 </div>
                 <div class="mb-3">
-                  <%= f.label :registration_address, class: "form-label fw-semibold" %>
+                  <%= f.label :registration_address, "Registration Address", class: "form-label fw-semibold" %>
                   <%= f.text_field :registration_address, class: "form-control" %>
                 </div>
                 <div class="mb-3">
@@ -265,11 +265,11 @@
               <div class="col-md-6">
                 <div class="mb-3">
                   <%= f.label :company_id_type, "Company ID Type", class: "form-label fw-semibold" %>
-                  <%= f.select :company_id_type, Company::ID_TYPES, { include_blank: "Select company ID type" }, class: "form-select", id: "company_id_type" %>
+                  <%= f.select :company_id_type, Company::ID_TYPES, { include_blank: "Select Company ID Type" }, class: "form-select", id: "company_id_type" %>
                 </div>
                 <div class="mb-3">
                   <%= f.label :tax_id_type, "Tax ID Type", class: "form-label fw-semibold" %>
-                  <%= f.select :tax_id_type, Company::TAX_ID_TYPES, { include_blank: "Select tax ID type" }, class: "form-select", id: "tax_id_type" %>
+                  <%= f.select :tax_id_type, Company::TAX_ID_TYPES, { include_blank: "Select Tax ID Type" }, class: "form-select", id: "tax_id_type" %>
                 </div>
                 <div class="mb-3">
                   <%= f.label :gln, "GLN", class: "form-label fw-semibold" %>

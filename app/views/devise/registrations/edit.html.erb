@@ -14,7 +14,7 @@
   </div>
 
   <div class="field mb-3">
-    <%= f.label :profile_image %><br />
+    <%= f.label :profile_image, "Profile Image" %><br />
     <%= f.file_field :profile_image, accept: "image/*", class: "form-control" %>
     <% if resource.profile_image.attached? %>
       <p>Current image: <%= image_tag resource.profile_image, width: 100, height: 100, style: "object-fit: cover; margin-top: 10px;" %></p>
@@ -26,7 +26,7 @@
   <% end %>
 
   <div class="field mb-3">
-    <%= f.label :password %> <i>(leave blank if you don't want to change it)</i><br />
+    <%= f.label :password, "Password" %> <i>(leave blank if you don't want to change it)</i><br />
     <div class="input-group">
       <%= f.password_field :password, autocomplete: "new-password", class: "form-control border-end-0", id: "password", data: { password_validation_target: "password", action: "input->password-validation#validatePassword" } %>
       <span class="input-group-text">
@@ -54,7 +54,7 @@
   </div>
 
   <div class="field mb-3">
-    <%= f.label :password_confirmation %><br />
+    <%= f.label :password_confirmation, "Password Confirmation" %><br />
     <div class="input-group">
       <%= f.password_field :password_confirmation, autocomplete: "new-password", class: "form-control border-end-0", id: "password_confirmation", data: { password_validation_target: "confirmation", action: "input->password-validation#validateConfirmation" } %>
       <span class="input-group-text">
@@ -65,7 +65,7 @@
   </div>
 
   <div class="field mb-3">
-    <%= f.label :current_password %> <i>(we need your current password to confirm your changes)</i><br />
+    <%= f.label :current_password, "Current Password" %> <i>(we need your current password to confirm your changes)</i><br />
     <%= f.password_field :current_password, autocomplete: "current-password", class: "form-control", required: true %>
   </div>
 
