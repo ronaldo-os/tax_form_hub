@@ -1,0 +1,377 @@
+/* ==========================================================================
+   Skeleton Loaders Design System (Light & Dark Theme Compatible)
+   Provides continuous wave animation across gray placeholder blocks
+   ========================================================================== */
+
+:root,
+[data-theme="light"] {
+  --skeleton-base: #d8dce2;
+  --skeleton-highlight: #eceff3;
+  --skeleton-wave-sheen: rgba(255, 255, 255, 0.85);
+  --skeleton-border: rgba(0, 0, 0, 0.05);
+  --skeleton-card-bg: var(--card-bg, #ffffff);
+}
+
+[data-theme="dark"] {
+  --skeleton-base: #383f47;
+  --skeleton-highlight: #4d5762;
+  --skeleton-wave-sheen: rgba(255, 255, 255, 0.28);
+  --skeleton-border: rgba(255, 255, 255, 0.06);
+  --skeleton-card-bg: var(--card-bg, #212529);
+}
+
+/* High-Intensity Pulsating (Opacity & Brightness Shift) Animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1.08);
+  }
+  50% {
+    opacity: 0.22;
+    filter: brightness(0.82);
+  }
+}
+
+@keyframes skeleton-pulse-dark {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1.28);
+  }
+  50% {
+    opacity: 0.24;
+    filter: brightness(0.72);
+  }
+}
+
+/* Continuous Wave Animation moving soft highlight from left to right */
+@keyframes skeleton-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes skeletonFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Base Skeleton Element with Pulsating (Opacity Shift) & Continuous Wave Animation */
+.skeleton-shimmer,
+.skeleton-box,
+.skeleton-line,
+.skeleton-circle,
+.skeleton-pill,
+.skeleton-badge,
+.skeleton-btn,
+.skeleton-btn-pill,
+.skeleton-progress,
+.skeleton-chart-bar,
+.skeleton-donut,
+.skeleton-value {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--skeleton-base);
+  border-radius: var(--form-field-radius, 0.5rem);
+  display: block;
+  animation: skeleton-pulse 1.3s ease-in-out infinite;
+}
+
+[data-theme="dark"] .skeleton-shimmer,
+[data-theme="dark"] .skeleton-box,
+[data-theme="dark"] .skeleton-line,
+[data-theme="dark"] .skeleton-circle,
+[data-theme="dark"] .skeleton-pill,
+[data-theme="dark"] .skeleton-badge,
+[data-theme="dark"] .skeleton-btn,
+[data-theme="dark"] .skeleton-btn-pill,
+[data-theme="dark"] .skeleton-progress,
+[data-theme="dark"] .skeleton-chart-bar,
+[data-theme="dark"] .skeleton-donut,
+[data-theme="dark"] .skeleton-value {
+  animation: skeleton-pulse-dark 1.3s ease-in-out infinite;
+}
+
+/* Wave pseudo-element: A soft luminous highlight moving continuously from left to right */
+.skeleton-shimmer::after,
+.skeleton-box::after,
+.skeleton-line::after,
+.skeleton-circle::after,
+.skeleton-pill::after,
+.skeleton-badge::after,
+.skeleton-btn::after,
+.skeleton-btn-pill::after,
+.skeleton-progress::after,
+.skeleton-chart-bar::after,
+.skeleton-donut::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 15%,
+    var(--skeleton-wave-sheen) 50%,
+    transparent 85%,
+    transparent 100%
+  );
+  animation: skeleton-wave 1.6s infinite ease-in-out;
+  pointer-events: none;
+}
+
+/* Text Lines */
+.skeleton-line {
+  height: 12px;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-line-xs {
+  height: 8px;
+  margin-bottom: 0.35rem;
+}
+
+.skeleton-line-sm {
+  height: 10px;
+  margin-bottom: 0.4rem;
+}
+
+.skeleton-line-lg {
+  height: 16px;
+  margin-bottom: 0.6rem;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-title-sm {
+  height: 16px;
+  width: 40%;
+  margin-bottom: 0.35rem;
+}
+
+.skeleton-value {
+  height: 32px;
+  width: 65%;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+}
+
+/* Circles / Avatars / Icons */
+.skeleton-circle {
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+.skeleton-circle-xs {
+  width: 20px;
+  height: 20px;
+}
+
+.skeleton-circle-sm {
+  width: 28px;
+  height: 28px;
+}
+
+.skeleton-circle-md {
+  width: 36px;
+  height: 36px;
+}
+
+.skeleton-circle-lg {
+  width: 44px;
+  height: 44px;
+}
+
+.skeleton-circle-xl {
+  width: 56px;
+  height: 56px;
+}
+
+/* Badges & Pills */
+.skeleton-pill {
+  height: 24px;
+  border-radius: 50rem !important;
+}
+
+.skeleton-badge {
+  height: 18px;
+  border-radius: 50rem !important;
+}
+
+/* Buttons */
+.skeleton-btn {
+  height: 32px;
+  border-radius: var(--form-field-radius, 0.5rem);
+}
+
+.skeleton-btn-pill {
+  height: 32px;
+  border-radius: 50rem !important;
+}
+
+.skeleton-btn-sm {
+  height: 28px;
+}
+
+/* Progress Bars */
+.skeleton-progress {
+  height: 6px;
+  width: 100%;
+  border-radius: 50rem !important;
+}
+
+/* Cards & Containers */
+.skeleton-card {
+  background: var(--skeleton-card-bg);
+  border: 1px solid var(--skeleton-border) !important;
+  border-radius: 0.875rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 14px -2px rgba(0, 0, 0, 0.03);
+  padding: 1rem 1.25rem;
+}
+
+[data-theme="dark"] .skeleton-card {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3), 0 6px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Charts Placeholders */
+.skeleton-chart-container {
+  height: 260px;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 1.5rem 1rem 0.5rem 1rem;
+}
+
+.skeleton-chart-bar {
+  flex: 1;
+  border-radius: 4px 4px 0 0;
+}
+
+.skeleton-donut-wrapper {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: 1rem auto;
+}
+
+.skeleton-donut {
+  width: 160px;
+  height: 160px;
+  border-radius: 50% !important;
+  mask: radial-gradient(circle, transparent 52%, black 53%);
+  -webkit-mask: radial-gradient(circle, transparent 52%, black 53%);
+}
+
+/* Table Skeletons */
+.skeleton-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.skeleton-table th,
+.skeleton-table td {
+  padding: 0.75rem 0.75rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--skeleton-border);
+}
+
+.skeleton-table th {
+  background-color: var(--bg-secondary);
+}
+
+/* Notification Item Skeleton */
+.skeleton-notification-item {
+  background: var(--skeleton-card-bg);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--skeleton-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+}
+
+/* Transitions */
+.skeleton-fade-out {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+}
+
+.skeleton-fade-in {
+  animation: skeletonFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Dashboard AJAX Fetching State */
+.dashboard-fetching-active .bento-financial-value,
+.dashboard-fetching-active .tabular-nums,
+.dashboard-fetching-active .partner-progress-bar {
+  opacity: 0.35;
+  filter: blur(1px);
+  transition: all 0.15s ease;
+}
+
+/* Accessibility: Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer,
+  .skeleton-box,
+  .skeleton-line,
+  .skeleton-circle,
+  .skeleton-pill,
+  .skeleton-badge,
+  .skeleton-btn,
+  .skeleton-btn-pill,
+  .skeleton-progress,
+  .skeleton-chart-bar,
+  .skeleton-donut {
+    animation: none !important;
+    background: var(--skeleton-base) !important;
+  }
+
+  .skeleton-shimmer::after,
+  .skeleton-box::after,
+  .skeleton-line::after,
+  .skeleton-circle::after,
+  .skeleton-pill::after,
+  .skeleton-badge::after,
+  .skeleton-btn::after,
+  .skeleton-btn-pill::after,
+  .skeleton-progress::after,
+  .skeleton-chart-bar::after,
+  .skeleton-donut::after {
+    display: none !important;
+    animation: none !important;
+  }
+
+  .skeleton-fade-out,
+  .skeleton-fade-in {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+

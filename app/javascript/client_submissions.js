@@ -1,6 +1,7 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
 import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
 import { getInitialTableState, updateUrlParams, activateTabElement, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
@@ -31,8 +32,11 @@ export function syncTaxSubmissionRedirectUrl() {
 }
 
 function initClientSubmissionsPage() {
+    setupSkeletonSafetyFallback([['tax_submissions_skeleton', 'tax_submissions_content']]);
+
     // This script targets the home page where the user can submit documents
     if ($('.submissionsTable').length === 0 && $('#submitDocsModal').length === 0) {
+        hideSkeleton('tax_submissions_skeleton', 'tax_submissions_content');
         return;
     }
 
@@ -227,6 +231,8 @@ function initClientSubmissionsPage() {
                 if (needsRedraw) {
                     api.draw(false);
                 }
+
+                hideSkeleton('tax_submissions_skeleton', 'tax_submissions_content');
             },
             drawCallback: function () {
                 const api = this.api();
@@ -241,6 +247,8 @@ function initClientSubmissionsPage() {
         tables.push(table);
         setupTaxSubmissionsBulkActions(table, $(this).attr('id'));
     });
+
+    hideSkeleton('tax_submissions_skeleton', 'tax_submissions_content');
 
     // Tab persistence and table adjustment
     $('#submissionTabs button[data-bs-toggle="tab"]')

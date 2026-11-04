@@ -2,7 +2,13 @@
 
 <div class="notifications-center-page container-fluid px-2 px-sm-3 px-md-4 py-3" data-controller="notifications">
   
-  <!-- Notifications Global Quick Actions -->
+  <!-- Notifications Skeleton Loader -->
+  <div id="notifications_skeleton" class="notifications-skeleton-wrapper">
+    <%= render "notifications/skeleton" %>
+  </div>
+
+  <div id="notifications_content" class="notifications-content-wrapper" style="display: none;">
+    <!-- Notifications Global Quick Actions -->
   <div class="notifications-header-bar mb-3" id="notifications_header_bar">
     <div class="d-flex gap-2 align-items-center justify-content-between flex-wrap" id="notifications_global_actions">
       <%= link_to session[:notifications_back_url] || root_path, class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2 text-nowrap", data: { behavior: "back-button" } do %>
@@ -281,5 +287,14 @@
       </div>
     <% end %>
   </div>
+
+  </div> <!-- /#notifications_content -->
+
+  <noscript>
+    <style>
+      #notifications_skeleton { display: none !important; }
+      #notifications_content { display: block !important; }
+    </style>
+  </noscript>
 
 </div>

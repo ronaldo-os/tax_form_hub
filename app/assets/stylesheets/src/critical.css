@@ -1,4 +1,6 @@
 /* Critical CSS - Above the fold styles */
+@import "../skeleton.css";
+
 /* Theme variables - MUST be first for proper rendering */
 :root,
 [data-theme="light"] {
@@ -21,6 +23,13 @@
   --modal-content-bg: #ffffff;
   --modal-content-color: #212529;
   --text-muted: #6c757d;
+
+  /* Skeleton Loader Tokens */
+  --skeleton-base: #d8dce2;
+  --skeleton-highlight: #eceff3;
+  --skeleton-wave-sheen: rgba(255, 255, 255, 0.85);
+  --skeleton-border: rgba(0, 0, 0, 0.05);
+  --skeleton-card-bg: var(--card-bg, #ffffff);
 
   /* Standardized Form Field Design Tokens */
   --bs-border-radius-md: 0.5rem;
@@ -74,6 +83,13 @@
   --modal-content-bg: #212529;
   --modal-content-color: #f8f9fa;
   --text-muted: #adb5bd;
+
+  /* Skeleton Loader Tokens (Dark Mode) */
+  --skeleton-base: #383f47;
+  --skeleton-highlight: #4d5762;
+  --skeleton-wave-sheen: rgba(255, 255, 255, 0.28);
+  --skeleton-border: rgba(255, 255, 255, 0.06);
+  --skeleton-card-bg: var(--card-bg, #212529);
 
   /* Standardized Form Field Design Tokens (Dark Mode) */
   --bs-border-radius-md: 0.5rem;
@@ -415,4 +431,64 @@ a {
 
 .loaded {
   opacity: 1;
+}
+
+/* Skeleton Loading Critical Keyframes */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1.08);
+  }
+  50% {
+    opacity: 0.22;
+    filter: brightness(0.82);
+  }
+}
+
+@keyframes skeleton-pulse-dark {
+  0%, 100% {
+    opacity: 1;
+    filter: brightness(1.28);
+  }
+  50% {
+    opacity: 0.24;
+    filter: brightness(0.72);
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes skeletonFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer,
+  .skeleton-box,
+  .skeleton-line,
+  .skeleton-circle,
+  .skeleton-pill,
+  .skeleton-badge,
+  .skeleton-btn,
+  .skeleton-btn-pill,
+  .skeleton-progress,
+  .skeleton-chart-bar,
+  .skeleton-donut {
+    animation: none !important;
+    background: var(--skeleton-base) !important;
+  }
 }

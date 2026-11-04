@@ -35,8 +35,8 @@ class CompanyProfileNotificationStackingTest < ActionDispatch::IntegrationTest
       "Notification dropdown menu z-index (#{notif_dropdown_z_index}) must be above .companies-header-bar (#{header_bar_z_index})"
 
     # Verify compiled CSS bundles contain the updated z-index
-    assert_includes @app_css_build, "z-index:100010!important"
-    assert_includes @critical_css_build, "z-index:100010!important"
+    assert_match(/z-index:\s*100010\s*!important/, @app_css_build)
+    assert_match(/z-index:\s*100010\s*!important/, @critical_css_build)
 
     # Verify JS showFlashMessage uses matching top/right positioning and z-index
     assert_includes @app_js, "top: 70px; right: 20px; z-index: 100010;"

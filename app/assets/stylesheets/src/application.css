@@ -2,6 +2,7 @@
 @import "../dashboard.css";
 @import "../notifications.css";
 @import "../avatar_cropper.css";
+@import "../skeleton.css";
 
 :root,
 [data-theme="light"] {
@@ -24,6 +25,13 @@
   --modal-content-bg: #ffffff;
   --modal-content-color: #212529;
   --text-muted: #6c757d;
+
+  /* Skeleton Loader Tokens */
+  --skeleton-base: #d8dce2;
+  --skeleton-highlight: #eceff3;
+  --skeleton-wave-sheen: rgba(255, 255, 255, 0.85);
+  --skeleton-border: rgba(0, 0, 0, 0.05);
+  --skeleton-card-bg: var(--card-bg, #ffffff);
 
   /* Standardized Form Field Design Tokens */
   --bs-border-radius-md: 0.5rem;
@@ -77,6 +85,13 @@
   --modal-content-bg: #212529;
   --modal-content-color: #f8f9fa;
   --text-muted: #adb5bd;
+
+  /* Skeleton Loader Tokens (Dark Mode) */
+  --skeleton-base: #383f47;
+  --skeleton-highlight: #4d5762;
+  --skeleton-wave-sheen: rgba(255, 255, 255, 0.28);
+  --skeleton-border: rgba(255, 255, 255, 0.06);
+  --skeleton-card-bg: var(--card-bg, #212529);
 
   /* Standardized Form Field Design Tokens (Dark Mode) */
   --bs-border-radius-md: 0.5rem;

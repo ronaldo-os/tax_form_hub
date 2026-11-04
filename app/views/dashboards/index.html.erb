@@ -20,7 +20,13 @@
 
 <div class="analytics-dashboard-page container-fluid px-2 px-sm-3 px-md-4 py-3" id="analytics_dashboard_container" data-initial-data="<%= html_escape(@dashboard_data.to_json) %>">
   
-  <!-- Bento Control Bar -->
+  <!-- Dashboard Skeleton Loader -->
+  <div id="dashboard_skeleton" class="dashboard-skeleton-wrapper">
+    <%= render "dashboards/skeleton" %>
+  </div>
+
+  <div id="dashboard_content" class="dashboard-content-wrapper" style="display: none;">
+    <!-- Bento Control Bar -->
   <div class="dashboard-header-card mb-3 mb-md-3.5">
     <div class="d-flex flex-column flex-xl-row align-items-stretch align-items-xl-center justify-content-between gap-2.5">
       
@@ -896,5 +902,14 @@
     </div>
 
   </div>
+
+  </div> <!-- /#dashboard_content -->
+
+  <noscript>
+    <style>
+      #dashboard_skeleton { display: none !important; }
+      #dashboard_content { display: block !important; }
+    </style>
+  </noscript>
 
 </div>

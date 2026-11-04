@@ -10,7 +10,13 @@
 <% end %>
 
 <div class="tax-submissions-page container-fluid px-2 px-sm-3 px-md-4 py-2.5 mt-3">
-  <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3">
+  <!-- Tax Submissions Skeleton Loader -->
+  <div id="tax_submissions_skeleton" class="tax-submissions-skeleton-wrapper">
+    <%= render "tax_submissions/skeleton" %>
+  </div>
+
+  <div id="tax_submissions_content" class="tax-submissions-content-wrapper" style="display: none;">
+    <div class="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3">
     <% is_archived_tab = (@active_tab || params[:tab].to_s.downcase) == "archived" %>
     <!-- Tab Navigation Container -->
     <div class="tabs-scroll-container">
@@ -55,6 +61,14 @@
       <%= render partial: 'submission_table', locals: { submissions: @archived_submissions, archived_table: true } %>
     </div>
   </div>
+  </div> <!-- /#tax_submissions_content -->
+
+  <noscript>
+    <style>
+      #tax_submissions_skeleton { display: none !important; }
+      #tax_submissions_content { display: block !important; }
+    </style>
+  </noscript>
 </div>
 
 <!-- Submit Documents Modal -->

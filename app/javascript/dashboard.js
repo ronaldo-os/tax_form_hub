@@ -1,5 +1,6 @@
 // Compact Bento Grid (Clean, High-Density & Modular) Dashboard Module
 import { registerBackgroundFetchController, unregisterBackgroundFetchController } from './action_spam_prevention';
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 let performanceTrendChart = null;
 let statusDonutChart = null;
@@ -68,6 +69,8 @@ export function initAnalyticsDashboard() {
   const container = document.getElementById('analytics_dashboard_container');
   if (!container) return;
 
+  setupSkeletonSafetyFallback([['dashboard_skeleton', 'dashboard_content']]);
+
   const trendCanvas = document.getElementById('performanceTrendChart');
   if (
     container.dataset.eventsAttached === 'true' &&
@@ -75,6 +78,7 @@ export function initAnalyticsDashboard() {
     performanceTrendChart &&
     performanceTrendChart.canvas === trendCanvas
   ) {
+    hideSkeleton('dashboard_skeleton', 'dashboard_content');
     return;
   }
 
@@ -98,13 +102,19 @@ export function initAnalyticsDashboard() {
       container.dataset.chartsInitialized = 'true';
     } catch (e) {
       console.error('Failed to render dashboard charts:', e);
+      hideSkeleton('dashboard_skeleton', 'dashboard_content');
     }
+  } else {
+    hideSkeleton('dashboard_skeleton', 'dashboard_content');
   }
 }
 
 let chartRenderAttempts = 0;
 function renderDashboardCharts(data) {
-  if (!data || !data.charts) return;
+  if (!data || !data.charts) {
+    hideSkeleton('dashboard_skeleton', 'dashboard_content');
+    return;
+  }
 
   const trendCanvas = document.getElementById('performanceTrendChart');
   const donutCanvas = document.getElementById('statusDonutChart');
@@ -113,6 +123,8 @@ function renderDashboardCharts(data) {
     if (chartRenderAttempts < 50) {
       chartRenderAttempts++;
       setTimeout(() => renderDashboardCharts(data), 60);
+    } else {
+      hideSkeleton('dashboard_skeleton', 'dashboard_content');
     }
     return;
   }
@@ -121,6 +133,7 @@ function renderDashboardCharts(data) {
   renderPerformanceTrendChart(data.charts.trends, data.currency);
   renderStatusDonutChart(data.charts[currentStatusType === 'sales' ? 'sales_status' : 'purchases_status']);
   renderTaxComplianceChart(data.charts.tax_compliance);
+  hideSkeleton('dashboard_skeleton', 'dashboard_content');
 }
 
 function renderPerformanceTrendChart(trends, currency) {
@@ -529,6 +542,9 @@ function fetchUpdatedAnalyticsData(timeFrame, currency) {
   registerBackgroundFetchController(controller);
   isFetchingAnalytics = true;
 
+  const container = document.getElementById('analytics_dashboard_container');
+  if (container) container.classList.add('dashboard-fetching-active');
+
   const loader = document.getElementById('trend_chart_loader');
   if (loader) loader.classList.add('active');
 
@@ -579,6 +595,8 @@ function fetchUpdatedAnalyticsData(timeFrame, currency) {
     })
     .finally(() => {
       unregisterBackgroundFetchController(controller);
+      const container = document.getElementById('analytics_dashboard_container');
+      if (container) container.classList.remove('dashboard-fetching-active');
       if (analyticsAbortController === controller) {
         analyticsAbortController = null;
         isFetchingAnalytics = false;

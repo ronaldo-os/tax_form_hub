@@ -1,7 +1,9 @@
 import { Controller } from "@hotwired/stimulus";
+import { hideSkeleton } from "../skeleton_loader";
 
 export default class extends Controller {
   connect() {
+    hideSkeleton("notifications_skeleton", "notifications_content");
     this.initLiveToasts();
     this.setupBulkForm();
   }
