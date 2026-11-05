@@ -7,6 +7,11 @@
 <% end %>
 
 <div class="companies-page container py-2 py-md-4">
+  <div id="companies_skeleton">
+    <%= render "companies/skeleton" %>
+  </div>
+
+  <div id="companies_content" style="display: none;">
   <%= form_with(model: @company, local: true, html: { multipart: true, id: "company-form", autocomplete: "off", data: { turbo: false } }) do |f| %>            
     <!-- Top Action Header Bar -->
     <div class="companies-header-bar d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
@@ -307,4 +312,12 @@
       </div>
     </div>
   <% end %>
+  </div>
 </div>
+
+<noscript>
+  <style>
+    #companies_skeleton { display: none !important; }
+    #companies_content { display: block !important; }
+  </style>
+</noscript>

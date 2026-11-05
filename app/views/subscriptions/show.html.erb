@@ -4,6 +4,11 @@
 <% end %>
 
 <div class="subscriptions-page container py-2 py-md-4">
+  <div id="subscription_show_skeleton">
+    <%= render "subscriptions/show_skeleton" %>
+  </div>
+
+  <div id="subscription_show_content" style="display: none;">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
       <%= link_to session[:subscription_back_url] || subscriptions_path(tab: @subscription.purchase? ? 'purchases' : 'sales'), class: "btn btn-back btn-sm rounded-pill px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-2", data: { behavior: "back-button" } do %>
@@ -419,6 +424,14 @@
       </div>
     </div>
   </div>
+  </div>
 </div>
+
+<noscript>
+  <style>
+    #subscription_show_skeleton { display: none !important; }
+    #subscription_show_content { display: block !important; }
+  </style>
+</noscript>
 
 <%= render "cancel_subscription_modal", subscription: @subscription, item_index: @item_index %>

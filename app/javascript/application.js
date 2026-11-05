@@ -38,7 +38,7 @@ function loadPageSpecificModules() {
     import(/* webpackChunkName: "locations" */ './locations');
   }
 
-  if (path.includes('/subscriptions')) {
+  if (path.includes('/subscriptions') || path.includes('/price_adjustments')) {
     import(/* webpackChunkName: "subscriptions" */ './subscriptions');
   }
 
@@ -51,6 +51,9 @@ function loadPageSpecificModules() {
     import(/* webpackChunkName: "edit_profile" */ './edit_profile');
   }
 }
+
+// Always load skeleton loader utility
+import './skeleton_loader';
 
 // Always load network search (small utility)
 import './network_search';

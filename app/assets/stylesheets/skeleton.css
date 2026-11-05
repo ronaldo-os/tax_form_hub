@@ -64,12 +64,10 @@
 
 @keyframes skeletonFadeIn {
   from {
-    opacity: 0;
-    transform: translateY(3px);
+    opacity: 0.6;
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -77,15 +75,46 @@
 .skeleton-shimmer,
 .skeleton-box,
 .skeleton-line,
+.skeleton-line-xs,
+.skeleton-line-sm,
+.skeleton-line-lg,
+.skeleton-title,
+.skeleton-title-sm,
 .skeleton-circle,
+.skeleton-circle-xs,
+.skeleton-circle-sm,
+.skeleton-circle-md,
+.skeleton-circle-lg,
+.skeleton-circle-xl,
+.skeleton-avatar-lg,
+.skeleton-avatar-xl,
 .skeleton-pill,
 .skeleton-badge,
 .skeleton-btn,
 .skeleton-btn-pill,
+.skeleton-btn-sm,
 .skeleton-progress,
 .skeleton-chart-bar,
 .skeleton-donut,
-.skeleton-value {
+.skeleton-value,
+.skeleton-input,
+.skeleton-textarea,
+.skeleton-banner,
+[class*="skeleton-box"],
+[class*="skeleton-line"],
+[class*="skeleton-circle"],
+[class*="skeleton-avatar"],
+[class*="skeleton-btn"],
+[class*="skeleton-pill"],
+[class*="skeleton-badge"],
+[class*="skeleton-title"],
+[class*="skeleton-value"],
+[class*="skeleton-progress"],
+[class*="skeleton-chart-bar"],
+[class*="skeleton-donut"],
+[class*="skeleton-input"],
+[class*="skeleton-textarea"],
+[class*="skeleton-banner"] {
   position: relative;
   overflow: hidden;
   background-color: var(--skeleton-base);
@@ -97,15 +126,46 @@
 [data-theme="dark"] .skeleton-shimmer,
 [data-theme="dark"] .skeleton-box,
 [data-theme="dark"] .skeleton-line,
+[data-theme="dark"] .skeleton-line-xs,
+[data-theme="dark"] .skeleton-line-sm,
+[data-theme="dark"] .skeleton-line-lg,
+[data-theme="dark"] .skeleton-title,
+[data-theme="dark"] .skeleton-title-sm,
 [data-theme="dark"] .skeleton-circle,
+[data-theme="dark"] .skeleton-circle-xs,
+[data-theme="dark"] .skeleton-circle-sm,
+[data-theme="dark"] .skeleton-circle-md,
+[data-theme="dark"] .skeleton-circle-lg,
+[data-theme="dark"] .skeleton-circle-xl,
+[data-theme="dark"] .skeleton-avatar-lg,
+[data-theme="dark"] .skeleton-avatar-xl,
 [data-theme="dark"] .skeleton-pill,
 [data-theme="dark"] .skeleton-badge,
 [data-theme="dark"] .skeleton-btn,
 [data-theme="dark"] .skeleton-btn-pill,
+[data-theme="dark"] .skeleton-btn-sm,
 [data-theme="dark"] .skeleton-progress,
 [data-theme="dark"] .skeleton-chart-bar,
 [data-theme="dark"] .skeleton-donut,
-[data-theme="dark"] .skeleton-value {
+[data-theme="dark"] .skeleton-value,
+[data-theme="dark"] .skeleton-input,
+[data-theme="dark"] .skeleton-textarea,
+[data-theme="dark"] .skeleton-banner,
+[data-theme="dark"] [class*="skeleton-box"],
+[data-theme="dark"] [class*="skeleton-line"],
+[data-theme="dark"] [class*="skeleton-circle"],
+[data-theme="dark"] [class*="skeleton-avatar"],
+[data-theme="dark"] [class*="skeleton-btn"],
+[data-theme="dark"] [class*="skeleton-pill"],
+[data-theme="dark"] [class*="skeleton-badge"],
+[data-theme="dark"] [class*="skeleton-title"],
+[data-theme="dark"] [class*="skeleton-value"],
+[data-theme="dark"] [class*="skeleton-progress"],
+[data-theme="dark"] [class*="skeleton-chart-bar"],
+[data-theme="dark"] [class*="skeleton-donut"],
+[data-theme="dark"] [class*="skeleton-input"],
+[data-theme="dark"] [class*="skeleton-textarea"],
+[data-theme="dark"] [class*="skeleton-banner"] {
   animation: skeleton-pulse-dark 1.3s ease-in-out infinite;
 }
 
@@ -113,14 +173,46 @@
 .skeleton-shimmer::after,
 .skeleton-box::after,
 .skeleton-line::after,
+.skeleton-line-xs::after,
+.skeleton-line-sm::after,
+.skeleton-line-lg::after,
+.skeleton-title::after,
+.skeleton-title-sm::after,
 .skeleton-circle::after,
+.skeleton-circle-xs::after,
+.skeleton-circle-sm::after,
+.skeleton-circle-md::after,
+.skeleton-circle-lg::after,
+.skeleton-circle-xl::after,
+.skeleton-avatar-lg::after,
+.skeleton-avatar-xl::after,
 .skeleton-pill::after,
 .skeleton-badge::after,
 .skeleton-btn::after,
 .skeleton-btn-pill::after,
+.skeleton-btn-sm::after,
 .skeleton-progress::after,
 .skeleton-chart-bar::after,
-.skeleton-donut::after {
+.skeleton-donut::after,
+.skeleton-value::after,
+.skeleton-input::after,
+.skeleton-textarea::after,
+.skeleton-banner::after,
+[class*="skeleton-box"]::after,
+[class*="skeleton-line"]::after,
+[class*="skeleton-circle"]::after,
+[class*="skeleton-avatar"]::after,
+[class*="skeleton-btn"]::after,
+[class*="skeleton-pill"]::after,
+[class*="skeleton-badge"]::after,
+[class*="skeleton-title"]::after,
+[class*="skeleton-value"]::after,
+[class*="skeleton-progress"]::after,
+[class*="skeleton-chart-bar"]::after,
+[class*="skeleton-donut"]::after,
+[class*="skeleton-input"]::after,
+[class*="skeleton-textarea"]::after,
+[class*="skeleton-banner"]::after {
   content: "";
   position: absolute;
   top: 0;
@@ -210,6 +302,39 @@
 .skeleton-circle-xl {
   width: 56px;
   height: 56px;
+}
+
+.skeleton-avatar-lg {
+  width: 96px;
+  height: 96px;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+.skeleton-avatar-xl {
+  width: 140px;
+  height: 140px;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+}
+
+/* Form Controls & Media Placeholders */
+.skeleton-input {
+  height: 38px;
+  width: 100%;
+  border-radius: var(--form-field-radius, 0.5rem);
+}
+
+.skeleton-textarea {
+  height: 80px;
+  width: 100%;
+  border-radius: var(--form-field-radius, 0.5rem);
+}
+
+.skeleton-banner {
+  height: 140px;
+  width: 100%;
+  border-radius: 1rem;
 }
 
 /* Badges & Pills */
@@ -318,13 +443,11 @@
 
 /* Transitions */
 .skeleton-fade-out {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease-out;
+  display: none !important;
 }
 
 .skeleton-fade-in {
-  animation: skeletonFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: skeletonFadeIn 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Dashboard AJAX Fetching State */
@@ -341,14 +464,46 @@
   .skeleton-shimmer,
   .skeleton-box,
   .skeleton-line,
+  .skeleton-line-xs,
+  .skeleton-line-sm,
+  .skeleton-line-lg,
+  .skeleton-title,
+  .skeleton-title-sm,
   .skeleton-circle,
+  .skeleton-circle-xs,
+  .skeleton-circle-sm,
+  .skeleton-circle-md,
+  .skeleton-circle-lg,
+  .skeleton-circle-xl,
+  .skeleton-avatar-lg,
+  .skeleton-avatar-xl,
   .skeleton-pill,
   .skeleton-badge,
   .skeleton-btn,
   .skeleton-btn-pill,
+  .skeleton-btn-sm,
   .skeleton-progress,
   .skeleton-chart-bar,
-  .skeleton-donut {
+  .skeleton-donut,
+  .skeleton-value,
+  .skeleton-input,
+  .skeleton-textarea,
+  .skeleton-banner,
+  [class*="skeleton-box"],
+  [class*="skeleton-line"],
+  [class*="skeleton-circle"],
+  [class*="skeleton-avatar"],
+  [class*="skeleton-btn"],
+  [class*="skeleton-pill"],
+  [class*="skeleton-badge"],
+  [class*="skeleton-title"],
+  [class*="skeleton-value"],
+  [class*="skeleton-progress"],
+  [class*="skeleton-chart-bar"],
+  [class*="skeleton-donut"],
+  [class*="skeleton-input"],
+  [class*="skeleton-textarea"],
+  [class*="skeleton-banner"] {
     animation: none !important;
     background: var(--skeleton-base) !important;
   }
@@ -356,14 +511,46 @@
   .skeleton-shimmer::after,
   .skeleton-box::after,
   .skeleton-line::after,
+  .skeleton-line-xs::after,
+  .skeleton-line-sm::after,
+  .skeleton-line-lg::after,
+  .skeleton-title::after,
+  .skeleton-title-sm::after,
   .skeleton-circle::after,
+  .skeleton-circle-xs::after,
+  .skeleton-circle-sm::after,
+  .skeleton-circle-md::after,
+  .skeleton-circle-lg::after,
+  .skeleton-circle-xl::after,
+  .skeleton-avatar-lg::after,
+  .skeleton-avatar-xl::after,
   .skeleton-pill::after,
   .skeleton-badge::after,
   .skeleton-btn::after,
   .skeleton-btn-pill::after,
+  .skeleton-btn-sm::after,
   .skeleton-progress::after,
   .skeleton-chart-bar::after,
-  .skeleton-donut::after {
+  .skeleton-donut::after,
+  .skeleton-value::after,
+  .skeleton-input::after,
+  .skeleton-textarea::after,
+  .skeleton-banner::after,
+  [class*="skeleton-box"]::after,
+  [class*="skeleton-line"]::after,
+  [class*="skeleton-circle"]::after,
+  [class*="skeleton-avatar"]::after,
+  [class*="skeleton-btn"]::after,
+  [class*="skeleton-pill"]::after,
+  [class*="skeleton-badge"]::after,
+  [class*="skeleton-title"]::after,
+  [class*="skeleton-value"]::after,
+  [class*="skeleton-progress"]::after,
+  [class*="skeleton-chart-bar"]::after,
+  [class*="skeleton-donut"]::after,
+  [class*="skeleton-input"]::after,
+  [class*="skeleton-textarea"]::after,
+  [class*="skeleton-banner"]::after {
     display: none !important;
     animation: none !important;
   }

@@ -1,0 +1,71 @@
+<!-- Company Profile Edit Skeleton Loader (Theme-Accurate & Container-Accurate) -->
+<div class="companies-page-skeleton" aria-hidden="true">
+  <!-- Top Action Header Bar -->
+  <div class="companies-header-bar d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div class="skeleton-btn-pill" style="width: 105px; height: 38px;"></div>
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <div class="skeleton-btn-pill" style="width: 145px; height: 38px;"></div>
+      <div class="skeleton-btn-pill" style="width: 135px; height: 38px;"></div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Avatar & Summary Card (3-4 cols) -->
+    <div class="col-lg-4 col-xl-3">
+      <div class="card shadow-sm rounded-4 border-0 mb-4" style="background: var(--skeleton-card-bg);">
+        <div class="card-body p-4 text-center">
+          <!-- Avatar Skeleton -->
+          <div class="skeleton-avatar-xl mx-auto mb-3" style="width: 140px; height: 140px;"></div>
+          <div class="skeleton-line skeleton-line-xs mx-auto mb-3" style="width: 130px; height: 10px;"></div>
+
+          <div class="skeleton-line skeleton-title-sm mx-auto mb-1" style="width: 140px; height: 18px;"></div>
+          <div class="skeleton-line skeleton-line-xs mx-auto mb-4" style="width: 100px; height: 12px;"></div>
+
+          <hr class="my-3 opacity-25" style="border-color: var(--skeleton-border) !important;">
+
+          <!-- About Details Skeleton -->
+          <div class="text-start mb-4">
+            <div class="skeleton-line skeleton-line-xs mb-3" style="width: 50px; height: 10px;"></div>
+            <% 4.times do %>
+              <div class="d-flex align-items-center gap-2 mb-2.5">
+                <div class="skeleton-circle" style="width: 16px; height: 16px;"></div>
+                <div class="skeleton-line skeleton-line-xs mb-0 flex-grow-1" style="height: 11px;"></div>
+              </div>
+            <% end %>
+          </div>
+
+          <hr class="my-3 opacity-25" style="border-color: var(--skeleton-border) !important;">
+
+          <!-- Map Box Skeleton -->
+          <div class="skeleton-box rounded-3" style="width: 100%; height: 140px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Settings & Fields (8-9 cols) -->
+    <div class="col-lg-8 col-xl-9">
+      <div class="card shadow-sm rounded-4 border-0 mb-4" style="background: var(--skeleton-card-bg);">
+        <div class="card-body p-4">
+          <div class="skeleton-line skeleton-title-sm mb-4" style="width: 180px; height: 20px;"></div>
+
+          <div class="row g-3 g-md-4">
+            <% 6.times do %>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <div class="skeleton-line skeleton-line-xs mb-2" style="width: 110px; height: 12px;"></div>
+                  <div class="skeleton-input" style="height: 38px;"></div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+
+          <div class="mt-4 pt-3 border-top" style="border-color: var(--skeleton-border) !important;">
+            <div class="skeleton-line skeleton-title-sm mb-3" style="width: 150px; height: 18px;"></div>
+            <div class="skeleton-textarea" style="height: 90px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

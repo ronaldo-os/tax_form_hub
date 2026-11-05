@@ -1,3 +1,15 @@
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
+
+function initNetworksPage() {
+    if (window.location.pathname.includes('/networks')) {
+        hideSkeleton('networks_skeleton', 'networks_content');
+    }
+}
+
+document.addEventListener('turbo:load', initNetworksPage);
+document.addEventListener('DOMContentLoaded', initNetworksPage);
+initNetworksPage();
+
 let timeout = null;
 
 $(document).on('input', '#company_search_input', function () {

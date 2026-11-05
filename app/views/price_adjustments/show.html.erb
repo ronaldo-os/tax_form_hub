@@ -1,4 +1,9 @@
 <div class="container mt-5">
+  <div id="price_adjustments_skeleton">
+    <%= render "price_adjustments/skeleton" %>
+  </div>
+
+  <div id="price_adjustments_content" style="display: none;">
   <div class="d-flex justify-content-between mt-5 mb-3">
     <div>
       <%= link_to session[:price_adjustment_back_url] || subscriptions_path(tab: @price_adjustment.purchase? ? 'purchases' : 'sales'), class: "btn btn-back rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2", data: { behavior: "back-button" } do %>
@@ -177,4 +182,34 @@
       </div>
     </div>
   </div>
+  </div>
 </div>
+
+<script>
+  (function() {
+    function revealPriceAdjustment() {
+      var s = document.getElementById('price_adjustments_skeleton');
+      var c = document.getElementById('price_adjustments_content');
+      if (s && s.style.display !== 'none') {
+        s.style.display = 'none';
+      }
+      if (c && c.style.display === 'none') {
+        c.style.display = '';
+        c.classList.add('skeleton-fade-in');
+      }
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', revealPriceAdjustment);
+    } else {
+      revealPriceAdjustment();
+    }
+    document.addEventListener('turbo:load', revealPriceAdjustment);
+  })();
+</script>
+
+<noscript>
+  <style>
+    #price_adjustments_skeleton { display: none !important; }
+    #price_adjustments_content { display: block !important; }
+  </style>
+</noscript>

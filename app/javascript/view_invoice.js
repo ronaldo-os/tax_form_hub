@@ -1,3 +1,13 @@
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
+
+function initViewInvoicePage() {
+    hideSkeleton('invoice_show_skeleton', 'invoice_show_content');
+}
+
+document.addEventListener('turbo:load', initViewInvoicePage);
+document.addEventListener('DOMContentLoaded', initViewInvoicePage);
+initViewInvoicePage();
+
 function loadHtml2Pdf() {
     if (typeof html2pdf !== 'undefined') {
         return Promise.resolve();

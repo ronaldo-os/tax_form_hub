@@ -1,0 +1,101 @@
+<!-- Invoice Form Skeleton Loader (Theme-Accurate & Container-Accurate) -->
+<div class="invoice-form-skeleton" aria-hidden="true">
+  <div class="card shadow-sm border-0 rounded-4 mb-10" style="background: var(--skeleton-card-bg);">
+    <div class="card-body p-3 p-md-4">
+      <!-- Title & Mode Badge -->
+      <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2" style="border-color: var(--skeleton-border) !important;">
+        <div class="skeleton-line skeleton-title mb-0" style="width: 170px; height: 24px;"></div>
+        <div class="skeleton-pill mb-0" style="width: 110px; height: 26px;"></div>
+      </div>
+
+      <!-- Parties & Core Fields Row -->
+      <div class="row g-3 g-md-4 mb-4">
+        <!-- Recipient Column -->
+        <div class="col-md-6 mb-3">
+          <div class="skeleton-line skeleton-line-xs mb-2" style="width: 60px; height: 11px;"></div>
+          <div class="p-3 rounded-3" style="background: var(--skeleton-card-bg); border: 1px solid var(--skeleton-border);">
+            <div class="skeleton-line skeleton-title-sm mb-2" style="width: 150px; height: 16px;"></div>
+            <div class="skeleton-line skeleton-line-sm mb-1.5" style="width: 75%;"></div>
+            <div class="skeleton-line skeleton-line-xs mb-3" style="width: 50%;"></div>
+            <div class="border-top pt-2" style="border-color: var(--skeleton-border) !important;">
+              <div class="skeleton-line skeleton-line-xs mb-1" style="width: 65%;"></div>
+              <div class="skeleton-line skeleton-line-xs mb-0" style="width: 60%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invoice Meta Column -->
+        <div class="col-md-6">
+          <div class="mb-3">
+            <div class="skeleton-line skeleton-line-xs mb-2" style="width: 95px; height: 11px;"></div>
+            <div class="skeleton-input" style="height: 38px;"></div>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-md-6">
+              <div class="skeleton-line skeleton-line-xs mb-2" style="width: 70px; height: 11px;"></div>
+              <div class="skeleton-input" style="height: 38px;"></div>
+            </div>
+            <div class="col-md-6">
+              <div class="skeleton-line skeleton-line-xs mb-2" style="width: 65px; height: 11px;"></div>
+              <div class="skeleton-input" style="height: 38px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line Items Table Skeleton -->
+      <div class="table-responsive mb-3">
+        <table class="table text-center align-middle skeleton-table mb-0 w-100">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 30px;"></th>
+              <th style="width: 14%;"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 60px;"></div></th>
+              <th style="width: 28%;"><div class="skeleton-line skeleton-line-sm mb-0" style="width: 80px;"></div></th>
+              <th style="width: 10%;"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 40px;"></div></th>
+              <th style="width: 12%;"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 45px;"></div></th>
+              <th style="width: 14%;"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 70px;"></div></th>
+              <th style="width: 10%;"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 45px;"></div></th>
+              <th style="width: 12%;"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 55px;"></div></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% 2.times do %>
+              <tr>
+                <td><div class="skeleton-circle" style="width: 14px; height: 14px;"></div></td>
+                <td><div class="skeleton-input" style="height: 34px;"></div></td>
+                <td><div class="skeleton-input" style="height: 34px;"></div></td>
+                <td><div class="skeleton-input" style="height: 34px;"></div></td>
+                <td><div class="skeleton-input" style="height: 34px;"></div></td>
+                <td><div class="skeleton-input" style="height: 34px;"></div></td>
+                <td><div class="skeleton-input" style="height: 34px;"></div></td>
+                <td><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 50px;"></div></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Add Item Button & Calculation Card -->
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mt-3">
+        <div class="skeleton-btn" style="width: 130px; height: 36px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+
+        <div class="p-3 rounded-3 w-100" style="max-width: 360px; background: var(--skeleton-card-bg); border: 1px solid var(--skeleton-border);">
+          <div class="d-flex justify-content-between mb-2">
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 60px;"></div>
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 70px;"></div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 45px;"></div>
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 60px;"></div>
+          </div>
+          <div class="border-top pt-2 mt-2 d-flex justify-content-between align-items-center" style="border-color: var(--skeleton-border) !important;">
+            <div class="skeleton-line skeleton-title-sm mb-0" style="width: 75px; height: 16px;"></div>
+            <div class="skeleton-value mb-0" style="width: 90px; height: 26px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

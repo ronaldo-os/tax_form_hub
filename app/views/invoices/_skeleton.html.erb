@@ -1,0 +1,143 @@
+<!-- Invoices Index Skeleton Loader (Theme-Accurate & Container-Accurate) -->
+<div class="invoices-page-skeleton" aria-hidden="true">
+  <!-- Invoice Header Bar: Tabs & Action Buttons -->
+  <div class="mt-3 d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3 invoice-header-bar">
+    <div class="tabs-scroll-container">
+      <ul class="custom_nav_tabs nav nav-tabs border-0">
+        <li class="nav-item">
+          <span class="nav-link active d-inline-flex align-items-center" style="pointer-events: none; padding: 0.5rem 1rem;">
+            <div class="skeleton-pill mb-0" style="width: 110px; height: 16px;"></div>
+          </span>
+        </li>
+        <li class="nav-item">
+          <span class="nav-link d-inline-flex align-items-center" style="pointer-events: none; padding: 0.5rem 1rem;">
+            <div class="skeleton-pill mb-0" style="width: 125px; height: 16px;"></div>
+          </span>
+        </li>
+        <li class="nav-item">
+          <span class="nav-link d-inline-flex align-items-center" style="pointer-events: none; padding: 0.5rem 1rem;">
+            <div class="skeleton-pill mb-0" style="width: 95px; height: 16px;"></div>
+          </span>
+        </li>
+        <li class="nav-item">
+          <span class="nav-link d-inline-flex align-items-center" style="pointer-events: none; padding: 0.5rem 1rem;">
+            <div class="skeleton-pill mb-0" style="width: 120px; height: 16px;"></div>
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="invoice-action-buttons d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
+      <div class="skeleton-btn" style="width: 110px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+      <div class="skeleton-btn" style="width: 145px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+    </div>
+  </div>
+
+  <!-- 4 Invoice KPI Metric Stat Cards -->
+  <div class="row g-2 g-md-2 mb-3 invoice-stats-row">
+    <% 4.times do %>
+      <div class="col-6 col-md-3">
+        <div class="card card-filter shadow-sm h-100 border-0" style="background: var(--skeleton-card-bg);">
+          <div class="card-body p-2 px-2.5 px-md-3 d-flex flex-column justify-content-between" style="min-height: 82px;">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div class="skeleton-line skeleton-line-xs mb-0" style="width: 48px; height: 10px;"></div>
+              <div class="skeleton-pill mb-0" style="width: 38px; height: 14px;"></div>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mt-2">
+              <div class="skeleton-value mb-0" style="width: 60px; height: 26px;"></div>
+              <div class="skeleton-chart-bar" style="width: 50px; height: 24px; border-radius: 4px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Invoice Table Card Skeleton -->
+  <div class="card invoice-table-card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-transparent border-0 px-3 pt-2.5 pb-2">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div class="d-flex gap-1">
+          <div class="skeleton-btn-pill" style="width: 165px; height: 30px;"></div>
+          <div class="skeleton-btn-pill" style="width: 90px; height: 30px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-2.5 pt-0">
+      <!-- Custom Filter Bar Skeleton -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 p-1">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <div class="skeleton-btn" style="width: 65px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+          <div class="skeleton-btn" style="width: 120px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+        </div>
+        <div class="skeleton-btn" style="width: 200px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+      </div>
+
+      <!-- Table Skeleton -->
+      <div class="table-responsive">
+        <table class="table table-hover table_text_centered align-middle table-compact nowrap skeleton-table w-100">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 40px;" class="text-center">
+                <div class="skeleton-box mx-auto" style="width: 16px; height: 16px; border-radius: 4px;"></div>
+              </th>
+              <th style="width: 130px;"><div class="skeleton-line skeleton-line-sm mb-0" style="width: 90px; height: 12px;"></div></th>
+              <th><div class="skeleton-line skeleton-line-sm mb-0" style="width: 80px; height: 12px;"></div></th>
+              <th style="width: 100px;"><div class="skeleton-line skeleton-line-sm mb-0" style="width: 70px; height: 12px;"></div></th>
+              <th><div class="skeleton-line skeleton-line-sm mb-0" style="width: 110px; height: 12px;"></div></th>
+              <th style="width: 95px;"><div class="skeleton-line skeleton-line-sm mb-0" style="width: 65px; height: 12px;"></div></th>
+              <th style="width: 110px;" class="text-end"><div class="skeleton-line skeleton-line-sm ms-auto mb-0" style="width: 80px; height: 12px;"></div></th>
+              <th style="width: 80px;" class="text-center"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 50px; height: 12px;"></div></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% 8.times do |i| %>
+              <tr>
+                <td class="text-center">
+                  <div class="skeleton-box mx-auto" style="width: 16px; height: 16px; border-radius: 4px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-pill mb-0" style="width: 95px; height: 20px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-line skeleton-line-sm mb-0" style="width: 85px; height: 12px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-line skeleton-line-sm mb-0" style="width: 75px; height: 12px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-line skeleton-line-sm mb-0" style="width: <%= [65, 80, 50, 75, 90, 60, 85, 70][i] %>%; height: 12px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-pill mb-0" style="width: 60px; height: 22px;"></div>
+                </td>
+                <td class="text-end">
+                  <div class="skeleton-line skeleton-line-sm ms-auto mb-0" style="width: 80px; height: 12px;"></div>
+                </td>
+                <td class="text-center">
+                  <div class="d-flex align-items-center justify-content-center gap-1">
+                    <div class="skeleton-circle" style="width: 26px; height: 26px;"></div>
+                    <div class="skeleton-circle" style="width: 26px; height: 26px;"></div>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer Skeleton -->
+      <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 mt-3 pt-2 border-top" style="border-color: var(--skeleton-border) !important;">
+        <div class="skeleton-line skeleton-line-xs mb-0" style="width: 160px; height: 12px;"></div>
+        <div class="d-flex gap-1">
+          <div class="skeleton-btn" style="width: 32px; height: 28px; border-radius: 4px;"></div>
+          <div class="skeleton-btn" style="width: 32px; height: 28px; border-radius: 4px;"></div>
+          <div class="skeleton-btn" style="width: 32px; height: 28px; border-radius: 4px;"></div>
+          <div class="skeleton-btn" style="width: 32px; height: 28px; border-radius: 4px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

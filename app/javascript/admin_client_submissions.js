@@ -1,6 +1,7 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
 import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
 import { getInitialTableState, updateUrlParams, activateTabElement, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 function fixEmptyRowColspan(tableApi) {
     if (!tableApi) return;
@@ -16,6 +17,8 @@ function initSubmissionTables() {
     if ($('#taxSubmissionsTableActive').length === 0 && $('#taxSubmissionsTableArchived').length === 0) {
         return;
     }
+
+    setupSkeletonSafetyFallback([['tax_submissions_index_skeleton', 'tax_submissions_index_content']], 1000);
 
     const initial = getInitialTableState();
 
@@ -207,6 +210,7 @@ function initSubmissionTables() {
                     if (needsRedraw) {
                         api.draw(false);
                     }
+                    hideSkeleton('tax_submissions_index_skeleton', 'tax_submissions_index_content');
                 },
                 drawCallback: function () {
                     const api = this.api();

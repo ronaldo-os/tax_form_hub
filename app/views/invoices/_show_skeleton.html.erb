@@ -1,0 +1,120 @@
+<!-- Invoice Show Skeleton Loader (Theme-Accurate & Container-Accurate) -->
+<div class="invoice-show-skeleton" aria-hidden="true">
+  <!-- Top Action Header -->
+  <div class="invoice-view-header d-flex justify-content-between align-items-center mb-3">
+    <div class="skeleton-btn-pill" style="width: 105px; height: 38px;"></div>
+    <div class="d-flex gap-2">
+      <div class="skeleton-btn" style="width: 80px; height: 38px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+      <div class="skeleton-btn" style="width: 100px; height: 38px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+      <div class="skeleton-btn" style="width: 90px; height: 38px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+    </div>
+  </div>
+
+  <!-- Document Card Skeleton -->
+  <div class="invoice-container p-4 p-md-5 mb-5 rounded-4 border-0 shadow-sm" style="background: var(--skeleton-card-bg);">
+    <!-- Top Header Bar -->
+    <div class="d-flex justify-content-between align-items-end pb-4 mb-4 border-bottom" style="border-color: var(--skeleton-border) !important;">
+      <div>
+        <div class="skeleton-line skeleton-line-xs mb-1.5" style="width: 65px; height: 11px;"></div>
+        <div class="skeleton-line skeleton-title mb-0" style="width: 180px; height: 26px;"></div>
+      </div>
+      <div class="skeleton-pill mb-0" style="width: 95px; height: 28px;"></div>
+    </div>
+
+    <!-- Parties & Details 3-Column Header Grid -->
+    <div class="row g-4 mb-4 pb-4 border-bottom" style="border-color: var(--skeleton-border) !important;">
+      <!-- TO / Recipient -->
+      <div class="col-sm-4">
+        <div class="skeleton-line skeleton-line-xs mb-2" style="width: 75px; height: 10px;"></div>
+        <div class="skeleton-line skeleton-title-sm mb-1.5" style="width: 140px; height: 16px;"></div>
+        <div class="skeleton-line skeleton-line-sm mb-1" style="width: 85%;"></div>
+        <div class="skeleton-line skeleton-line-xs mb-1" style="width: 60%;"></div>
+        <div class="skeleton-line skeleton-line-xs mb-0" style="width: 70%;"></div>
+      </div>
+
+      <!-- FROM / Sender -->
+      <div class="col-sm-4">
+        <div class="skeleton-line skeleton-line-xs mb-2" style="width: 75px; height: 10px;"></div>
+        <div class="skeleton-line skeleton-title-sm mb-1.5" style="width: 140px; height: 16px;"></div>
+        <div class="skeleton-line skeleton-line-sm mb-1" style="width: 85%;"></div>
+        <div class="skeleton-line skeleton-line-xs mb-1" style="width: 60%;"></div>
+        <div class="skeleton-line skeleton-line-xs mb-0" style="width: 70%;"></div>
+      </div>
+
+      <!-- DETAILS -->
+      <div class="col-sm-4">
+        <div class="skeleton-line skeleton-line-xs mb-2" style="width: 95px; height: 10px;"></div>
+        <div class="d-flex justify-content-between mb-1.5">
+          <div class="skeleton-line skeleton-line-xs mb-0" style="width: 40%;"></div>
+          <div class="skeleton-line skeleton-line-xs mb-0" style="width: 45%;"></div>
+        </div>
+        <div class="d-flex justify-content-between mb-1.5">
+          <div class="skeleton-line skeleton-line-xs mb-0" style="width: 35%;"></div>
+          <div class="skeleton-line skeleton-line-xs mb-0" style="width: 40%;"></div>
+        </div>
+        <div class="d-flex justify-content-between mb-0">
+          <div class="skeleton-line skeleton-line-xs mb-0" style="width: 30%;"></div>
+          <div class="skeleton-line skeleton-line-xs mb-0" style="width: 35%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Items Table Skeleton -->
+    <div class="table-responsive mb-4">
+      <table class="table align-middle skeleton-table w-100">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 40%;"><div class="skeleton-line skeleton-line-sm mb-0" style="width: 100px;"></div></th>
+            <th class="text-center" style="width: 15%;"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 50px;"></div></th>
+            <th class="text-end" style="width: 15%;"><div class="skeleton-line skeleton-line-sm ms-auto mb-0" style="width: 70px;"></div></th>
+            <th class="text-end" style="width: 15%;"><div class="skeleton-line skeleton-line-sm ms-auto mb-0" style="width: 55px;"></div></th>
+            <th class="text-end" style="width: 15%;"><div class="skeleton-line skeleton-line-sm ms-auto mb-0" style="width: 75px;"></div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% 3.times do |i| %>
+            <tr>
+              <td>
+                <div class="skeleton-line skeleton-line-sm mb-1" style="width: <%= [70, 85, 60][i] %>%;"></div>
+                <div class="skeleton-line skeleton-line-xs mb-0" style="width: 45%;"></div>
+              </td>
+              <td class="text-center">
+                <div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 30px;"></div>
+              </td>
+              <td class="text-end">
+                <div class="skeleton-line skeleton-line-sm ms-auto mb-0" style="width: 65px;"></div>
+              </td>
+              <td class="text-end">
+                <div class="skeleton-line skeleton-line-sm ms-auto mb-0" style="width: 40px;"></div>
+              </td>
+              <td class="text-end">
+                <div class="skeleton-line skeleton-line-sm ms-auto mb-0" style="width: 75px;"></div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Totals Summary Grid -->
+    <div class="row justify-content-end mb-4">
+      <div class="col-md-5 col-lg-4">
+        <div class="p-3 rounded-3" style="background: var(--skeleton-card-bg); border: 1px solid var(--skeleton-border);">
+          <div class="d-flex justify-content-between mb-2">
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 60px;"></div>
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 75px;"></div>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 45px;"></div>
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 65px;"></div>
+          </div>
+          <div class="border-top pt-2 mt-2 d-flex justify-content-between align-items-center" style="border-color: var(--skeleton-border) !important;">
+            <div class="skeleton-line skeleton-title-sm mb-0" style="width: 80px; height: 16px;"></div>
+            <div class="skeleton-value mb-0" style="width: 100px; height: 26px;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

@@ -1,9 +1,13 @@
 import { handleAvatarSelection } from './avatar_cropper';
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 function initCompanyPage() {
     if (!window.location.pathname.includes("/companies")) {
         return;
     }
+
+    hideSkeleton('companies_skeleton', 'companies_content');
+    hideSkeleton('company_show_skeleton', 'company_show_content');
 
     const $companyForm = $('form[action*="/companies"]');
 

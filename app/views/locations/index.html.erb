@@ -4,6 +4,11 @@
 <% end %>
 
 <div class="locations-page container-fluid px-2 px-sm-3 px-md-4 py-2.5">
+  <div id="locations_skeleton">
+    <%= render "locations/skeleton" %>
+  </div>
+
+  <div id="locations_content" style="display: none;">
   <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
     <div class="dropdown ms-auto">
       <button class="btn btn-primary btn-sm dropdown-toggle d-inline-flex align-items-center justify-content-center gap-2" type="button" id="addLocationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -127,6 +132,15 @@
     </div>
   </div>
 </div>
+</div>
+</div>
+
+<noscript>
+  <style>
+    #locations_skeleton { display: none !important; }
+    #locations_content { display: block !important; }
+  </style>
+</noscript>
 
 
 <div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">

@@ -467,12 +467,10 @@ a {
 
 @keyframes skeletonFadeIn {
   from {
-    opacity: 0;
-    transform: translateY(3px);
+    opacity: 0.6;
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -480,14 +478,46 @@ a {
   .skeleton-shimmer,
   .skeleton-box,
   .skeleton-line,
+  .skeleton-line-xs,
+  .skeleton-line-sm,
+  .skeleton-line-lg,
+  .skeleton-title,
+  .skeleton-title-sm,
   .skeleton-circle,
+  .skeleton-circle-xs,
+  .skeleton-circle-sm,
+  .skeleton-circle-md,
+  .skeleton-circle-lg,
+  .skeleton-circle-xl,
+  .skeleton-avatar-lg,
+  .skeleton-avatar-xl,
   .skeleton-pill,
   .skeleton-badge,
   .skeleton-btn,
   .skeleton-btn-pill,
+  .skeleton-btn-sm,
   .skeleton-progress,
   .skeleton-chart-bar,
-  .skeleton-donut {
+  .skeleton-donut,
+  .skeleton-value,
+  .skeleton-input,
+  .skeleton-textarea,
+  .skeleton-banner,
+  [class*="skeleton-box"],
+  [class*="skeleton-line"],
+  [class*="skeleton-circle"],
+  [class*="skeleton-avatar"],
+  [class*="skeleton-btn"],
+  [class*="skeleton-pill"],
+  [class*="skeleton-badge"],
+  [class*="skeleton-title"],
+  [class*="skeleton-value"],
+  [class*="skeleton-progress"],
+  [class*="skeleton-chart-bar"],
+  [class*="skeleton-donut"],
+  [class*="skeleton-input"],
+  [class*="skeleton-textarea"],
+  [class*="skeleton-banner"] {
     animation: none !important;
     background: var(--skeleton-base) !important;
   }

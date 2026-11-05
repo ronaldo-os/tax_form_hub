@@ -1,4 +1,5 @@
 import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 function fixEmptyRowColspan(api) {
     const table = api.table ? api.table().node() : api;
@@ -191,6 +192,8 @@ function initLocationsPage(eventOrForce = false) {
     if (!window.location.pathname.includes("/locations") || $('#location-table').length === 0) return;
     if (document.documentElement.hasAttribute('data-turbo-preview')) return;
 
+    setupSkeletonSafetyFallback([['locations_skeleton', 'locations_content']], 1000);
+
     const forceReinit =
         eventOrForce === true ||
         Boolean(eventOrForce && eventOrForce.type === 'popstate');
@@ -340,6 +343,7 @@ function initLocationsPage(eventOrForce = false) {
             }
 
             setupLocationsBulkActions(api);
+            hideSkeleton('locations_skeleton', 'locations_content');
         },
         drawCallback: function () {
             const api = this.api();

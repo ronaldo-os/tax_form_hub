@@ -1,0 +1,79 @@
+<!-- Company Show Skeleton Loader (Theme-Accurate & Container-Accurate) -->
+<div class="company-show-skeleton" aria-hidden="true">
+  <!-- Hero Banner Header Skeleton -->
+  <div class="company-hero-card mb-4 rounded-4 overflow-hidden shadow-sm" style="background: var(--skeleton-card-bg);">
+    <div class="skeleton-banner" style="height: 140px; border-radius: 0;"></div>
+    <div class="company-hero-body p-3 p-md-4">
+      <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end justify-content-between gap-3">
+        <!-- Avatar & Main Title -->
+        <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-3 text-center text-md-start w-100 min-w-0">
+          <div class="skeleton-avatar-lg" style="width: 90px; height: 90px; margin-top: -45px; border: 4px solid var(--skeleton-card-bg);"></div>
+
+          <div class="min-w-0 flex-grow-1 pb-1">
+            <div class="skeleton-line skeleton-title mb-2" style="width: 200px; height: 24px;"></div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <div class="skeleton-pill" style="width: 100px; height: 24px;"></div>
+              <div class="skeleton-pill" style="width: 90px; height: 24px;"></div>
+              <div class="skeleton-pill" style="width: 110px; height: 24px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex flex-wrap align-items-center gap-2 flex-shrink-0 pt-2 pt-md-0">
+          <div class="skeleton-btn-pill" style="width: 120px; height: 36px;"></div>
+          <div class="skeleton-btn-pill" style="width: 90px; height: 36px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="row g-4">
+    <!-- Main Left Column (8 cols) -->
+    <div class="col-lg-8">
+      <div class="company-card mb-4 rounded-4 p-4 shadow-sm" style="background: var(--skeleton-card-bg);">
+        <div class="skeleton-line skeleton-title-sm mb-3" style="width: 170px; height: 20px;"></div>
+        <div class="skeleton-line skeleton-line-sm mb-2" style="width: 95%;"></div>
+        <div class="skeleton-line skeleton-line-sm mb-2" style="width: 85%;"></div>
+        <div class="skeleton-line skeleton-line-sm mb-2" style="width: 90%;"></div>
+        <div class="skeleton-line skeleton-line-sm mb-0" style="width: 60%;"></div>
+      </div>
+
+      <div class="company-card rounded-4 p-4 shadow-sm" style="background: var(--skeleton-card-bg);">
+        <div class="skeleton-line skeleton-title-sm mb-3" style="width: 150px; height: 20px;"></div>
+        <div class="p-3 rounded-3 mb-2" style="background: var(--skeleton-card-bg); border: 1px solid var(--skeleton-border);">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="skeleton-circle" style="width: 32px; height: 32px;"></div>
+            <div class="skeleton-line skeleton-line-sm mb-0" style="width: 120px;"></div>
+          </div>
+          <div class="skeleton-line skeleton-line-xs mb-0" style="width: 80%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Right Column (4 cols) -->
+    <div class="col-lg-4">
+      <div class="company-card mb-4 rounded-4 p-4 shadow-sm" style="background: var(--skeleton-card-bg);">
+        <div class="skeleton-line skeleton-title-sm mb-3" style="width: 130px; height: 18px;"></div>
+        <% 4.times do %>
+          <div class="d-flex justify-content-between align-items-center mb-2.5">
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 35%;"></div>
+            <div class="skeleton-line skeleton-line-xs mb-0" style="width: 50%;"></div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="company-card rounded-4 p-4 shadow-sm" style="background: var(--skeleton-card-bg);">
+        <div class="skeleton-line skeleton-title-sm mb-3" style="width: 120px; height: 18px;"></div>
+        <% 3.times do %>
+          <div class="d-flex align-items-center gap-2 mb-2.5">
+            <div class="skeleton-circle" style="width: 20px; height: 20px;"></div>
+            <div class="skeleton-line skeleton-line-xs mb-0 flex-grow-1"></div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+

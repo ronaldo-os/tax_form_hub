@@ -1,0 +1,79 @@
+<!-- Locations Index Skeleton Loader (Theme-Accurate & Container-Accurate) -->
+<div class="locations-page-skeleton" aria-hidden="true">
+  <!-- Top Action Button Bar -->
+  <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+    <div class="ms-auto">
+      <div class="skeleton-btn" style="width: 175px; height: 32px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+    </div>
+  </div>
+
+  <!-- Locations Table Card Skeleton -->
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-body p-2.5">
+      <!-- Filter Controls Bar -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 p-1">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <div class="skeleton-btn" style="width: 65px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+          <div class="skeleton-btn" style="width: 120px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+          <div class="skeleton-btn" style="width: 140px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+        </div>
+        <div class="skeleton-btn" style="width: 200px; height: 31px; border-radius: var(--form-field-radius, 0.5rem);"></div>
+      </div>
+
+      <!-- Table Skeleton -->
+      <div class="table-responsive">
+        <table class="table table-hover table_text_centered align-middle table-compact nowrap skeleton-table w-100">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 40px;" class="text-center">
+                <div class="skeleton-box mx-auto" style="width: 16px; height: 16px; border-radius: 4px;"></div>
+              </th>
+              <th style="width: 120px;"><div class="skeleton-line skeleton-line-sm mb-0" style="width: 60px; height: 12px;"></div></th>
+              <th><div class="skeleton-line skeleton-line-sm mb-0" style="width: 110px; height: 12px;"></div></th>
+              <th><div class="skeleton-line skeleton-line-sm mb-0" style="width: 140px; height: 12px;"></div></th>
+              <th><div class="skeleton-line skeleton-line-sm mb-0" style="width: 110px; height: 12px;"></div></th>
+              <th style="width: 80px;" class="text-center"><div class="skeleton-line skeleton-line-sm mx-auto mb-0" style="width: 50px; height: 12px;"></div></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% 6.times do |i| %>
+              <tr>
+                <td class="text-center">
+                  <div class="skeleton-box mx-auto" style="width: 16px; height: 16px; border-radius: 4px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-pill mb-0" style="width: 85px; height: 20px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-line skeleton-line-sm mb-0" style="width: <%= [75, 60, 85, 70, 90, 65][i] %>%; height: 12px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-line skeleton-line-sm mb-0" style="width: <%= [85, 70, 90, 60, 80, 75][i] %>%; height: 12px;"></div>
+                </td>
+                <td>
+                  <div class="skeleton-line skeleton-line-sm mb-0" style="width: <%= [65, 80, 70, 85, 60, 75][i] %>%; height: 12px;"></div>
+                </td>
+                <td class="text-center">
+                  <div class="d-flex align-items-center justify-content-center gap-1">
+                    <div class="skeleton-circle" style="width: 26px; height: 26px;"></div>
+                    <div class="skeleton-circle" style="width: 26px; height: 26px;"></div>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer Skeleton -->
+      <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-2 mt-3 pt-2 border-top" style="border-color: var(--skeleton-border) !important;">
+        <div class="skeleton-line skeleton-line-xs mb-0" style="width: 160px; height: 12px;"></div>
+        <div class="d-flex gap-1">
+          <div class="skeleton-btn" style="width: 32px; height: 28px; border-radius: 4px;"></div>
+          <div class="skeleton-btn" style="width: 32px; height: 28px; border-radius: 4px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

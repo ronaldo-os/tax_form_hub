@@ -1,11 +1,13 @@
 import { COUNTRY_OPTIONS, DISCOUNT_OPTIONS, INVOICE_INFO_OPTIONAL_FIELDS, OPTIONAL_FIELDS } from "./long_select_options/options";
 import { initCompanySelector } from "./invoice_company_selector";
 import { updatePdfPreviewScale } from "./invoice_preview";
+import { hideSkeleton, setupSkeletonSafetyFallback } from "./skeleton_loader";
 
 // Variable to hold the cleanup function for company selector
 let companySelectorCleanup = null;
 
 const initInvoiceForm = () => {
+  hideSkeleton('invoice_form_skeleton', 'invoice_form_content');
   if (!document.getElementById('company_search_input')) return;
 
   // Cleanup previous company selector listener if exists

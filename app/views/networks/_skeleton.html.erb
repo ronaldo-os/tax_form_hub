@@ -1,0 +1,53 @@
+<!-- Networks Index Skeleton Loader (Theme-Accurate & Container-Accurate) -->
+<div class="networks-page-skeleton" aria-hidden="true">
+  <!-- Search & Add Company Section Skeleton -->
+  <div class="card shadow-sm border-0 mb-4 network-search-card rounded-4" style="background: var(--skeleton-card-bg);">
+    <div class="card-body p-3 p-md-4">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <div class="skeleton-line skeleton-line-xs mb-0" style="width: 170px; height: 12px;"></div>
+      </div>
+      <div class="skeleton-input" style="height: 48px; border-radius: var(--bs-border-radius-lg, 0.75rem);"></div>
+    </div>
+  </div>
+
+  <!-- Connected Companies Section Header -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="skeleton-line skeleton-title-sm mb-0" style="width: 160px; height: 20px;"></div>
+    <div class="skeleton-pill mb-0" style="width: 110px; height: 26px;"></div>
+  </div>
+
+  <!-- Network Grid Skeleton -->
+  <div class="row g-3 network-cards-grid">
+    <% 6.times do |i| %>
+      <div class="col-12 col-sm-6 col-md-6 col-xl-4">
+        <div class="card shadow-sm border-0 h-100 network-company-card rounded-4" style="background: var(--skeleton-card-bg);">
+          <div class="card-body p-3 p-md-4 d-flex flex-column justify-content-between" style="min-height: 160px;">
+            <div>
+              <div class="d-flex align-items-start justify-content-between mb-3 gap-2">
+                <div class="skeleton-box rounded-3" style="width: 48px; height: 48px; flex-shrink: 0;"></div>
+                <div class="flex-grow-1 min-w-0 ms-1">
+                  <div class="skeleton-line skeleton-title-sm mb-1.5" style="width: <%= [75, 60, 85, 70, 90, 65][i] %>%; height: 16px;"></div>
+                  <div class="skeleton-pill mb-0" style="width: 85px; height: 18px;"></div>
+                </div>
+                <div class="skeleton-circle flex-shrink-0" style="width: 28px; height: 28px;"></div>
+              </div>
+
+              <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                <div class="skeleton-badge" style="width: 90px; height: 18px;"></div>
+                <div class="skeleton-line skeleton-line-xs mb-0" style="width: 110px; height: 10px;"></div>
+              </div>
+            </div>
+
+            <div class="pt-2 border-top mt-auto" style="border-color: var(--skeleton-border) !important;">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="skeleton-line skeleton-line-xs mb-0" style="width: 70px;"></div>
+                <div class="skeleton-btn" style="width: 95px; height: 28px; border-radius: 50rem;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
+

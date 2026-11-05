@@ -1,4 +1,5 @@
 import { getInitialTableState, updateUrlParams, getUrlParam, activateTabElement, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 const VALID_TOP_TABS = ['sales', 'purchases'];
 const VALID_SUB_STATUSES = ['active', 'finished', 'cancelled'];
@@ -410,6 +411,16 @@ function initSubscriptionsPage(eventOrForce = false) {
     if (!window.location.pathname.includes("/subscriptions")) return;
     if (document.documentElement.hasAttribute('data-turbo-preview')) return;
 
+    setupSkeletonSafetyFallback([
+        ['subscriptions_skeleton', 'subscriptions_content'],
+        ['subscription_show_skeleton', 'subscription_show_content']
+    ], 1000);
+
+    // If on subscription show page without tables, hide skeleton directly
+    if (window.location.pathname.match(/\/subscriptions\/\d+$/) && document.getElementById('subscription_show_skeleton')) {
+        hideSkeleton('subscription_show_skeleton', 'subscription_show_content');
+    }
+
     if (typeof $ === 'undefined' || !$.fn.DataTable) {
         console.warn("DataTables not loaded yet, deferring initialization.");
         setTimeout(initSubscriptionsPage, 100);
@@ -571,6 +582,7 @@ function initSubscriptionsPage(eventOrForce = false) {
                 if (hasCheckboxCol && tableId) {
                     setupSubscriptionsBulkActions(api, tableId);
                 }
+                hideSkeleton('subscriptions_skeleton', 'subscriptions_content');
             },
             drawCallback: function () {
                 fixEmptyRowColspan(this.api());

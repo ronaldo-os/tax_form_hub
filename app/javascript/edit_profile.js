@@ -1,4 +1,5 @@
 import { handleAvatarSelection, clearAvatarSelection } from './avatar_cropper';
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 (function() {
     let initialProfileState = {
@@ -293,6 +294,7 @@ import { handleAvatarSelection, clearAvatarSelection } from './avatar_cropper';
     // For things that still need to run on every load
     function runOnEveryLoad() {
         initProfileBaseline();
+        hideSkeleton('profile_skeleton', 'profile_content');
         if ($('#image-preview').length) {
             // Auto-hide alert messages (flashes) and errors after 5 seconds
             setTimeout(function() {

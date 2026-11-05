@@ -18,6 +18,11 @@
 <% end %>
 
 <div class="container py-4 py-md-3">
+  <div id="company_show_skeleton">
+    <%= render "companies/show_skeleton" %>
+  </div>
+
+  <div id="company_show_content" style="display: none;">
   <!-- Hero Banner Header -->
   <div class="company-hero-card mb-4">
     <div class="company-hero-banner"></div>
@@ -397,4 +402,12 @@
     </div>
 
   </div>
+  </div>
 </div>
+
+<noscript>
+  <style>
+    #company_show_skeleton { display: none !important; }
+    #company_show_content { display: block !important; }
+  </style>
+</noscript>

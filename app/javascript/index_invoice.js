@@ -1,6 +1,7 @@
 import { updatePdfPreviewScale } from './invoice_preview';
 import { initInvoiceExport, showInvoiceToast } from './invoices_export';
 import { setupInvoiceBulkActions } from './invoice_bulk';
+import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 import { 
     getInitialTableState, 
     updateUrlParams, 
@@ -86,6 +87,8 @@ function syncCardFilterState(targetStatus) {
 
 function initInvoicePage() {
     if (!window.location.pathname.includes("/invoices")) return;
+
+    setupSkeletonSafetyFallback([['invoices_skeleton', 'invoices_content']], 1000);
 
     const initial = getInitialTableState();
 
@@ -277,6 +280,7 @@ function initInvoicePage() {
                 bindSearchInputSync($searchInput);
                 bindPaginationSync(api);
                 bindOrderSync(api, { defaultOrder: defaultOrder });
+                hideSkeleton('invoices_skeleton', 'invoices_content');
             }
         };
 
