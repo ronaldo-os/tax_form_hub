@@ -91,8 +91,8 @@ class CompaniesControllerTest < ActionDispatch::IntegrationTest
       assert_select "a", text: /View As Visitor/
     end
 
-    assert_select "#update-company-btn", text: /Save Changes/
-    assert_select "a.btn-back", count: 2
+    assert_select "#update-company-btn-top", text: /Save Changes/
+    assert_select "a.btn-back", count: 1
   end
 
   test "visitor cannot access edit page for a connected company via companies index params" do

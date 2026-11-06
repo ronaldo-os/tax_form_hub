@@ -25,10 +25,9 @@
   --text-muted: #6c757d;
 
   /* Skeleton Loader Tokens */
-  --skeleton-base: #d8dce2;
-  --skeleton-highlight: #eceff3;
-  --skeleton-wave-sheen: rgba(255, 255, 255, 0.85);
-  --skeleton-border: rgba(0, 0, 0, 0.05);
+  --skeleton-base: #cbd2d9;
+  --skeleton-highlight: #eef1f5;
+  --skeleton-border: rgba(0, 0, 0, 0.06);
   --skeleton-card-bg: var(--card-bg, #ffffff);
 
   /* Standardized Form Field Design Tokens */
@@ -85,10 +84,9 @@
   --text-muted: #adb5bd;
 
   /* Skeleton Loader Tokens (Dark Mode) */
-  --skeleton-base: #383f47;
-  --skeleton-highlight: #4d5762;
-  --skeleton-wave-sheen: rgba(255, 255, 255, 0.28);
-  --skeleton-border: rgba(255, 255, 255, 0.06);
+  --skeleton-base: #3a424c;
+  --skeleton-highlight: #64748b;
+  --skeleton-border: rgba(255, 255, 255, 0.08);
   --skeleton-card-bg: var(--card-bg, #212529);
 
   /* Standardized Form Field Design Tokens (Dark Mode) */
@@ -436,32 +434,32 @@ a {
 /* Skeleton Loading Critical Keyframes */
 @keyframes skeleton-pulse {
   0%, 100% {
+    background-color: var(--skeleton-base, #cbd2d9);
     opacity: 1;
-    filter: brightness(1.08);
   }
   50% {
-    opacity: 0.22;
-    filter: brightness(0.82);
+    background-color: var(--skeleton-highlight, #eef1f5);
+    opacity: 0.32;
   }
 }
 
 @keyframes skeleton-pulse-dark {
   0%, 100% {
+    background-color: var(--skeleton-base, #3a424c);
     opacity: 1;
-    filter: brightness(1.28);
   }
   50% {
-    opacity: 0.24;
-    filter: brightness(0.72);
+    background-color: var(--skeleton-highlight, #64748b);
+    opacity: 0.30;
   }
 }
 
 @keyframes skeleton-shimmer {
-  0% {
-    background-position: -200% 0;
+  0%, 100% {
+    opacity: 1;
   }
-  100% {
-    background-position: 200% 0;
+  50% {
+    opacity: 0.32;
   }
 }
 
@@ -475,50 +473,9 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton-shimmer,
-  .skeleton-box,
-  .skeleton-line,
-  .skeleton-line-xs,
-  .skeleton-line-sm,
-  .skeleton-line-lg,
-  .skeleton-title,
-  .skeleton-title-sm,
-  .skeleton-circle,
-  .skeleton-circle-xs,
-  .skeleton-circle-sm,
-  .skeleton-circle-md,
-  .skeleton-circle-lg,
-  .skeleton-circle-xl,
-  .skeleton-avatar-lg,
-  .skeleton-avatar-xl,
-  .skeleton-pill,
-  .skeleton-badge,
-  .skeleton-btn,
-  .skeleton-btn-pill,
-  .skeleton-btn-sm,
-  .skeleton-progress,
-  .skeleton-chart-bar,
-  .skeleton-donut,
-  .skeleton-value,
-  .skeleton-input,
-  .skeleton-textarea,
-  .skeleton-banner,
-  [class*="skeleton-box"],
-  [class*="skeleton-line"],
-  [class*="skeleton-circle"],
-  [class*="skeleton-avatar"],
-  [class*="skeleton-btn"],
-  [class*="skeleton-pill"],
-  [class*="skeleton-badge"],
-  [class*="skeleton-title"],
-  [class*="skeleton-value"],
-  [class*="skeleton-progress"],
-  [class*="skeleton-chart-bar"],
-  [class*="skeleton-donut"],
-  [class*="skeleton-input"],
-  [class*="skeleton-textarea"],
-  [class*="skeleton-banner"] {
+  .skeleton-fade-out,
+  .skeleton-fade-in {
+    transition: none !important;
     animation: none !important;
-    background: var(--skeleton-base) !important;
   }
 }

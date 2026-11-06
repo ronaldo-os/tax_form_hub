@@ -27,10 +27,9 @@
   --text-muted: #6c757d;
 
   /* Skeleton Loader Tokens */
-  --skeleton-base: #d8dce2;
-  --skeleton-highlight: #eceff3;
-  --skeleton-wave-sheen: rgba(255, 255, 255, 0.85);
-  --skeleton-border: rgba(0, 0, 0, 0.05);
+  --skeleton-base: #cbd2d9;
+  --skeleton-highlight: #eef1f5;
+  --skeleton-border: rgba(0, 0, 0, 0.06);
   --skeleton-card-bg: var(--card-bg, #ffffff);
 
   /* Standardized Form Field Design Tokens */
@@ -87,10 +86,9 @@
   --text-muted: #adb5bd;
 
   /* Skeleton Loader Tokens (Dark Mode) */
-  --skeleton-base: #383f47;
-  --skeleton-highlight: #4d5762;
-  --skeleton-wave-sheen: rgba(255, 255, 255, 0.28);
-  --skeleton-border: rgba(255, 255, 255, 0.06);
+  --skeleton-base: #3a424c;
+  --skeleton-highlight: #64748b;
+  --skeleton-border: rgba(255, 255, 255, 0.08);
   --skeleton-card-bg: var(--card-bg, #212529);
 
   /* Standardized Form Field Design Tokens (Dark Mode) */
