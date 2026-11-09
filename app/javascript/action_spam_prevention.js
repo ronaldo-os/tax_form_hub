@@ -6,10 +6,10 @@
  * contention during page transitions.
  */
 
-const THROTTLE_WINDOW_MS = 400; // Minimum time between consecutive clicks on the same element
-const GLOBAL_ACTION_COOLDOWN_MS = 300; // Minimum cooldown between clicking different action/redirect elements
-const NAVIGATION_LOCK_MS = 1500; // Lock window preventing duplicate clicks on the same redirect URL
-const SAFETY_FALLBACK_TIMEOUT_MS = 6000; // Re-enable fallback if no response/navigation occurs
+const THROTTLE_WINDOW_MS = 300; // Minimum time between consecutive clicks on the same element
+const GLOBAL_ACTION_COOLDOWN_MS = 250; // Minimum cooldown between clicking different action/redirect elements
+const NAVIGATION_LOCK_MS = 800; // Lock window preventing duplicate clicks on the same redirect URL
+const SAFETY_FALLBACK_TIMEOUT_MS = 4000; // Re-enable fallback if no response/navigation occurs
 
 let pageActionInFlight = false;
 let pageActionTimeoutId = null;
@@ -19,6 +19,20 @@ let navigationTimeoutId = null;
 
 const activeBackgroundXhrs = new Set();
 const activeAbortControllers = new Set();
+
+/**
+ * Normalizes URL strings for robust comparison regardless of trailing slashes,
+ * hash fragments, or origin format.
+ */
+function normalizeUrlString(urlStr) {
+  if (!urlStr) return '';
+  try {
+    const parsed = new URL(urlStr, window.location.origin);
+    return parsed.origin + parsed.pathname.replace(/\/+$/, '') + parsed.search;
+  } catch (e) {
+    return String(urlStr).trim().replace(/\/+$/, '');
+  }
+}
 
 /**
  * Registers an AbortController for a background fetch request so it can be
@@ -364,14 +378,18 @@ function setupFormSubmitProtection() {
     const fetchResponse = event.detail?.fetchResponse;
     const isRedirecting = Boolean(fetchResponse && fetchResponse.redirected);
 
-    // If the response is a redirect, keep the action lock active briefly until Turbo renders the redirected page
+    // If the response is a redirect, clear the action lock promptly so redirection completes without stall
     if (isRedirecting) {
+      if (form && form.tagName === 'FORM') {
+        form.dataset.submitting = 'false';
+        form.dataset.confirming = 'false';
+      }
       setTimeout(() => {
         if (form && form.tagName === 'FORM') {
           resetFormSubmitting(form);
         }
         setPageActionInFlight(false);
-      }, 600);
+      }, 150);
       return;
     }
 
@@ -396,14 +414,25 @@ function setupFormSubmitProtection() {
     resetAllSubmissions();
   });
 
-  // Abort pending background XHR/fetch requests whenever Turbo begins visiting a new page
+  // Automatically reset lock state when Turbo visit starts, prepares to render, renders, or loads
   document.addEventListener('turbo:before-visit', function () {
     abortPendingBackgroundRequests();
+  });
+
+  document.addEventListener('turbo:visit', function () {
+    abortPendingBackgroundRequests();
+    setPageActionInFlight(false);
+    navigationInFlightUrl = null;
+  });
+
+  document.addEventListener('turbo:before-render', function () {
+    resetAllSubmissions();
   });
 
   document.addEventListener('turbo:load', resetAllSubmissions);
   document.addEventListener('turbo:render', resetAllSubmissions);
   window.addEventListener('pageshow', resetAllSubmissions);
+  window.addEventListener('popstate', resetAllSubmissions);
 }
 
 /**
@@ -487,9 +516,15 @@ function setupActionDebounce() {
         navLink.classList.contains('download-pdf');
 
       if (!isUiToggle) {
-        // If a mutating form/action is currently in flight, block simultaneous redirect clicks
-        // so the browser does not queue competing requests against the server redirect.
-        if (pageActionInFlight) {
+        // If user explicitly clicks a back/cancel button while an action was pending,
+        // let them navigate and abort pending background/action requests
+        const isBackButton = navLink.classList.contains('btn-back') || navLink.getAttribute('data-behavior') === 'back-button';
+        if (pageActionInFlight && isBackButton) {
+          setPageActionInFlight(false);
+          abortPendingBackgroundRequests();
+        } else if (pageActionInFlight) {
+          // If a mutating form/action is currently in flight, block simultaneous redirect clicks
+          // so the browser does not queue competing requests against the server redirect.
           event.preventDefault();
           event.stopImmediatePropagation();
           return false;
@@ -500,10 +535,11 @@ function setupActionDebounce() {
         const targetUrl = navLink.href;
 
         // Block rapid duplicate clicks on the same redirect link or back button
+        const isSameNavInFlight = navigationInFlightUrl && normalizeUrlString(navigationInFlightUrl) === normalizeUrlString(targetUrl);
         if (
           now - lastLinkClick < THROTTLE_WINDOW_MS ||
           navLink.dataset.redirectInFlight === 'true' ||
-          (navigationInFlightUrl && navigationInFlightUrl === targetUrl && now - lastGlobalActionTimestamp < NAVIGATION_LOCK_MS)
+          (isSameNavInFlight && now - lastGlobalActionTimestamp < NAVIGATION_LOCK_MS)
         ) {
           event.preventDefault();
           event.stopImmediatePropagation();
