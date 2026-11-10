@@ -3,6 +3,9 @@
   full_title_incoming = company_name.present? ? "#{company_name} Incoming Submissions" : "Incoming Submissions"
   display_company = company_name.present? ? truncate(company_name, length: 30) : nil
   display_title_incoming = display_company ? "#{display_company} Incoming Submissions" : "Incoming Submissions"
+
+  add_breadcrumb "Taxes", tax_submissions_home_path
+  add_breadcrumb "Incoming Submissions"
 %>
 <% content_for :page_title, full_title_incoming %>
 <% content_for :stylesheets do %>

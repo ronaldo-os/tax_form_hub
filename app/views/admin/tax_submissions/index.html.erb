@@ -1,3 +1,7 @@
+<% 
+  add_breadcrumb "Taxes", tax_submissions_home_path
+  add_breadcrumb "Client Submissions"
+%>
 <% content_for :page_title, "Client Submissions" %>
 <% is_archived_tab = (@active_tab || params[:tab].to_s.downcase) == "archived" %>
 <div class="tax-submissions-page container py-2 py-md-3">

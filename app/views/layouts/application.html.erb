@@ -62,9 +62,16 @@
         <div class="mobile-app-menu-toggle flex-shrink-0" id="mobile_menu_toggle" role="button" aria-label="Toggle navigation">
           <i class="fa-solid fa-bars"></i>
         </div>
-        <h1 class="mobile-page-title mb-0 fs-5 text-truncate fw-bold">
-          <%= content_for(:page_title) || content_for(:title) || "Tax Form Hub" %>
-        </h1>
+        <div class="min-w-0 overflow-hidden">
+          <% if breadcrumbs.present? %>
+            <div class="mobile-header-breadcrumbs mb-0.5">
+              <%= render_breadcrumbs(custom_class: "mobile-breadcrumbs") %>
+            </div>
+          <% end %>
+          <h1 class="mobile-page-title mb-0 fs-5 text-truncate fw-bold">
+            <%= content_for(:page_title) || content_for(:title) || "Tax Form Hub" %>
+          </h1>
+        </div>
       </div>
     </div>
 
@@ -94,49 +101,49 @@
 
         <!-- Main Menu -->
         <div class="app-menu-list">
-          <li class="<%= 'app-active' if request.path == root_path || request.path == dashboard_path || request.path.starts_with?('/dashboard') %>">
+          <li data-nav-item="dashboard" class="<%= 'app-active' if request.path == root_path || request.path == dashboard_path || request.path.starts_with?('/dashboard') %>">
             <%= link_to root_path do %>
               <div class="app-icon"><i class="fa-solid fa-gauge-high fa-fw z-1"></i></div>
               <div class="app-text">Dashboard</div>
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?('/tax_submissions') || request.path.starts_with?('/admin') %>">
+          <li data-nav-item="taxes" class="<%= 'app-active' if request.path.starts_with?('/tax_submissions') || request.path.starts_with?('/admin') %>">
             <%= link_to tax_submissions_home_path do %>
               <div class="app-icon"><i class="fa-solid fa-file-invoice-dollar fa-fw z-1"></i></div>
               <div class="app-text">Taxes</div>
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?(invoices_path) %>">
+          <li data-nav-item="invoices" class="<%= 'app-active' if request.path.starts_with?(invoices_path) %>">
             <%= link_to invoices_path do %>
               <div class="app-icon"><i class="fa-solid fa-file-invoice fa-fw z-1"></i></div>
               <div class="app-text">Invoices</div>
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?(subscriptions_path) rescue false %>">
+          <li data-nav-item="subscriptions" class="<%= 'app-active' if request.path.starts_with?(subscriptions_path) || request.path.starts_with?('/price_adjustments') rescue false %>">
             <%= link_to subscriptions_path do %>
               <div class="app-icon"><i class="fa-solid fa-repeat fa-fw z-1"></i></div>
               <div class="app-text">Subscriptions</div>
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?(locations_path) %>">
+          <li data-nav-item="locations" class="<%= 'app-active' if request.path.starts_with?(locations_path) %>">
             <%= link_to locations_path do %>
               <div class="app-icon"><i class="fa-solid fa-location-dot fa-fw z-1"></i></div>
               <div class="app-text">Locations</div>
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?(networks_path) %>">
+          <li data-nav-item="networks" class="<%= 'app-active' if request.path.starts_with?(networks_path) %>">
             <%= link_to networks_path do %>
               <div class="app-icon"><i class="fa-solid fa-network-wired fa-fw z-1"></i></div>
               <div class="app-text">Network</div>
             <% end %>
           </li>
 
-          <li class="<%= 'app-active' if request.path.starts_with?(notifications_path) %>">
+          <li data-nav-item="notifications" class="<%= 'app-active' if request.path.starts_with?(notifications_path) %>">
             <%= link_to notifications_path do %>
               <div class="app-icon position-relative">
                 <i class="fa-solid fa-bell fa-fw z-1"></i>
@@ -151,14 +158,14 @@
           </li>
 
           <!-- Mobile-only account links (since desktop header dropdown is hidden on mobile) -->
-          <li class="d-lg-none <%= 'app-active' if request.path.starts_with?(edit_profile_path) %>">
+          <li data-nav-item="user-profile" class="d-lg-none <%= 'app-active' if request.path.starts_with?(edit_profile_path) || request.path.starts_with?('/users/edit') %>">
             <%= link_to edit_profile_path do %>
               <div class="app-icon"><i class="fa-solid fa-user-gear fa-fw z-1"></i></div>
               <div class="app-text">User Profile</div>
             <% end %>
           </li>
 
-          <li class="d-lg-none <%= 'app-active' if request.path.starts_with?(companies_path) %>">
+          <li data-nav-item="company-profile" class="d-lg-none <%= 'app-active' if request.path.starts_with?(companies_path) %>">
             <%= link_to companies_path, data: { turbo: false } do %>
               <div class="app-icon"><i class="fa-solid fa-building fa-fw z-1"></i></div>
               <div class="app-text">Company Profile</div>
@@ -193,12 +200,17 @@
 
     <!-- Desktop Page Title Header Bar -->
     <div id="desktop_header_bar" class="page-header-bar d-none d-lg-flex align-items-center justify-content-between px-4 py-3 border-bottom bg-sidebar">
-      <div class="d-flex align-items-center gap-3">
-        <h1 class="desktop-page-title mb-0 fs-4 fw-bold text-main">
+      <div class="d-flex flex-column justify-content-center min-w-0 me-3">
+        <% if breadcrumbs.present? %>
+          <div class="desktop-header-breadcrumbs mb-1">
+            <%= render_breadcrumbs(custom_class: "desktop-breadcrumbs") %>
+          </div>
+        <% end %>
+        <h1 class="desktop-page-title mb-0 fs-4 fw-bold text-main text-truncate">
           <%= content_for(:page_title) || content_for(:title) || "Tax Form Hub" %>
         </h1>
       </div>
-      <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center gap-2 flex-shrink-0">
         <!-- Modern Notification Dropdown Menu -->
         <%= render "layouts/notification_dropdown" %>
 

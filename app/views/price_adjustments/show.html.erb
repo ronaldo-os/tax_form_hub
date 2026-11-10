@@ -1,3 +1,12 @@
+<% 
+  add_breadcrumb "Subscriptions", subscriptions_path(tab: @price_adjustment.purchase? ? 'purchases' : 'sales')
+  if @price_adjustment.persisted?
+    add_breadcrumb @price_adjustment.invoice_number.presence || "Subscription ##{@price_adjustment.id}", subscription_path(@price_adjustment, tab: @price_adjustment.purchase? ? 'purchases' : 'sales')
+  end
+  add_breadcrumb "Price Adjustment"
+%>
+<% content_for :page_title, "Price Adjustment Details" %>
+
 <div class="container mt-5">
   <div id="price_adjustments_skeleton">
     <%= render "price_adjustments/skeleton" %>

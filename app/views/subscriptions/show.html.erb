@@ -1,3 +1,8 @@
+<% 
+  add_breadcrumb "Subscriptions", subscriptions_path(tab: @subscription.purchase? ? 'purchases' : 'sales')
+  sub_label = @subscription.invoice_number.presence || "Subscription ##{@subscription.id}"
+  add_breadcrumb sub_label
+%>
 <% content_for :page_title, "Subscriptions" %>
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "invoices", media: "all" %>

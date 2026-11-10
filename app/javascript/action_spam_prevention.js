@@ -546,8 +546,10 @@ function setupActionDebounce() {
           return false;
         }
 
-        // Throttle simultaneous clicks across different redirect links within the cooldown window
-        if (now - lastGlobalActionTimestamp < GLOBAL_ACTION_COOLDOWN_MS && navigationInFlightUrl) {
+        // Allow rapid navigation between different pages/links (especially in the side nav),
+        // but throttle simultaneous clicks across competing back/redirect buttons
+        const isSidebarNav = Boolean(navLink.closest('.app-sidebar'));
+        if (!isSidebarNav && !isSameNavInFlight && now - lastGlobalActionTimestamp < GLOBAL_ACTION_COOLDOWN_MS && navigationInFlightUrl && (navLink.classList.contains('btn-back') || navLink.getAttribute('data-behavior') === 'back-button')) {
           event.preventDefault();
           event.stopImmediatePropagation();
           return false;

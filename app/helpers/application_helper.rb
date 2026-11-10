@@ -50,6 +50,41 @@ module ApplicationHelper
     )
   end
 
+  # Breadcrumbs management
+  def breadcrumbs
+    @breadcrumbs ||= []
+  end
+
+  def add_breadcrumb(name, path = nil)
+    breadcrumbs << { name: name, path: path }
+  end
+
+  def render_breadcrumbs(custom_class: "")
+    return if breadcrumbs.empty?
+
+    content_tag(:nav, aria: { label: "breadcrumb" }, class: "app-breadcrumbs-nav #{custom_class}".strip) do
+      content_tag(:ol, class: "breadcrumb mb-0 py-0 align-items-center flex-nowrap") do
+        breadcrumbs.each_with_index.map do |crumb, index|
+          is_last = (index == breadcrumbs.length - 1)
+          item_class = "breadcrumb-item #{'active' if is_last}".strip
+
+          content_tag(:li, class: item_class, aria: (is_last ? { current: "page" } : nil)) do
+            if !is_last && crumb[:path].present?
+              link_to crumb[:path], class: "text-decoration-none breadcrumb-link d-inline-flex align-items-center gap-1" do
+                if index == 0 && crumb[:name] == "Home"
+                  concat content_tag(:i, "", class: "fa-solid fa-house fs-8 me-1")
+                end
+                concat content_tag(:span, crumb[:name])
+              end
+            else
+              content_tag(:span, crumb[:name], class: "breadcrumb-current fw-semibold text-truncate")
+            end
+          end
+        end.join.html_safe
+      end
+    end
+  end
+
   # Cached critical CSS inliner to avoid repeated disk reads
   def inline_critical_css
     if Rails.env.production?

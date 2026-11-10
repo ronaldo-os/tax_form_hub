@@ -666,6 +666,71 @@ function handleThemeToggleEvent(e) {
   }
 }
 
+/**
+ * Maps a given pathname/URL string to its corresponding sidebar navigation key.
+ */
+export function getActiveNavItemKey(pathname) {
+  if (!pathname) return null;
+  let path = pathname;
+  try {
+    if (path.startsWith('http://') || path.startsWith('https://')) {
+      path = new URL(path).pathname;
+    } else {
+      path = path.split('?')[0].split('#')[0];
+    }
+  } catch (e) {}
+  path = path.replace(/\/+$/, '') || '/';
+
+  if (path === '/' || path === '/dashboard' || path.startsWith('/dashboard/')) {
+    return 'dashboard';
+  }
+  if (path.startsWith('/tax_submissions') || path.startsWith('/admin')) {
+    return 'taxes';
+  }
+  if (path.startsWith('/invoices')) {
+    return 'invoices';
+  }
+  if (path.startsWith('/subscriptions') || path.startsWith('/price_adjustments')) {
+    return 'subscriptions';
+  }
+  if (path.startsWith('/locations')) {
+    return 'locations';
+  }
+  if (path.startsWith('/networks')) {
+    return 'networks';
+  }
+  if (path.startsWith('/notifications')) {
+    return 'notifications';
+  }
+  if (path.startsWith('/profile/edit') || path.startsWith('/users/edit')) {
+    return 'user-profile';
+  }
+  if (path.startsWith('/companies')) {
+    return 'company-profile';
+  }
+  return null;
+}
+
+/**
+ * Synchronizes the active page navigation item in the sidebar across fast page switches,
+ * Turbo transitions, cache previews, and history traversal.
+ */
+export function syncSidebarActiveNav(root = document, targetPath = window.location.pathname) {
+  if (!root) return;
+  const activeKey = getActiveNavItemKey(targetPath);
+  const navItems = root.querySelectorAll ? root.querySelectorAll('.app-menu-list li[data-nav-item]') : [];
+  if (!navItems || navItems.length === 0) return;
+
+  navItems.forEach((li) => {
+    const key = li.getAttribute('data-nav-item');
+    if (activeKey && key === activeKey) {
+      li.classList.add('app-active');
+    } else {
+      li.classList.remove('app-active');
+    }
+  });
+}
+
 function initApplication() {
   // Theme Toggle Logic - Synchronize from meta tag or document attribute
   const metaTheme = document.querySelector('meta[name="user-theme"]')?.getAttribute('content');
@@ -829,9 +894,15 @@ function initApplication() {
     }
   });
 
+  // Ensure active navigation item in sidebar accurately reflects current URL
+  syncSidebarActiveNav(document, window.location.pathname);
+
   $menuListItems.on("click", function () {
-    $menuListItems.removeClass("app-active");
-    $(this).addClass("app-active");
+    const link = this.querySelector('a[href]');
+    if (link && link.getAttribute('href')) {
+      const href = link.getAttribute('href');
+      syncSidebarActiveNav(document, href);
+    }
 
     if (window.innerWidth <= 991.98) {
       $sidebar.removeClass("app-active");
@@ -1002,16 +1073,31 @@ function runPageInitialization() {
   }
 }
 
+// On Turbo visit initiation, immediately reflect target page in sidebar
+document.addEventListener("turbo:visit", (event) => {
+  const targetUrl = event.detail?.url;
+  if (targetUrl) {
+    syncSidebarActiveNav(document, targetUrl);
+  }
+});
+
 // Bind to Turbo Load
 document.addEventListener("turbo:load", () => {
+  syncSidebarActiveNav(document, window.location.pathname);
   runPageInitialization();
 });
-// Ensure incoming pages during Turbo navigation preserve active theme without flashing previous theme
+// Ensure incoming pages during Turbo navigation preserve active theme and correct sidebar active item without flashing
 document.addEventListener("turbo:before-render", (event) => {
   const newBody = event.detail && event.detail.newBody;
   if (newBody && newBody.dataset) {
     delete newBody.dataset.appInitialized;
   }
+  const currentPath = window.location.pathname;
+  if (newBody) {
+    syncSidebarActiveNav(newBody, currentPath);
+  }
+  syncSidebarActiveNav(document, currentPath);
+
   const incomingTheme = newBody?.getAttribute('data-theme') || document.documentElement.getAttribute('data-theme') || 'light';
   document.documentElement.setAttribute('data-theme', incomingTheme);
   document.documentElement.setAttribute('data-bs-theme', incomingTheme);
@@ -1054,11 +1140,21 @@ document.addEventListener("turbo:before-render", (event) => {
 
 // Specifically handle Turbo render (e.g. 422 form validation errors)
 document.addEventListener("turbo:render", () => {
+  syncSidebarActiveNav(document, window.location.pathname);
   runPageInitialization();
 });
 // Also bind to DOMContentLoaded for initial non-Turbo load if any
 document.addEventListener("DOMContentLoaded", () => {
+  syncSidebarActiveNav(document, window.location.pathname);
   runPageInitialization();
+});
+
+// History traversal and popstate
+window.addEventListener("popstate", () => {
+  syncSidebarActiveNav(document, window.location.pathname);
+});
+window.addEventListener("pageshow", () => {
+  syncSidebarActiveNav(document, window.location.pathname);
 });
 
 // Clear cached data on logout
@@ -1128,6 +1224,7 @@ document.addEventListener("turbo:before-cache", function () {
   if (document.body && document.body.dataset) {
     delete document.body.dataset.appInitialized;
   }
+  syncSidebarActiveNav(document, window.location.pathname);
   const confirmModal = document.getElementById('turboConfirmModal');
   if (confirmModal) {
     confirmModal.remove();

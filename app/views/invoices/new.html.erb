@@ -1,3 +1,14 @@
+<% 
+  doc_type = if @invoice&.quote?
+               "Quote"
+             elsif @invoice&.credit_note?
+               "Credit Note"
+             else
+               "Invoice"
+             end
+  add_breadcrumb "Invoices", invoices_path(tab: params[:tab])
+  add_breadcrumb "New #{doc_type}"
+%>
 <% content_for :page_title, invoice_form_page_title(@invoice) %>
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "invoices", media: "all" %>

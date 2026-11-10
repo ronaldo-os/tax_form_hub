@@ -120,4 +120,40 @@ class ActionSpamPreventionTest < ActionDispatch::IntegrationTest
     assert_includes app_js, "hasExplicitHref"
     assert_includes app_js, "targetUrl.pathname !== currentUrl.pathname || targetUrl.search !== currentUrl.search"
   end
+
+  test "sidebar navigation marks only the current page active and includes data-nav-item attributes" do
+    get root_path
+    assert_response :success
+    assert_select ".app-menu-list li[data-nav-item='dashboard'].app-active", 1
+    assert_select ".app-menu-list li[data-nav-item='invoices'].app-active", 0
+
+    get invoices_path
+    assert_response :success
+    assert_select ".app-menu-list li[data-nav-item='invoices'].app-active", 1
+    assert_select ".app-menu-list li[data-nav-item='dashboard'].app-active", 0
+
+    get tax_submissions_home_path
+    assert_response :success
+    assert_select ".app-menu-list li[data-nav-item='taxes'].app-active", 1
+    assert_select ".app-menu-list li[data-nav-item='invoices'].app-active", 0
+
+    get subscriptions_path
+    assert_response :success
+    assert_select ".app-menu-list li[data-nav-item='subscriptions'].app-active", 1
+
+    get locations_path
+    assert_response :success
+    assert_select ".app-menu-list li[data-nav-item='locations'].app-active", 1
+
+    get networks_path
+    assert_response :success
+    assert_select ".app-menu-list li[data-nav-item='networks'].app-active", 1
+
+    app_js = File.read(Rails.root.join("app/javascript/application.js"))
+    assert_includes app_js, "getActiveNavItemKey"
+    assert_includes app_js, "syncSidebarActiveNav"
+    assert_includes app_js, "turbo:visit"
+    assert_includes app_js, "turbo:before-render"
+    assert_includes app_js, "turbo:before-cache"
+  end
 end

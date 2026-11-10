@@ -1,3 +1,7 @@
+<% 
+  add_breadcrumb "Company Profile", companies_path
+  add_breadcrumb @company.name.presence || "Visitor View"
+%>
 <% content_for :page_title, @company.name.presence || "Company Profile" %>
 <% content_for :stylesheets do %>
   <%= stylesheet_link_tag "company", media: "all" %>
