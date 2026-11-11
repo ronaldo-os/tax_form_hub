@@ -125,4 +125,16 @@ class FormFieldStylingStandardizationTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".search-input-group input.form-control"
   end
+
+  test "ensures DataTables search input padding prevents search icon and placeholder overlap on small screens" do
+    # Responsive CSS must specify padding-left of at least 42px for search inputs with icons
+    assert_match(/\.invoices-page\s+div\.dataTables_filter\s+input[\s\S]*?padding-left:\s*42px\s*!important;/, @responsive_css)
+    assert_match(/\.invoices-page\s+\.dataTables_filter\s+input\.form-control[\s\S]*?padding-left:\s*42px\s*!important;/, @invoices_css)
+
+    # Invoices CSS must scope desktop compact padding (0.65rem) to min-width 992px
+    assert_match(/@media\s*\(min-width:\s*992px\)\s*\{[\s\S]*?\.invoices-page\s+\.dataTables_filter\s+input\.form-control[\s\S]*?padding:\s*0\.25rem\s+0\.65rem\s*!important;/, @invoices_css)
+
+    # Application CSS must scope desktop compact padding to min-width 992px
+    assert_match(/@media\s*\(min-width:\s*992px\)\s*\{[\s\S]*?\.dataTables_filter\s+input\.form-control[\s\S]*?padding:\s*0\.25rem\s+0\.65rem\s*!important;/, @app_css_source)
+  end
 end

@@ -1945,28 +1945,75 @@
   color: var(--form-field-text, var(--input-text)) !important;
 }
 
-.invoices-page .dataTables_filter label {
-  font-size: 0.8rem;
-  margin-bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+@media (min-width: 992px) {
+  .invoices-page .dataTables_filter label {
+    font-size: 0.8rem;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  .invoices-page .dataTables_filter input.form-control {
+    font-size: 0.8125rem !important;
+    padding: 0.25rem 0.65rem !important;
+    height: var(--form-field-height-sm, 2.125rem) !important;
+    min-width: 200px !important;
+    border-radius: var(--form-field-radius, 0.5rem) !important;
+    border: 1px solid var(--form-field-border, var(--border-color)) !important;
+    background-color: var(--form-field-bg, var(--input-bg)) !important;
+    color: var(--form-field-text, var(--input-text)) !important;
+  }
+
+  .invoices-page .dataTables_filter input.form-control:focus {
+    border-color: var(--form-field-focus-border, var(--main-color)) !important;
+    box-shadow: var(--form-field-focus-ring, 0 0 0 0.2rem rgba(0, 174, 255, 0.2)) !important;
+  }
 }
 
-.invoices-page .dataTables_filter input.form-control {
-  font-size: 0.8125rem !important;
-  padding: 0.25rem 0.65rem !important;
-  height: var(--form-field-height-sm, 2.125rem) !important;
-  min-width: 200px !important;
-  border-radius: var(--form-field-radius, 0.5rem) !important;
-  border: 1px solid var(--form-field-border, var(--border-color)) !important;
-  background-color: var(--form-field-bg, var(--input-bg)) !important;
-  color: var(--form-field-text, var(--input-text)) !important;
-}
+/* Responsive DataTables search styling on smaller screens: ensures icon and placeholder never overlap across all invoice tabs */
+@media (max-width: 991.98px) {
+  .invoices-page .dataTables_filter,
+  .invoices-page .dataTables_filter label {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    display: block !important;
+  }
 
-.invoices-page .dataTables_filter input.form-control:focus {
-  border-color: var(--form-field-focus-border, var(--main-color)) !important;
-  box-shadow: var(--form-field-focus-ring, 0 0 0 0.2rem rgba(0, 174, 255, 0.2)) !important;
+  .invoices-page .dataTables_filter input.form-control,
+  .invoices-page div.dataTables_filter input {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    margin-left: 0 !important;
+    border-radius: var(--form-field-radius, 0.5rem) !important;
+    padding: 10px 16px 10px 42px !important;
+    padding-left: 42px !important;
+    border: 1px solid var(--form-field-border, var(--border-color)) !important;
+    background-color: var(--form-field-bg, var(--input-bg)) !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: 14px center !important;
+    background-size: 16px 16px !important;
+    font-size: 0.925rem !important;
+    color: var(--form-field-text, var(--input-text)) !important;
+    box-shadow: none !important;
+    outline: none !important;
+    box-sizing: border-box !important;
+  }
+
+  .invoices-page .dataTables_filter input.form-control:focus,
+  .invoices-page div.dataTables_filter input:focus {
+    border-color: var(--form-field-focus-border, var(--main-color)) !important;
+    background-color: var(--form-field-bg, var(--input-bg)) !important;
+    box-shadow: var(--form-field-focus-ring, 0 0 0 3px rgba(0, 174, 255, 0.15)) !important;
+  }
+
+  [data-theme="dark"] .invoices-page .dataTables_filter input.form-control,
+  [data-theme="dark"] .invoices-page div.dataTables_filter input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
+  }
 }
 
 /* DataTables Footer (Info & Pagination) */

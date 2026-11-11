@@ -1507,29 +1507,31 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
   }
 }
 
-.dataTables_filter label {
-  font-size: 0.8rem;
-  margin-bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  color: var(--text-muted);
-}
+@media (min-width: 992px) {
+  .dataTables_filter label {
+    font-size: 0.8rem;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    color: var(--text-muted);
+  }
 
-.dataTables_filter input.form-control {
-  font-size: 0.8125rem !important;
-  padding: 0.25rem 0.65rem !important;
-  height: var(--form-field-height-sm) !important;
-  min-width: 200px !important;
-  border-radius: var(--form-field-radius) !important;
-  border: 1px solid var(--form-field-border) !important;
-  background-color: var(--form-field-bg) !important;
-  color: var(--form-field-text) !important;
-}
+  .dataTables_filter input.form-control {
+    font-size: 0.8125rem !important;
+    padding: 0.25rem 0.65rem !important;
+    height: var(--form-field-height-sm) !important;
+    min-width: 200px !important;
+    border-radius: var(--form-field-radius) !important;
+    border: 1px solid var(--form-field-border) !important;
+    background-color: var(--form-field-bg) !important;
+    color: var(--form-field-text) !important;
+  }
 
-.dataTables_filter input.form-control:focus {
-  border-color: var(--form-field-focus-border) !important;
-  box-shadow: var(--form-field-focus-ring) !important;
+  .dataTables_filter input.form-control:focus {
+    border-color: var(--form-field-focus-border) !important;
+    box-shadow: var(--form-field-focus-ring) !important;
+  }
 }
 
 .table-light {

@@ -656,12 +656,18 @@
   .tax-submissions-page div.dataTables_filter input,
   .locations-page div.dataTables_filter input,
   .subscriptions-page div.dataTables_filter input,
-  .invoices-page div.dataTables_filter input {
+  .invoices-page div.dataTables_filter input,
+  .tax-submissions-page div.dataTables_filter input.form-control,
+  .locations-page div.dataTables_filter input.form-control,
+  .subscriptions-page div.dataTables_filter input.form-control,
+  .invoices-page div.dataTables_filter input.form-control,
+  .invoices-page .dataTables_filter input.form-control {
     width: 100% !important;
     max-width: 100% !important;
     margin-left: 0 !important;
     border-radius: var(--form-field-radius, 0.5rem) !important;
     padding: 10px 16px 10px 42px !important;
+    padding-left: 42px !important;
     border: 1px solid var(--form-field-border, var(--border-color)) !important;
     background-color: var(--form-field-bg, var(--input-bg)) !important;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236c757d' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
@@ -679,10 +685,19 @@
   .tax-submissions-page div.dataTables_filter input:focus,
   .locations-page div.dataTables_filter input:focus,
   .subscriptions-page div.dataTables_filter input:focus,
-  .invoices-page div.dataTables_filter input:focus {
+  .invoices-page div.dataTables_filter input:focus,
+  .invoices-page .dataTables_filter input.form-control:focus {
     border-color: var(--form-field-focus-border, var(--main-color)) !important;
     background-color: var(--form-field-bg, var(--input-bg)) !important;
     box-shadow: var(--form-field-focus-ring, 0 0 0 3px rgba(0, 174, 255, 0.15)) !important;
+  }
+
+  [data-theme="dark"] .tax-submissions-page div.dataTables_filter input,
+  [data-theme="dark"] .locations-page div.dataTables_filter input,
+  [data-theme="dark"] .subscriptions-page div.dataTables_filter input,
+  [data-theme="dark"] .invoices-page div.dataTables_filter input,
+  [data-theme="dark"] .invoices-page .dataTables_filter input.form-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
   }
 
   /* Styled per-page, company, and type dropdowns in a single flex row */
@@ -1587,5 +1602,6 @@
   .dataTables_filter input.form-control {
     width: 100% !important;
     min-width: 100% !important;
+    padding-left: 42px !important;
   }
 }
