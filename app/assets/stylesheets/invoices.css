@@ -2508,3 +2508,72 @@ table.dataTable tbody tr.row-selected,
 [data-bs-theme="dark"] #zip-export-overlay .zip-overlay-progress-wrap {
   background-color: #2c3034 !important;
 }
+
+/* ==========================================================================
+   Line Item Drag-and-Drop Reordering (Invoices, Quotes & Credit Notes)
+   ========================================================================== */
+.invoice-table td.line-item-actions-cell {
+  white-space: nowrap;
+  width: 68px;
+}
+
+.line-item-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 30px;
+  border-radius: 6px;
+  color: var(--text-muted, #6c757d);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.line-item-drag-handle:hover {
+  color: var(--accent-primary, #00a7e1);
+  background-color: rgba(0, 167, 225, 0.1);
+}
+
+.line-item-drag-handle:active {
+  cursor: grabbing;
+}
+
+.line-item-drag-handle.drag-handle-disabled {
+  opacity: 0.35;
+  cursor: default;
+  pointer-events: none;
+}
+
+#line-items tr.line-item-dragging,
+#line-items tr.line-item-dragging td {
+  opacity: 0.55;
+  background-color: rgba(0, 167, 225, 0.06) !important;
+}
+
+#line-items tr.line-item-drop-above > td {
+  border-top: 2px solid var(--accent-primary, #00a7e1) !important;
+}
+
+#line-items tr.line-item-drop-below > td {
+  border-bottom: 2px solid var(--accent-primary, #00a7e1) !important;
+}
+
+[data-theme="dark"] .line-item-drag-handle,
+[data-bs-theme="dark"] .line-item-drag-handle {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .line-item-drag-handle:hover,
+[data-bs-theme="dark"] .line-item-drag-handle:hover {
+  color: #38bdf8;
+  background-color: rgba(56, 189, 248, 0.15);
+}
+
+[data-theme="dark"] #line-items tr.line-item-dragging,
+[data-theme="dark"] #line-items tr.line-item-dragging td,
+[data-bs-theme="dark"] #line-items tr.line-item-dragging,
+[data-bs-theme="dark"] #line-items tr.line-item-dragging td {
+  background-color: rgba(56, 189, 248, 0.12) !important;
+}

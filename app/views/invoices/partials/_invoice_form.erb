@@ -183,8 +183,13 @@
               <% unless action_name == "edit" %>
                 <% unless params[:template_id].present? %>
                   <tr class="line-item" data-line-index="0">
-                    <td>
-                      <button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button>
+                    <td class="line-item-actions-cell">
+                      <div class="d-flex align-items-center justify-content-center gap-1">
+                        <span class="line-item-drag-handle" title="Drag to reorder line item" aria-label="Drag to reorder line item">
+                          <i class="fa-solid fa-grip-vertical"></i>
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button>
+                      </div>
                     </td>
 
                     <td><input type="text" name="invoice[line_items_attributes][0][item_id]" class="form-control item-id" required></td>

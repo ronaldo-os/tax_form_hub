@@ -106,7 +106,14 @@ const initInvoiceForm = () => {
   function getLineItemHTML(index, selectedTax = null) {
     return `
         <tr class="line-item" data-line-index="${index}">
-          <td><button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button></td>
+          <td class="line-item-actions-cell">
+            <div class="d-flex align-items-center justify-content-center gap-1">
+              <span class="line-item-drag-handle" title="Drag to reorder line item" aria-label="Drag to reorder line item">
+                <i class="fa-solid fa-grip-vertical"></i>
+              </span>
+              <button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button>
+            </div>
+          </td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][item_id]" class="form-control item-id" required></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][description]" class="form-control description" required></td>
           <td><input type="text" name="invoice[line_items_attributes][${index}][quantity]" class="form-control quantity" value="1" required></td>
@@ -132,6 +139,119 @@ const initInvoiceForm = () => {
 
   let lineIndex = 1; // Global counter for new lines
 
+  function getLineItemCompanionRows($lineItem) {
+    const companions = [];
+    let $next = $lineItem.next();
+    while ($next.length && !$next.hasClass('line-item') && !$next.hasClass('discount-item')) {
+      if ($next.hasClass('dropdown_per_line') || $next.hasClass('optional-field-row')) {
+        companions.push($next);
+      }
+      $next = $next.next();
+    }
+    return companions;
+  }
+
+  function getLineItemGroupRows($lineItem) {
+    return [$lineItem, ...getLineItemCompanionRows($lineItem)];
+  }
+
+  function resolveTargetLineItem($row) {
+    if (!$row || !$row.length) return $();
+    if ($row.hasClass('line-item')) return $row;
+    if ($row.hasClass('dropdown_per_line') || $row.hasClass('optional-field-row')) {
+      return $row.prevAll('tr.line-item').first();
+    }
+    return $();
+  }
+
+  function reindexLineItems() {
+    const $lineItems = $('#line-items tr.line-item');
+    $lineItems.each(function (newIndex) {
+      const $row = $(this);
+      $row.attr('data-line-index', newIndex).data('line-index', newIndex);
+
+      $row.find('[name^="invoice[line_items_attributes]["]').each(function () {
+        const oldName = $(this).attr('name');
+        if (oldName) {
+          const updatedName = oldName.replace(
+            /^invoice\[line_items_attributes\]\[\d+\]/,
+            `invoice[line_items_attributes][${newIndex}]`
+          );
+          $(this).attr('name', updatedName);
+        }
+      });
+
+      const companions = getLineItemCompanionRows($row);
+      companions.forEach($comp => {
+        $comp.attr('data-line-index', newIndex).data('line-index', newIndex);
+
+        $comp.find('[data-line-index]').each(function () {
+          $(this).attr('data-line-index', newIndex).data('line-index', newIndex);
+        });
+
+        $comp.find('[name^="invoice[line_items_attributes]["]').each(function () {
+          const oldName = $(this).attr('name');
+          if (oldName) {
+            const updatedName = oldName.replace(
+              /^invoice\[line_items_attributes\]\[\d+\]/,
+              `invoice[line_items_attributes][${newIndex}]`
+            );
+            $(this).attr('name', updatedName);
+          }
+        });
+
+        $comp.find('select[id^="additional_field_"], select[name^="additional_field_"]').each(function () {
+          $(this).attr('id', `additional_field_${newIndex}`);
+          $(this).attr('name', `additional_field_${newIndex}`);
+        });
+      });
+    });
+
+    lineIndex = $lineItems.length;
+  }
+
+  function moveLineItemGroup($sourceLineItem, $targetLineItem, position) {
+    if (!$sourceLineItem || !$sourceLineItem.length || !$targetLineItem || !$targetLineItem.length) return false;
+    if ($sourceLineItem.is($targetLineItem)) return false;
+
+    const groupRows = getLineItemGroupRows($sourceLineItem);
+
+    // Snapshot select values before moving DOM nodes to guarantee preservation across browsers
+    const selectSnapshots = [];
+    groupRows.forEach($r => {
+      $r.find('select').each(function () {
+        selectSnapshots.push({ el: this, val: $(this).val() });
+      });
+    });
+
+    if (position === 'before') {
+      groupRows.forEach($r => {
+        $r.insertBefore($targetLineItem);
+      });
+    } else {
+      const targetGroup = getLineItemGroupRows($targetLineItem);
+      let $anchor = targetGroup[targetGroup.length - 1];
+      groupRows.forEach($r => {
+        $r.insertAfter($anchor);
+        $anchor = $r;
+      });
+    }
+
+    selectSnapshots.forEach(item => {
+      if (item.val !== undefined && item.val !== null) {
+        $(item.el).val(item.val);
+      }
+    });
+
+    reindexLineItems();
+    updateRemoveButtons();
+    recalculateTotals();
+    updateDiscountsJSON();
+    window.isInvoiceFormDirty = true;
+    $('#line-items').trigger('line-items:reordered');
+    return true;
+  }
+
   // Credit Note Invoice Selector Logic (Dropdown)
   $(document).on('change.invoice_form', '#credit_note_original_invoice_id', function () {
     const invoiceId = $(this).val();
@@ -149,7 +269,8 @@ const initInvoiceForm = () => {
   });
 
   function updateRemoveButtons() {
-    const lineItemCount = $('#line-items .line-item').length;
+    const visibleLineItemCount = $('#line-items .line-item:not(.hidden-on-parent)').length;
+    const lineItemCount = visibleLineItemCount || $('#line-items .line-item').length;
     const discountItemCount = $('#line-items .discount-item').length;
 
     // Hide all remove buttons by default
@@ -158,6 +279,14 @@ const initInvoiceForm = () => {
     // If there is more than one item in total, show all remove buttons
     if (lineItemCount + discountItemCount > 1) {
       $('#line-items .remove-line').show();
+    }
+
+    // Update drag handle state based on number of reorderable line items
+    const $dragHandles = $('#line-items .line-item-drag-handle');
+    if (lineItemCount <= 1) {
+      $dragHandles.addClass('drag-handle-disabled').attr('aria-disabled', 'true');
+    } else {
+      $dragHandles.removeClass('drag-handle-disabled').attr('aria-disabled', 'false');
     }
   }
 
@@ -696,7 +825,14 @@ const initInvoiceForm = () => {
 
     // Event listener for adding a line - using delegation for robustness
     $(document).off('click.invoice_form', '#add-line').on('click.invoice_form', '#add-line', function () {
-      $('#line-items').append(getLineItemHTML(lineIndex++));
+      const $firstDiscount = $('#line-items tr.discount-item').first();
+      const newLineHtml = getLineItemHTML(lineIndex++);
+      if ($firstDiscount.length) {
+        $firstDiscount.before(newLineHtml);
+      } else {
+        $('#line-items').append(newLineHtml);
+      }
+      reindexLineItems();
       updateRemoveButtons();
       recalculateTotals();
     });
@@ -1162,9 +1298,123 @@ const initInvoiceForm = () => {
 
       $lineItem.remove();
 
+      reindexLineItems();
       updateRemoveButtons();
       recalculateTotals();
       updateDiscountsJSON();
+    });
+
+    // -------------------------------------------------------------------------
+    // DRAG-AND-DROP REORDERING FOR LINE ITEMS
+    // -------------------------------------------------------------------------
+    let $draggedLineItem = null;
+    let dragDropPosition = null;
+    let $dragTargetLineItem = null;
+
+    function clearLineItemDropIndicators() {
+      $('#line-items tr').removeClass('line-item-drop-above line-item-drop-below');
+      $dragTargetLineItem = null;
+      dragDropPosition = null;
+    }
+
+    function clearLineItemDraggingState() {
+      clearLineItemDropIndicators();
+      $('#line-items tr').removeClass('line-item-dragging');
+      $('#line-items tr.line-item').removeAttr('draggable').removeData('drag-armed');
+      $draggedLineItem = null;
+    }
+
+    function updateDropIndicatorForClientY($candidateRow, clientY) {
+      const $targetItem = resolveTargetLineItem($candidateRow);
+      if (!$targetItem.length || !$draggedLineItem || $targetItem.is($draggedLineItem)) {
+        clearLineItemDropIndicators();
+        return;
+      }
+
+      const targetGroup = getLineItemGroupRows($targetItem);
+      const visibleTargetRows = targetGroup.filter($r => $r.is(':visible') && !$r.hasClass('hidden'));
+      const firstRect = $targetItem[0].getBoundingClientRect();
+      const $lastVisibleRow = visibleTargetRows.length ? visibleTargetRows[visibleTargetRows.length - 1] : $targetItem;
+      const lastRect = $lastVisibleRow[0].getBoundingClientRect();
+
+      const groupMidY = (firstRect.top + lastRect.bottom) / 2;
+      const pos = clientY < groupMidY ? 'before' : 'after';
+
+      $('#line-items tr').removeClass('line-item-drop-above line-item-drop-below');
+      $dragTargetLineItem = $targetItem;
+      dragDropPosition = pos;
+
+      if (pos === 'before') {
+        $targetItem.addClass('line-item-drop-above');
+      } else {
+        $lastVisibleRow.addClass('line-item-drop-below');
+      }
+    }
+
+    // Arm draggable only when user interacts with the drag handle so text selection in inputs stays smooth
+    $(document).off('mousedown.line_item_dnd', '#line-items .line-item-drag-handle')
+               .on('mousedown.line_item_dnd', '#line-items .line-item-drag-handle', function () {
+      if ($('#line-items tr.line-item:not(.hidden-on-parent)').length <= 1) return;
+      const $row = $(this).closest('tr.line-item');
+      $row.attr('draggable', 'true').data('drag-armed', true);
+    });
+
+    $(document).off('mouseup.line_item_dnd', '#line-items .line-item-drag-handle')
+               .on('mouseup.line_item_dnd', '#line-items .line-item-drag-handle', function () {
+      const $row = $(this).closest('tr.line-item');
+      if (!$draggedLineItem) {
+        $row.removeAttr('draggable').removeData('drag-armed');
+      }
+    });
+
+    $(document).off('dragstart.line_item_dnd', '#line-items tr.line-item')
+               .on('dragstart.line_item_dnd', '#line-items tr.line-item', function (e) {
+      const $row = $(this);
+      if (!$row.data('drag-armed') || $('#line-items tr.line-item:not(.hidden-on-parent)').length <= 1) {
+        e.preventDefault();
+        return;
+      }
+
+      $draggedLineItem = $row;
+      const groupRows = getLineItemGroupRows($row);
+      groupRows.forEach($r => $r.addClass('line-item-dragging'));
+
+      const dt = e.originalEvent && e.originalEvent.dataTransfer;
+      if (dt) {
+        dt.effectAllowed = 'move';
+        try {
+          dt.setData('text/plain', String($row.attr('data-line-index') || '0'));
+        } catch (_) {}
+      }
+    });
+
+    $(document).off('dragover.line_item_dnd', '#line-items tr')
+               .on('dragover.line_item_dnd', '#line-items tr', function (e) {
+      if (!$draggedLineItem) return;
+      e.preventDefault();
+      const dt = e.originalEvent && e.originalEvent.dataTransfer;
+      if (dt) {
+        dt.dropEffect = 'move';
+      }
+
+      const clientY = e.originalEvent ? e.originalEvent.clientY : e.clientY;
+      updateDropIndicatorForClientY($(this), clientY);
+    });
+
+    $(document).off('drop.line_item_dnd', '#line-items')
+               .on('drop.line_item_dnd', '#line-items', function (e) {
+      if (!$draggedLineItem) return;
+      e.preventDefault();
+
+      if ($dragTargetLineItem && dragDropPosition) {
+        moveLineItemGroup($draggedLineItem, $dragTargetLineItem, dragDropPosition);
+      }
+      clearLineItemDraggingState();
+    });
+
+    $(document).off('dragend.line_item_dnd', '#line-items tr.line-item')
+               .on('dragend.line_item_dnd', '#line-items tr.line-item', function () {
+      clearLineItemDraggingState();
     });
 
     // Track changes
@@ -2398,6 +2648,9 @@ const initInvoiceForm = () => {
   // Validate tax selection on form submission
   $(document).on("submit", "#invoice-form", function (e) {
     const $form = $(this);
+    if (typeof reindexLineItems === 'function') {
+      reindexLineItems();
+    }
     if (typeof updateDiscountsJSON === 'function') {
       updateDiscountsJSON();
     }
@@ -2537,6 +2790,10 @@ const initInvoiceForm = () => {
     $previewBtn.off('click.invoice_preview').on('click.invoice_preview', function () {
       if ($previewBtn.prop('disabled')) return;
       $previewBtn.prop('disabled', true).addClass('disabled');
+
+      if (typeof reindexLineItems === 'function') {
+        reindexLineItems();
+      }
 
       const $form = $('form');
       const formData = new FormData($form[0]);
