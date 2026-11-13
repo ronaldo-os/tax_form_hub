@@ -108,7 +108,7 @@ const initInvoiceForm = () => {
         <tr class="line-item" data-line-index="${index}">
           <td class="line-item-actions-cell">
             <div class="d-flex align-items-center justify-content-center gap-1">
-              <span class="line-item-drag-handle" title="Drag to reorder line item" aria-label="Drag to reorder line item">
+              <span class="line-item-drag-handle" role="button" tabindex="0" title="Drag to reorder line item" aria-label="Drag to reorder line item">
                 <i class="fa-solid fa-grip-vertical"></i>
               </span>
               <button type="button" class="btn btn-sm btn-outline-primary toggle-dropdown">+</button>
@@ -1305,7 +1305,7 @@ const initInvoiceForm = () => {
     });
 
     // -------------------------------------------------------------------------
-    // DRAG-AND-DROP REORDERING FOR LINE ITEMS
+    // DRAG-AND-DROP & KEYBOARD REORDERING FOR LINE ITEMS
     // -------------------------------------------------------------------------
     let $draggedLineItem = null;
     let dragDropPosition = null;
@@ -1415,6 +1415,68 @@ const initInvoiceForm = () => {
     $(document).off('dragend.line_item_dnd', '#line-items tr.line-item')
                .on('dragend.line_item_dnd', '#line-items tr.line-item', function () {
       clearLineItemDraggingState();
+    });
+
+    // Touch support for mobile / tablet drag-and-drop reordering
+    $(document).off('touchstart.line_item_dnd', '#line-items .line-item-drag-handle')
+               .on('touchstart.line_item_dnd', '#line-items .line-item-drag-handle', function (e) {
+      if ($('#line-items tr.line-item:not(.hidden-on-parent)').length <= 1) return;
+      const $row = $(this).closest('tr.line-item');
+      if (!$row.length) return;
+
+      $draggedLineItem = $row;
+      getLineItemGroupRows($row).forEach($r => $r.addClass('line-item-dragging'));
+    });
+
+    $(document).off('touchmove.line_item_dnd', '#line-items .line-item-drag-handle')
+               .on('touchmove.line_item_dnd', '#line-items .line-item-drag-handle', function (e) {
+      if (!$draggedLineItem) return;
+      const touch = e.originalEvent && e.originalEvent.touches && e.originalEvent.touches[0];
+      if (!touch) return;
+
+      if (e.cancelable) e.preventDefault();
+
+      const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (!targetEl) return;
+      const $candidateRow = $(targetEl).closest('#line-items tr');
+      if ($candidateRow.length) {
+        updateDropIndicatorForClientY($candidateRow, touch.clientY);
+      }
+    });
+
+    $(document).off('touchend.line_item_dnd touchcancel.line_item_dnd', '#line-items .line-item-drag-handle')
+               .on('touchend.line_item_dnd touchcancel.line_item_dnd', '#line-items .line-item-drag-handle', function () {
+      if (!$draggedLineItem) return;
+      if ($dragTargetLineItem && dragDropPosition) {
+        moveLineItemGroup($draggedLineItem, $dragTargetLineItem, dragDropPosition);
+      }
+      clearLineItemDraggingState();
+    });
+
+    // Keyboard accessibility (ArrowUp / ArrowDown on drag handle)
+    $(document).off('keydown.line_item_dnd', '#line-items .line-item-drag-handle')
+               .on('keydown.line_item_dnd', '#line-items .line-item-drag-handle', function (e) {
+      if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+      if ($('#line-items tr.line-item:not(.hidden-on-parent)').length <= 1) return;
+
+      const $currentLineItem = $(this).closest('tr.line-item');
+      if (!$currentLineItem.length) return;
+
+      if (e.key === 'ArrowUp') {
+        const $prevLineItem = $currentLineItem.prevAll('tr.line-item:not(.hidden-on-parent)').first();
+        if ($prevLineItem.length) {
+          e.preventDefault();
+          moveLineItemGroup($currentLineItem, $prevLineItem, 'before');
+          $currentLineItem.find('.line-item-drag-handle').trigger('focus');
+        }
+      } else if (e.key === 'ArrowDown') {
+        const $nextLineItem = $currentLineItem.nextAll('tr.line-item:not(.hidden-on-parent)').first();
+        if ($nextLineItem.length) {
+          e.preventDefault();
+          moveLineItemGroup($currentLineItem, $nextLineItem, 'after');
+          $currentLineItem.find('.line-item-drag-handle').trigger('focus');
+        }
+      }
     });
 
     // Track changes

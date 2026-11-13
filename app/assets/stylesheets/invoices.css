@@ -2528,12 +2528,15 @@ table.dataTable tbody tr.row-selected,
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: none;
   transition: color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
 }
 
-.line-item-drag-handle:hover {
+.line-item-drag-handle:hover,
+.line-item-drag-handle:focus-visible {
   color: var(--accent-primary, #00a7e1);
   background-color: rgba(0, 167, 225, 0.1);
+  outline: none;
 }
 
 .line-item-drag-handle:active {
@@ -2566,7 +2569,9 @@ table.dataTable tbody tr.row-selected,
 }
 
 [data-theme="dark"] .line-item-drag-handle:hover,
-[data-bs-theme="dark"] .line-item-drag-handle:hover {
+[data-theme="dark"] .line-item-drag-handle:focus-visible,
+[data-bs-theme="dark"] .line-item-drag-handle:hover,
+[data-bs-theme="dark"] .line-item-drag-handle:focus-visible {
   color: #38bdf8;
   background-color: rgba(56, 189, 248, 0.15);
 }

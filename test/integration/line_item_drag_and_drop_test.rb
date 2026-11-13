@@ -127,8 +127,8 @@ class LineItemDragAndDropTest < ActionDispatch::IntegrationTest
     assert_includes js_content, "function reindexLineItems()"
     assert_includes js_content, "function moveLineItemGroup("
     assert_includes js_content, "dragstart.line_item_dnd"
-    refute_includes js_content, "touchmove.line_item_dnd"
-    refute_includes js_content, "keydown.line_item_dnd"
+    assert_includes js_content, "touchmove.line_item_dnd"
+    assert_includes js_content, "keydown.line_item_dnd"
 
     css_content = File.read(Rails.root.join("app/assets/stylesheets/invoices.css"))
     assert_includes css_content, ".line-item-drag-handle"
