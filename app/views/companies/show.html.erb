@@ -1,6 +1,11 @@
 <% 
-  add_breadcrumb "Company Profile", companies_path
-  add_breadcrumb @company.name.presence || "Visitor View"
+  if current_user && current_user.companies.include?(@company)
+    add_breadcrumb "Company Profile", companies_path
+    add_breadcrumb @company.name.presence || "Visitor View"
+  else
+    add_breadcrumb "Networks", networks_path
+    add_breadcrumb @company.name.presence || "Company Profile"
+  end
 %>
 <% content_for :page_title, @company.name.presence || "Company Profile" %>
 <% content_for :stylesheets do %>

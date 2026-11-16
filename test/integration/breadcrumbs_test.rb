@@ -115,4 +115,31 @@ class BreadcrumbsTest < ActionDispatch::IntegrationTest
     assert_select ".breadcrumb-item a[href='/']"
     assert_select ".breadcrumb-item.active .breadcrumb-current", text: "User Profile"
   end
+
+  test "deep page connected company profile from network renders breadcrumbs pointing to networks page" do
+    owner = User.create!(
+      email: "network_owner_#{Time.now.to_i}_#{rand(10000)}@example.com",
+      password: "Password123!@#Secure",
+      password_confirmation: "Password123!@#Secure"
+    )
+    sony = Company.create!(name: "Sony", country: "Japan", user: owner)
+    owner.update!(company: sony)
+    @user.networks.create!(company: sony)
+
+    get company_path(sony)
+    assert_response :success
+    assert_select ".app-breadcrumbs-nav"
+    assert_select ".breadcrumb-item a[href='/networks']", text: "Networks"
+    assert_select ".breadcrumb-item.active .breadcrumb-current", text: "Sony"
+    # Ensure it does NOT link to company edit profile (/companies)
+    assert_select ".breadcrumb-item a[href='/companies']", count: 0
+  end
+
+  test "deep page own company profile in visitor mode renders breadcrumbs pointing to company edit profile" do
+    get company_path(@company)
+    assert_response :success
+    assert_select ".app-breadcrumbs-nav"
+    assert_select ".breadcrumb-item a[href='/companies']", text: "Company Profile"
+    assert_select ".breadcrumb-item.active .breadcrumb-current", text: "Acme Holdings"
+  end
 end
