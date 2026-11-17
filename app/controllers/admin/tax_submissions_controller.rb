@@ -63,9 +63,27 @@ class Admin::TaxSubmissionsController < ApplicationController
 
       TaxSubmissionMailer.status_updated(@tax_submission, message).deliver_later
       NotificationService.notify_tax_status_updated(@tax_submission, message, current_user)
-      redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, notice: message
+      respond_to do |format|
+        format.js
+        format.html do
+          if params[:redirect_to].present?
+            redirect_to sanitize_safe_redirect(params[:redirect_to], admin_tax_submissions_path), status: :see_other, notice: message
+          else
+            redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, notice: message
+          end
+        end
+      end
     else
-      redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, alert: "Failed to update."
+      respond_to do |format|
+        format.js { render js: "alert('Failed to update.');" }
+        format.html do
+          if params[:redirect_to].present?
+            redirect_to sanitize_safe_redirect(params[:redirect_to], admin_tax_submissions_path), status: :see_other, alert: "Failed to update."
+          else
+            redirect_back fallback_location: admin_tax_submissions_path, status: :see_other, alert: "Failed to update."
+          end
+        end
+      end
     end
   end
 
@@ -119,5 +137,21 @@ class Admin::TaxSubmissionsController < ApplicationController
 
   def tax_submission_params
     params.require(:tax_submission).permit(:reviewed, :processed, :archived)
+  end
+
+  def sanitize_safe_redirect(url_string, fallback = admin_tax_submissions_path)
+    return fallback if url_string.blank?
+
+    begin
+      uri = URI.parse(url_string.to_s.strip)
+      return fallback if uri.host.present? && uri.host != request.host
+      return fallback if url_string.to_s.strip.start_with?("//")
+
+      path = uri.path.presence || fallback
+      query = uri.query.present? ? "?#{uri.query}" : ""
+      "#{path}#{query}"
+    rescue URI::InvalidURIError
+      fallback
+    end
   end
 end

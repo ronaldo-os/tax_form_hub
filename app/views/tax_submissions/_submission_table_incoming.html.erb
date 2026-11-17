@@ -77,7 +77,8 @@
             deposit_slip_names = submission.deposit_slip.attached? ? submission.deposit_slip.map { |f| f.filename.to_s }.join("; ") : ""
             status_text = tax_submission_status_text(submission)
           %>
-          <tr data-transaction-id="<%= submission.company_submission_id || submission.user_transaction_id %>"
+          <tr id="submission-row-<%= submission.id %>"
+              data-transaction-id="<%= submission.company_submission_id || submission.user_transaction_id %>"
               data-email="<%= submission.email.presence || inv&.user&.email || 'N/A' %>"
               data-company-name="<%= company_name %>"
               data-company-tin="<%= company_tin %>"
@@ -220,7 +221,7 @@
             </td>
 
             <!-- Status -->
-            <td>
+            <td class="submission-status-cell">
               <% if submission.reviewed? && submission.processed? %>
                 <span class="badge bg-success">Processed & Reviewed</span>
               <% elsif submission.reviewed? %>

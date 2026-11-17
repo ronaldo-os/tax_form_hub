@@ -461,4 +461,142 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
       assert_includes value, "tab=archived"
     end
   end
+
+  test "show js partial renders reviewer quick actions for incoming submission recipient" do
+    tax_submission = TaxSubmission.create!(
+      company: @company,
+      invoice: @invoice,
+      email: "sender@example.com",
+      details: "Incoming tax submission",
+      reviewed: false,
+      processed: false
+    )
+
+    get tax_submission_url(tax_submission, format: :js), xhr: true
+    assert_response :success
+    assert_includes response.body, "reviewer-quick-actions-card"
+    assert_includes response.body, "Reviewer Quick Actions"
+    assert_includes response.body, "Mark as Reviewed"
+    assert_includes response.body, "Mark as Processed"
+    assert_includes response.body, "Pending"
+  end
+
+  test "show js partial toggles buttons to unmark when submission is reviewed or processed" do
+    tax_submission = TaxSubmission.create!(
+      company: @company,
+      invoice: @invoice,
+      email: "sender@example.com",
+      details: "Reviewed and processed tax submission",
+      reviewed: true,
+      processed: true
+    )
+
+    get tax_submission_url(tax_submission, format: :js), xhr: true
+    assert_response :success
+    assert_includes response.body, "reviewer-quick-actions-card"
+    assert_includes response.body, "Unmark Reviewed"
+    assert_includes response.body, "Unmark Processed"
+    assert_includes response.body, "Processed &amp; Reviewed"
+  end
+
+  test "show js partial does not render reviewer quick actions for non-reviewer sender" do
+    other_user = User.create!(email: "vendor_#{Time.now.to_i}_#{rand(1000)}@example.com", password: "Password123!@#Secure", password_confirmation: "Password123!@#Secure")
+    other_company = Company.create!(name: "Other Company #{Time.now.to_i}", user: other_user)
+    
+    # Submission sent to other_company, viewed by @user (sender)
+    tax_submission = TaxSubmission.create!(
+      company: other_company,
+      invoice: @invoice,
+      email: @user.email,
+      details: "Sent by user"
+    )
+
+    get tax_submission_url(tax_submission, format: :js), xhr: true
+    assert_response :success
+    refute_includes response.body, "reviewer-quick-actions-card"
+  end
+
+  test "update toggles reviewed and redirects to redirect_to with open_submission" do
+    tax_submission = TaxSubmission.create!(
+      company: @company,
+      invoice: @invoice,
+      email: "sender@example.com",
+      details: "Incoming submission",
+      reviewed: false
+    )
+
+    target_redirect = "/tax_submissions?open_submission=#{tax_submission.id}"
+    patch tax_submission_url(tax_submission), params: {
+      tax_submission: { reviewed: 1 },
+      redirect_to: target_redirect
+    }
+
+    assert_response :redirect
+    assert_redirected_to target_redirect
+    assert tax_submission.reload.reviewed?
+  end
+
+  test "update toggles processed and redirects to redirect_to with open_submission" do
+    tax_submission = TaxSubmission.create!(
+      company: @company,
+      invoice: @invoice,
+      email: "sender@example.com",
+      details: "Incoming submission",
+      processed: false
+    )
+
+    target_redirect = "/tax_submissions?open_submission=#{tax_submission.id}"
+    patch tax_submission_url(tax_submission), params: {
+      tax_submission: { processed: 1 },
+      redirect_to: target_redirect
+    }
+
+    assert_response :redirect
+    assert_redirected_to target_redirect
+    assert tax_submission.reload.processed?
+  end
+
+  test "update via js format toggles reviewed and updates modal and table row without page reload" do
+    tax_submission = TaxSubmission.create!(
+      company: @company,
+      invoice: @invoice,
+      email: "sender@example.com",
+      details: "Incoming submission",
+      reviewed: false,
+      processed: false
+    )
+
+    patch tax_submission_url(tax_submission, format: :js), params: {
+      tax_submission: { reviewed: 1 }
+    }, xhr: true
+
+    assert_response :success
+    assert tax_submission.reload.reviewed?
+    assert_includes response.body, '$("#submissionModalBody").html('
+    assert_includes response.body, "Unmark Reviewed"
+    assert_includes response.body, "Reviewed"
+    assert_includes response.body, "submission-row-#{tax_submission.id}"
+  end
+
+  test "update via js format toggles processed and updates modal and table row without page reload" do
+    tax_submission = TaxSubmission.create!(
+      company: @company,
+      invoice: @invoice,
+      email: "sender@example.com",
+      details: "Incoming submission",
+      reviewed: true,
+      processed: false
+    )
+
+    patch tax_submission_url(tax_submission, format: :js), params: {
+      tax_submission: { processed: 1 }
+    }, xhr: true
+
+    assert_response :success
+    assert tax_submission.reload.processed?
+    assert_includes response.body, '$("#submissionModalBody").html('
+    assert_includes response.body, "Unmark Processed"
+    assert_includes response.body, "Processed &amp; Reviewed"
+    assert_includes response.body, "submission-row-#{tax_submission.id}"
+  end
 end

@@ -1,0 +1,65 @@
+<%
+  status_badge_html = if @tax_submission.reviewed? && @tax_submission.processed?
+    '<span class="badge bg-success">Processed & Reviewed</span>'
+  elsif @tax_submission.reviewed?
+    '<span class="badge bg-info">Reviewed</span>'
+  elsif @tax_submission.processed?
+    '<span class="badge bg-warning text-dark">Processed</span>'
+  else
+    '<span class="badge bg-secondary">Pending</span>'
+  end
+
+  status_text = if @tax_submission.reviewed? && @tax_submission.processed?
+    'Processed & Reviewed'
+  elsif @tax_submission.reviewed?
+    'Reviewed'
+  elsif @tax_submission.processed?
+    'Processed'
+  else
+    'Pending'
+  end
+%>
+
+// 1. In-place update of modal overview without page refresh
+$("#submissionModalBody").html("<%= j render partial: 'tax_submissions/shared/details', locals: { tax_submission: @tax_submission } %>");
+
+// 2. In-place update of background table row without page refresh
+(function() {
+  var $row = $("#submission-row-<%= @tax_submission.id %>");
+  if (!$row.length) {
+    $row = $("tr:has(input.submission-row-checkbox[value='<%= @tax_submission.id %>'])");
+  }
+
+  if ($row.length) {
+    // Update Status cell
+    $row.find(".submission-status-cell").html("<%= j status_badge_html.html_safe %>");
+    $row.attr("data-status", "<%= status_text %>");
+
+    <% if respond_to?(:allowed_tax_submission_bulk_actions) %>
+      var allowedActions = "<%= allowed_tax_submission_bulk_actions(@tax_submission, @tax_submission.archived?, true).join(',') %>";
+      $row.find(".submission-row-checkbox").attr("data-allowed-actions", allowedActions);
+    <% end %>
+
+    // Update row dropdown menu forms
+    var $dropdownMenu = $row.find(".dropdown-menu");
+    if ($dropdownMenu.length) {
+      var $reviewedForm = $dropdownMenu.find("input[name='tax_submission[reviewed]']").closest("form");
+      if ($reviewedForm.length) {
+        $reviewedForm.find("input[name='tax_submission[reviewed]']").val("<%= @tax_submission.reviewed? ? 0 : 1 %>");
+        $reviewedForm.find("input[type='submit'], button[type='submit']").val("<%= @tax_submission.reviewed? ? 'Unmark Reviewed' : 'Mark as Reviewed' %>");
+      }
+
+      var $processedForm = $dropdownMenu.find("input[name='tax_submission[processed]']").closest("form");
+      if ($processedForm.length) {
+        $processedForm.find("input[name='tax_submission[processed]']").val("<%= @tax_submission.processed? ? 0 : 1 %>");
+        $processedForm.find("input[type='submit'], button[type='submit']").val("<%= @tax_submission.processed? ? 'Unmark Processed' : 'Mark as Processed' %>");
+      }
+    }
+
+    // Invalidate DataTables cache for smooth search/sort consistency
+    var $table = $row.closest("table");
+    if ($table.length && window.jQuery && $.fn.DataTable && $.fn.DataTable.isDataTable($table[0])) {
+      $table.DataTable().row($row).invalidate("dom");
+    }
+  }
+})();

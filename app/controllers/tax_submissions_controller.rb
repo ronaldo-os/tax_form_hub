@@ -105,10 +105,28 @@ class TaxSubmissionsController < ApplicationController
       end
       notice = "Submission updated."
       NotificationService.notify_tax_status_updated(@tax_submission, notice, current_user)
-      redirect_back fallback_location: root_path, status: :see_other, notice: notice
+      respond_to do |format|
+        format.js
+        format.html do
+          if params[:redirect_to].present?
+            redirect_to sanitize_safe_redirect(params[:redirect_to], tax_submissions_path), status: :see_other, notice: notice
+          else
+            redirect_back fallback_location: root_path, status: :see_other, notice: notice
+          end
+        end
+      end
     else
       alert = "Failed to update."
-      redirect_back fallback_location: root_path, status: :see_other, alert: alert
+      respond_to do |format|
+        format.js { render js: "alert(#{alert.to_json});" }
+        format.html do
+          if params[:redirect_to].present?
+            redirect_to sanitize_safe_redirect(params[:redirect_to], tax_submissions_path), status: :see_other, alert: alert
+          else
+            redirect_back fallback_location: root_path, status: :see_other, alert: alert
+          end
+        end
+      end
     end
   end
 
@@ -361,6 +379,22 @@ class TaxSubmissionsController < ApplicationController
       end
     rescue URI::InvalidURIError
       tax_submissions_home_path
+    end
+  end
+
+  def sanitize_safe_redirect(url_string, fallback = tax_submissions_path)
+    return fallback if url_string.blank?
+
+    begin
+      uri = URI.parse(url_string.to_s.strip)
+      return fallback if uri.host.present? && uri.host != request.host
+      return fallback if url_string.to_s.strip.start_with?("//")
+
+      path = uri.path.presence || fallback
+      query = uri.query.present? ? "?#{uri.query}" : ""
+      "#{path}#{query}"
+    rescue URI::InvalidURIError
+      fallback
     end
   end
 end

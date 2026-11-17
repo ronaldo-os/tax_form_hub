@@ -273,6 +273,41 @@ function initSubmissionTables() {
         }
     }
 
+    $(document).off('hidden.bs.modal.admin_submission', '#submissionModal').on('hidden.bs.modal.admin_submission', '#submissionModal', function () {
+        const url = new URL(window.location);
+        if (url.searchParams.has('open_submission')) {
+            url.searchParams.delete('open_submission');
+            window.history.replaceState({}, document.title, url.pathname + (url.search ? url.search : '') + url.hash);
+        }
+    });
+
+    // In-place reviewer quick action button processing without page refresh
+    $(document).off('submit.reviewer_quick_action', '.reviewer-quick-action-form').on('submit.reviewer_quick_action', '.reviewer-quick-action-form', function (e) {
+        e.preventDefault();
+        const $form = $(this);
+        const $btn = $form.find('button[type="submit"]');
+        if ($btn.prop('disabled')) return false;
+
+        $btn.prop('disabled', true);
+        const originalHtml = $btn.html();
+        $btn.html('<i class="fa-solid fa-spinner fa-spin"></i> <span>Updating...</span>');
+
+        $.ajax({
+            url: $form.attr('action'),
+            type: 'PATCH',
+            data: $form.serialize(),
+            dataType: 'script',
+            headers: {
+                'Accept': 'text/javascript',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).fail(function () {
+            $btn.prop('disabled', false).html(originalHtml);
+            alert('Failed to update submission status. Please try again.');
+        });
+        return false;
+    });
+
     // Global Header Export CSV Button Handler for Incoming Submissions
     $(document).off('click', '#exportIncomingSubmissionsBtn').on('click', '#exportIncomingSubmissionsBtn', function (e) {
         e.preventDefault();
