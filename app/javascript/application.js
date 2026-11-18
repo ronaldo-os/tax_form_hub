@@ -994,7 +994,13 @@ function initApplication() {
     }, 5000);
   };
 
-  $('div.dataTables_filter input').attr('placeholder', 'Search...');
+  $('div.dataTables_filter input').each(function () {
+    if (!$(this).attr('placeholder')) {
+      $(this).attr('placeholder', 'Search...');
+    }
+    $(this).addClass('form-control form-control-sm');
+  });
+  $('div.dataTables_length select').addClass('form-select form-select-sm');
 
   $('.dataTables_wrapper [class*="col-sm-"], .dataTables_wrapper [class*="col-md-"], .dataTables_wrapper [class*="col-12"]').each(function () {
     let current = $(this).attr('class');

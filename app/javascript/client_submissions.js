@@ -119,6 +119,7 @@ function initClientSubmissionsPage() {
 
                 // Setup filter bar container around dataTables_length
                 const $lengthDiv = $container.find('div.dataTables_length');
+                $lengthDiv.find('select').addClass('form-select form-select-sm');
                 $lengthDiv.addClass('custom-filter-bar d-flex flex-wrap align-items-center gap-2');
 
                 // Find column indices by header text
@@ -219,6 +220,7 @@ function initClientSubmissionsPage() {
 
                 // Search input synchronization
                 const $searchInput = $container.find('div.dataTables_filter input');
+                $searchInput.addClass('form-control form-control-sm');
                 if (initial.search) {
                     $searchInput.val(initial.search);
                     api.search(initial.search);

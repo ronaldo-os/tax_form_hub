@@ -1554,7 +1554,7 @@
 }
 
 /* Desktop: Align Active and Archived tabs on the same horizontal line as the DataTable filter */
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .invoice-table-card {
     position: relative !important;
   }
@@ -1573,6 +1573,10 @@
     pointer-events: auto !important;
   }
 
+  .invoice-table-card .card-header .export-invoices-sub-btn {
+    display: none !important;
+  }
+
   .invoice-table-card .card-body {
     padding: 1rem !important;
   }
@@ -1584,9 +1588,10 @@
   }
 
   .invoice-table-card .dataTables_wrapper > .row:first-child {
-    min-height: 32px !important;
+    min-height: 34px !important;
     margin-top: 0 !important;
     margin-bottom: 0.65rem !important;
+    padding-left: 300px !important;
   }
 }
 
@@ -1871,7 +1876,7 @@
 }
 
 /* Desktop Only: Put both Search and Show rows filter on the right */
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .invoices-page .dataTables_wrapper>.row:first-child {
     display: flex !important;
     flex-direction: row !important;
@@ -1925,24 +1930,20 @@
     align-items: center !important;
     gap: 0.45rem !important;
     margin-bottom: 0 !important;
+    font-size: 0.8rem;
+    color: var(--text-muted);
   }
-}
 
-.invoices-page .dataTables_length label {
-  font-size: 0.8rem;
-  margin-bottom: 0;
-  color: var(--text-muted);
-}
-
-.invoices-page .dataTables_length select.form-select {
-  font-size: 0.8125rem !important;
-  padding: 0.25rem 1.6rem 0.25rem 0.5rem !important;
-  height: var(--form-field-height-sm, 2.125rem) !important;
-  min-width: 65px !important;
-  border-radius: var(--form-field-radius, 0.5rem) !important;
-  border-color: var(--form-field-border, var(--border-color)) !important;
-  background-color: var(--form-field-bg, var(--input-bg)) !important;
-  color: var(--form-field-text, var(--input-text)) !important;
+  .invoices-page .dataTables_length select.form-select {
+    font-size: 0.8125rem !important;
+    padding: 0.25rem 1.6rem 0.25rem 0.5rem !important;
+    height: var(--form-field-height-sm, 2.125rem) !important;
+    min-width: 65px !important;
+    border-radius: var(--form-field-radius, 0.5rem) !important;
+    border-color: var(--form-field-border, var(--border-color)) !important;
+    background-color: var(--form-field-bg, var(--input-bg)) !important;
+    color: var(--form-field-text, var(--input-text)) !important;
+  }
 }
 
 @media (min-width: 992px) {
@@ -1959,6 +1960,7 @@
     padding: 0.25rem 0.65rem !important;
     height: var(--form-field-height-sm, 2.125rem) !important;
     min-width: 200px !important;
+    margin-left: 0 !important;
     border-radius: var(--form-field-radius, 0.5rem) !important;
     border: 1px solid var(--form-field-border, var(--border-color)) !important;
     background-color: var(--form-field-bg, var(--input-bg)) !important;
@@ -1986,9 +1988,11 @@
     width: 100% !important;
     max-width: 100% !important;
     min-width: 100% !important;
+    height: var(--form-field-height, 2.5rem) !important;
+    min-height: var(--form-field-height, 2.5rem) !important;
     margin-left: 0 !important;
     border-radius: var(--form-field-radius, 0.5rem) !important;
-    padding: 10px 16px 10px 42px !important;
+    padding: 0.4375rem 1rem 0.4375rem 42px !important;
     padding-left: 42px !important;
     border: 1px solid var(--form-field-border, var(--border-color)) !important;
     background-color: var(--form-field-bg, var(--input-bg)) !important;
@@ -1996,7 +2000,8 @@
     background-repeat: no-repeat !important;
     background-position: 14px center !important;
     background-size: 16px 16px !important;
-    font-size: 0.925rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
     color: var(--form-field-text, var(--input-text)) !important;
     box-shadow: none !important;
     outline: none !important;
@@ -2013,6 +2018,29 @@
   [data-theme="dark"] .invoices-page .dataTables_filter input.form-control,
   [data-theme="dark"] .invoices-page div.dataTables_filter input {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") !important;
+  }
+
+  .invoices-page .dataTables_length label {
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    width: auto !important;
+  }
+
+  .invoices-page .dataTables_length select.form-select,
+  .invoices-page div.dataTables_length select {
+    height: var(--form-field-height, 2.5rem) !important;
+    min-height: var(--form-field-height, 2.5rem) !important;
+    padding: 0.375rem 2.25rem 0.375rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    line-height: 1.5 !important;
+    width: auto !important;
+    min-width: 72px !important;
+    border-radius: var(--form-field-radius, 0.5rem) !important;
+    border: 1px solid var(--form-field-border, var(--border-color)) !important;
+    background-color: var(--form-field-bg, var(--input-bg)) !important;
+    color: var(--form-field-text, var(--input-text)) !important;
   }
 }
 

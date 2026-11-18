@@ -1413,7 +1413,7 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 }
 
 /* Desktop Only: Put both Search and Show rows filter on the right for all datatables */
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .dataTables_wrapper>.row:first-child {
     display: flex !important;
     flex-direction: row !important;
@@ -1471,7 +1471,7 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
 }
 
 /* Invoices page: Align Active and Archived tabs on the same horizontal line as the DataTable filter */
-@media (min-width: 768px) {
+@media (min-width: 992px) {
   .invoice-table-card {
     position: relative !important;
   }
@@ -1490,6 +1490,10 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
     pointer-events: auto !important;
   }
 
+  .invoice-table-card .card-header .export-invoices-sub-btn {
+    display: none !important;
+  }
+
   .invoice-table-card .card-body {
     padding: 1rem !important;
   }
@@ -1501,9 +1505,10 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
   }
 
   .invoice-table-card .dataTables_wrapper>.row:first-child {
-    min-height: 32px !important;
+    min-height: 34px !important;
     margin-top: 0 !important;
     margin-bottom: 0.65rem !important;
+    padding-left: 300px !important;
   }
 }
 
@@ -1517,20 +1522,34 @@ table.dataTable.dtr-inline.collapsed>tbody>tr>td {
     color: var(--text-muted);
   }
 
-  .dataTables_filter input.form-control {
+  .dataTables_filter input.form-control,
+  div.dataTables_wrapper div.dataTables_filter input {
     font-size: 0.8125rem !important;
     padding: 0.25rem 0.65rem !important;
     height: var(--form-field-height-sm) !important;
     min-width: 200px !important;
+    margin-left: 0 !important;
     border-radius: var(--form-field-radius) !important;
     border: 1px solid var(--form-field-border) !important;
     background-color: var(--form-field-bg) !important;
     color: var(--form-field-text) !important;
   }
 
-  .dataTables_filter input.form-control:focus {
+  .dataTables_filter input.form-control:focus,
+  div.dataTables_wrapper div.dataTables_filter input:focus {
     border-color: var(--form-field-focus-border) !important;
     box-shadow: var(--form-field-focus-ring) !important;
+  }
+
+  div.dataTables_wrapper div.dataTables_length select {
+    font-size: 0.8125rem !important;
+    padding: 0.25rem 1.85rem 0.25rem 0.6rem !important;
+    height: var(--form-field-height-sm) !important;
+    min-width: 68px !important;
+    border-radius: var(--form-field-radius) !important;
+    border: 1px solid var(--form-field-border) !important;
+    background-color: var(--form-field-bg) !important;
+    color: var(--form-field-text) !important;
   }
 }
 

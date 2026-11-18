@@ -3,8 +3,11 @@
   add_breadcrumb "Client Submissions"
 %>
 <% content_for :page_title, "Client Submissions" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "invoices", media: "all" %>
+<% end %>
 <% is_archived_tab = (@active_tab || params[:tab].to_s.downcase) == "archived" %>
-<div class="tax-submissions-page container py-2 py-md-3">
+<div class="tax-submissions-page container-fluid px-2 px-sm-3 px-md-4 py-3">
   <div id="tax_submissions_index_skeleton">
     <%= render "tax_submissions/index_skeleton" %>
   </div>

@@ -568,9 +568,11 @@ function initSubscriptionsPage(eventOrForce = false) {
 
                 // Setup filter bar container around dataTables_length (only per-page dropdown filter)
                 const $lengthDiv = $container.find('div.dataTables_length');
+                $lengthDiv.find('select').addClass('form-select form-select-sm');
                 $lengthDiv.addClass('custom-filter-bar d-flex flex-wrap align-items-center gap-2');
 
                 const $searchInput = $container.find('div.dataTables_filter input');
+                $searchInput.addClass('form-control form-control-sm');
                 if (initial.search) {
                     $searchInput.val(initial.search);
                     api.search(initial.search).draw(false);
@@ -639,6 +641,9 @@ function initSubscriptionsPage(eventOrForce = false) {
                     $container.find('div.dataTables_filter label').contents().filter(function () {
                         return this.nodeType === 3;
                     }).remove();
+
+                    $container.find('div.dataTables_length select').addClass('form-select form-select-sm');
+                    $container.find('div.dataTables_filter input').addClass('form-control form-control-sm');
                 }
             });
         }

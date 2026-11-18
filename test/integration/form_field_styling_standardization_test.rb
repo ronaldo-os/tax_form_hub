@@ -137,4 +137,17 @@ class FormFieldStylingStandardizationTest < ActionDispatch::IntegrationTest
     # Application CSS must scope desktop compact padding to min-width 992px
     assert_match(/@media\s*\(min-width:\s*992px\)\s*\{[\s\S]*?\.dataTables_filter\s+input\.form-control[\s\S]*?padding:\s*0\.25rem\s+0\.65rem\s*!important;/, @app_css_source)
   end
+
+  test "standardizes tablet DataTables toolbar, filters, and search fields without 768px breakpoint collisions" do
+    # Desktop DataTables row ordering and absolute card-header positioning must be scoped to min-width: 992px (not 768px)
+    assert_match(/@media\s*\(min-width:\s*992px\)\s*\{[\s\S]*?\.dataTables_wrapper>\.row:first-child[\s\S]*?justify-content:\s*flex-end\s*!important;/, @app_css_source)
+    assert_match(/@media\s*\(min-width:\s*992px\)\s*\{[\s\S]*?\.invoice-table-card\s+\.card-header[\s\S]*?position:\s*absolute\s*!important;/, @app_css_source)
+    assert_match(/@media\s*\(min-width:\s*992px\)\s*\{[\s\S]*?\.invoices-page\s+\.dataTables_wrapper>\.row:first-child[\s\S]*?justify-content:\s*flex-end\s*!important;/, @invoices_css)
+    assert_match(/@media\s*\(min-width:\s*992px\)\s*\{[\s\S]*?\.invoice-table-card\s+\.card-header[\s\S]*?position:\s*absolute\s*!important;/, @invoices_css)
+
+    # Responsive CSS must standardize height (--form-field-height) across search inputs and filter dropdowns on tablets & mobile
+    assert_match(/\.tax-submissions-page\s+div\.dataTables_filter\s+input[\s\S]*?height:\s*var\(--form-field-height,\s*2\.5rem\)\s*!important;/, @responsive_css)
+    assert_match(/\.tax-submissions-page\s+div\.dataTables_length\s+select[\s\S]*?height:\s*var\(--form-field-height,\s*2\.5rem\)\s*!important;/, @responsive_css)
+    assert_match(/\.invoices-page\s+\.dataTables_length\s+select\.form-select[\s\S]*?height:\s*var\(--form-field-height,\s*2\.5rem\)\s*!important;/, @invoices_css)
+  end
 end
