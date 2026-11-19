@@ -219,7 +219,7 @@ class TaxSubmissionsController < ApplicationController
                            .where(archived: [ false, nil ])
                            .where.not(invoice_category: "quote")
                            .where("(invoice_type = 'sale' AND recipient_company_id = :company_id) OR (invoice_type = 'purchase' AND sale_from_id = :company_id)", company_id: company_id)
-                           .order(created_at: :desc)
+                           .order(created_at: :desc, id: :desc)
 
     render json: invoices.map { |inv|
       {

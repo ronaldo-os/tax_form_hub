@@ -2975,4 +2975,135 @@ table.dataTable tbody tr.row-selected,
   border-color: rgba(255, 255, 255, 0.25);
 }
 
+/* Drag-and-Drop File Upload Areas (Invoices & Tax Submissions) */
+.file-dropzone {
+  position: relative;
+  border: 2px dashed var(--border-color, #cbd5e1);
+  border-radius: 12px;
+  background-color: var(--card-bg, #ffffff);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  outline: none;
+  min-height: 125px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-dropzone:hover,
+.file-dropzone.is-dragover {
+  border-color: var(--main-color, #00aeff);
+  background-color: rgba(0, 174, 255, 0.04);
+}
+
+.file-dropzone.is-dragover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 14px rgba(0, 174, 255, 0.18);
+}
+
+[data-theme="dark"] .file-dropzone {
+  border-color: rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="dark"] .file-dropzone:hover,
+[data-theme="dark"] .file-dropzone.is-dragover {
+  border-color: var(--main-color, #00aeff);
+  background-color: rgba(0, 174, 255, 0.08);
+}
+
+.file-dropzone.has-files {
+  border-style: solid;
+  border-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.04);
+}
+
+[data-theme="dark"] .file-dropzone.has-files {
+  border-color: #059669;
+  background-color: rgba(16, 185, 129, 0.08);
+}
+
+.file-dropzone input[type="file"].file-upload-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 5;
+  margin: 0;
+  padding: 0;
+}
+
+.file-dropzone .dropzone-content {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+  width: 100%;
+}
+
+.file-dropzone:focus-within,
+.file-dropzone:focus-visible {
+  border-color: var(--main-color, #00aeff);
+  box-shadow: 0 0 0 3px rgba(0, 174, 255, 0.18);
+}
+
+.file-dropzone .dropzone-icon i {
+  transition: transform 0.2s ease;
+}
+
+.file-dropzone:hover .dropzone-icon i,
+.file-dropzone.is-dragover .dropzone-icon i {
+  transform: translateY(-2px) scale(1.1);
+}
+
+.file-dropzone .browse-link {
+  cursor: pointer;
+}
+
+.file-preview-item {
+  position: relative;
+}
+
+.file-preview-item .btn-remove-preview-file {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 10;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  background: var(--card-bg, #ffffff);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.file-preview-item .btn-remove-preview-file:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+[data-theme="dark"] .file-preview-item .btn-remove-preview-file {
+  background: #1e293b;
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+[data-theme="dark"] .file-preview-item .btn-remove-preview-file:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+
 

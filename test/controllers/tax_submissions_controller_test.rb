@@ -599,4 +599,43 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Processed &amp; Reviewed"
     assert_includes response.body, "submission-row-#{tax_submission.id}"
   end
+
+  test "home page renders drag-and-drop upload areas for Form 2307 and Deposit Slip" do
+    get tax_submissions_home_url
+    assert_response :success
+    assert_select "#submitDocsModal div.file-dropzone.tax-file-dropzone[role='button'][tabindex='0']", count: 2
+    assert_select "#submitDocsModal div.tax-file-dropzone input#form_2307_input.file-upload-input[type='file']", count: 1
+    assert_select "#submitDocsModal div.tax-file-dropzone input#deposit_slip_input.file-upload-input[type='file'][multiple='multiple']", count: 1
+    assert_select "#form_2307_list", count: 1
+    assert_select "#deposit_slip_list", count: 1
+  end
+
+  test "fetch_invoices returns eligible invoices ordered with the most recent first" do
+    older_invoice = Invoice.create!(
+      user: @user,
+      recipient_company: @company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-OLD-001",
+      status: "approved",
+      created_at: 2.days.ago
+    )
+    newest_invoice = Invoice.create!(
+      user: @user,
+      recipient_company: @company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-NEW-002",
+      status: "approved",
+      created_at: 1.minute.from_now
+    )
+
+    get fetch_invoices_tax_submissions_url, params: { company_id: @company.id }, as: :json
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    returned_ids = json.map { |inv| inv["id"] }
+    assert_equal newest_invoice.id, returned_ids.first, "Most recent invoice should be first for auto-selection"
+    assert_includes returned_ids, older_invoice.id
+  end
 end

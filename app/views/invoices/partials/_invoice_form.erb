@@ -454,14 +454,29 @@
             <% unless @invoice.recurring_sub_invoice? %>
               <div class="mb-3">
                 <%= f.label :attachments, "Attachments", class: "form-label" %>
+                <div class="file-dropzone invoice-file-dropzone" data-target-input="#attachments" role="button" tabindex="0" aria-label="Upload invoice attachments">
+                  <%= f.file_field :attachments,
+                        class: "file-upload-input",
+                        multiple: true,
+                        accept: "image/*,application/pdf",
+                        id: "attachments",
+                        tabindex: -1 %>
+                  <div class="dropzone-content text-center py-3 px-2">
+                    <div class="dropzone-icon mb-2">
+                      <i class="fa-solid fa-cloud-arrow-up fs-2 text-primary"></i>
+                    </div>
+                    <div class="dropzone-default-text">
+                      <div class="dropzone-text mb-1">
+                        <span class="fw-semibold text-body">Drag &amp; drop attachments here</span>, or <span class="text-primary text-decoration-underline browse-link">browse</span>
+                      </div>
+                      <div id="fileHelp" class="dropzone-hint text-muted small">
+                        Only images (JPEG, PNG, GIF) and PDFs allowed. Max file size: 10 MB.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="fileError" class="text-danger small mt-1" role="alert"></div>
                 <div id="new_attachments_preview" class="mt-3"></div>
-                <%= f.file_field :attachments, 
-                      class: "form-control", 
-                      multiple: true, 
-                      accept: "image/*,application/pdf", 
-                      id: "attachments" %>
-                <div id="fileHelp" class="form-text">Only images (JPEG, PNG, GIF) and PDFs allowed. Max file size: 10 MB.</div>
-                <div id="fileError" class="text-danger small mt-1"></div>
               </div>
 
               <% if @invoice.attachments.attached? %>

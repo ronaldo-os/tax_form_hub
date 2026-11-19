@@ -272,84 +272,244 @@ function initClientSubmissionsPage() {
             }
         });
 
-    // Show file previews (thumbnails for images, icons for PDFs)
+    // Show file previews (thumbnails for images, embeds for PDFs) and sync dropzone state
     function updateFileList(inputSelector, listSelector, multiple = true) {
-        $(document).off('change', inputSelector).on('change', inputSelector, function () {
+        $(document).off('change.tax_dropzone', inputSelector).on('change.tax_dropzone', inputSelector, function () {
             const $input = $(this);
-            const $list = $(listSelector).empty();
-            const files = Array.from(this.files);
+            const listEl = document.querySelector(listSelector);
+            const $dropzone = $input.closest('.file-dropzone');
 
-            if (!files.length) return;
+            if (listEl) {
+                listEl.replaceChildren();
+                listEl.classList.remove('file-preview-single', 'file-preview-grid');
+            }
+
+            const files = Array.from(this.files || []);
+            if (!files.length) {
+                $dropzone.removeClass('has-files is-dragover');
+                $dropzone.find('.dropzone-status-text').remove();
+                $dropzone.find('.dropzone-default-text').removeClass('d-none');
+                return;
+            }
 
             // Check for HEIC files
             const heicExtensions = ['.heic', '.heif'];
             const heicMimeTypes = ['image/heic', 'image/heif'];
             const invalidFiles = files.filter(file => {
-                const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-                return heicExtensions.includes(ext) || heicMimeTypes.includes(file.type.toLowerCase());
+                const dotIdx = file.name.lastIndexOf('.');
+                const ext = dotIdx >= 0 ? file.name.toLowerCase().substring(dotIdx) : '';
+                return heicExtensions.includes(ext) || heicMimeTypes.includes((file.type || '').toLowerCase());
             });
 
             if (invalidFiles.length > 0) {
                 const fileNames = invalidFiles.map(f => f.name).join(', ');
                 if (window.showFlashMessage) {
-                    window.showFlashMessage(`HEIC files are not supported: ${fileNames}<br>Please convert to JPG, PNG, or PDF.`, 'danger');
+                    window.showFlashMessage(`HEIC files are not supported: ${fileNames}. Please convert to JPG, PNG, or PDF.`, 'danger');
                 }
                 $input.val('');
+                $dropzone.removeClass('has-files is-dragover');
+                $dropzone.find('.dropzone-status-text').remove();
+                $dropzone.find('.dropzone-default-text').removeClass('d-none');
                 return;
             }
 
             const displayFiles = multiple ? files : [files[0]];
 
+            // Update dropzone UI state safely without innerHTML
+            $dropzone.addClass('has-files');
+            $dropzone.find('.dropzone-default-text').addClass('d-none');
+            const countText = multiple
+                ? `${displayFiles.length} file${displayFiles.length > 1 ? 's' : ''} selected`
+                : `1 file selected (${displayFiles[0].name})`;
+
+            let statusEl = $dropzone.find('.dropzone-status-text')[0];
+            if (!statusEl) {
+                statusEl = document.createElement('div');
+                statusEl.className = 'dropzone-status-text text-success fw-semibold small mt-1';
+                const contentEl = $dropzone.find('.dropzone-content')[0];
+                if (contentEl) contentEl.appendChild(statusEl);
+            }
+            statusEl.replaceChildren();
+            const checkIcon = document.createElement('i');
+            checkIcon.className = 'fa-solid fa-circle-check me-1';
+            statusEl.appendChild(checkIcon);
+            statusEl.appendChild(document.createTextNode(countText));
+
+            const subHint = document.createElement('span');
+            subHint.className = 'text-muted fw-normal d-block small';
+            subHint.textContent = 'Click or drag & drop to replace';
+            statusEl.appendChild(subHint);
+
+            if (!listEl) return;
+
             // For single file, use full width; for multiple, use grid layout
             if (!multiple && displayFiles.length === 1) {
-                $list.addClass('file-preview-single');
+                listEl.classList.add('file-preview-single');
             } else {
-                $list.addClass('file-preview-grid');
+                listEl.classList.add('file-preview-grid');
             }
 
-            displayFiles.forEach(file => {
+            const inputId = $input.attr('id') ? `#${$input.attr('id')}` : inputSelector;
+
+            displayFiles.forEach((file, index) => {
                 const isImage = file.type.startsWith('image/');
                 const isPDF = file.type === 'application/pdf';
-                let previewHTML = '';
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'btn btn-remove-preview-file';
+                removeBtn.dataset.fileIndex = String(index);
+                removeBtn.dataset.inputTarget = inputId;
+                removeBtn.title = 'Remove file';
+                removeBtn.setAttribute('aria-label', `Remove ${file.name}`);
+                const xIcon = document.createElement('i');
+                xIcon.className = 'fa-solid fa-xmark';
+                removeBtn.appendChild(xIcon);
 
                 if (isImage) {
-                    // Create object URL for image preview
                     const objectUrl = URL.createObjectURL(file);
-                    previewHTML = `
-                        <li class="list-group-item file-preview-item p-0 border-0">
-                            <div class="file-preview-container">
-                                <img src="${objectUrl}" alt="${file.name}" class="file-preview-image" title="${file.name}">
-                                <div class="file-preview-name">${file.name}</div>
-                            </div>
-                        </li>
-                    `;
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item file-preview-item p-0 border-0';
+                    li.appendChild(removeBtn);
+
+                    const container = document.createElement('div');
+                    container.className = 'file-preview-container';
+
+                    const img = document.createElement('img');
+                    img.src = objectUrl;
+                    img.alt = file.name;
+                    img.title = file.name;
+                    img.className = 'file-preview-image';
+
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'file-preview-name';
+                    nameDiv.textContent = file.name;
+
+                    container.appendChild(img);
+                    container.appendChild(nameDiv);
+                    li.appendChild(container);
+                    listEl.appendChild(li);
                 } else if (isPDF) {
                     const objectUrl = URL.createObjectURL(file);
-                    previewHTML = `
-                        <li class="list-group-item file-preview-item p-0 border-0">
-                            <div class="file-preview-container">
-                                <embed src="${objectUrl}" type="application/pdf" class="w-100 rounded" style="height: 350px; min-height: 40vh;" />
-                                <div class="file-preview-name text-center small p-1 text-truncate" title="${file.name}">${file.name}</div>
-                            </div>
-                        </li>
-                    `;
-                } else {
-                    // Fallback for other file types
-                    previewHTML = `
-                        <li class="list-group-item file-preview-item p-3 border-0 d-flex flex-column align-items-center justify-content-center bg-light rounded">
-                            <i class="bi bi-file-earmark fs-2 text-secondary mb-2"></i>
-                            <span class="file-preview-name text-center small" title="${file.name}">${file.name}</span>
-                        </li>
-                    `;
-                }
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item file-preview-item p-0 border-0';
+                    li.appendChild(removeBtn);
 
-                $list.append(previewHTML);
+                    const container = document.createElement('div');
+                    container.className = 'file-preview-container';
+
+                    const embed = document.createElement('embed');
+                    embed.src = objectUrl;
+                    embed.type = 'application/pdf';
+                    embed.className = 'w-100 rounded';
+                    embed.style.height = '350px';
+                    embed.style.minHeight = '40vh';
+
+                    const nameDiv = document.createElement('div');
+                    nameDiv.className = 'file-preview-name text-center small p-1 text-truncate';
+                    nameDiv.title = file.name;
+                    nameDiv.textContent = file.name;
+
+                    container.appendChild(embed);
+                    container.appendChild(nameDiv);
+                    li.appendChild(container);
+                    listEl.appendChild(li);
+                } else {
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item file-preview-item p-3 border-0 d-flex flex-column align-items-center justify-content-center bg-light rounded';
+                    li.appendChild(removeBtn);
+
+                    const fileIcon = document.createElement('i');
+                    fileIcon.className = 'bi bi-file-earmark fs-2 text-secondary mb-2';
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'file-preview-name text-center small';
+                    nameSpan.title = file.name;
+                    nameSpan.textContent = file.name;
+
+                    li.appendChild(fileIcon);
+                    li.appendChild(nameSpan);
+                    listEl.appendChild(li);
+                }
             });
         });
     }
 
     updateFileList('#deposit_slip_input', '#deposit_slip_list', true);
     updateFileList('#form_2307_input', '#form_2307_list', false);
+
+    // Drag-and-drop & keyboard accessibility for Tax Submissions dropzones
+    $(document).off('dragenter.tax_dropzone dragover.tax_dropzone', '#submitDocsModal .tax-file-dropzone')
+               .on('dragenter.tax_dropzone dragover.tax_dropzone', '#submitDocsModal .tax-file-dropzone', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('is-dragover');
+    });
+
+    $(document).off('dragleave.tax_dropzone dragend.tax_dropzone', '#submitDocsModal .tax-file-dropzone')
+               .on('dragleave.tax_dropzone dragend.tax_dropzone', '#submitDocsModal .tax-file-dropzone', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const related = e.originalEvent && e.originalEvent.relatedTarget;
+        if (!related || !this.contains(related)) {
+            $(this).removeClass('is-dragover');
+        }
+    });
+
+    $(document).off('drop.tax_dropzone', '#submitDocsModal .tax-file-dropzone')
+               .on('drop.tax_dropzone', '#submitDocsModal .tax-file-dropzone', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const $dropzone = $(this);
+        $dropzone.removeClass('is-dragover');
+
+        const droppedFiles = e.originalEvent && e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files;
+        if (!droppedFiles || !droppedFiles.length) return;
+
+        const targetSelector = $dropzone.data('target-input');
+        const inputEl = targetSelector ? document.querySelector(targetSelector) : $dropzone.find('input[type="file"]')[0];
+        if (!inputEl) return;
+
+        const isMultiple = $(inputEl).data('multiple') === true || $(inputEl).data('multiple') === 'true';
+        const dt = new DataTransfer();
+        if (isMultiple) {
+            Array.from(droppedFiles).forEach(file => dt.items.add(file));
+        } else {
+            dt.items.add(droppedFiles[0]);
+        }
+        inputEl.files = dt.files;
+        $(inputEl).trigger('change');
+    });
+
+    $(document).off('keydown.tax_dropzone', '#submitDocsModal .tax-file-dropzone')
+               .on('keydown.tax_dropzone', '#submitDocsModal .tax-file-dropzone', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const targetSelector = $(this).data('target-input');
+            const inputEl = targetSelector ? document.querySelector(targetSelector) : $(this).find('input[type="file"]')[0];
+            if (inputEl) inputEl.click();
+        }
+    });
+
+    $(document).off('click.tax_dropzone', '#submitDocsModal .btn-remove-preview-file')
+               .on('click.tax_dropzone', '#submitDocsModal .btn-remove-preview-file', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const indexToRemove = Number($(this).data('file-index'));
+        const inputSelector = $(this).data('input-target');
+        const inputEl = inputSelector ? document.querySelector(inputSelector) : null;
+        if (!inputEl || !inputEl.files) return;
+
+        const dt = new DataTransfer();
+        Array.from(inputEl.files).forEach((file, idx) => {
+            if (idx !== indexToRemove) {
+                dt.items.add(file);
+            }
+        });
+        inputEl.files = dt.files;
+        $(inputEl).trigger('change');
+    });
 
 
     const params = new URLSearchParams(window.location.search);
@@ -408,13 +568,24 @@ function initClientSubmissionsPage() {
         return false;
     });
 
-    // Fetch invoices based on selected company
+    // Track pending resubmission prefill so fetch_invoices selects it instead of overriding it
+    let pendingPrefillCompanyId = $("#prefill_company_id").val() || null;
+    let pendingPrefillInvoiceId = $("#prefill_invoice_id").val() || null;
+
+    // Fetch invoices based on selected company and auto-select the most recent invoice
     $(document).off("change", "#company_select").on("change", "#company_select", function () {
         const companyId = $(this).val();
-        const $invoiceSelect = $("#invoice_select");
+        const invoiceSelectEl = document.getElementById("invoice_select");
+        const $invoiceSelect = $(invoiceSelectEl);
+
+        if (!invoiceSelectEl) return;
 
         // Clear and show loading state
-        $invoiceSelect.empty().append('<option value="">Loading invoices...</option>').prop('disabled', true);
+        const loadingOpt = document.createElement("option");
+        loadingOpt.value = "";
+        loadingOpt.textContent = "Loading invoices...";
+        invoiceSelectEl.replaceChildren(loadingOpt);
+        $invoiceSelect.prop('disabled', true);
 
         if (companyId) {
             $.ajax({
@@ -422,30 +593,60 @@ function initClientSubmissionsPage() {
                 data: { company_id: companyId },
                 dataType: "json",
                 success: function (data) {
-                    $invoiceSelect.empty().append('<option value="">Select Invoice</option>');
+                    const defaultOpt = document.createElement("option");
+                    defaultOpt.value = "";
+                    defaultOpt.textContent = "Select Invoice";
+                    invoiceSelectEl.replaceChildren(defaultOpt);
 
-                    if (data.length === 0) {
-                        $invoiceSelect.append('<option value="" disabled>No invoices available for this company</option>');
+                    if (!Array.isArray(data) || data.length === 0) {
+                        const emptyOpt = document.createElement("option");
+                        emptyOpt.value = "";
+                        emptyOpt.disabled = true;
+                        emptyOpt.textContent = "No invoices available for this company";
+                        invoiceSelectEl.appendChild(emptyOpt);
                     } else {
                         data.forEach(function (invoice) {
-                            $invoiceSelect.append(
-                                `<option value="${invoice.id}">${invoice.display_name}</option>`
-                            );
+                            const opt = document.createElement("option");
+                            opt.value = String(invoice.id);
+                            opt.textContent = invoice.display_name || invoice.invoice_number || String(invoice.id);
+                            invoiceSelectEl.appendChild(opt);
                         });
+
+                        // Preserve resubmission prefill if applicable; otherwise auto-select the most recent invoice
+                        const hasMatchingPrefill = pendingPrefillInvoiceId &&
+                            String(pendingPrefillCompanyId) === String(companyId) &&
+                            data.some(inv => String(inv.id) === String(pendingPrefillInvoiceId));
+
+                        if (hasMatchingPrefill) {
+                            $invoiceSelect.val(String(pendingPrefillInvoiceId));
+                            pendingPrefillInvoiceId = null;
+                            pendingPrefillCompanyId = null;
+                        } else {
+                            $invoiceSelect.val(String(data[0].id));
+                        }
                     }
                     $invoiceSelect.prop('disabled', false);
                 },
                 error: function (xhr, status, error) {
                     console.error("Error fetching invoices:", error);
-                    $invoiceSelect.empty().append('<option value="" disabled>Error loading invoices. Please try again.</option>');
+                    const errOpt = document.createElement("option");
+                    errOpt.value = "";
+                    errOpt.disabled = true;
+                    errOpt.textContent = "Error loading invoices. Please try again.";
+                    invoiceSelectEl.replaceChildren(errOpt);
                     $invoiceSelect.prop('disabled', false);
 
-                    // Show user-friendly alert
-                    alert("Unable to load invoices. Please refresh the page and try again.");
+                    if (window.showFlashMessage) {
+                        window.showFlashMessage("Unable to load invoices. Please refresh the page and try again.", "danger");
+                    }
                 }
             });
         } else {
-            $invoiceSelect.empty().append('<option value="">Select Invoice</option>').prop('disabled', false);
+            const defaultOpt = document.createElement("option");
+            defaultOpt.value = "";
+            defaultOpt.textContent = "Select Invoice";
+            invoiceSelectEl.replaceChildren(defaultOpt);
+            $invoiceSelect.prop('disabled', false);
         }
     });
 

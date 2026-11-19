@@ -138,26 +138,56 @@
 
             <div class="col-12">
               <%= f.label :form_2307, "Form 2307", class: "form-label fw-semibold small text-muted" %>
-              <%= f.file_field :form_2307,
-                    class: "form-control rounded-3 file-upload-input",
-                    required: true,
-                    accept: "image/*,application/pdf",
-                    id: "form_2307_input",
-                    data: { list_target: "#form_2307_list", multiple: false } %>
-              <small class="form-text text-muted">Only images (JPG, PNG) and PDFs are allowed.</small>
+              <div class="file-dropzone tax-file-dropzone" data-target-input="#form_2307_input" role="button" tabindex="0" aria-label="Upload Form 2307">
+                <%= f.file_field :form_2307,
+                      class: "file-upload-input",
+                      required: true,
+                      accept: "image/*,application/pdf",
+                      id: "form_2307_input",
+                      tabindex: -1,
+                      data: { list_target: "#form_2307_list", multiple: false } %>
+                <div class="dropzone-content text-center py-3 px-2">
+                  <div class="dropzone-icon mb-2">
+                    <i class="fa-solid fa-cloud-arrow-up fs-2 text-primary"></i>
+                  </div>
+                  <div class="dropzone-default-text">
+                    <div class="dropzone-text mb-1">
+                      <span class="fw-semibold text-body">Drag &amp; drop Form 2307 here</span>, or <span class="text-primary text-decoration-underline browse-link">browse</span>
+                    </div>
+                    <div class="dropzone-hint text-muted small">
+                      Supports JPG, PNG, and PDF (Single file)
+                    </div>
+                  </div>
+                </div>
+              </div>
               <ul id="form_2307_list" class="list-group mt-2"></ul>
             </div>
 
             <div class="col-12">
               <%= f.label :deposit_slip, "Deposit Slip or Bank Transfer Details", class: "form-label fw-semibold small text-muted" %>
-              <%= f.file_field :deposit_slip,
-                    multiple: true,
-                    class: "form-control rounded-3 file-upload-input",
-                    required: true,
-                    accept: "image/*,application/pdf",
-                    id: "deposit_slip_input",
-                    data: { list_target: "#deposit_slip_list", multiple: true } %>
-              <small class="form-text text-muted">You can upload multiple images or PDFs.</small>
+              <div class="file-dropzone tax-file-dropzone" data-target-input="#deposit_slip_input" role="button" tabindex="0" aria-label="Upload Deposit Slip or Bank Transfer Details">
+                <%= f.file_field :deposit_slip,
+                      multiple: true,
+                      class: "file-upload-input",
+                      required: true,
+                      accept: "image/*,application/pdf",
+                      id: "deposit_slip_input",
+                      tabindex: -1,
+                      data: { list_target: "#deposit_slip_list", multiple: true } %>
+                <div class="dropzone-content text-center py-3 px-2">
+                  <div class="dropzone-icon mb-2">
+                    <i class="fa-solid fa-cloud-arrow-up fs-2 text-primary"></i>
+                  </div>
+                  <div class="dropzone-default-text">
+                    <div class="dropzone-text mb-1">
+                      <span class="fw-semibold text-body">Drag &amp; drop deposit slips or bank transfers here</span>, or <span class="text-primary text-decoration-underline browse-link">browse</span>
+                    </div>
+                    <div class="dropzone-hint text-muted small">
+                      Upload one or more images (JPG, PNG) or PDFs
+                    </div>
+                  </div>
+                </div>
+              </div>
               <ul id="deposit_slip_list" class="list-group mt-2"></ul>
             </div>
 

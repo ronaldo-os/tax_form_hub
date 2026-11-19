@@ -2570,51 +2570,218 @@ const initInvoiceForm = () => {
 
   // DataTransfer to manage file additions/removals
   const attachmentDataTransfer = new DataTransfer();
+  let attachmentPreviewObjectUrls = [];
 
-  function updateNewAttachmentPreviews() {
-    const $container = $('#new_attachments_preview');
-    $container.empty();
-    const files = Array.from(attachmentDataTransfer.files);
-
-    for (let i = 0; i < files.length; i += 2) {
-      let rowHtml = '<div class="row no-break">';
-      for (let j = i; j < i + 2 && j < files.length; j++) {
-        const file = files[j];
-        let contentHtml = '';
-        if (file.type.startsWith('image/')) {
-          const objectUrl = URL.createObjectURL(file);
-          contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 150px; object-fit: contain;">`;
-        } else if (file.type === 'application/pdf') {
-          const objectUrl = URL.createObjectURL(file);
-          contentHtml = `<embed src="${objectUrl}" type="application/pdf" class="w-100 mb-2" style="height: 150px;" />`;
-        } else {
-          contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
-        }
-
-        rowHtml += `
-             <div class="col-6 mb-3">
-               <div class="card h-100 d-flex flex-column">
-                 <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
-                   ${contentHtml}
-                 </div>
-                 <div class="p-2 text-center mt-auto border-top">
-                   <small class="d-block text-truncate w-100 mb-2 fw-bold" title="${file.name}">${file.name}</small>
-                   <button type="button" class="btn btn-sm btn-outline-danger remove-new-attachment w-100" data-index="${j}">
-                     <i class="bi bi-trash"></i> Remove
-                   </button>
-                 </div>
-               </div>
-             </div>
-           `;
-      }
-      rowHtml += '</div>';
-      $container.append(rowHtml);
-    }
+  function revokeAttachmentPreviewUrls() {
+    attachmentPreviewObjectUrls.forEach((url) => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+    });
+    attachmentPreviewObjectUrls = [];
   }
 
+  function formatAttachmentFileSize(bytes) {
+    if (!Number.isFinite(bytes) || bytes < 1024) return `${bytes || 0} B`;
+    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
 
-  $(document).on("click", ".remove-new-attachment", function () {
-    const index = $(this).data('index');
+  function updateInvoiceDropzoneState() {
+    const $dropzone = $('.invoice-file-dropzone');
+    if (!$dropzone.length) return;
+
+    const count = attachmentDataTransfer.files.length;
+    if (count === 0) {
+      $dropzone.removeClass('has-files is-dragover');
+      $dropzone.find('.dropzone-status-text').remove();
+      $dropzone.find('.dropzone-default-text').removeClass('d-none');
+      return;
+    }
+
+    $dropzone.addClass('has-files');
+    $dropzone.find('.dropzone-default-text').addClass('d-none');
+
+    let statusEl = $dropzone.find('.dropzone-status-text')[0];
+    if (!statusEl) {
+      statusEl = document.createElement('div');
+      statusEl.className = 'dropzone-status-text text-success fw-semibold small mt-1';
+      const contentEl = $dropzone.find('.dropzone-content')[0];
+      if (contentEl) contentEl.appendChild(statusEl);
+    }
+
+    statusEl.replaceChildren();
+    const checkIcon = document.createElement('i');
+    checkIcon.className = 'fa-solid fa-circle-check me-1';
+    statusEl.appendChild(checkIcon);
+
+    const summaryText = count === 1
+      ? `1 file selected (${attachmentDataTransfer.files[0].name})`
+      : `${count} files selected`;
+    statusEl.appendChild(document.createTextNode(summaryText));
+
+    const subHint = document.createElement('span');
+    subHint.className = 'text-muted fw-normal d-block small';
+    subHint.textContent = 'Click or drag & drop to add more files';
+    statusEl.appendChild(subHint);
+  }
+
+  function buildAttachmentPreviewElement(file, maxHeight) {
+    if (file.type.startsWith('image/')) {
+      const objectUrl = URL.createObjectURL(file);
+      attachmentPreviewObjectUrls.push(objectUrl);
+      const img = document.createElement('img');
+      img.src = objectUrl;
+      img.alt = file.name;
+      img.className = 'img-fluid rounded mb-2';
+      img.style.maxHeight = `${maxHeight}px`;
+      img.style.objectFit = 'contain';
+      return img;
+    }
+
+    if (file.type === 'application/pdf') {
+      const objectUrl = URL.createObjectURL(file);
+      attachmentPreviewObjectUrls.push(objectUrl);
+      const embed = document.createElement('embed');
+      embed.src = objectUrl;
+      embed.type = 'application/pdf';
+      embed.className = 'w-100 mb-2 rounded';
+      embed.style.height = `${maxHeight}px`;
+      return embed;
+    }
+
+    const icon = document.createElement('i');
+    icon.className = 'bi bi-file-earmark-text fs-1 text-muted';
+    return icon;
+  }
+
+  function updateNewAttachmentPreviews() {
+    const container = document.getElementById('new_attachments_preview');
+    if (!container) return;
+
+    revokeAttachmentPreviewUrls();
+    container.replaceChildren();
+
+    const files = Array.from(attachmentDataTransfer.files);
+    for (let i = 0; i < files.length; i += 2) {
+      const row = document.createElement('div');
+      row.className = 'row no-break';
+
+      for (let j = i; j < i + 2 && j < files.length; j++) {
+        const file = files[j];
+
+        const col = document.createElement('div');
+        col.className = 'col-12 col-sm-6 mb-3';
+
+        const card = document.createElement('div');
+        card.className = 'card h-100 d-flex flex-column file-preview-item';
+
+        const body = document.createElement('div');
+        body.className = 'card-body text-center flex-grow-1 d-flex align-items-center justify-content-center';
+        body.appendChild(buildAttachmentPreviewElement(file, 150));
+
+        const footer = document.createElement('div');
+        footer.className = 'p-2 text-center mt-auto border-top';
+
+        const nameEl = document.createElement('small');
+        nameEl.className = 'd-block text-truncate w-100 fw-bold';
+        nameEl.title = file.name;
+        nameEl.textContent = file.name;
+
+        const sizeEl = document.createElement('small');
+        sizeEl.className = 'd-block text-muted mb-2';
+        sizeEl.textContent = formatAttachmentFileSize(file.size);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'btn btn-sm btn-outline-danger remove-new-attachment w-100';
+        removeBtn.dataset.index = String(j);
+        removeBtn.setAttribute('aria-label', `Remove ${file.name}`);
+
+        const trashIcon = document.createElement('i');
+        trashIcon.className = 'bi bi-trash me-1';
+        removeBtn.appendChild(trashIcon);
+        removeBtn.appendChild(document.createTextNode('Remove'));
+
+        footer.appendChild(nameEl);
+        footer.appendChild(sizeEl);
+        footer.appendChild(removeBtn);
+
+        card.appendChild(body);
+        card.appendChild(footer);
+        col.appendChild(card);
+        row.appendChild(col);
+      }
+
+      container.appendChild(row);
+    }
+
+    updateInvoiceDropzoneState();
+  }
+
+  function processInvoiceAttachmentFiles(incomingFiles) {
+    const inputEl = document.getElementById('attachments');
+    if (!inputEl) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+    const heicExtensions = ['.heic', '.heif'];
+    const heicMimeTypes = ['image/heic', 'image/heif'];
+    const maxSize = 10 * 1024 * 1024;
+    const $errorDiv = $('#fileError');
+
+    const $saveDraftBtn = $("input[value='Save As Draft']");
+    const $sendBtn = $('#send_invoice_btn');
+
+    $errorDiv.text('');
+    const errors = [];
+
+    const existingKeys = new Set(
+      Array.from(attachmentDataTransfer.files).map((f) => `${f.name}:${f.size}:${f.lastModified}`)
+    );
+
+    Array.from(incomingFiles || []).forEach((file) => {
+      const dotIndex = file.name.lastIndexOf('.');
+      const ext = dotIndex >= 0 ? file.name.toLowerCase().substring(dotIndex) : '';
+      const mimeType = (file.type || '').toLowerCase();
+
+      if (heicExtensions.includes(ext) || heicMimeTypes.includes(mimeType)) {
+        errors.push(`${file.name} is an unsupported HEIC/HEIF file. Please convert to JPEG, PNG, or PDF.`);
+        return;
+      }
+
+      if (!allowedTypes.includes(mimeType)) {
+        errors.push(`${file.name} is not a valid file. Only JPEG, PNG, GIF, and PDF are allowed.`);
+        return;
+      }
+
+      if (file.size > maxSize) {
+        errors.push(`${file.name} exceeds the 10 MB size limit.`);
+        return;
+      }
+
+      const key = `${file.name}:${file.size}:${file.lastModified}`;
+      if (!existingKeys.has(key)) {
+        attachmentDataTransfer.items.add(file);
+        existingKeys.add(key);
+      }
+    });
+
+    inputEl.files = attachmentDataTransfer.files;
+
+    if (errors.length > 0) {
+      $errorDiv.text(errors.join(' '));
+    }
+
+    // Invalid files are never added to DataTransfer, so keep form actions enabled
+    $saveDraftBtn.prop('disabled', false);
+    $sendBtn.prop('disabled', false);
+
+    updateNewAttachmentPreviews();
+  }
+
+  $(document).off('click.invoice_attachments', '.remove-new-attachment')
+             .on('click.invoice_attachments', '.remove-new-attachment', function () {
+    const index = Number($(this).data('index'));
     const dt = new DataTransfer();
 
     Array.from(attachmentDataTransfer.files).forEach((file, i) => {
@@ -2624,60 +2791,58 @@ const initInvoiceForm = () => {
     });
 
     attachmentDataTransfer.items.clear();
-    Array.from(dt.files).forEach(file => attachmentDataTransfer.items.add(file));
+    Array.from(dt.files).forEach((file) => attachmentDataTransfer.items.add(file));
 
-    // Update input files
-    $('#attachments')[0].files = attachmentDataTransfer.files;
+    const inputEl = document.getElementById('attachments');
+    if (inputEl) {
+      inputEl.files = attachmentDataTransfer.files;
+    }
+    $('#fileError').text('');
     updateNewAttachmentPreviews();
   });
 
-  $(document).on("change", "#attachments", function () {
-    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "application/pdf"];
-    const maxSize = 10 * 1024 * 1024;
-    const $errorDiv = $("#fileError");
+  $(document).off('change.invoice_attachments', '#attachments')
+             .on('change.invoice_attachments', '#attachments', function () {
+    processInvoiceAttachmentFiles(this.files);
+  });
 
-    const $saveDraftBtn = $("input[value='Save As Draft']");
-    const $sendBtn = $("#send_invoice_btn");
+  // Drag-and-drop & keyboard accessibility for invoice attachments dropzone
+  $(document).off('dragenter.invoice_attachments dragover.invoice_attachments', '.invoice-file-dropzone')
+             .on('dragenter.invoice_attachments dragover.invoice_attachments', '.invoice-file-dropzone', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $(this).addClass('is-dragover');
+  });
 
-    $errorDiv.text("");
-    let hasError = false;
-
-    // Clear previous files and reset DataTransfer to only contain newly selected files
-    attachmentDataTransfer.items.clear();
-
-    // Add newly selected files to our DataTransfer object
-    $.each(this.files, function (_, file) {
-      if (!allowedTypes.includes(file.type)) {
-        $errorDiv.text(file.name + " is not a valid file. Only JPEG, PNG, GIF, and PDF are allowed.");
-        hasError = true;
-        return true; // continue
-      }
-
-      if (file.size > maxSize) {
-        $errorDiv.text(file.name + " exceeds the 10MB size limit.");
-        hasError = true;
-        return true; // continue
-      }
-
-      // Add to DataTransfer
-      attachmentDataTransfer.items.add(file);
-    });
-
-    // Set the input files to the DataTransfer files
-    this.files = attachmentDataTransfer.files;
-
-    if (hasError) {
+  $(document).off('dragleave.invoice_attachments dragend.invoice_attachments', '.invoice-file-dropzone')
+             .on('dragleave.invoice_attachments dragend.invoice_attachments', '.invoice-file-dropzone', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const related = e.originalEvent && e.originalEvent.relatedTarget;
+    if (!related || !this.contains(related)) {
+      $(this).removeClass('is-dragover');
     }
+  });
 
-    if (attachmentDataTransfer.files.length > 0 && !hasError) {
-      $saveDraftBtn.prop("disabled", false);
-      $sendBtn.prop("disabled", false);
-    } else if (hasError) {
-      $saveDraftBtn.prop("disabled", true);
-      $sendBtn.prop("disabled", true);
+  $(document).off('drop.invoice_attachments', '.invoice-file-dropzone')
+             .on('drop.invoice_attachments', '.invoice-file-dropzone', function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    $(this).removeClass('is-dragover');
+
+    const droppedFiles = e.originalEvent && e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      processInvoiceAttachmentFiles(droppedFiles);
     }
+  });
 
-    updateNewAttachmentPreviews();
+  $(document).off('keydown.invoice_attachments', '.invoice-file-dropzone')
+             .on('keydown.invoice_attachments', '.invoice-file-dropzone', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const inputEl = document.getElementById('attachments');
+      if (inputEl) inputEl.click();
+    }
   });
 
   $(document).on("click", "#send_invoice_btn, #view_invoice_send_btn", function (e) {
@@ -2884,47 +3049,56 @@ const initInvoiceForm = () => {
           $invoiceCard.addClass('force-light-mode').attr('data-theme', 'light').attr('data-bs-theme', 'light');
           $invoiceCard.find('.invoice-container').addClass('force-light-mode').attr('data-theme', 'light').attr('data-bs-theme', 'light');
 
-          const $modalNewAttachments = $('#modal_new_attachments_preview');
-          if ($modalNewAttachments.length && attachmentDataTransfer.files.length > 0) {
+          const modalNewAttachmentsEl = document.getElementById('modal_new_attachments_preview');
+          if (modalNewAttachmentsEl && attachmentDataTransfer.files.length > 0) {
             $('#attachments-section').removeClass('d-none');
             $('#no-attachments-msg').addClass('d-none');
+            modalNewAttachmentsEl.replaceChildren();
 
             const files = Array.from(attachmentDataTransfer.files);
             for (let i = 0; i < files.length; i += 2) {
-              let rowHtml = '<div class="row no-break">';
+              const row = document.createElement('div');
+              row.className = 'row no-break';
+
               for (let j = i; j < i + 2 && j < files.length; j++) {
                 const file = files[j];
-                let contentHtml = '';
-                if (file.type.startsWith('image/')) {
-                  const objectUrl = URL.createObjectURL(file);
-                  contentHtml = `<img src="${objectUrl}" class="img-fluid rounded mb-2" style="max-height: 300px; object-fit: contain;">`;
-                } else if (file.type === "application/pdf") {
-                  const objectUrl = URL.createObjectURL(file);
-                  contentHtml = `<embed src="${objectUrl}" type="application/pdf" class="w-100 mb-2" style="height: 200px;" />`;
-                } else {
-                  contentHtml = `<i class="bi bi-file-earmark-text fs-1 text-muted"></i>`;
-                }
+                const col = document.createElement('div');
+                col.className = 'col-6 mb-4 d-flex';
 
-                rowHtml += `
-                          <div class="col-6 mb-4 d-flex">
-                              <div class="card h-100 w-100 d-flex flex-column mt-2">
-                                  <div class="card-body text-center flex-grow-1 d-flex align-items-center justify-content-center">
-                                      ${contentHtml}
-                                  </div>
-                                  <div class="text-center mt-auto bg-light py-2">
-                                      <div class="d-flex flex-column align-items-center px-2">
-                                          <span class="mb-2 text-truncate small fw-bold" style="max-width: 100%;" title="${file.name}">
-                                              ${file.name}
-                                          </span>
-                                          <span class="badge bg-primary-subtle text-primary small">New Attachment</span>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                      `;
+                const card = document.createElement('div');
+                card.className = 'card h-100 w-100 d-flex flex-column mt-2';
+
+                const body = document.createElement('div');
+                body.className = 'card-body text-center flex-grow-1 d-flex align-items-center justify-content-center';
+                const maxHeight = file.type.startsWith('image/') ? 300 : 200;
+                body.appendChild(buildAttachmentPreviewElement(file, maxHeight));
+
+                const footer = document.createElement('div');
+                footer.className = 'text-center mt-auto bg-light py-2';
+
+                const meta = document.createElement('div');
+                meta.className = 'd-flex flex-column align-items-center px-2';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'mb-2 text-truncate small fw-bold';
+                nameSpan.style.maxWidth = '100%';
+                nameSpan.title = file.name;
+                nameSpan.textContent = file.name;
+
+                const badge = document.createElement('span');
+                badge.className = 'badge bg-primary-subtle text-primary small';
+                badge.textContent = 'New Attachment';
+
+                meta.appendChild(nameSpan);
+                meta.appendChild(badge);
+                footer.appendChild(meta);
+                card.appendChild(body);
+                card.appendChild(footer);
+                col.appendChild(card);
+                row.appendChild(col);
               }
-              rowHtml += '</div>';
-              $modalNewAttachments.append(rowHtml);
+
+              modalNewAttachmentsEl.appendChild(row);
             }
           }
 

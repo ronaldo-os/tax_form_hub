@@ -1137,5 +1137,58 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert purchase_inv.activities.where(action: "invoice_created").exists?
     assert purchase_inv.activities.where(action: "invoice_sent").exists?
   end
+
+  test "invoice forms render drag-and-drop upload area for all invoice types" do
+    [
+      { invoice_type: "sale", category: "standard" },
+      { invoice_type: "purchase", category: "standard" },
+      { invoice_type: "sale", category: "quote" },
+      { invoice_type: "sale", category: "credit_note" }
+    ].each do |query_params|
+      get new_invoice_url, params: query_params
+      assert_response :success
+      assert_select "div.file-dropzone.invoice-file-dropzone[role='button'][tabindex='0'][data-target-input='#attachments']", count: 1
+      assert_select "div.invoice-file-dropzone input#attachments.file-upload-input[type='file'][multiple='multiple']", count: 1
+      assert_select "div.invoice-file-dropzone .dropzone-content .dropzone-icon", count: 1
+      assert_select "#new_attachments_preview", count: 1
+      assert_select "#fileError", count: 1
+    end
+  end
+
+  test "edit invoice form renders drag-and-drop upload area" do
+    invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-DROPZONE-EDIT-1",
+      status: "draft"
+    )
+
+    get edit_invoice_url(invoice)
+    assert_response :success
+    assert_select "div.file-dropzone.invoice-file-dropzone[data-target-input='#attachments']", count: 1
+    assert_select "div.invoice-file-dropzone input#attachments.file-upload-input[type='file'][multiple='multiple']", count: 1
+  end
+
+  test "submit tax documents modal on invoices uses drag-and-drop upload areas" do
+    invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "purchase",
+      invoice_category: "standard",
+      invoice_number: "INV-TAX-DROPZONE-1",
+      status: "approved"
+    )
+
+    html = ApplicationController.renderer.render(
+      partial: "invoices/partials/submit_tax_documents_modal",
+      locals: { invoice: invoice }
+    )
+    doc = Nokogiri::HTML::DocumentFragment.parse(html)
+
+    dropzones = doc.css("div.file-dropzone.tax-file-dropzone")
+    assert_equal 2, dropzones.length, "Expected 2 drag-and-drop upload areas (Form 2307 and Deposit Slip)"
+    assert_equal 1, doc.css("input#tax_submission_form_2307_#{invoice.id}.file-upload-input[type='file']").length
+    assert_equal 1, doc.css("input#tax_submission_deposit_slip_#{invoice.id}.file-upload-input[type='file'][multiple]").length
+  end
 end
 

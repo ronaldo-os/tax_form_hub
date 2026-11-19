@@ -795,78 +795,247 @@ function initInvoicePage() {
         }
     });
 
-    // File list handler for dynamic modals
-    $(document).off('change', '.file-upload-input').on('change', '.file-upload-input', function () {
+    // File list handler for dynamic modals and drag-and-drop dropzones
+    $(document).off('change.invoice_tax_dropzone', '.tax-file-dropzone .file-upload-input').on('change.invoice_tax_dropzone', '.tax-file-dropzone .file-upload-input', function () {
         const $input = $(this);
         const targetSelector = $input.data('list-target');
-        const isMultiple = $input.data('multiple');
-        const $list = $(targetSelector).empty();
+        const isMultiple = $input.data('multiple') === true || $input.data('multiple') === 'true';
+        const listEl = targetSelector ? document.querySelector(targetSelector) : null;
+        const $dropzone = $input.closest('.file-dropzone');
 
-        const files = Array.from(this.files);
-        if (!files.length) return;
+        if (listEl) {
+            listEl.replaceChildren();
+            listEl.classList.remove('file-preview-single', 'file-preview-grid');
+        }
+
+        const files = Array.from(this.files || []);
+        if (!files.length) {
+            $dropzone.removeClass('has-files is-dragover');
+            $dropzone.find('.dropzone-status-text').remove();
+            $dropzone.find('.dropzone-default-text').removeClass('d-none');
+            return;
+        }
 
         // Check for HEIC files
         const heicExtensions = ['.heic', '.heif'];
         const heicMimeTypes = ['image/heic', 'image/heif'];
         const invalidFiles = files.filter(file => {
-            const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
-            return heicExtensions.includes(ext) || heicMimeTypes.includes(file.type.toLowerCase());
+            const dotIdx = file.name.lastIndexOf('.');
+            const ext = dotIdx >= 0 ? file.name.toLowerCase().substring(dotIdx) : '';
+            return heicExtensions.includes(ext) || heicMimeTypes.includes((file.type || '').toLowerCase());
         });
 
         if (invalidFiles.length > 0) {
             const fileNames = invalidFiles.map(f => f.name).join(', ');
             if (window.showFlashMessage) {
-                window.showFlashMessage(`HEIC files are not supported: ${fileNames}<br>Please convert to JPG, PNG, or PDF.`, 'danger');
+                window.showFlashMessage(`HEIC files are not supported: ${fileNames}. Please convert to JPG, PNG, or PDF.`, 'danger');
             }
             $input.val('');
+            $dropzone.removeClass('has-files is-dragover');
+            $dropzone.find('.dropzone-status-text').remove();
+            $dropzone.find('.dropzone-default-text').removeClass('d-none');
             return;
         }
 
         const displayFiles = isMultiple ? files : [files[0]];
 
+        // Update dropzone UI state safely without innerHTML
+        $dropzone.addClass('has-files');
+        $dropzone.find('.dropzone-default-text').addClass('d-none');
+        const countText = isMultiple
+            ? `${displayFiles.length} file${displayFiles.length > 1 ? 's' : ''} selected`
+            : `1 file selected (${displayFiles[0].name})`;
+
+        let statusEl = $dropzone.find('.dropzone-status-text')[0];
+        if (!statusEl) {
+            statusEl = document.createElement('div');
+            statusEl.className = 'dropzone-status-text text-success fw-semibold small mt-1';
+            const contentEl = $dropzone.find('.dropzone-content')[0];
+            if (contentEl) contentEl.appendChild(statusEl);
+        }
+        statusEl.replaceChildren();
+        const checkIcon = document.createElement('i');
+        checkIcon.className = 'fa-solid fa-circle-check me-1';
+        statusEl.appendChild(checkIcon);
+        statusEl.appendChild(document.createTextNode(countText));
+
+        const subHint = document.createElement('span');
+        subHint.className = 'text-muted fw-normal d-block small';
+        subHint.textContent = 'Click or drag & drop to replace';
+        statusEl.appendChild(subHint);
+
+        if (!listEl) return;
+
         if (!isMultiple && displayFiles.length === 1) {
-            $list.addClass('file-preview-single');
+            listEl.classList.add('file-preview-single');
         } else {
-            $list.addClass('file-preview-grid');
+            listEl.classList.add('file-preview-grid');
         }
 
-        displayFiles.forEach(file => {
+        const inputId = $input.attr('id') ? `#${$input.attr('id')}` : '';
+
+        displayFiles.forEach((file, index) => {
             const isImage = file.type.startsWith('image/');
             const isPDF = file.type === 'application/pdf';
-            let previewHTML = '';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-remove-preview-file';
+            removeBtn.dataset.fileIndex = String(index);
+            removeBtn.dataset.inputTarget = inputId;
+            removeBtn.title = 'Remove file';
+            removeBtn.setAttribute('aria-label', `Remove ${file.name}`);
+            const xIcon = document.createElement('i');
+            xIcon.className = 'fa-solid fa-xmark';
+            removeBtn.appendChild(xIcon);
 
             if (isImage) {
                 const objectUrl = URL.createObjectURL(file);
-                previewHTML = `
-                    <li class="list-group-item file-preview-item p-0 border-0">
-                        <div class="file-preview-container">
-                            <img src="${objectUrl}" alt="${file.name}" class="file-preview-image" title="${file.name}">
-                            <div class="file-preview-name">${file.name}</div>
-                        </div>
-                    </li>
-                `;
+                const li = document.createElement('li');
+                li.className = 'list-group-item file-preview-item p-0 border-0';
+                li.appendChild(removeBtn);
+
+                const container = document.createElement('div');
+                container.className = 'file-preview-container';
+
+                const img = document.createElement('img');
+                img.src = objectUrl;
+                img.alt = file.name;
+                img.title = file.name;
+                img.className = 'file-preview-image';
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'file-preview-name';
+                nameDiv.textContent = file.name;
+
+                container.appendChild(img);
+                container.appendChild(nameDiv);
+                li.appendChild(container);
+                listEl.appendChild(li);
             } else if (isPDF) {
                 const objectUrl = URL.createObjectURL(file);
-                previewHTML = `
-                    <li class="list-group-item file-preview-item p-0 border-0">
-                        <div class="file-preview-container">
-                            <embed src="${objectUrl}" type="application/pdf" class="w-100 rounded" style="height: 350px; min-height: 40vh;" />
-                            <div class="file-preview-name text-center small p-1 text-truncate" title="${file.name}">${file.name}</div>
-                        </div>
-                    </li>
-                `;
+                const li = document.createElement('li');
+                li.className = 'list-group-item file-preview-item p-0 border-0';
+                li.appendChild(removeBtn);
+
+                const container = document.createElement('div');
+                container.className = 'file-preview-container';
+
+                const embed = document.createElement('embed');
+                embed.src = objectUrl;
+                embed.type = 'application/pdf';
+                embed.className = 'w-100 rounded';
+                embed.style.height = '350px';
+                embed.style.minHeight = '40vh';
+
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'file-preview-name text-center small p-1 text-truncate';
+                nameDiv.title = file.name;
+                nameDiv.textContent = file.name;
+
+                container.appendChild(embed);
+                container.appendChild(nameDiv);
+                li.appendChild(container);
+                listEl.appendChild(li);
             } else {
                 const size = Math.round(file.size / 1024);
-                previewHTML = `
-                    <li class="list-group-item d-flex justify-content-between align-items-center file-list-item">
-                        <span class="file-name-wrapper" title="${file.name}">${file.name}</span>
-                        <span class="badge bg-secondary rounded-pill ms-2 flex-shrink-0">${size} KB</span>
-                    </li>
-                `;
-            }
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center file-list-item file-preview-item';
 
-            $list.append(previewHTML);
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'file-name-wrapper';
+                nameSpan.title = file.name;
+                nameSpan.textContent = file.name;
+
+                const rightWrap = document.createElement('span');
+                rightWrap.className = 'd-inline-flex align-items-center gap-2 ms-2 flex-shrink-0';
+
+                const sizeBadge = document.createElement('span');
+                sizeBadge.className = 'badge bg-secondary rounded-pill';
+                sizeBadge.textContent = `${size} KB`;
+
+                removeBtn.style.position = 'static';
+                rightWrap.appendChild(sizeBadge);
+                rightWrap.appendChild(removeBtn);
+
+                li.appendChild(nameSpan);
+                li.appendChild(rightWrap);
+                listEl.appendChild(li);
+            }
         });
+    });
+
+    // Drag-and-drop & keyboard events for tax document dropzones on Invoices page
+    $(document).off('dragenter.invoice_tax_dropzone dragover.invoice_tax_dropzone', '.tax-file-dropzone')
+               .on('dragenter.invoice_tax_dropzone dragover.invoice_tax_dropzone', '.tax-file-dropzone', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('is-dragover');
+    });
+
+    $(document).off('dragleave.invoice_tax_dropzone dragend.invoice_tax_dropzone', '.tax-file-dropzone')
+               .on('dragleave.invoice_tax_dropzone dragend.invoice_tax_dropzone', '.tax-file-dropzone', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const related = e.originalEvent && e.originalEvent.relatedTarget;
+        if (!related || !this.contains(related)) {
+            $(this).removeClass('is-dragover');
+        }
+    });
+
+    $(document).off('drop.invoice_tax_dropzone', '.tax-file-dropzone')
+               .on('drop.invoice_tax_dropzone', '.tax-file-dropzone', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const $dropzone = $(this);
+        $dropzone.removeClass('is-dragover');
+
+        const droppedFiles = e.originalEvent && e.originalEvent.dataTransfer && e.originalEvent.dataTransfer.files;
+        if (!droppedFiles || !droppedFiles.length) return;
+
+        const targetSelector = $dropzone.data('target-input');
+        const inputEl = targetSelector ? document.querySelector(targetSelector) : $dropzone.find('input[type="file"]')[0];
+        if (!inputEl) return;
+
+        const isMultiple = $(inputEl).data('multiple') === true || $(inputEl).data('multiple') === 'true';
+        const dt = new DataTransfer();
+        if (isMultiple) {
+            Array.from(droppedFiles).forEach(file => dt.items.add(file));
+        } else {
+            dt.items.add(droppedFiles[0]);
+        }
+        inputEl.files = dt.files;
+        $(inputEl).trigger('change');
+    });
+
+    $(document).off('keydown.invoice_tax_dropzone', '.tax-file-dropzone')
+               .on('keydown.invoice_tax_dropzone', '.tax-file-dropzone', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const targetSelector = $(this).data('target-input');
+            const inputEl = targetSelector ? document.querySelector(targetSelector) : $(this).find('input[type="file"]')[0];
+            if (inputEl) inputEl.click();
+        }
+    });
+
+    $(document).off('click.invoice_tax_dropzone', '.btn-remove-preview-file')
+               .on('click.invoice_tax_dropzone', '.btn-remove-preview-file', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const indexToRemove = Number($(this).data('file-index'));
+        const inputSelector = $(this).data('input-target');
+        const inputEl = inputSelector ? document.querySelector(inputSelector) : null;
+        if (!inputEl || !inputEl.files) return;
+
+        const dt = new DataTransfer();
+        Array.from(inputEl.files).forEach((file, idx) => {
+            if (idx !== indexToRemove) {
+                dt.items.add(file);
+            }
+        });
+        inputEl.files = dt.files;
+        $(inputEl).trigger('change');
     });
 }
 
