@@ -74,12 +74,12 @@
               </div>
             </div>
           <% elsif params[:query].present? %>
-            <div class="network-autocomplete-popover position-absolute w-100 bg-body shadow-lg rounded-3 border mt-2 p-4 text-center">
-              <div class="avatar-circle-icon bg-light text-muted mx-auto mb-2">
+            <div class="network-autocomplete-popover network-empty-search-popover position-absolute w-100 shadow-lg rounded-3 border mt-2 p-4 text-center">
+              <div class="avatar-circle-icon mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle">
                 <i class="fa-solid fa-building-circle-xmark fs-4"></i>
               </div>
-              <p class="fw-semibold mb-1 text-body">No matching companies found</p>
-              <p class="text-muted small mb-0">No unconnected companies match "<%= params[:query] %>".</p>
+              <p class="fw-semibold mb-1 network-empty-title">No matching companies found</p>
+              <p class="network-empty-subtitle small mb-0">No unconnected companies match "<%= params[:query] %>".</p>
             </div>
           <% end %>
         </turbo-frame>
@@ -140,6 +140,21 @@
                           <i class="fa-solid fa-eye me-2 text-primary"></i> View Details
                         <% end %>
                       </li>
+                      <li>
+                        <%= link_to new_invoice_path(recipient_company_id: company.id), class: "dropdown-item py-2 px-3 fs-7" do %>
+                          <i class="fa-solid fa-file-invoice-dollar me-2 text-primary"></i> New Invoice
+                        <% end %>
+                      </li>
+                      <li>
+                        <%= link_to new_invoice_path(category: "quote", recipient_company_id: company.id), class: "dropdown-item py-2 px-3 fs-7" do %>
+                          <i class="fa-solid fa-file-lines me-2 text-info"></i> New Quote
+                        <% end %>
+                      </li>
+                      <li>
+                        <%= link_to tax_submissions_home_path(company_id: company.id, open_modal: "true"), class: "dropdown-item py-2 px-3 fs-7" do %>
+                          <i class="fa-solid fa-file-arrow-up me-2 text-success"></i> Submit Tax Docs
+                        <% end %>
+                      </li>
                       <li><hr class="dropdown-divider my-1"></li>
                       <li>
                         <%= button_to network_path(network), method: :delete, class: "dropdown-item text-danger py-2 px-3 fs-7", data: { turbo_confirm: "Are you sure you want to remove #{company.name} from your network?" } do %>
@@ -196,8 +211,35 @@
                 </div>
               </div>
 
+              <!-- Quick Actions Bar -->
+              <div class="network-quick-actions d-flex flex-wrap gap-2 pt-3 border-top mt-2" role="group" aria-label="Quick actions for <%= company.name %>">
+                <%= link_to new_invoice_path(recipient_company_id: company.id),
+                      class: "btn btn-sm btn-network-action btn-network-invoice flex-fill",
+                      title: "Create a new invoice for #{company.name}",
+                      aria: { label: "Create new invoice for #{company.name}" } do %>
+                  <i class="fa-solid fa-file-invoice-dollar"></i>
+                  <span>Invoice</span>
+                <% end %>
+
+                <%= link_to new_invoice_path(category: "quote", recipient_company_id: company.id),
+                      class: "btn btn-sm btn-network-action btn-network-quote flex-fill",
+                      title: "Create a new quote for #{company.name}",
+                      aria: { label: "Create new quote for #{company.name}" } do %>
+                  <i class="fa-solid fa-file-lines"></i>
+                  <span>Quote</span>
+                <% end %>
+
+                <%= link_to tax_submissions_home_path(company_id: company.id, open_modal: "true"),
+                      class: "btn btn-sm btn-network-action btn-network-tax flex-fill",
+                      title: "Submit tax documents for #{company.name}",
+                      aria: { label: "Submit tax documents for #{company.name}" } do %>
+                  <i class="fa-solid fa-file-arrow-up"></i>
+                  <span>Tax Docs</span>
+                <% end %>
+              </div>
+
               <!-- Footer Pills & Action -->
-              <div class="pt-3 border-top d-flex align-items-center justify-content-between gap-2 mt-2">
+              <div class="pt-3 border-top d-flex align-items-center justify-content-between gap-2 mt-3">
                 <span class="badge bg-body-tertiary text-body-secondary rounded-pill px-2.5 py-1.5 fs-8">
                   <%= company.ownership.presence || "Private" %>
                 </span>

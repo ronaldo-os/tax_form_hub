@@ -35,4 +35,34 @@ class NetworksControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to networks_path
   end
+
+  test "connected company cards display quick actions for invoice, quote, and tax docs" do
+    @user.networks.create!(company: @other_company)
+
+    get networks_url
+    assert_response :success
+    assert_select ".network-company-card .network-quick-actions", count: 1
+    assert_select ".network-quick-actions a.btn-network-invoice[href='#{new_invoice_path(recipient_company_id: @other_company.id)}']", count: 1
+    assert_select ".network-quick-actions a.btn-network-quote[href='#{new_invoice_path(category: "quote", recipient_company_id: @other_company.id)}']", count: 1
+    assert_select ".network-quick-actions a.btn-network-tax[href='#{tax_submissions_home_path(company_id: @other_company.id, open_modal: "true")}']", count: 1
+  end
+
+  test "new invoice quick action prefills recipient company" do
+    get new_invoice_url, params: { recipient_company_id: @other_company.id }
+    assert_response :success
+    assert_select "input#recipient_company_id[value='#{@other_company.id}']", count: 1
+  end
+
+  test "new quote quick action prefills recipient company" do
+    get new_invoice_url, params: { category: "quote", recipient_company_id: @other_company.id }
+    assert_response :success
+    assert_select "input#recipient_company_id[value='#{@other_company.id}']", count: 1
+  end
+
+  test "submit tax docs quick action prefills company and opens modal" do
+    get tax_submissions_home_url, params: { company_id: @other_company.id, open_modal: "true" }
+    assert_response :success
+    assert_select "input#prefill_company_id[value='#{@other_company.id}']", count: 1
+    assert_select "input#open_submit_modal[value='true']", count: 1
+  end
 end

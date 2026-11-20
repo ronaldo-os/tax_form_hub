@@ -1525,8 +1525,47 @@
 
 .networks-page .network-autocomplete-popover {
   z-index: 1060;
+  background-color: var(--card-bg, #ffffff);
+  border-color: var(--border-color, #e2e8f0) !important;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+[data-theme="dark"] .networks-page .network-autocomplete-popover {
+  background-color: var(--card-bg, #1e293b) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 16px 32px -6px rgba(0, 0, 0, 0.55) !important;
+}
+
+.networks-page .avatar-circle-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+[data-theme="dark"] .networks-page .avatar-circle-icon {
+  background-color: rgba(148, 163, 184, 0.14);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.networks-page .network-empty-title {
+  color: var(--text-main, #0f172a);
+}
+
+.networks-page .network-empty-subtitle {
+  color: var(--text-muted, #64748b);
+}
+
+[data-theme="dark"] .networks-page .network-empty-title {
+  color: var(--text-main, #f8fafc);
+}
+
+[data-theme="dark"] .networks-page .network-empty-subtitle {
+  color: #94a3b8;
 }
 
 .networks-page .company-title-link {
@@ -1590,6 +1629,101 @@
 [data-theme="dark"] .networks-page .network-search-card {
   box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Connected Company Card Quick Actions */
+.networks-page .network-quick-actions .btn-network-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 0.4rem 0.65rem;
+  white-space: nowrap;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.15s ease;
+}
+
+.networks-page .network-quick-actions .btn-network-action:hover {
+  transform: translateY(-1px);
+}
+
+.networks-page .network-quick-actions .btn-network-action:focus-visible {
+  outline: 2px solid var(--main-color, #00aeff);
+  outline-offset: 2px;
+}
+
+.networks-page .btn-network-invoice {
+  background-color: rgba(13, 110, 253, 0.08);
+  color: #0d6efd;
+  border: 1px solid rgba(13, 110, 253, 0.22);
+}
+
+.networks-page .btn-network-invoice:hover {
+  background-color: rgba(13, 110, 253, 0.15);
+  color: #0a58ca;
+  border-color: rgba(13, 110, 253, 0.38);
+}
+
+.networks-page .btn-network-quote {
+  background-color: rgba(14, 165, 233, 0.08);
+  color: #0284c7;
+  border: 1px solid rgba(14, 165, 233, 0.22);
+}
+
+.networks-page .btn-network-quote:hover {
+  background-color: rgba(14, 165, 233, 0.16);
+  color: #0369a1;
+  border-color: rgba(14, 165, 233, 0.38);
+}
+
+.networks-page .btn-network-tax {
+  background-color: rgba(16, 185, 129, 0.08);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.22);
+}
+
+.networks-page .btn-network-tax:hover {
+  background-color: rgba(16, 185, 129, 0.16);
+  color: #047857;
+  border-color: rgba(16, 185, 129, 0.38);
+}
+
+[data-theme="dark"] .networks-page .btn-network-invoice {
+  background-color: rgba(59, 130, 246, 0.14);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.32);
+}
+
+[data-theme="dark"] .networks-page .btn-network-invoice:hover {
+  background-color: rgba(59, 130, 246, 0.24);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+[data-theme="dark"] .networks-page .btn-network-quote {
+  background-color: rgba(14, 165, 233, 0.14);
+  color: #38bdf8;
+  border-color: rgba(14, 165, 233, 0.32);
+}
+
+[data-theme="dark"] .networks-page .btn-network-quote:hover {
+  background-color: rgba(14, 165, 233, 0.24);
+  color: #7dd3fc;
+  border-color: rgba(14, 165, 233, 0.5);
+}
+
+[data-theme="dark"] .networks-page .btn-network-tax {
+  background-color: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.32);
+}
+
+[data-theme="dark"] .networks-page .btn-network-tax:hover {
+  background-color: rgba(16, 185, 129, 0.24);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.5);
 }
 
 @media (max-width: 575.98px) {

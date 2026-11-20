@@ -13,8 +13,8 @@ class TaxSubmissionsController < ApplicationController
     load_sent_submissions
     @companies = companies_with_approved_invoices
     
-    # For resubmission: pre-fill company and invoice if provided
-    if params[:invoice_id].present? && params[:company_id].present?
+    # Pre-fill company (and optionally invoice for resubmission) if provided
+    if params[:company_id].present?
       @tax_submission = TaxSubmission.new(invoice_id: params[:invoice_id], company_id: params[:company_id])
     else
       @tax_submission = TaxSubmission.new # For the modal form

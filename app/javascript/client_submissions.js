@@ -671,25 +671,27 @@ function initClientSubmissionsPage() {
         }
     }
 
-    // Handle resubmission flow: pre-fill company and invoice, then open modal
+    // Handle pre-fill flow (resubmission or quick action from Networks): pre-select company and open modal
     const prefillCompanyId = $("#prefill_company_id").val();
     const prefillInvoiceId = $("#prefill_invoice_id").val();
 
-    if (prefillCompanyId && prefillInvoiceId) {
-        // Set the company select value
-        $("#company_select").val(prefillCompanyId).trigger("change");
+    if (prefillCompanyId) {
+        const $companySelect = $("#company_select");
+        if ($companySelect.find(`option[value="${CSS.escape(String(prefillCompanyId))}"]`).length > 0) {
+            $companySelect.val(prefillCompanyId).trigger("change");
+        }
 
-        // Wait for invoices to load, then set the invoice value
-        setTimeout(function () {
-            $("#invoice_select").val(prefillInvoiceId);
-
-            // Open the modal
-            const modalEl = document.getElementById("submitDocsModal");
-            if (modalEl) {
-                const submitModal = new bootstrap.Modal(modalEl);
-                submitModal.show();
-            }
-        }, 500);
+        if (prefillInvoiceId) {
+            setTimeout(function () {
+                const modalEl = document.getElementById("submitDocsModal");
+                if (modalEl) {
+                    const submitModal = (typeof bootstrap !== 'undefined' && bootstrap.Modal)
+                        ? bootstrap.Modal.getOrCreateInstance(modalEl)
+                        : new bootstrap.Modal(modalEl);
+                    submitModal.show();
+                }
+            }, 250);
+        }
     }
 
     // Keep redirect_url in sync with current table page, tab, and filters

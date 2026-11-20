@@ -257,6 +257,10 @@ class InvoicesController < ApplicationController
         invoice_category: params[:category] || 'standard',
         currency: current_user.currency.presence || "PHP"
       )
+      if params[:recipient_company_id].present?
+        prefill_company = Company.where.not(id: current_user.company_ids).find_by(id: params[:recipient_company_id])
+        @invoice.recipient_company_id = prefill_company.id if prefill_company
+      end
       last_invoice = current_user.invoices.where(invoice_type: @invoice.invoice_type, invoice_category: @invoice.invoice_category).order(created_at: :desc).first
       @suggested_invoice_number = Invoice.next_invoice_number_for_user(current_user, @invoice.invoice_type, @invoice.invoice_category)
       if last_invoice
