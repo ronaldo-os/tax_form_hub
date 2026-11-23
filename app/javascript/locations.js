@@ -1,4 +1,5 @@
 import { getInitialTableState, updateUrlParams, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { initDataTableColumnVisibility } from './datatable_column_visibility';
 import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 function fixEmptyRowColspan(api) {
@@ -339,6 +340,7 @@ function initLocationsPage(eventOrForce = false) {
             bindSearchInputSync($searchInput);
             bindPaginationSync(api);
             bindOrderSync(api, { defaultOrder: defaultOrder });
+            initDataTableColumnVisibility(api);
 
             if (needsFilterRedraw) {
                 api.draw(false);

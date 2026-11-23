@@ -1,4 +1,5 @@
 import { getInitialTableState, updateUrlParams, getUrlParam, activateTabElement, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { initDataTableColumnVisibility } from './datatable_column_visibility';
 import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 const VALID_TOP_TABS = ['sales', 'purchases'];
@@ -580,6 +581,7 @@ function initSubscriptionsPage(eventOrForce = false) {
                 bindSearchInputSync($searchInput);
                 bindPaginationSync(api);
                 bindOrderSync(api, { defaultOrder: defaultOrder });
+                initDataTableColumnVisibility(api);
 
                 if (hasCheckboxCol && tableId) {
                     setupSubscriptionsBulkActions(api, tableId);
@@ -644,6 +646,7 @@ function initSubscriptionsPage(eventOrForce = false) {
 
                     $container.find('div.dataTables_length select').addClass('form-select form-select-sm');
                     $container.find('div.dataTables_filter input').addClass('form-control form-control-sm');
+                    initDataTableColumnVisibility(api, { storageKey: 'subscriptions:generated_invoices' });
                 }
             });
         }

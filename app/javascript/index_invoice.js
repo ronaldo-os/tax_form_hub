@@ -1,6 +1,7 @@
 import { updatePdfPreviewScale } from './invoice_preview';
 import { initInvoiceExport, showInvoiceToast } from './invoices_export';
 import { setupInvoiceBulkActions } from './invoice_bulk';
+import { initDataTableColumnVisibility } from './datatable_column_visibility';
 import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 import { 
     getInitialTableState, 
@@ -280,6 +281,7 @@ function initInvoicePage() {
                 bindSearchInputSync($searchInput);
                 bindPaginationSync(api);
                 bindOrderSync(api, { defaultOrder: defaultOrder });
+                initDataTableColumnVisibility(api);
                 hideSkeleton('invoices_skeleton', 'invoices_content');
             }
         };

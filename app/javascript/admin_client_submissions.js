@@ -1,6 +1,7 @@
 import { exportSubmissionsToCsv } from './tax_submissions_export';
 import { setupTaxSubmissionsBulkActions } from './tax_submissions_bulk';
 import { getInitialTableState, updateUrlParams, activateTabElement, bindSearchInputSync, bindPaginationSync, resolveSortOrder, bindOrderSync } from './table_url_sync';
+import { initDataTableColumnVisibility } from './datatable_column_visibility';
 import { hideSkeleton, setupSkeletonSafetyFallback } from './skeleton_loader';
 
 function fixEmptyRowColspan(tableApi) {
@@ -178,6 +179,9 @@ function initSubmissionTables() {
                             }
                         }
                     }
+
+                    // Column visibility toggle & localStorage preference persistence
+                    initDataTableColumnVisibility(api);
 
                     // Append Export CSV button to custom filter bar
                     if (!$container.find('.custom-export-csv-btn').length) {
