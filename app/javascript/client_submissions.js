@@ -35,53 +35,86 @@ export function syncTaxSubmissionRedirectUrl() {
 function initClientSubmissionsPage() {
     setupSkeletonSafetyFallback([['tax_submissions_skeleton', 'tax_submissions_content']]);
 
-    // This script targets the home page where the user can submit documents
-    if ($('.submissionsTable').length === 0 && $('#submitDocsModal').length === 0) {
+    const SUBMISSION_TABLES_SELECTOR = '.submissionsTable, #taxSubmissionsTableActive, #taxSubmissionsTableArchived';
+
+    // This script targets the unified Tax Submissions home page
+    if ($(SUBMISSION_TABLES_SELECTOR).length === 0 && $('#submitDocsModal').length === 0) {
         hideSkeleton('tax_submissions_skeleton', 'tax_submissions_content');
         return;
     }
 
     const initial = getInitialTableState();
 
-    // Tab restoration based on URL parameter or sessionStorage fallback
-    if (initial.tab === 'archived') {
-        const archivedTab = document.getElementById('archived-tab');
-        if (archivedTab) {
-            activateTabElement(archivedTab);
-            sessionStorage.setItem('activeClientSubmissionsTabId', 'archived-tab');
-        }
+    // Restore top-level section (outgoing vs incoming) and nested subtab (active vs archived)
+    const outgoingSectionTab = document.getElementById('outgoing-submissions-tab');
+    const incomingSectionTab = document.getElementById('incoming-submissions-tab');
+
+    let targetSection = null;
+    let targetSubtab = initial.subtab === 'archived' ? 'archived' : (initial.subtab === 'active' ? 'active' : null);
+
+    if (initial.tab === 'incoming' && incomingSectionTab) {
+        targetSection = 'incoming';
+    } else if (initial.tab === 'outgoing') {
+        targetSection = 'outgoing';
+    } else if (initial.tab === 'archived') {
+        targetSection = 'outgoing';
+        targetSubtab = 'archived';
     } else if (initial.tab === 'active' || initial.tab === 'unarchived') {
-        const activeTab = document.getElementById('unarchived-tab') || document.getElementById('active-tab');
-        if (activeTab) {
-            activateTabElement(activeTab);
-            sessionStorage.setItem('activeClientSubmissionsTabId', activeTab.id);
-        }
+        targetSection = 'outgoing';
+        targetSubtab = 'active';
     } else {
-        const savedTabId = sessionStorage.getItem('activeClientSubmissionsTabId');
-        if (savedTabId && document.getElementById(savedTabId)) {
-            const tabEl = document.getElementById(savedTabId);
-            if (tabEl) {
-                activateTabElement(tabEl);
-                const isArchived = savedTabId === 'archived-tab';
-                updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
+        const savedSection = sessionStorage.getItem('activeTaxSubmissionsSection');
+        if (savedSection === 'incoming' && incomingSectionTab) {
+            targetSection = 'incoming';
+        } else if (savedSection === 'outgoing') {
+            targetSection = 'outgoing';
+        }
+        if (!targetSubtab) {
+            const effectiveSection = targetSection || 'outgoing';
+            const savedSubtab = sessionStorage.getItem(`activeTaxSubmissionsSubtab_${effectiveSection}`);
+            if (savedSubtab === 'archived' || savedSubtab === 'active') {
+                targetSubtab = savedSubtab;
             }
         }
     }
 
+    if (targetSection === 'incoming' && incomingSectionTab) {
+        activateTabElement(incomingSectionTab);
+        sessionStorage.setItem('activeTaxSubmissionsSection', 'incoming');
+        const incomingSubtabEl = document.getElementById(targetSubtab === 'archived' ? 'incoming-archived-tab' : 'incoming-active-tab');
+        if (incomingSubtabEl) {
+            activateTabElement(incomingSubtabEl);
+        }
+    } else if (targetSection === 'outgoing' && outgoingSectionTab) {
+        activateTabElement(outgoingSectionTab);
+        sessionStorage.setItem('activeTaxSubmissionsSection', 'outgoing');
+        const outgoingSubtabEl = document.getElementById(targetSubtab === 'archived' ? 'archived-tab' : 'unarchived-tab');
+        if (outgoingSubtabEl) {
+            activateTabElement(outgoingSubtabEl);
+        }
+    } else if (targetSubtab === 'archived') {
+        const archivedTab = document.getElementById('archived-tab');
+        if (archivedTab) activateTabElement(archivedTab);
+    }
+
     const tables = [];
 
-    $('.submissionsTable').each(function () {
+    $(SUBMISSION_TABLES_SELECTOR).each(function () {
+        const $tableEl = $(this);
+        const tableId = $tableEl.attr('id') || '';
+        const isIncomingTable = $tableEl.is('#taxSubmissionsTableActive, #taxSubmissionsTableArchived');
+
         if ($.fn.DataTable.isDataTable(this)) {
-            const table = $(this).DataTable();
+            const table = $tableEl.DataTable();
             tables.push(table);
-            setupTaxSubmissionsBulkActions(table, $(this).attr('id'));
+            setupTaxSubmissionsBulkActions(table, tableId);
             return;
         }
 
-        const defaultOrder = [[8, 'desc']];
-        const resolvedOrder = resolveSortOrder($(this), initial.sort, initial.dir, defaultOrder);
+        const defaultOrder = isIncomingTable ? [[9, 'desc']] : [[8, 'desc']];
+        const resolvedOrder = resolveSortOrder($tableEl, initial.sort, initial.dir, defaultOrder);
 
-        const table = $(this).DataTable({
+        const table = $tableEl.DataTable({
             responsive: true,
             paging: true,
             searching: true,
@@ -215,8 +248,12 @@ function initClientSubmissionsPage() {
                     $exportBtn.on('click', function (e) {
                         e.preventDefault();
                         const tabPane = $(api.table().node()).closest('.tab-pane');
-                        const isArchived = tabPane.attr('id') === 'archived';
-                        exportSubmissionsToCsv(api, isArchived ? 'tax_submissions_archived' : 'tax_submissions_active', false);
+                        const paneId = tabPane.attr('id') || '';
+                        const isArchived = paneId === 'archived' || paneId === 'incoming-archived';
+                        const prefix = isIncomingTable
+                            ? (isArchived ? 'tax_submissions_incoming_archived' : 'tax_submissions_incoming_active')
+                            : (isArchived ? 'tax_submissions_archived' : 'tax_submissions_active');
+                        exportSubmissionsToCsv(api, prefix, isIncomingTable);
                     });
 
                     $lengthDiv.append($exportBtn);
@@ -256,25 +293,66 @@ function initClientSubmissionsPage() {
 
     hideSkeleton('tax_submissions_skeleton', 'tax_submissions_content');
 
-    // Tab persistence and table adjustment
+    function recalcAllSubmissionTables() {
+        tables.forEach(function (table) {
+            table.columns.adjust().responsive.recalc();
+            fixEmptyRowColspan(table);
+            setTimeout(function () {
+                fixEmptyRowColspan(table);
+            }, 50);
+        });
+    }
+
+    // Top-level tab persistence (Outgoing vs Incoming Submissions)
     $('#submissionTabs button[data-bs-toggle="tab"]')
         .off('click.client shown.bs.tab.client')
         .on('click.client shown.bs.tab.client', function (e) {
             const targetId = $(e.currentTarget).attr('id') || '';
-            const isArchived = targetId === 'archived-tab' || (targetId.includes('archived') && !targetId.includes('unarchived'));
-            sessionStorage.setItem('activeClientSubmissionsTabId', targetId);
-            updateUrlParams({ tab: isArchived ? 'archived' : 'active' });
+            const section = targetId === 'incoming-submissions-tab' ? 'incoming' : 'outgoing';
+            sessionStorage.setItem('activeTaxSubmissionsSection', section);
+
+            const subtabNavSelector = section === 'incoming' ? '#incomingSubTabs' : '#outgoingSubTabs';
+            const activeSubBtn = document.querySelector(`${subtabNavSelector} .nav-link.active`);
+            const activeSubId = activeSubBtn ? activeSubBtn.id : '';
+            const isArchivedSub = activeSubId.includes('archived') && !activeSubId.includes('unarchived');
+
+            updateUrlParams({
+                tab: section,
+                subtab: isArchivedSub ? 'archived' : null
+            }, { clearPage: true });
             syncTaxSubmissionRedirectUrl();
+
             if (e.type === 'shown') {
-                tables.forEach(function (table) {
-                    table.columns.adjust().responsive.recalc();
-                    fixEmptyRowColspan(table);
-                    setTimeout(function() {
-                        fixEmptyRowColspan(table);
-                    }, 50);
-                });
+                recalcAllSubmissionTables();
             }
         });
+
+    // Nested sub-tab persistence (Active vs Archived within Outgoing or Incoming)
+    $('#outgoingSubTabs button[data-bs-toggle="pill"], #incomingSubTabs button[data-bs-toggle="pill"]')
+        .off('click.client_sub shown.bs.tab.client_sub')
+        .on('click.client_sub shown.bs.tab.client_sub', function (e) {
+            const targetId = $(e.currentTarget).attr('id') || '';
+            const isIncomingSub = targetId.startsWith('incoming-');
+            const section = isIncomingSub ? 'incoming' : 'outgoing';
+            const isArchivedSub = targetId.includes('archived') && !targetId.includes('unarchived');
+
+            sessionStorage.setItem('activeTaxSubmissionsSection', section);
+            sessionStorage.setItem(`activeTaxSubmissionsSubtab_${section}`, isArchivedSub ? 'archived' : 'active');
+            updateUrlParams({
+                tab: section,
+                subtab: isArchivedSub ? 'archived' : null
+            }, { clearPage: true });
+            syncTaxSubmissionRedirectUrl();
+
+            if (e.type === 'shown') {
+                recalcAllSubmissionTables();
+            }
+        });
+
+    // Auto-submit handler for any inline status form controls
+    $(document).off('change.auto-submit', '.auto-submit').on('change.auto-submit', '.auto-submit', function () {
+        $(this).closest('form').submit();
+    });
 
     // Show file previews (thumbnails for images, embeds for PDFs) and sync dropzone state
     function updateFileList(inputSelector, listSelector, multiple = true) {
@@ -726,15 +804,23 @@ function initClientSubmissionsPage() {
         return true;
     });
 
-    // Global Header Export CSV Button Handler
+    // Global Header Export CSV Button Handler (exports active section & subtab table)
     $(document).off('click', '#exportTaxSubmissionsBtn').on('click', '#exportTaxSubmissionsBtn', function (e) {
         e.preventDefault();
-        const $activePane = $('.tab-content > .tab-pane.active, .tab-content > .tab-pane.show.active, .tab-content .tab-pane.active').first();
-        const $activeTable = $activePane.find('.submissionsTable:visible, .submissionsTable').first();
+        const $mainPane = $('#taxSubmissionsMainTabsContent > .tab-pane.active, #taxSubmissionsMainTabsContent > .tab-pane.show.active').first();
+        const isIncomingSection = $mainPane.attr('id') === 'incoming-submissions';
+        const $activeSubPane = $mainPane.find('.tab-content > .tab-pane.active, .tab-content > .tab-pane.show.active').first();
+        const $searchScope = $activeSubPane.length ? $activeSubPane : $mainPane;
+        const $activeTable = $searchScope.find('table.dataTable:visible, .submissionsTable:visible, #taxSubmissionsTableActive:visible, #taxSubmissionsTableArchived:visible, table').first();
+
         if ($activeTable.length && $.fn.DataTable.isDataTable($activeTable[0])) {
             const api = $activeTable.DataTable();
-            const isArchived = $activePane.attr('id') === 'archived';
-            exportSubmissionsToCsv(api, isArchived ? 'tax_submissions_archived' : 'tax_submissions_active', false);
+            const subPaneId = $activeSubPane.attr('id') || '';
+            const isArchived = subPaneId === 'archived' || subPaneId === 'incoming-archived';
+            const prefix = isIncomingSection
+                ? (isArchived ? 'tax_submissions_incoming_archived' : 'tax_submissions_incoming_active')
+                : (isArchived ? 'tax_submissions_archived' : 'tax_submissions_active');
+            exportSubmissionsToCsv(api, prefix, isIncomingSection);
         }
     });
 }
@@ -757,7 +843,7 @@ document.addEventListener('theme:changed', function (e) {
 });
 
 document.addEventListener("turbo:before-cache", function () {
-    $('.submissionsTable').each(function () {
+    $('.submissionsTable, #taxSubmissionsTableActive, #taxSubmissionsTableArchived').each(function () {
         if ($.fn.DataTable.isDataTable(this)) {
             $(this).DataTable().destroy();
         }
@@ -767,7 +853,7 @@ document.addEventListener("turbo:before-cache", function () {
 document.addEventListener("turbo:load", initClientSubmissionsPage);
 document.addEventListener("DOMContentLoaded", initClientSubmissionsPage);
 window.addEventListener("popstate", function () {
-    if (window.location.pathname.includes("/tax_submissions") && $('.submissionsTable').length > 0) {
+    if (window.location.pathname.includes("/tax_submissions") && $('.submissionsTable, #taxSubmissionsTableActive, #taxSubmissionsTableArchived').length > 0) {
         initClientSubmissionsPage();
     }
 });

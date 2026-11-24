@@ -16,51 +16,106 @@
   </div>
 
   <div id="tax_submissions_content" class="tax-submissions-content-wrapper" style="display: none;">
+    <%
+      active_section = @active_section.presence || "outgoing"
+      active_subtab = @active_subtab.presence || ((@active_tab || params[:tab].to_s.downcase) == "archived" ? "archived" : "active")
+      is_incoming_section = (active_section == "incoming" && @has_incoming_submissions_access)
+      is_outgoing_archived = (!is_incoming_section && active_subtab == "archived")
+      is_incoming_archived = (is_incoming_section && active_subtab == "archived")
+      incoming_active_count = @incoming_unarchived_submissions&.size.to_i
+    %>
     <div class="d-flex flex-column flex-lg-row align-items-stretch align-items-lg-center justify-content-between gap-2 mb-3">
-    <% is_archived_tab = (@active_tab || params[:tab].to_s.downcase) == "archived" %>
-    <!-- Tab Navigation Container -->
-    <div class="tabs-scroll-container">
-      <ul class="custom_nav_tabs nav nav-tabs mb-0 border-0" id="submissionTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-          <button class="nav-link <%= 'active' unless is_archived_tab %>" id="unarchived-tab" data-bs-toggle="tab" data-bs-target="#unarchived" type="button" role="tab" aria-controls="unarchived" aria-selected="<%= !is_archived_tab %>">
-            Active Submissions
-          </button>
-        </li>
-        <li class="nav-item" role="presentation">
-          <button class="nav-link <%= 'active' if is_archived_tab %>" id="archived-tab" data-bs-toggle="tab" data-bs-target="#archived" type="button" role="tab" aria-controls="archived" aria-selected="<%= is_archived_tab %>">
-            Archived Submissions
-          </button>
-        </li>
-      </ul>
+      <!-- Top-Level Tab Navigation: Outgoing & Incoming Submissions -->
+      <div class="tabs-scroll-container">
+        <ul class="custom_nav_tabs nav nav-tabs mb-0 border-0" id="submissionTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link <%= 'active' unless is_incoming_section %>" id="outgoing-submissions-tab" data-bs-toggle="tab" data-bs-target="#outgoing-submissions" type="button" role="tab" aria-controls="outgoing-submissions" aria-selected="<%= !is_incoming_section %>">
+              <i class="fa-solid fa-paper-plane me-1.5"></i>Outgoing Submissions
+            </button>
+          </li>
+          <% if @has_incoming_submissions_access %>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link <%= 'active' if is_incoming_section %>" id="incoming-submissions-tab" data-bs-toggle="tab" data-bs-target="#incoming-submissions" type="button" role="tab" aria-controls="incoming-submissions" aria-selected="<%= is_incoming_section %>">
+                <i class="fa-solid fa-inbox me-1.5"></i>Incoming Submissions
+                <% if incoming_active_count > 0 %>
+                  <span class="badge rounded-pill bg-primary-subtle text-primary ms-1.5 fs-8"><%= incoming_active_count %></span>
+                <% end %>
+              </button>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+
+      <!-- Action buttons aligned right / stacked/full-width on mobile -->
+      <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
+        <button type="button" class="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center" id="exportTaxSubmissionsBtn" title="Export currently filtered records to CSV">
+          <i class="fa-solid fa-file-csv text-success fs-8"></i>
+          <span>Export CSV</span>
+        </button>
+        <button class="btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
+          <i class="fa-solid fa-plus"></i>
+          <span>Submit Documents</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Action buttons aligned right / stacked/full-width on mobile -->
-    <div class="d-flex gap-2 flex-wrap flex-sm-nowrap justify-content-end">
-      <% if current_user.company_id.present? %>
-        <%= link_to tax_submissions_path, class: "btn btn-outline-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center gap-2" do %>
-          <i class="fa-solid fa-inbox me-1.5"></i>
-          <span>Incoming Submissions</span>
-        <% end %>
+    <div class="tab-content" id="taxSubmissionsMainTabsContent">
+      <!-- Outgoing Submissions Pane -->
+      <div class="tab-pane fade <%= 'show active' unless is_incoming_section %>" id="outgoing-submissions" role="tabpanel" aria-labelledby="outgoing-submissions-tab">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+          <ul class="nav nav-pills invoice-sub-tabs gap-1" id="outgoingSubTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link <%= 'active' unless is_outgoing_archived %>" id="unarchived-tab" data-bs-toggle="pill" data-bs-target="#unarchived" type="button" role="tab" aria-controls="unarchived" aria-selected="<%= !is_outgoing_archived %>">
+                <i class="fa-solid fa-file-lines me-1.5"></i>Active Submissions
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link <%= 'active' if is_outgoing_archived %>" id="archived-tab" data-bs-toggle="pill" data-bs-target="#archived" type="button" role="tab" aria-controls="archived" aria-selected="<%= is_outgoing_archived %>">
+                <i class="fa-solid fa-box-archive me-1.5"></i>Archived Submissions
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="tab-content" id="outgoingSubTabsContent">
+          <div class="tab-pane fade <%= 'show active' unless is_outgoing_archived %>" id="unarchived" role="tabpanel" aria-labelledby="unarchived-tab">
+            <%= render partial: 'submission_table', locals: { submissions: @unarchived_submissions, archived_table: false } %>
+          </div>
+          <div class="tab-pane fade <%= 'show active' if is_outgoing_archived %>" id="archived" role="tabpanel" aria-labelledby="archived-tab">
+            <%= render partial: 'submission_table', locals: { submissions: @archived_submissions, archived_table: true } %>
+          </div>
+        </div>
+      </div>
+
+      <% if @has_incoming_submissions_access %>
+        <!-- Incoming Submissions Pane -->
+        <div class="tab-pane fade <%= 'show active' if is_incoming_section %>" id="incoming-submissions" role="tabpanel" aria-labelledby="incoming-submissions-tab">
+          <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <ul class="nav nav-pills invoice-sub-tabs gap-1" id="incomingSubTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link <%= 'active' unless is_incoming_archived %>" id="incoming-active-tab" data-bs-toggle="pill" data-bs-target="#incoming-active" type="button" role="tab" aria-controls="incoming-active" aria-selected="<%= !is_incoming_archived %>">
+                  <i class="fa-solid fa-inbox me-1.5"></i>Active Submissions
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link <%= 'active' if is_incoming_archived %>" id="incoming-archived-tab" data-bs-toggle="pill" data-bs-target="#incoming-archived" type="button" role="tab" aria-controls="incoming-archived" aria-selected="<%= is_incoming_archived %>">
+                  <i class="fa-solid fa-box-archive me-1.5"></i>Archived Submissions
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          <div class="tab-content" id="incomingSubTabsContent">
+            <div class="tab-pane fade <%= 'show active' unless is_incoming_archived %>" id="incoming-active" role="tabpanel" aria-labelledby="incoming-active-tab">
+              <%= render partial: 'submission_table_incoming', locals: { submissions: @incoming_unarchived_submissions, table_id: 'taxSubmissionsTableActive', archived_table: false } %>
+            </div>
+            <div class="tab-pane fade <%= 'show active' if is_incoming_archived %>" id="incoming-archived" role="tabpanel" aria-labelledby="incoming-archived-tab">
+              <%= render partial: 'submission_table_incoming', locals: { submissions: @incoming_archived_submissions, table_id: 'taxSubmissionsTableArchived', archived_table: true } %>
+            </div>
+          </div>
+        </div>
       <% end %>
-      <button type="button" class="btn btn-outline-secondary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center" id="exportTaxSubmissionsBtn" title="Export currently filtered records to CSV">
-        <i class="fa-solid fa-file-csv text-success fs-8"></i>
-        <span>Export CSV</span>
-      </button>
-      <button class="btn btn-primary btn-sm flex-fill flex-sm-grow-0 text-nowrap d-inline-flex align-items-center justify-content-center" data-bs-toggle="modal" data-bs-target="#submitDocsModal">
-        <i class="fa-solid fa-plus"></i>
-        <span>Submit Documents</span>
-      </button>
     </div>
-  </div>
-
-  <div class="tab-content">
-    <div class="tab-pane fade <%= 'show active' unless is_archived_tab %>" id="unarchived">
-      <%= render partial: 'submission_table', locals: { submissions: @unarchived_submissions, archived_table: false } %>
-    </div>
-    <div class="tab-pane fade <%= 'show active' if is_archived_tab %>" id="archived">
-      <%= render partial: 'submission_table', locals: { submissions: @archived_submissions, archived_table: true } %>
-    </div>
-  </div>
   </div> <!-- /#tax_submissions_content -->
 
   <noscript>

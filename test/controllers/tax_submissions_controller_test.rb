@@ -638,4 +638,32 @@ class TaxSubmissionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal newest_invoice.id, returned_ids.first, "Most recent invoice should be first for auto-selection"
     assert_includes returned_ids, older_invoice.id
   end
+
+  test "home page displays both outgoing and incoming submissions in tabs on one page without incoming link button" do
+    get tax_submissions_home_url
+    assert_response :success
+
+    # Outgoing and Incoming top-level tabs present on the same page
+    assert_select "#submissionTabs #outgoing-submissions-tab.active", count: 1
+    assert_select "#submissionTabs #incoming-submissions-tab", count: 1
+    assert_select "#outgoing-submissions.show.active", count: 1
+    assert_select "#incoming-submissions", count: 1
+
+    # Both Outgoing and Incoming active/archived tables rendered on one page
+    assert_select "#taxSubmissionsSentActive", count: 1
+    assert_select "#taxSubmissionsSentArchived", count: 1
+    assert_select "#taxSubmissionsTableActive", count: 1
+    assert_select "#taxSubmissionsTableArchived", count: 1
+
+    # No separate "Incoming Submissions" navigation link button
+    assert_select "a[href='#{tax_submissions_path}']", count: 0
+
+    # Deep-linking directly to incoming tab & archived subtab
+    get tax_submissions_home_url(tab: "incoming", subtab: "archived")
+    assert_response :success
+    assert_select "#submissionTabs #incoming-submissions-tab.active", count: 1
+    assert_select "#incoming-submissions.show.active", count: 1
+    assert_select "#incoming-archived-tab.active", count: 1
+    assert_select "#incoming-archived.show.active", count: 1
+  end
 end

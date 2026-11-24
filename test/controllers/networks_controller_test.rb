@@ -65,4 +65,39 @@ class NetworksControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#prefill_company_id[value='#{@other_company.id}']", count: 1
     assert_select "input#open_submit_modal[value='true']", count: 1
   end
+
+  test "renders quick filters bar and card filter metadata for connected companies" do
+    @other_company.update!(industry: "Technology", ownership: "Private Limited Company", phone: "+63 917 123 4567", website: "https://acme.com")
+    @user.networks.create!(company: @other_company)
+
+    # Create an invoice so @other_company matches "With Invoices"
+    Invoice.create!(
+      user: @user,
+      recipient_company: @other_company,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-NET-CUST-1",
+      status: "sent"
+    )
+
+    get networks_url
+    assert_response :success
+
+    # General quick filter pills
+    assert_select "#network_quick_filters_bar .network-filter-pill[data-filter='all']", count: 1
+    assert_select "#network_quick_filters_bar .network-filter-pill[data-filter='recent']", count: 1
+    assert_select "#network_quick_filters_bar .network-filter-pill[data-filter='with_invoices']", count: 1
+    assert_select "#network_quick_filters_bar .network-filter-pill[data-filter='has_contact']", count: 1
+    assert_select "#network_quick_filters_bar .network-filter-pill[data-filter='has_website']", count: 1
+
+    # Search, industry, ownership, and sort controls
+    assert_select "#network_connected_search", count: 1
+    assert_select "#network_industry_filter option[value='technology']", count: 1
+    assert_select "#network_ownership_filter option[value='private limited company']", count: 1
+    assert_select "#network_sort_filter", count: 1
+
+    # Card metadata attributes
+    assert_select ".network-card-col[data-has-invoices='true'][data-has-contact='true'][data-has-website='true'][data-industry='technology'][data-ownership='private limited company']", count: 1
+    assert_select "#network_no_filter_matches", count: 1
+  end
 end

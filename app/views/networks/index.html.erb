@@ -88,21 +88,110 @@
   </div>
 
   <!-- Connected Companies Section Header -->
-  <div class="d-flex align-items-center justify-content-between mb-3">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
     <h5 class="fw-bold mb-0 text-body">
       Connected Companies
     </h5>
-    <span class="badge rounded-pill bg-primary-subtle text-primary px-2.5 py-1.5 fs-7 fw-semibold">
-      <i class="fa-solid fa-building me-1"></i><%= @networks.count %> Connected
+    <span id="network_connected_count_badge" class="badge rounded-pill bg-primary-subtle text-primary px-2.5 py-1.5 fs-7 fw-semibold" data-total-count="<%= @networks.size %>">
+      <i class="fa-solid fa-building me-1"></i><span id="network_connected_count_text"><%= @networks.size %> Connected</span>
     </span>
   </div>
 
   <!-- Network List Section -->
   <% if @networks.any? %>
-    <div class="row g-3 network-cards-grid">
+    <!-- Quick Filters Bar for Connected Companies -->
+    <div class="card border-0 shadow-sm rounded-4 mb-3 network-quick-filters-bar" id="network_quick_filters_bar">
+      <div class="card-body p-3">
+        <div class="d-flex flex-column gap-3">
+          <!-- Row 1: Quick Filter Pills -->
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="d-flex flex-wrap align-items-center gap-2 network-filter-pills" role="group" aria-label="Quick company filters">
+              <button type="button" class="btn btn-sm network-filter-pill active" data-filter="all" aria-pressed="true">
+                <span>All</span>
+                <span class="network-pill-count"><%= @networks.size %></span>
+              </button>
+              <button type="button" class="btn btn-sm network-filter-pill" data-filter="recent" aria-pressed="false">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <span>Recently Added</span>
+                <span class="network-pill-count"><%= @recent_network_count %></span>
+              </button>
+              <button type="button" class="btn btn-sm network-filter-pill" data-filter="with_invoices" aria-pressed="false">
+                <i class="fa-solid fa-file-invoice"></i>
+                <span>With Invoices</span>
+                <span class="network-pill-count"><%= @with_invoices_company_ids.size %></span>
+              </button>
+              <button type="button" class="btn btn-sm network-filter-pill" data-filter="has_contact" aria-pressed="false">
+                <i class="fa-solid fa-address-book"></i>
+                <span>Has Contact Info</span>
+                <span class="network-pill-count"><%= @has_contact_count %></span>
+              </button>
+              <button type="button" class="btn btn-sm network-filter-pill" data-filter="has_website" aria-pressed="false">
+                <i class="fa-solid fa-globe"></i>
+                <span>Has Website</span>
+                <span class="network-pill-count"><%= @has_website_count %></span>
+              </button>
+            </div>
+
+            <button type="button" id="network_clear_filters_btn" class="btn btn-sm btn-link text-decoration-none network-clear-filters-btn d-none p-0">
+              <i class="fa-solid fa-rotate-left me-1"></i>Clear Filters
+            </button>
+          </div>
+
+          <!-- Row 2: Search, Industry, Ownership, and Sort Controls -->
+          <div class="network-filter-controls d-flex flex-wrap align-items-center gap-2">
+            <div class="network-filter-search-wrap flex-grow-1">
+              <i class="fa-solid fa-magnifying-glass network-filter-search-icon" aria-hidden="true"></i>
+              <input type="search"
+                     id="network_connected_search"
+                     class="form-control form-control-sm network-filter-search-input"
+                     placeholder="Filter connected companies by name, industry, address..."
+                     aria-label="Filter connected companies"
+                     autocomplete="off">
+            </div>
+
+            <% if @connected_industries.any? %>
+              <select id="network_industry_filter" class="form-select form-select-sm network-filter-select" aria-label="Filter by industry">
+                <option value="">All Industries</option>
+                <% @connected_industries.each do |ind| %>
+                  <option value="<%= ind.downcase %>"><%= ind %></option>
+                <% end %>
+              </select>
+            <% end %>
+
+            <% if @connected_ownerships.any? %>
+              <select id="network_ownership_filter" class="form-select form-select-sm network-filter-select" aria-label="Filter by ownership">
+                <option value="">All Ownerships</option>
+                <% @connected_ownerships.each do |own| %>
+                  <option value="<%= own.downcase %>"><%= own %></option>
+                <% end %>
+              </select>
+            <% end %>
+
+            <select id="network_sort_filter" class="form-select form-select-sm network-filter-select network-sort-select" aria-label="Sort connected companies">
+              <option value="name_asc">Sort: Name (A–Z)</option>
+              <option value="name_desc">Sort: Name (Z–A)</option>
+              <option value="newest">Sort: Newest Added</option>
+              <option value="oldest">Sort: Oldest Added</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 network-cards-grid" id="network_cards_grid">
       <% @networks.each do |network| %>
         <% company = network.company %>
-        <div class="col-12 col-sm-6 col-md-6 col-xl-4">
+        <% search_blob = [company.name, company.industry, company.ownership, company.address, company.phone, company.website].compact.join(" ").downcase %>
+        <div class="col-12 col-sm-6 col-md-6 col-xl-4 network-card-col"
+             data-company-name="<%= company.name.to_s.downcase %>"
+             data-industry="<%= company.industry.to_s.downcase %>"
+             data-ownership="<%= company.ownership.to_s.downcase %>"
+             data-search-text="<%= search_blob %>"
+             data-has-invoices="<%= @with_invoices_company_ids.include?(company.id) %>"
+             data-has-contact="<%= company.phone.present? || company.email_address.present? %>"
+             data-has-website="<%= company.website.present? %>"
+             data-is-recent="<%= network.created_at.present? && network.created_at >= 30.days.ago %>"
+             data-created-at="<%= network.created_at.to_i %>">
           <div class="card shadow-sm border-0 h-100 network-company-card rounded-4">
             <div class="card-body p-3 p-md-4 d-flex flex-column justify-content-between">
               <div>
@@ -252,6 +341,22 @@
           </div>
         </div>
       <% end %>
+    </div>
+
+    <!-- Empty State when Quick Filters Match No Connected Companies -->
+    <div id="network_no_filter_matches" class="card border-0 shadow-sm rounded-4 text-center py-5 px-3 mt-2 d-none network-no-matches-card">
+      <div class="card-body py-3">
+        <div class="avatar-circle-icon mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle">
+          <i class="fa-solid fa-filter-circle-xmark fs-4"></i>
+        </div>
+        <h6 class="fw-bold mb-1 network-empty-title">No connected companies match your filters</h6>
+        <p class="network-empty-subtitle small mx-auto mb-3" style="max-width: 400px;">
+          Try adjusting or clearing your quick filters to view all connected companies.
+        </p>
+        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-semibold network-empty-reset-btn">
+          <i class="fa-solid fa-rotate-left me-1"></i>Reset Filters
+        </button>
+      </div>
     </div>
   <% else %>
     <!-- Empty State for Networks -->

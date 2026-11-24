@@ -8,6 +8,37 @@ class NetworksController < ApplicationController
     @networks = current_user.networks.includes(company: { profile_image_attachment: :blob })
                               .order("companies.name ASC")
 
+    connected_ids = @networks.map(&:company_id)
+    if connected_ids.any?
+      my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
+
+      sale_company_ids = Invoice.where(user_id: current_user.id, invoice_type: "sale", recipient_company_id: connected_ids)
+                                .distinct
+                                .pluck(:recipient_company_id)
+
+      supplier_scope = Invoice.where(invoice_type: "purchase", sale_from_id: connected_ids)
+      supplier_scope = if my_company_ids.any?
+                         supplier_scope.where("user_id = ? OR recipient_company_id IN (?)", current_user.id, my_company_ids)
+                       else
+                         supplier_scope.where(user_id: current_user.id)
+                       end
+      purchase_company_ids = supplier_scope.distinct.pluck(:sale_from_id)
+
+      @with_invoices_company_ids = (sale_company_ids + purchase_company_ids).to_set
+      @recent_network_count = @networks.count { |n| n.created_at && n.created_at >= 30.days.ago }
+      @has_contact_count = @networks.count { |n| n.company&.phone.present? || n.company&.email_address.present? }
+      @has_website_count = @networks.count { |n| n.company&.website.present? }
+      @connected_industries = @networks.filter_map { |n| n.company&.industry.presence }.uniq.sort
+      @connected_ownerships = @networks.filter_map { |n| n.company&.ownership.presence }.uniq.sort
+    else
+      @with_invoices_company_ids = Set.new
+      @recent_network_count = 0
+      @has_contact_count = 0
+      @has_website_count = 0
+      @connected_industries = []
+      @connected_ownerships = []
+    end
+
     if params[:query].present?
       msg = "%#{params[:query]}%"
       existing_ids = current_user.connected_company_ids

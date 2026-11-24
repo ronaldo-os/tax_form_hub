@@ -10,7 +10,7 @@ class TaxSubmissionsController < ApplicationController
 
   def home
     Rails.logger.info "DEBUG: TaxSubmissionsController#home executing"
-    load_sent_submissions
+    load_home_submissions
     @companies = companies_with_approved_invoices
     
     # Pre-fill company (and optionally invoice for resubmission) if provided
@@ -35,7 +35,7 @@ class TaxSubmissionsController < ApplicationController
         @tax_submission = TaxSubmission.new(tax_submission_params)
         @tax_submission.errors.add(:invoice_id, "must be selected")
         @companies = companies_with_approved_invoices
-        load_sent_submissions
+        load_home_submissions
 
         respond_to do |format|
           format.html { render :home }
@@ -81,7 +81,7 @@ class TaxSubmissionsController < ApplicationController
       else
         error_message = @tax_submission.errors.full_messages.join(", ")
         @companies = companies_with_approved_invoices
-        load_sent_submissions
+        load_home_submissions
 
         respond_to do |format|
           format.html { render :home }
@@ -244,6 +244,43 @@ class TaxSubmissionsController < ApplicationController
     @archived_submissions = scope.where(company_id: my_company_ids)
                                  .where(archived: true)
                                  .order(created_at: :desc)
+  end
+
+  def load_home_submissions
+    load_sent_submissions
+
+    my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
+    @has_incoming_submissions_access = my_company_ids.any?
+
+    if @has_incoming_submissions_access
+      scope = submission_scope
+      @incoming_unarchived_submissions = scope.where(company_id: my_company_ids)
+                                              .where(archived: [ false, nil ])
+                                              .order(created_at: :desc)
+
+      @incoming_archived_submissions = scope.where(company_id: my_company_ids)
+                                            .where(archived: true)
+                                            .order(created_at: :desc)
+    else
+      @incoming_unarchived_submissions = TaxSubmission.none
+      @incoming_archived_submissions = TaxSubmission.none
+    end
+
+    raw_tab = params[:tab].to_s.downcase
+    raw_subtab = params[:subtab].to_s.downcase
+
+    if raw_tab == "incoming" && @has_incoming_submissions_access
+      @active_section = "incoming"
+      @active_subtab = raw_subtab == "archived" ? "archived" : "active"
+    elsif raw_tab == "archived"
+      @active_section = "outgoing"
+      @active_subtab = "archived"
+    else
+      @active_section = "outgoing"
+      @active_subtab = raw_subtab == "archived" ? "archived" : "active"
+    end
+
+    @active_tab = @active_subtab
   end
 
   def load_sent_submissions
