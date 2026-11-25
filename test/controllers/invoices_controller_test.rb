@@ -1190,5 +1190,30 @@ class InvoicesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, doc.css("input#tax_submission_form_2307_#{invoice.id}.file-upload-input[type='file']").length
     assert_equal 1, doc.css("input#tax_submission_deposit_slip_#{invoice.id}.file-upload-input[type='file'][multiple]").length
   end
+
+  test "invoices datatable includes preview column header and PDF icon preview button" do
+    invoice = Invoice.create!(
+      user: @user,
+      invoice_type: "sale",
+      invoice_category: "standard",
+      invoice_number: "INV-PREVIEW-COL-1",
+      status: "sent"
+    )
+
+    get invoices_url
+    assert_response :success
+    assert_select "table#sales-table thead th[data-data='preview'][data-orderable='false']", text: "Preview"
+
+    get datatable_data_invoices_url, params: { invoice_type: "sale", format: :json }
+    assert_response :success
+    row = JSON.parse(response.body)["data"].find { |r| r["DT_RowId"] == "invoice_#{invoice.id}" }
+    assert_not_nil row
+    assert row.key?("preview"), "Expected datatable row to include preview column"
+
+    doc = Nokogiri::HTML::DocumentFragment.parse(row["preview"])
+    btn = doc.at_css("button.btn-preview-pdf-icon.preview-invoice[data-id='#{invoice.id}']")
+    assert_not_nil btn, "Expected preview button with data-id='#{invoice.id}'"
+    assert_not_nil btn.at_css("i.fa-file-pdf"), "Expected PDF icon inside preview button"
+  end
 end
 

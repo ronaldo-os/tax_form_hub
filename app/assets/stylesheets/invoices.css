@@ -2446,6 +2446,51 @@ table.dataTable tbody tr.row-selected,
   box-shadow: 0 2px 8px rgba(56, 189, 248, 0.25);
 }
 
+/* Preview PDF Column Icon Button */
+.invoices-page .btn-preview-pdf-icon,
+.btn-preview-pdf-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 50% !important;
+  color: #dc2626 !important;
+  border-color: rgba(220, 38, 38, 0.28);
+  background-color: rgba(220, 38, 38, 0.05);
+  text-decoration: none !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.invoices-page .btn-preview-pdf-icon:hover,
+.invoices-page .btn-preview-pdf-icon:focus,
+.btn-preview-pdf-icon:hover,
+.btn-preview-pdf-icon:focus {
+  color: #ffffff !important;
+  background-color: #dc2626;
+  border-color: #dc2626;
+  text-decoration: none !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.28);
+}
+
+[data-theme="dark"] .invoices-page .btn-preview-pdf-icon,
+[data-bs-theme="dark"] .invoices-page .btn-preview-pdf-icon,
+[data-theme="dark"] .btn-preview-pdf-icon,
+[data-bs-theme="dark"] .btn-preview-pdf-icon {
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.28);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .invoices-page .btn-preview-pdf-icon:hover,
+[data-bs-theme="dark"] .invoices-page .btn-preview-pdf-icon:hover,
+[data-theme="dark"] .btn-preview-pdf-icon:hover,
+[data-bs-theme="dark"] .btn-preview-pdf-icon:hover {
+  color: #ffffff !important;
+  background-color: #ef4444;
+  border-color: #ef4444;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.35);
+}
+
 /* Activity Modal Header */
 .activity-modal-header {
   background: linear-gradient(to right, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.95));

@@ -332,4 +332,62 @@ class DashboardsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.headers["Cache-Control"], "no-store"
   end
+
+  test "first-time user sees onboarding checklist with all 4 steps and dynamic progress" do
+    new_user = User.create!(
+      email: "new_account_#{Time.now.to_i}_#{rand(1000)}@example.com",
+      password: "Password123!@#Secure",
+      password_confirmation: "Password123!@#Secure"
+    )
+    # Mimic sign-up creating a bare company with only name populated
+    bare_company = new_user.companies.create!(name: "Fresh Startup Inc")
+    new_user.update_column(:company_id, bare_company.id)
+
+    sign_in new_user
+    get root_url
+    assert_response :success
+
+    assert_select "#onboarding_checklist_card", count: 1
+    assert_select "#onboarding_progress_badge", text: /0 of 4 completed/
+    assert_select ".onboarding-step-card[data-onboarding-step='company_profile'][data-completed='false'].is-next", count: 1
+    assert_select ".onboarding-step-card[data-onboarding-step='branch_location'][data-completed='false']", count: 1
+    assert_select ".onboarding-step-card[data-onboarding-step='connect_partner'][data-completed='false']", count: 1
+    assert_select ".onboarding-step-card[data-onboarding-step='first_invoice'][data-completed='false']", count: 1
+    assert_select "#onboarding_checklist_card a[href='#{companies_path}']", count: 1
+    assert_select "#onboarding_checklist_card a[href='#{locations_path}']", count: 1
+    assert_select "#onboarding_checklist_card a[href='#{networks_path}']", count: 1
+    assert_select "#onboarding_checklist_card a[href='#{new_invoice_path}']", count: 1
+
+    # Complete step 1 (company profile) and step 2 (branch location)
+    bare_company.update!(industry: "SOFTWARE", address: "Makati City")
+    new_user.locations.create!(
+      location_type: "Branch",
+      location_name: "HQ Branch",
+      company_name: bare_company.name,
+      street: "Ayala Ave",
+      city: "Makati",
+      country: "Philippines"
+    )
+
+    get root_url
+    assert_response :success
+    assert_select "#onboarding_progress_badge", text: /2 of 4 completed/
+    assert_select ".onboarding-step-card[data-onboarding-step='company_profile'][data-completed='true']", count: 1
+    assert_select ".onboarding-step-card[data-onboarding-step='branch_location'][data-completed='true']", count: 1
+    assert_select ".onboarding-step-card[data-onboarding-step='connect_partner'][data-completed='false'].is-next", count: 1
+
+    # Complete step 3 (connect partner) and step 4 (create first invoice) -> checklist auto-hides
+    new_user.networks.create!(company: @partner_company)
+    new_user.invoices.create!(
+      recipient_company: @partner_company,
+      invoice_number: "INV-FIRST-001",
+      invoice_type: "sale",
+      invoice_category: "standard",
+      status: "draft"
+    )
+
+    get root_url
+    assert_response :success
+    assert_select "#onboarding_checklist_card", count: 0
+  end
 end

@@ -63,6 +63,35 @@ function formatCurrency(amount, currency = 'PHP') {
   return symbol + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function initOnboardingChecklist() {
+  const card = document.getElementById('onboarding_checklist_card');
+  if (!card) return;
+
+  const userId = card.dataset.userId || 'default';
+  const storageKey = `onboarding_checklist_dismissed_v1:${userId}`;
+
+  try {
+    if (window.localStorage && window.localStorage.getItem(storageKey) === 'true') {
+      card.classList.add('d-none');
+      return;
+    }
+  } catch (e) {}
+
+  const dismissBtn = document.getElementById('dismiss_onboarding_checklist_btn');
+  if (dismissBtn && dismissBtn.dataset.listenerAttached !== 'true') {
+    dismissBtn.dataset.listenerAttached = 'true';
+    dismissBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      try {
+        if (window.localStorage) {
+          window.localStorage.setItem(storageKey, 'true');
+        }
+      } catch (err) {}
+      card.classList.add('d-none');
+    });
+  }
+}
+
 export function initAnalyticsDashboard() {
   if (document.documentElement.hasAttribute('data-turbo-preview')) return;
 
@@ -70,6 +99,7 @@ export function initAnalyticsDashboard() {
   if (!container) return;
 
   setupSkeletonSafetyFallback([['dashboard_skeleton', 'dashboard_content']]);
+  initOnboardingChecklist();
 
   const trendCanvas = document.getElementById('performanceTrendChart');
   if (

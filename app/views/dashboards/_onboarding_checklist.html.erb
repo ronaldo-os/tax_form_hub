@@ -1,0 +1,114 @@
+<%
+  checklist = @onboarding_checklist
+  return unless checklist && checklist[:show]
+%>
+<section class="onboarding-checklist-card mb-3 mb-md-3.5"
+         id="onboarding_checklist_card"
+         data-user-id="<%= current_user.id %>"
+         aria-labelledby="onboarding_checklist_heading">
+  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between gap-2.5 mb-3">
+    <div class="d-flex align-items-start align-items-sm-center gap-2.5 min-w-0">
+      <div class="onboarding-header-icon flex-shrink-0 d-flex align-items-center justify-content-center rounded-3">
+        <i class="fa-solid fa-rocket fs-6"></i>
+      </div>
+      <div class="min-w-0">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          <h6 class="fw-bold text-main mb-0" id="onboarding_checklist_heading">
+            Get started with Tax Form Hub
+          </h6>
+          <span class="badge rounded-pill onboarding-progress-pill" id="onboarding_progress_badge">
+            <%= checklist[:completed_count] %> of <%= checklist[:total_count] %> completed
+          </span>
+        </div>
+        <p class="text-muted fs-8 mb-0 mt-0.5">
+          Complete these quick setup steps to configure your account and send your first invoice.
+        </p>
+      </div>
+    </div>
+
+    <div class="d-flex align-items-center gap-2 ms-md-auto flex-shrink-0">
+      <span class="onboarding-percent-label tabular-nums fw-semibold fs-8 text-primary">
+        <%= checklist[:progress_percent] %>%
+      </span>
+      <button type="button"
+              id="dismiss_onboarding_checklist_btn"
+              class="btn btn-sm btn-link text-muted text-decoration-none onboarding-dismiss-btn p-1 px-2"
+              aria-label="Dismiss onboarding checklist"
+              title="Dismiss checklist">
+        <i class="fa-solid fa-xmark me-1"></i><span>Dismiss</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="onboarding-progress-track mb-3"
+       role="progressbar"
+       aria-label="Onboarding setup progress"
+       aria-valuenow="<%= checklist[:progress_percent] %>"
+       aria-valuemin="0"
+       aria-valuemax="100">
+    <div class="onboarding-progress-fill" style="width: <%= checklist[:progress_percent] %>%;"></div>
+  </div>
+
+  <!-- 4-Step Checklist Grid -->
+  <div class="row g-2.5">
+    <% checklist[:steps].each_with_index do |step, idx| %>
+      <%
+        is_completed = step[:completed]
+        is_next = !is_completed && checklist[:next_step_key] == step[:key]
+        card_classes = ["onboarding-step-card", "h-100", "d-flex", "flex-column", "justify-content-between"]
+        card_classes << "is-completed" if is_completed
+        card_classes << "is-next" if is_next
+      %>
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="<%= card_classes.join(' ') %>" data-onboarding-step="<%= step[:key] %>" data-completed="<%= is_completed %>">
+          <div>
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+              <div class="d-flex align-items-center gap-2">
+                <% if is_completed %>
+                  <span class="onboarding-step-indicator is-completed" aria-label="Completed">
+                    <i class="fa-solid fa-check"></i>
+                  </span>
+                <% else %>
+                  <span class="onboarding-step-indicator <%= 'is-next' if is_next %>">
+                    <%= idx + 1 %>
+                  </span>
+                <% end %>
+                <span class="onboarding-step-icon">
+                  <i class="fa-solid <%= step[:icon] %>"></i>
+                </span>
+              </div>
+
+              <% if is_completed %>
+                <span class="badge rounded-pill onboarding-status-done fs-10 fw-semibold">Done</span>
+              <% elsif is_next %>
+                <span class="badge rounded-pill onboarding-status-next fs-10 fw-semibold">Next step</span>
+              <% end %>
+            </div>
+
+            <h6 class="onboarding-step-title fw-semibold mb-1">
+              <%= step[:title] %>
+            </h6>
+            <p class="onboarding-step-desc text-muted fs-8 mb-3">
+              <%= step[:description] %>
+            </p>
+          </div>
+
+          <div class="mt-auto">
+            <% if is_completed %>
+              <%= link_to step[:path], class: "btn btn-sm onboarding-step-btn-done w-100 d-inline-flex align-items-center justify-content-center gap-1.5" do %>
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Completed</span>
+              <% end %>
+            <% else %>
+              <%= link_to step[:path], class: "btn btn-sm #{is_next ? 'btn-primary' : 'btn-outline-primary'} onboarding-step-btn w-100 d-inline-flex align-items-center justify-content-center gap-1.5 fw-semibold" do %>
+                <span><%= step[:cta] %></span>
+                <i class="fa-solid fa-arrow-right fs-10"></i>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>

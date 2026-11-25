@@ -64,6 +64,7 @@ class InvoiceDatatable < BaseDatatable
         'issue_date' => format_date(invoice.issue_date),
         'attachments' => format_attachments(invoice),
         'status' => format_status(invoice),
+        'preview' => format_preview(invoice),
         'history' => format_history(invoice),
         'actions' => format_actions(invoice)
       }
@@ -424,6 +425,26 @@ class InvoiceDatatable < BaseDatatable
       'Partially Paid'
     else
       invoice.status.to_s.capitalize
+    end
+  end
+
+  def format_preview(invoice)
+    doc_label = invoice.standard? ? "Invoice" : invoice.invoice_category.humanize
+    content_tag(:div, class: 'd-flex justify-content-center align-items-center') do
+      content_tag(
+        :button,
+        type: 'button',
+        class: 'btn btn-sm btn-outline-danger rounded-circle d-inline-flex align-items-center justify-content-center btn-preview-pdf-icon preview-invoice',
+        title: "Preview #{doc_label} PDF",
+        aria: { label: "Preview #{doc_label} #{invoice.invoice_number} PDF" },
+        data: {
+          id: invoice.id,
+          bs_toggle: 'tooltip'
+        },
+        style: 'width: 32px; height: 32px; padding: 0;'
+      ) do
+        content_tag(:i, '', class: 'fa-solid fa-file-pdf fs-7')
+      end
     end
   end
 

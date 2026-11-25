@@ -135,8 +135,11 @@
     </div>
   </div>
 
-  <!-- Zero-State Onboarding Banner (When no data exists) -->
-  <% if kpis[:total_sales_count] == 0 && kpis[:total_purchases_count] == 0 %>
+  <!-- First-Time User Onboarding Checklist (Shown until all 4 setup steps are complete) -->
+  <% if @onboarding_checklist && @onboarding_checklist[:show] %>
+    <%= render "dashboards/onboarding_checklist" %>
+  <% elsif kpis[:total_sales_count] == 0 && kpis[:total_purchases_count] == 0 %>
+    <!-- Zero-State Banner (When onboarding is complete but current timeframe has no invoices) -->
     <div class="zero-state-banner mb-3 mb-md-3.5">
       <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
         <div>

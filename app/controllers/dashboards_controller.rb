@@ -10,6 +10,7 @@ class DashboardsController < ApplicationController
     @time_frame = params[:time_frame].presence || "this_month"
     @currency = params[:currency].presence || current_user.currency.presence || "PHP"
     @dashboard_data = get_dashboard_metrics(@time_frame, @currency)
+    @onboarding_checklist = build_onboarding_checklist
 
     respond_to do |format|
       format.html
@@ -25,6 +26,84 @@ class DashboardsController < ApplicationController
   end
 
   private
+
+  def build_onboarding_checklist
+    primary_company = current_user.company || current_user.companies.first
+
+    company_profile_completed = if primary_company.present?
+      profile_fields = [
+        primary_company.industry,
+        primary_company.ownership,
+        primary_company.address,
+        primary_company.registration_address,
+        primary_company.phone,
+        primary_company.email_address,
+        primary_company.tax_id_number,
+        primary_company.country,
+        primary_company.website,
+        primary_company.description
+      ]
+      profile_fields.any?(&:present?) || primary_company.profile_image.attached?
+    else
+      false
+    end
+
+    branch_location_completed = current_user.locations.exists?
+    connect_partner_completed = current_user.networks.exists?
+    first_invoice_completed = current_user.invoices.exists?
+
+    steps = [
+      {
+        key: "company_profile",
+        title: "Set up company profile",
+        description: "Add your business details, TIN, contact info, or company logo.",
+        icon: "fa-building",
+        cta: "Set Up Profile",
+        path: primary_company.present? ? companies_path : new_company_path,
+        completed: company_profile_completed
+      },
+      {
+        key: "branch_location",
+        title: "Add branch location",
+        description: "Add your main office or branch address for invoices and billing.",
+        icon: "fa-location-dot",
+        cta: "Add Location",
+        path: locations_path,
+        completed: branch_location_completed
+      },
+      {
+        key: "connect_partner",
+        title: "Connect partner",
+        description: "Search and connect with customers or suppliers in your network.",
+        icon: "fa-handshake",
+        cta: "Connect Partner",
+        path: networks_path,
+        completed: connect_partner_completed
+      },
+      {
+        key: "first_invoice",
+        title: "Create first invoice",
+        description: "Generate and send your first sales invoice or quote.",
+        icon: "fa-file-invoice-dollar",
+        cta: "Create Invoice",
+        path: new_invoice_path,
+        completed: first_invoice_completed
+      }
+    ]
+
+    completed_count = steps.count { |step| step[:completed] }
+    total_count = steps.size
+    next_step = steps.find { |step| !step[:completed] }
+
+    {
+      show: completed_count < total_count,
+      completed_count: completed_count,
+      total_count: total_count,
+      progress_percent: ((completed_count.to_f / total_count) * 100).round,
+      next_step_key: next_step&.dig(:key),
+      steps: steps
+    }
+  end
 
   def get_dashboard_metrics(time_frame, currency)
     my_company_ids = (current_user.companies.pluck(:id) << current_user.company_id).compact.uniq
