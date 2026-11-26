@@ -1,0 +1,17 @@
+You're Invited to Tax Form Hub
+
+<% if @company_name.present? %>
+<%= @inviter_company_name %> invited <%= @company_name %> to connect on Tax Form Hub.
+<% else %>
+<%= @inviter_company_name %> invited you to connect on Tax Form Hub.
+<% end %>
+<% if @personal_message.present? %>
+
+Message from <%= @inviter_company_name %>:
+<%= @personal_message %>
+<% end %>
+
+Create your account and connect automatically using the link below:
+<%= @signup_url %>
+
+This invitation expires in 14 days. If you didn't expect this email, you can safely ignore it.

@@ -3,6 +3,22 @@ class Users::RegistrationsController < Devise::RegistrationsController
   before_action :configure_account_update_params, only: [:update]
   before_action :store_profile_back_url, only: [:edit]
 
+  def new
+    @invite_payload = verify_network_invite_token(params[:invite_token])
+    if @invite_payload.present?
+      @inviter = User.find_by(id: @invite_payload["inviter_id"])
+      @inviter_company_name = @inviter&.company&.name.presence || @inviter&.companies&.first&.name.presence || @inviter&.display_name
+    end
+
+    build_resource({})
+    if @invite_payload.present?
+      resource.email = @invite_payload["email"] if resource.email.blank?
+      resource.company_name = @invite_payload["company_name"] if resource.company_name.blank?
+    end
+    yield resource if block_given?
+    respond_with resource
+  end
+
   def edit
     super
   end
@@ -12,10 +28,13 @@ class Users::RegistrationsController < Devise::RegistrationsController
     resource.save
 
     if resource.persisted?
+      created_company = nil
       if params[:user][:company_name].present?
-        company = resource.companies.create(name: params[:user][:company_name])
-        resource.update_column(:company_id, company.id) if company.persisted?
+        created_company = resource.companies.create(name: params[:user][:company_name])
+        resource.update_column(:company_id, created_company.id) if created_company.persisted?
       end
+
+      connect_invited_companies!(resource, created_company, params[:invite_token])
 
       if resource.active_for_authentication?
         flash[:notice] = find_message(:signed_up)
@@ -27,6 +46,11 @@ class Users::RegistrationsController < Devise::RegistrationsController
         respond_with resource, location: after_inactive_sign_up_path_for(resource)
       end
     else
+      @invite_payload = verify_network_invite_token(params[:invite_token])
+      if @invite_payload.present?
+        @inviter = User.find_by(id: @invite_payload["inviter_id"])
+        @inviter_company_name = @inviter&.company&.name.presence || @inviter&.companies&.first&.name.presence || @inviter&.display_name
+      end
       flash.now[:alert] = resource.errors.full_messages.join("\n")
       clean_up_passwords resource
       set_minimum_password_length
@@ -103,5 +127,36 @@ class Users::RegistrationsController < Devise::RegistrationsController
     return if referrer_path == edit_profile_path || referrer_path == edit_user_registration_path
 
     session[:profile_back_url] = request.referrer
+  end
+
+  def verify_network_invite_token(token)
+    return nil if token.blank?
+
+    payload = Rails.application.message_verifier(:network_company_invite).verify(
+      token.to_s,
+      purpose: :network_company_invite
+    )
+    payload.is_a?(Hash) ? payload.stringify_keys : nil
+  rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveSupport::MessageEncryptor::InvalidMessage, StandardError
+    nil
+  end
+
+  def connect_invited_companies!(new_user, new_company, token)
+    payload = verify_network_invite_token(token)
+    return if payload.blank?
+
+    inviter = User.find_by(id: payload["inviter_id"])
+    return unless inviter && inviter.id != new_user.id
+
+    if new_company&.persisted? && !inviter.companies.include?(new_company)
+      inviter.networks.find_or_create_by(company: new_company)
+    end
+
+    inviter_company = inviter.company || inviter.companies.first
+    if inviter_company&.persisted? && !new_user.companies.include?(inviter_company)
+      new_user.networks.find_or_create_by(company: inviter_company)
+    end
+  rescue StandardError => e
+    Rails.logger.error "[Users::RegistrationsController#connect_invited_companies!] #{e.class}: #{e.message}"
   end
 end

@@ -205,6 +205,54 @@ function initNetworksPage() {
             e.preventDefault();
             resetNetworkQuickFilters();
         });
+
+    // Open "Invite Company via Email" modal (supports prefilling company name or email)
+    $(document)
+        .off('click.network_invite', '.open-invite-company-modal-btn')
+        .on('click.network_invite', '.open-invite-company-modal-btn', function (e) {
+            e.preventDefault();
+            const companyName = (this.getAttribute('data-company-name') || '').trim();
+            const companyEmail = (this.getAttribute('data-company-email') || '').trim();
+            const modalEl = document.getElementById('inviteCompanyModal');
+            if (!modalEl) return;
+
+            // Hide the search popover so it does not stay open behind the modal
+            const popover = this.closest('.network-autocomplete-popover');
+            if (popover) popover.classList.add('d-none');
+
+            const nameInput = document.getElementById('invite_company_name');
+            const emailInput = document.getElementById('invite_company_email');
+            const messageInput = document.getElementById('invite_company_message');
+            const charCountEl = document.getElementById('invite_message_char_count');
+
+            if (nameInput) nameInput.value = companyName;
+            if (emailInput) emailInput.value = companyEmail;
+            if (messageInput) messageInput.value = '';
+            if (charCountEl) charCountEl.textContent = '0 / 500';
+
+            const bs = (typeof bootstrap !== 'undefined') ? bootstrap : (window.bootstrap || null);
+            if (bs && bs.Modal) {
+                const modal = bs.Modal.getOrCreateInstance(modalEl);
+                modal.show();
+                setTimeout(() => {
+                    if (!companyEmail && emailInput) {
+                        emailInput.focus();
+                    } else if (nameInput) {
+                        nameInput.focus();
+                    }
+                }, 200);
+            }
+        });
+
+    // Live character counter for optional invite note
+    $(document)
+        .off('input.network_invite', '#invite_company_message')
+        .on('input.network_invite', '#invite_company_message', function () {
+            const charCountEl = document.getElementById('invite_message_char_count');
+            if (charCountEl) {
+                charCountEl.textContent = `${this.value.length} / 500`;
+            }
+        });
 }
 
 document.addEventListener('turbo:load', initNetworksPage);

@@ -93,10 +93,112 @@ class NetworksController < ApplicationController
     end
   end
 
+  INVITE_EMAIL_REGEX = /\A[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\z/
+  MAX_INVITES_PER_HOUR = 10
+  INVITE_TOKEN_TTL = 14.days
+
   def destroy
     @network = current_user.networks.find(params[:id])
     company_name = @network.company.name
     @network.destroy
     redirect_to networks_path, status: :see_other, notice: "#{company_name} removed from your network."
+  end
+
+  def invite
+    invite_params = params.fetch(:invite_company, params).permit(:company_name, :email, :message)
+    company_name = invite_params[:company_name].to_s.gsub(/[\r\n\t]+/, " ").strip
+    email = invite_params[:email].to_s.strip.downcase
+    message = invite_params[:message].to_s.strip
+
+    if company_name.length > 150
+      redirect_to networks_path, status: :see_other, alert: "Company name must be 150 characters or fewer."
+      return
+    end
+
+    if email.blank? || email.length > 254 || !email.match?(INVITE_EMAIL_REGEX)
+      redirect_to networks_path, status: :see_other, alert: "Please enter a valid email address."
+      return
+    end
+
+    if message.length > 500
+      redirect_to networks_path, status: :see_other, alert: "Personal note must be 500 characters or fewer."
+      return
+    end
+
+    if email == current_user.email.to_s.downcase
+      redirect_to networks_path, status: :see_other, alert: "You cannot invite your own email address."
+      return
+    end
+
+    # Check if the company or user is already registered on Tax Form Hub
+    existing_user = User.find_by("LOWER(email) = ?", email)
+    existing_company = Company.find_by("LOWER(email_address) = ?", email) ||
+                       existing_user&.company ||
+                       existing_user&.companies&.first
+
+    if existing_company.present?
+      if current_user.companies.include?(existing_company) || current_user.company_id == existing_company.id
+        redirect_to networks_path, status: :see_other, alert: "You cannot invite your own company."
+        return
+      end
+
+      if current_user.connected_companies.include?(existing_company)
+        redirect_to networks_path, status: :see_other, notice: "#{existing_company.name} is already in your network."
+        return
+      end
+
+      network = current_user.networks.build(company: existing_company)
+      if network.save
+        redirect_to networks_path, status: :see_other, notice: "#{existing_company.name} is already registered and has been added to your network."
+      else
+        redirect_to networks_path, status: :see_other, alert: "Unable to connect with #{existing_company.name}."
+      end
+      return
+    end
+
+    # Rate limit invitations per user and per recipient email to prevent email abuse
+    user_rate_key = "network_invite_rate:user:#{current_user.id}"
+    recipient_rate_key = "network_invite_rate:user:#{current_user.id}:recipient:#{Digest::SHA256.hexdigest(email)}"
+
+    if Rails.cache.read(recipient_rate_key).present?
+      redirect_to networks_path, status: :see_other, alert: "An invitation was already sent to #{email} recently. Please wait before resending."
+      return
+    end
+
+    sent_count = Rails.cache.read(user_rate_key).to_i
+    if sent_count >= MAX_INVITES_PER_HOUR
+      redirect_to networks_path, status: :see_other, alert: "You have reached the hourly invitation limit. Please try again later."
+      return
+    end
+
+    invite_token = Rails.application.message_verifier(:network_company_invite).generate(
+      {
+        inviter_id: current_user.id,
+        company_name: company_name.presence,
+        email: email
+      },
+      expires_in: INVITE_TOKEN_TTL,
+      purpose: :network_company_invite
+    )
+
+    begin
+      NetworkInvitationMailer.invite_company(
+        inviter: current_user,
+        company_name: company_name.presence,
+        recipient_email: email,
+        invite_token: invite_token,
+        message: message.presence,
+        signup_url: new_user_registration_url(invite_token: invite_token)
+      ).deliver_later
+
+      Rails.cache.write(user_rate_key, sent_count + 1, expires_in: 1.hour)
+      Rails.cache.write(recipient_rate_key, true, expires_in: 15.minutes)
+
+      notice_target = company_name.present? ? "#{company_name} (#{email})" : email
+      redirect_to networks_path, status: :see_other, notice: "Invitation sent to #{notice_target}."
+    rescue StandardError => e
+      Rails.logger.error "[NetworksController#invite] Failed to queue invitation email: #{e.class} - #{e.message}"
+      redirect_to networks_path, status: :see_other, alert: "Unable to send the invitation right now. Please try again later."
+    end
   end
 end

@@ -1457,11 +1457,86 @@
 }
 
 .networks-page .status-dot-active {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background-color: #198754;
+  background-color: #10b981;
   display: inline-block;
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .networks-page .status-dot-active {
+  background-color: #34d399;
+}
+
+/* Uniform Header CTA ("Invite via Email") & Connected Count Badge */
+.networks-page .network-invite-btn,
+.networks-page .network-connected-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.45rem !important;
+  height: 32px !important;
+  padding: 0 0.875rem !important;
+  border-radius: 6px !important;
+  font-size: 0.8125rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  letter-spacing: 0.01em;
+  white-space: nowrap !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.networks-page .network-invite-btn i,
+.networks-page .network-connected-badge i {
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.networks-page .network-invite-btn {
+  background-color: var(--main-color, #00aeff) !important;
+  border: 1px solid var(--main-color, #00aeff) !important;
+  color: #ffffff !important;
+}
+
+.networks-page .network-invite-btn:hover,
+.networks-page .network-invite-btn:focus-visible {
+  background-color: var(--active-color, #20b9ff) !important;
+  border-color: var(--active-color, #20b9ff) !important;
+  color: #ffffff !important;
+}
+
+.networks-page .network-connected-badge {
+  background-color: rgba(0, 174, 255, 0.12) !important;
+  border: 1px solid rgba(0, 174, 255, 0.28) !important;
+  color: #0284c7 !important;
+}
+
+[data-theme="dark"] .networks-page .network-connected-badge {
+  background-color: rgba(0, 174, 255, 0.15) !important;
+  border: 1px solid rgba(56, 189, 248, 0.32) !important;
+  color: #38bdf8 !important;
+}
+
+/* Uniform Company Card "Connected" Status Badge */
+.networks-page .network-status-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  padding: 0.25rem 0.55rem !important;
+  border-radius: 6px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  background-color: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #047857 !important;
+}
+
+[data-theme="dark"] .networks-page .network-status-badge {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.3) !important;
+  color: #34d399 !important;
 }
 
 .networks-page .meta-icon-wrapper {
@@ -1524,7 +1599,7 @@
 }
 
 .networks-page .network-autocomplete-popover {
-  z-index: 1060;
+  z-index: 1030;
   background-color: var(--card-bg, #ffffff);
   border-color: var(--border-color, #e2e8f0) !important;
   backdrop-filter: blur(10px);
@@ -1568,6 +1643,29 @@
   color: #94a3b8;
 }
 
+.networks-page .network-search-invite-footer {
+  background-color: #f8fafc;
+  border-color: var(--border-color, #e2e8f0) !important;
+}
+
+[data-theme="dark"] .networks-page .network-search-invite-footer {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.network-invite-modal .network-invite-modal-icon {
+  width: 40px;
+  height: 40px;
+  background-color: rgba(0, 174, 255, 0.12);
+  color: var(--main-color, #00aeff);
+  font-size: 1rem;
+}
+
+[data-theme="dark"] .network-invite-modal .network-invite-modal-icon {
+  background-color: rgba(56, 189, 248, 0.16);
+  color: #38bdf8;
+}
+
 .networks-page .company-title-link {
   display: block !important;
   width: 100% !important;
@@ -1589,13 +1687,6 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08),
     0 8px 10px -6px rgba(0, 0, 0, 0.05),
     0 2px 4px 0 rgba(0, 0, 0, 0.04) !important;
-  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-}
-
-.networks-page .network-company-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px -4px rgba(0, 0, 0, 0.12),
-    0 8px 12px -6px rgba(0, 0, 0, 0.08) !important;
 }
 
 .networks-page .network-company-card .card-title {
@@ -1611,11 +1702,6 @@
   box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.3),
     0 6px 12px -2px rgba(0, 0, 0, 0.2),
     0 0 0 1px rgba(255, 255, 255, 0.08) !important;
-}
-
-[data-theme="dark"] .networks-page .network-company-card:hover {
-  box-shadow: 0 14px 30px -4px rgba(0, 0, 0, 0.45),
-    0 0 0 1px rgba(255, 255, 255, 0.12) !important;
 }
 
 .networks-page .network-search-card {

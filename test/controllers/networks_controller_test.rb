@@ -100,4 +100,124 @@ class NetworksControllerTest < ActionDispatch::IntegrationTest
     assert_select ".network-card-col[data-has-invoices='true'][data-has-contact='true'][data-has-website='true'][data-industry='technology'][data-ownership='private limited company']", count: 1
     assert_select "#network_no_filter_matches", count: 1
   end
+
+  test "searching for an unregistered company shows invite button with prefilled company name" do
+    get networks_url, params: { query: "Unregistered Partner LLC" }
+    assert_response :success
+    assert_select ".network-empty-search-popover .open-invite-company-modal-btn[data-company-name='Unregistered Partner LLC']", count: 1
+    assert_select "#inviteCompanyModal form#invite_company_form[action='#{invite_networks_path}']", count: 1
+  end
+
+  test "inviting an unregistered company sends invitation email and redirects with notice" do
+    Rails.cache.clear
+    assert_enqueued_emails 1 do
+      post invite_networks_url, params: {
+        invite_company: {
+          company_name: "New Vendor Corp",
+          email: "newvendor@example.com",
+          message: "Let's connect for Form 2307 submissions."
+        }
+      }
+    end
+    assert_redirected_to networks_path
+    assert_includes flash[:notice], "Invitation sent to New Vendor Corp (newvendor@example.com)."
+  end
+
+  test "inviting with invalid email or own email is rejected" do
+    assert_enqueued_emails 0 do
+      post invite_networks_url, params: {
+        invite_company: { company_name: "Bad Email Co", email: "not-an-email" }
+      }
+    end
+    assert_redirected_to networks_path
+    assert_includes flash[:alert], "valid email"
+
+    assert_enqueued_emails 0 do
+      post invite_networks_url, params: {
+        invite_company: { company_name: "Self Co", email: @user.email }
+      }
+    end
+    assert_redirected_to networks_path
+    assert_includes flash[:alert], "own email"
+  end
+
+  test "inviting an already registered company email connects them directly without sending invite email" do
+    @other_company.update!(email_address: "contact@acme-registered.com")
+
+    assert_difference("@user.networks.count", 1) do
+      assert_enqueued_emails 0 do
+        post invite_networks_url, params: {
+          invite_company: {
+            company_name: @other_company.name,
+            email: "contact@acme-registered.com"
+          }
+        }
+      end
+    end
+    assert_redirected_to networks_path
+    assert_includes flash[:notice], "already registered and has been added to your network"
+  end
+
+  test "invited recipient signing up via invite token prefills fields and auto-connects companies" do
+    inviter_company = Company.create!(name: "Inviter HQ Corp", user: @user)
+    @user.update!(company: inviter_company)
+
+    invited_email = "invited_partner_#{Time.now.to_i}@example.com"
+    token = Rails.application.message_verifier(:network_company_invite).generate(
+      { inviter_id: @user.id, company_name: "Invited Partner Co", email: invited_email },
+      expires_in: 14.days,
+      purpose: :network_company_invite
+    )
+
+    sign_out @user
+    get new_user_registration_url(invite_token: token)
+    assert_response :success
+    assert_select "#network_invite_signup_banner", text: /Inviter HQ Corp/
+    assert_select "input[name='user[email]'][value='#{invited_email}']"
+    assert_select "input[name='user[company_name]'][value='Invited Partner Co']"
+    assert_select "input[name='invite_token'][value='#{token}']"
+
+    post user_registration_url, params: {
+      invite_token: token,
+      user: {
+        email: invited_email,
+        company_name: "Invited Partner Co",
+        password: "Password123!@#Secure",
+        password_confirmation: "Password123!@#Secure"
+      }
+    }
+    assert_response :redirect
+
+    new_user = User.find_by!(email: invited_email)
+    new_company = new_user.company
+    assert_not_nil new_company
+    assert_includes @user.reload.connected_companies, new_company
+    assert_includes new_user.reload.connected_companies, inviter_company
+  end
+
+  test "networks page provides direct invite via email button and allows inviting with email only" do
+    Rails.cache.clear
+
+    get networks_url
+    assert_response :success
+    assert_select "button#direct_invite_company_btn.open-invite-company-modal-btn", count: 1
+    assert_select "#invite_company_name:not([required])", count: 1
+    assert_select "#invite_company_email[required]", count: 1
+
+    # Searching an email directly prefills data-company-email
+    get networks_url, params: { query: "directvendor@example.com" }
+    assert_response :success
+    assert_select ".network-empty-search-popover .open-invite-company-modal-btn[data-company-email='directvendor@example.com']", count: 1
+
+    # Submitting email-only invitation works without company_name
+    assert_enqueued_emails 1 do
+      post invite_networks_url, params: {
+        invite_company: {
+          email: "directvendor@example.com"
+        }
+      }
+    end
+    assert_redirected_to networks_path
+    assert_includes flash[:notice], "Invitation sent to directvendor@example.com."
+  end
 end

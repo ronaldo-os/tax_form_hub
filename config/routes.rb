@@ -4,7 +4,11 @@ Rails.application.routes.draw do
       post :bulk_action
     end
   end
-  resources :networks, only: [:index, :create, :destroy]
+  resources :networks, only: [:index, :create, :destroy] do
+    collection do
+      post :invite
+    end
+  end
   get "invoices/index"
   resources :tax_rates, only: [:create, :update, :destroy]
   resources :units, only: [:create, :destroy]
