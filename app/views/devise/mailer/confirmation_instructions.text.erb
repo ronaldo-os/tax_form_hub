@@ -1,0 +1,7 @@
+<% content_for :email_footer_note, "You're receiving this email because an account was registered with this address on Tax Form Hub." %>
+CONFIRM YOUR EMAIL ADDRESS
+
+Welcome <%= @email %>!
+
+Confirm your email address to activate your Tax Form Hub account using the link below:
+<%= confirmation_url(@resource, confirmation_token: @token) %>

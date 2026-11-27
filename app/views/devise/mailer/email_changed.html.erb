@@ -1,7 +1,28 @@
-<p>Hello <%= @email %>!</p>
+<% pending_change = @resource.try(:unconfirmed_email?) %>
+<% target_email = pending_change ? @resource.unconfirmed_email : @resource.email %>
+<% content_for :email_title, "Email Address Update" %>
+<% content_for :email_category, "Account Security" %>
+<% content_for :email_accent, pending_change ? "warning" : "primary" %>
+<% content_for :email_preheader, pending_change ? "A request was made to change the email address on your Tax Form Hub account." : "The email address on your Tax Form Hub account has been updated." %>
+<% content_for :email_footer_note, "This is a security notification sent to the email address previously associated with your Tax Form Hub account." %>
 
-<% if @resource.try(:unconfirmed_email?) %>
-  <p>We're contacting you to notify you that your email is being changed to <%= @resource.unconfirmed_email %>.</p>
-<% else %>
-  <p>We're contacting you to notify you that your email has been changed to <%= @resource.email %>.</p>
-<% end %>
+<%= render "shared/mailer/header",
+      title: pending_change ? "Email address change requested" : "Your email address was changed",
+      subtitle: pending_change ? "We’re letting you know that a request was submitted to change your Tax Form Hub email address." : "This confirms that the email address associated with your Tax Form Hub account has been updated.",
+      status_label: pending_change ? "Pending Confirmation" : "Updated",
+      status_tone: pending_change ? :warning : :primary %>
+
+<%= render "shared/mailer/details_table", rows: [
+      { label: "Previous Email", value: @email },
+      { label: pending_change ? "New Email (Pending)" : "New Email", value: target_email, emphasize: true }
+    ] %>
+
+<%= render "shared/mailer/callout",
+      title: "Didn’t make this change?",
+      body: "If you did not authorize this email update, please sign in immediately to secure your account or contact Tax Form Hub support.",
+      tone: :warning %>
+
+<%= render "shared/mailer/button",
+      label: "Go to Tax Form Hub",
+      url: root_url,
+      tone: :primary %>

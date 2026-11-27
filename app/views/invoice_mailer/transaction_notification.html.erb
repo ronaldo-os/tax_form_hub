@@ -1,60 +1,37 @@
-<% currency_symbols = { "PHP" => "₱", "USD" => "$", "EUR" => "€", "JPY" => "¥" } %>
-<% symbol = currency_symbols[@invoice.currency] || @invoice.currency %>
-<% action_labels = {
-  invoice_sent: "New Invoice",
-  quote_sent: "New Quotation",
-  invoice_approved: "Invoice Approved",
-  invoice_rejected: "Invoice Rejected",
-  quote_approved: "Quotation Approved",
-  quote_rejected: "Quotation Rejected"
-} %>
+<%
+  doc_type = @invoice.quote? ? "Quotation" : "Invoice"
+  action_config = {
+    invoice_sent:     { title: "New Invoice Received",    status: "New",      accent: :primary, subtitle: "#{@sender_user&.email} sent you a new invoice on Tax Form Hub." },
+    quote_sent:       { title: "New Quotation Received",  status: "New",      accent: :primary, subtitle: "#{@sender_user&.email} sent you a new quotation on Tax Form Hub." },
+    invoice_approved: { title: "Invoice Approved",        status: "Approved", accent: :success, subtitle: "#{@sender_user&.email} approved your invoice." },
+    invoice_rejected: { title: "Invoice Rejected",        status: "Rejected", accent: :danger,  subtitle: "#{@sender_user&.email} rejected your invoice." },
+    quote_approved:   { title: "Quotation Approved",      status: "Approved", accent: :success, subtitle: "#{@sender_user&.email} approved your quotation." },
+    quote_rejected:   { title: "Quotation Rejected",      status: "Rejected", accent: :danger,  subtitle: "#{@sender_user&.email} rejected your quotation." }
+  }
+  config = action_config[@action] || { title: "#{doc_type} Update", status: "Updated", accent: :primary, subtitle: "Action by #{@sender_user&.email}" }
+  from_name = @original_sender_user&.company&.name || @original_sender_user&.email || @invoice.user.company&.name || @invoice.user.email
+  formatted_total = email_format_amount(@invoice.grand_total, @invoice.currency)
+%>
+<% content_for :email_title, config[:title] %>
+<% content_for :email_category, doc_type %>
+<% content_for :email_accent, config[:accent].to_s %>
+<% content_for :email_preheader, "#{config[:title]} — #{doc_type} ##{@invoice.invoice_number} (#{formatted_total})." %>
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9fafb;padding:40px 0;font-family:Arial,Helvetica,sans-serif;">
-  <tr>
-    <td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:40px;text-align:left;">
+<%= render "shared/mailer/header",
+      title: config[:title],
+      subtitle: config[:subtitle],
+      status_label: config[:status],
+      status_tone: config[:accent] %>
 
-        <tr>
-          <td style="text-align:center;padding-bottom:30px;">
-            <h2 style="margin:0;font-size:24px;color:#111827;"><%= action_labels[@action] || "Invoice Update" %></h2>
-            <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">Action by <%= @sender_user&.email %></p>
-          </td>
-        </tr>
+<%= render "shared/mailer/details_table", rows: [
+      { label: "#{doc_type} Number", value: @invoice.invoice_number, emphasize: true },
+      { label: "From", value: from_name },
+      { label: "To", value: @invoice.recipient_company&.name },
+      { label: "Total Amount", value: formatted_total, emphasize: true },
+      { label: "Date", value: @invoice.created_at&.strftime("%b %d, %Y") }
+    ] %>
 
-        <tr>
-          <td style="padding:20px;background:#f3f4f6;border-radius:8px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong><%= @invoice.quote? ? "Quotation" : "Invoice" %> Number:</strong> <%= @invoice.invoice_number %></td>
-              </tr>
-              <tr>
-                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>From:</strong> <%= (@original_sender_user&.company&.name || @original_sender_user&.email || @invoice.user.company&.name || @invoice.user.email) %></td>
-              </tr>
-              <tr>
-                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>To:</strong> <%= @invoice.recipient_company&.name %></td>
-              </tr>
-              <tr>
-                <td style="font-size:14px;color:#374151;padding-bottom:8px;"><strong>Total:</strong> <%= symbol %><%= number_with_precision(@invoice.grand_total, precision: 2) %></td>
-              </tr>
-              <tr>
-                <td style="font-size:14px;color:#374151;"><strong>Date:</strong> <%= @invoice.created_at.strftime("%b %d, %Y") %></td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-
-        <tr>
-          <td style="text-align:center;padding-top:30px;">
-            <a href="<%= invoices_url %>" style="display:inline-block;background:#3b82f6;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">View <%= @invoice.quote? ? "Quotation" : "Invoice" %></a>
-          </td>
-        </tr>
-
-        <tr>
-          <td style="text-align:center;padding-top:30px;font-size:12px;color:#9ca3af;">
-            <p>This is an automated notification. Please do not reply to this email.</p>
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+<%= render "shared/mailer/button",
+      label: "View #{doc_type}",
+      url: invoices_url,
+      tone: :primary %>

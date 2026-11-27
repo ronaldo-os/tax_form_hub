@@ -1,7 +1,30 @@
-<p>Hello <%= @resource.email %>!</p>
+<% unlock_link = unlock_url(@resource, unlock_token: @token) %>
+<% content_for :email_title, "Unlock Your Account" %>
+<% content_for :email_category, "Account Security" %>
+<% content_for :email_accent, "warning" %>
+<% content_for :email_preheader, "Your Tax Form Hub account was temporarily locked after multiple failed sign-in attempts." %>
+<% content_for :email_footer_note, "If you did not attempt to sign in, we recommend updating your password immediately after unlocking your account." %>
 
-<p>Your account has been locked due to an excessive number of unsuccessful sign in attempts.</p>
+<%= render "shared/mailer/header",
+      title: "Your account has been locked",
+      subtitle: "For your protection, access to your Tax Form Hub account was temporarily locked following multiple unsuccessful sign-in attempts.",
+      status_label: "Action Required",
+      status_tone: :warning %>
 
-<p>Click the link below to unlock your account:</p>
+<%= render "shared/mailer/details_table", rows: [
+      { label: "Account Email", value: @resource.email, emphasize: true },
+      { label: "Status", value: "Temporarily Locked" }
+    ] %>
 
-<p><%= link_to 'Unlock my account', unlock_url(@resource, unlock_token: @token) %></p>
+<%= render "shared/mailer/button",
+      label: "Unlock My Account",
+      url: unlock_link,
+      tone: :primary,
+      show_fallback_url: true %>
+
+<div style="margin-top:24px;">
+  <%= render "shared/mailer/callout",
+        title: "Security Recommendation",
+        body: "If you don’t recognize these sign-in attempts, unlock your account and reset your password right away.",
+        tone: :warning %>
+</div>

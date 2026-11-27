@@ -1,5 +1,20 @@
-<p>Welcome <%= @email %>!</p>
+<% confirmation_link = confirmation_url(@resource, confirmation_token: @token) %>
+<% content_for :email_title, "Confirm Your Account" %>
+<% content_for :email_category, "Account Verification" %>
+<% content_for :email_accent, "primary" %>
+<% content_for :email_preheader, "Confirm your email address to activate your Tax Form Hub account." %>
+<% content_for :email_footer_note, "You’re receiving this email because an account was registered with this address on Tax Form Hub." %>
 
-<p>You can confirm your account email through the link below:</p>
+<%= render "shared/mailer/header",
+      title: "Confirm your email address",
+      subtitle: "Welcome to Tax Form Hub. Confirm your email address below to activate your account and start managing invoices and tax documents." %>
 
-<p><%= link_to 'Confirm my account', confirmation_url(@resource, confirmation_token: @token) %></p>
+<%= render "shared/mailer/details_table", rows: [
+      { label: "Account Email", value: @email, emphasize: true }
+    ] %>
+
+<%= render "shared/mailer/button",
+      label: "Confirm My Account",
+      url: confirmation_link,
+      tone: :primary,
+      show_fallback_url: true %>

@@ -8,6 +8,9 @@ class Users::RegistrationsController < Devise::RegistrationsController
     if @invite_payload.present?
       @inviter = User.find_by(id: @invite_payload["inviter_id"])
       @inviter_company_name = @inviter&.company&.name.presence || @inviter&.companies&.first&.name.presence || @inviter&.display_name
+    elsif params[:invite_token].present?
+      @invite_expired = true
+      flash.now[:alert] = "This company invitation link has expired or is invalid. You can still create an account below, or ask your partner to send a new invitation."
     end
 
     build_resource({})
@@ -136,7 +139,15 @@ class Users::RegistrationsController < Devise::RegistrationsController
       token.to_s,
       purpose: :network_company_invite
     )
-    payload.is_a?(Hash) ? payload.stringify_keys : nil
+    return nil unless payload.is_a?(Hash)
+
+    normalized = payload.stringify_keys
+    if normalized["expires_at"].present?
+      parsed_expiry = Time.iso8601(normalized["expires_at"].to_s) rescue nil
+      return nil if parsed_expiry.present? && Time.current > parsed_expiry
+    end
+
+    normalized
   rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveSupport::MessageEncryptor::InvalidMessage, StandardError
     nil
   end

@@ -1,0 +1,26 @@
+<%
+  doc_type = @invoice.quote? ? "Quotation" : "Invoice"
+  action_labels = {
+    invoice_sent: "New Invoice Received",
+    quote_sent: "New Quotation Received",
+    invoice_approved: "Invoice Approved",
+    invoice_rejected: "Invoice Rejected",
+    quote_approved: "Quotation Approved",
+    quote_rejected: "Quotation Rejected"
+  }
+  heading = action_labels[@action] || "#{doc_type} Update"
+  from_name = @original_sender_user&.company&.name || @original_sender_user&.email || @invoice.user.company&.name || @invoice.user.email
+  formatted_total = email_format_amount(@invoice.grand_total, @invoice.currency)
+%>
+<%= heading.upcase %>
+
+Action by: <%= @sender_user&.email %>
+
+<%= doc_type %> Number: <%= @invoice.invoice_number %>
+From: <%= from_name %>
+To: <%= @invoice.recipient_company&.name %>
+Total Amount: <%= formatted_total %>
+Date: <%= @invoice.created_at&.strftime("%b %d, %Y") %>
+
+View <%= doc_type %>:
+<%= invoices_url %>

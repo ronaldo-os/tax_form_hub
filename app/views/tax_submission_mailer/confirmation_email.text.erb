@@ -1,0 +1,12 @@
+<% has_both_docs = @tax_submission.form_2307.attached? && @tax_submission.deposit_slip.attached? %>
+<% content_for :email_footer_note, "This confirmation was sent after uploading tax documents on Tax Form Hub. If you believe this was a mistake, please contact support." %>
+TAX DOCUMENT SUBMISSION CONFIRMATION
+
+Thank you for your submission! We've received your tax documents and our team will review them shortly.
+
+Submission Status: Received
+<% if has_both_docs %>Submitted From: [<%= @sender_source %>]
+<% end %>Additional Notes: <%= @tax_submission.details.presence || "None provided" %>
+
+View Submission:
+<%= root_url(open_submission: @tax_submission.id) %>

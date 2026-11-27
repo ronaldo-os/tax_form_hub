@@ -1,13 +1,97 @@
+<% accent = email_accent_palette(content_for?(:email_accent) ? content_for(:email_accent).strip : :primary) %>
+<% category = content_for?(:email_category) ? content_for(:email_category).strip : nil %>
+<% preheader = content_for?(:email_preheader) ? content_for(:email_preheader).strip : nil %>
+<% footer_note = content_for?(:email_footer_note) ? content_for(:email_footer_note).strip : "This is an automated message from Tax Form Hub. Please do not reply directly to this email." %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="x-apple-disable-message-reformatting">
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <title><%= content_for?(:email_title) ? content_for(:email_title).strip : "Tax Form Hub" %></title>
     <style>
-      /* Email styles need to be inline */
+      body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+      table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+      body { margin: 0 !important; padding: 0 !important; width: 100% !important; background-color: #f4f6f9; }
+      @media only screen and (max-width: 620px) {
+        .email-outer { padding: 20px 12px !important; }
+        .email-container { width: 100% !important; border-radius: 10px !important; }
+        .email-header-cell { padding: 20px 20px 16px 20px !important; }
+        .email-body-cell { padding: 24px 20px 28px 20px !important; }
+        .email-footer-cell { padding: 18px 20px !important; }
+      }
     </style>
   </head>
 
-  <body>
-    <%= yield %>
+  <body style="margin:0;padding:0;background-color:#f4f6f9;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;-webkit-font-smoothing:antialiased;">
+    <% if preheader.present? %>
+      <div style="display:none;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f4f6f9;">
+        <%= preheader %>&#8199;&#65279;&#847; &#8199;&#65279;&#847; &#8199;&#65279;&#847;
+      </div>
+    <% end %>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" class="email-outer" style="background-color:#f4f6f9;padding:36px 16px;">
+      <tr>
+        <td align="center" valign="top">
+          <!-- Main Card -->
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" class="email-container" style="width:600px;max-width:600px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;border-collapse:separate;">
+            <!-- Top Accent Strip -->
+            <tr>
+              <td style="height:4px;line-height:4px;font-size:4px;background-color:<%= accent[:bar] %>;">&nbsp;</td>
+            </tr>
+
+            <!-- Brand Header -->
+            <tr>
+              <td class="email-header-cell" style="padding:24px 36px 18px 36px;border-bottom:1px solid #f1f5f9;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                  <tr>
+                    <td align="left" valign="middle">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td align="center" valign="middle" style="width:32px;height:32px;background-color:#00aeff;border-radius:7px;color:#ffffff;font-size:12px;font-weight:700;letter-spacing:0.03em;line-height:32px;">
+                            TFH
+                          </td>
+                          <td style="padding-left:10px;font-size:15px;font-weight:700;color:#0f172a;letter-spacing:-0.01em;line-height:1.2;">
+                            Tax Form Hub
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    <% if category.present? %>
+                      <td align="right" valign="middle">
+                        <span style="display:inline-block;padding:4px 10px;border-radius:6px;background-color:<%= accent[:badge_bg] %>;border:1px solid <%= accent[:badge_border] %>;color:<%= accent[:badge_text] %>;font-size:11px;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;line-height:1.2;">
+                          <%= category %>
+                        </span>
+                      </td>
+                    <% end %>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Email Body -->
+            <tr>
+              <td class="email-body-cell" style="padding:32px 36px 34px 36px;text-align:left;">
+                <%= yield %>
+              </td>
+            </tr>
+
+            <!-- Card Footer -->
+            <tr>
+              <td class="email-footer-cell" style="padding:20px 36px;background-color:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
+                <p style="margin:0 0 8px 0;font-size:12px;line-height:18px;color:#64748b;">
+                  <%= footer_note %>
+                </p>
+                <p style="margin:0;font-size:11px;line-height:16px;color:#94a3b8;">
+                  &copy; <%= Time.current.year %> Tax Form Hub. All rights reserved.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

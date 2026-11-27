@@ -1,61 +1,48 @@
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9fafb;padding:40px 0;font-family:Arial,Helvetica,sans-serif;">
-  <tr>
-    <td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:40px;text-align:left;">
-        <tr>
-          <td style="text-align:center;padding-bottom:24px;">
-            <h2 style="margin:0;font-size:24px;color:#111827;">You’re Invited to Tax Form Hub</h2>
-            <p style="margin:10px 0 0;font-size:14px;color:#6b7280;line-height:20px;">
-              <% if @company_name.present? %>
-                <strong><%= @inviter_company_name %></strong> invited <strong><%= @company_name %></strong> to connect on Tax Form Hub.
-              <% else %>
-                <strong><%= @inviter_company_name %></strong> invited you to connect on Tax Form Hub.
-              <% end %>
-            </p>
-          </td>
-        </tr>
+<%
+  ttl = @expires_in.presence || NetworkInvitationMailer::INVITE_TOKEN_TTL
+  valid_for = email_duration_label(ttl)
+  expires_at = @expires_at.presence || (Time.current + ttl.to_i)
+  expires_at_label = email_expiration_timestamp(expires_at)
 
-        <tr>
-          <td style="padding:20px;background:#f3f4f6;border-radius:8px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="padding:6px 0;font-size:14px;color:#374151;"><strong>Invited By:</strong></td>
-                <td style="padding:6px 0;font-size:14px;color:#111827;text-align:right;"><%= @inviter_company_name %></td>
-              </tr>
-              <% if @company_name.present? %>
-                <tr>
-                  <td style="padding:6px 0;font-size:14px;color:#374151;"><strong>Company:</strong></td>
-                  <td style="padding:6px 0;font-size:14px;color:#111827;text-align:right;"><%= @company_name %></td>
-                </tr>
-              <% end %>
-              <% if @personal_message.present? %>
-                <tr>
-                  <td colspan="2" style="padding-top:14px;border-top:1px solid #e5e7eb;font-size:14px;color:#374151;line-height:20px;">
-                    <strong>Message:</strong><br>
-                    <span style="color:#111827;"><%= simple_format(@personal_message, {}, sanitize: true) %></span>
-                  </td>
-                </tr>
-              <% end %>
-            </table>
-          </td>
-        </tr>
+  subtitle = if @company_name.present?
+    "#{@inviter_company_name} invited #{@company_name} to connect on Tax Form Hub for streamlined invoicing and Form 2307 submissions. You have #{valid_for} to accept this invitation."
+  else
+    "#{@inviter_company_name} invited you to connect on Tax Form Hub for streamlined invoicing and Form 2307 submissions. You have #{valid_for} to accept this invitation."
+  end
 
-        <tr>
-          <td style="text-align:center;padding:28px 0;">
-            <a href="<%= @signup_url %>"
-               style="background:#00aeff;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:600;display:inline-block;">
-              Create Account &amp; Connect
-            </a>
-          </td>
-        </tr>
+  details_rows = [{ label: "Invited By", value: @inviter_company_name, emphasize: true }]
+  details_rows << { label: "Company", value: @company_name } if @company_name.present?
+  details_rows << { label: "Invitation Valid For", value: valid_for, emphasize: true }
+  details_rows << { label: "Expires At", value: expires_at_label }
+%>
+<% content_for :email_title, "You’re Invited to Tax Form Hub" %>
+<% content_for :email_category, "Network Invitation" %>
+<% content_for :email_accent, "primary" %>
+<% content_for :email_preheader, "#{@inviter_company_name} invited you to connect on Tax Form Hub. This invite expires in #{valid_for}." %>
+<% content_for :email_footer_note, "Once you register using this link, your company will automatically connect with #{@inviter_company_name}. This invitation expires in #{valid_for} (#{expires_at_label}). If you didn’t expect this invitation, you can safely ignore this email." %>
 
-        <tr>
-          <td style="text-align:center;padding-top:16px;font-size:12px;color:#9ca3af;line-height:18px;">
-            Once you register using this link, your company will automatically connect with <%= @inviter_company_name %>.<br>
-            This invitation expires in 14 days. If you didn’t expect this email, you can safely ignore it.
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+<%= render "shared/mailer/header",
+      title: "You’re invited to Tax Form Hub",
+      subtitle: subtitle %>
+
+<%= render "shared/mailer/details_table", rows: details_rows %>
+
+<% if @personal_message.present? %>
+  <%= render "shared/mailer/callout",
+        title: "Personal Note from #{@inviter_company_name}",
+        body: @personal_message,
+        tone: :info %>
+<% end %>
+
+<%= render "shared/mailer/button",
+      label: "Create Account & Connect",
+      url: @signup_url,
+      tone: :primary,
+      show_fallback_url: true %>
+
+<div style="margin-top:24px;">
+  <%= render "shared/mailer/callout",
+        title: "Invitation Expiration",
+        body: "This invitation link is valid for #{valid_for} and expires on #{expires_at_label}. If it expires before you sign up, ask #{@inviter_company_name} to send you a new invitation.",
+        tone: :warning %>
+</div>

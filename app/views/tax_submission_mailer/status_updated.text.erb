@@ -1,0 +1,10 @@
+<% content_for :email_footer_note, "If you have any questions about this status update, please contact the Tax Form Hub team." %>
+YOUR TAX SUBMISSION WAS UPDATED
+
+There is a new status update on your submitted tax documents.
+
+Status: <%= @status_message %>
+Submission ID: #<%= @tax_submission.id %>
+
+View Submission:
+<%= root_url(open_submission: @tax_submission.id) %>

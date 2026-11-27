@@ -1,0 +1,15 @@
+<% pending_change = @resource.try(:unconfirmed_email?) %>
+<% target_email = pending_change ? @resource.unconfirmed_email : @resource.email %>
+<% content_for :email_footer_note, "This is a security notification sent to the email address associated with your Tax Form Hub account." %>
+<%= pending_change ? "EMAIL ADDRESS CHANGE REQUESTED" : "YOUR EMAIL ADDRESS WAS CHANGED" %>
+
+Hello <%= @email %>,
+
+<% if pending_change %>
+We're contacting you to notify you that your email address is being changed to <%= target_email %>.
+<% else %>
+We're contacting you to notify you that your email address has been changed to <%= target_email %>.
+<% end %>
+
+If you did not authorize this update, please sign in immediately or contact Tax Form Hub support:
+<%= root_url %>

@@ -220,4 +220,56 @@ class NetworksControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to networks_path
     assert_includes flash[:notice], "Invitation sent to directvendor@example.com."
   end
+
+  test "expired network invite token shows expired warning banner and does not auto-connect" do
+    inviter_company = Company.create!(name: "Inviter Expiry Corp", user: @user)
+    @user.update!(company: inviter_company)
+
+    expired_token = Rails.application.message_verifier(:network_company_invite).generate(
+      {
+        inviter_id: @user.id,
+        company_name: "Expired Partner Co",
+        email: "expired_partner@example.com",
+        expires_at: 1.hour.ago.iso8601
+      },
+      expires_in: 7.days,
+      purpose: :network_company_invite
+    )
+
+    sign_out @user
+    get new_user_registration_url(invite_token: expired_token)
+    assert_response :success
+    assert_select "#network_invite_expired_banner", count: 1
+    assert_select "#network_invite_signup_banner", count: 0
+    assert_select "input[name='invite_token']", count: 0
+
+    post user_registration_url, params: {
+      invite_token: expired_token,
+      user: {
+        email: "expired_signup_#{Time.now.to_i}@example.com",
+        company_name: "Expired Partner Co",
+        password: "Password123!@#Secure",
+        password_confirmation: "Password123!@#Secure"
+      }
+    }
+    assert_response :redirect
+
+    new_user = User.order(:id).last
+    refute_includes @user.reload.connected_companies, new_user.company
+  end
+
+  test "reset password edit rejects expired reset tokens and allows valid tokens" do
+    sign_out @user
+    raw_token = @user.send(:set_reset_password_token)
+
+    # Valid token within 1 hour renders reset password form
+    get edit_user_password_url(reset_password_token: raw_token)
+    assert_response :success
+
+    # Simulate token older than Devise.reset_password_within (1 hour)
+    @user.update_column(:reset_password_sent_at, 2.hours.ago)
+    get edit_user_password_url(reset_password_token: raw_token)
+    assert_redirected_to new_user_password_path
+    assert_includes flash[:alert], "expired or is invalid"
+  end
 end

@@ -12,10 +12,17 @@
         </div>
 
         <% if @invite_payload.present? %>
-          <div class="alert alert-info rounded-3 py-2.5 px-3 mb-3 small d-flex align-items-start gap-2" id="network_invite_signup_banner">
-            <i class="fa-solid fa-envelope-open-text mt-0.5 text-primary"></i>
+          <div class="alert alert-info rounded-3 py-2 px-3 mb-3 small d-flex align-items-start gap-2" id="network_invite_signup_banner">
+            <i class="fa-solid fa-envelope-open-text mt-1 text-primary"></i>
             <div>
               <strong><%= @inviter_company_name.presence || "A partner" %></strong> invited you to connect on Tax Form Hub. Complete your registration to connect automatically.
+            </div>
+          </div>
+        <% elsif @invite_expired %>
+          <div class="alert alert-warning rounded-3 py-2 px-3 mb-3 small d-flex align-items-start gap-2" id="network_invite_expired_banner">
+            <i class="fa-solid fa-clock mt-1"></i>
+            <div>
+              <strong>Invitation link expired or invalid.</strong> You can still register an account below, or ask your partner to send a fresh invitation from their Network page.
             </div>
           </div>
         <% end %>

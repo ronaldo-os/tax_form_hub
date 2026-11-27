@@ -1,46 +1,21 @@
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9fafb;padding:40px 0;font-family:Arial,Helvetica,sans-serif;">
-  <tr>
-    <td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:40px;text-align:left;">
-        
-        <tr>
-          <td style="text-align:center;padding-bottom:30px;">
-            <h2 style="margin:0;font-size:24px;color:#111827;">Submission Update Notification</h2>
-            <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">Your tax submission has been updated</p>
-          </td>
-        </tr>
+<% content_for :email_title, "Tax Submission Status Updated" %>
+<% content_for :email_category, "Tax Submission" %>
+<% content_for :email_accent, "primary" %>
+<% content_for :email_preheader, "Your tax submission has been updated: #{@status_message}" %>
+<% content_for :email_footer_note, "If you have any questions about this status update, please contact the Tax Form Hub team." %>
 
-        <tr>
-          <td style="padding:20px;background:#f3f4f6;border-radius:8px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="padding:6px 0;font-size:14px;color:#374151;"><strong>Status:</strong></td>
-                <td style="padding:6px 0;font-size:14px;color:#111827;text-align:right;"><%= @status_message %></td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+<%= render "shared/mailer/header",
+      title: "Your tax submission was updated",
+      subtitle: "There is a new status update on your submitted tax documents.",
+      status_label: "Status Updated",
+      status_tone: :primary %>
 
-        <tr>
-          <td style="text-align:center;padding:30px 0;">
-            <a href="<%= root_url(open_submission: @tax_submission.id) %>"
-              style="background:#00aeff;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600;display:inline-block;">
-              View Submission
-            </a>
-          </td>
-        </tr>
+<%= render "shared/mailer/details_table", rows: [
+      { label: "Status", value: @status_message, emphasize: true },
+      { label: "Submission ID", value: "##{@tax_submission.id}" }
+    ] %>
 
-        <tr>
-          <td style="text-align:center;padding-top:20px;font-size:12px;color:#9ca3af;line-height:18px;">
-            If you have any questions, feel free to contact our team.  
-            <br><br>
-            Best regards,  
-            <br>
-            Tax Form Hub Team
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
+<%= render "shared/mailer/button",
+      label: "View Submission",
+      url: root_url(open_submission: @tax_submission.id),
+      tone: :primary %>

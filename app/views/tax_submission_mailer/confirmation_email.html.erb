@@ -1,52 +1,26 @@
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f9fafb;padding:40px 0;font-family:Arial,Helvetica,sans-serif;">
-  <tr>
-    <td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:40px;text-align:left;">
-        
-        <tr>
-          <td style="text-align:center;padding-bottom:30px;">
-            <h2 style="margin:0;font-size:24px;color:#111827;">Thank you for your submission!</h2>
-            <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">We’ve received your tax documents and our team will review them shortly.</p>
-            <% if @tax_submission.form_2307.attached? && @tax_submission.deposit_slip.attached? %>
-              <p style="margin:8px 0 0;font-size:14px;color:#6b7280;">
-                Submitted from: <strong>[<%= @sender_source %>]</strong>
-              </p>
-            <% end %>
-          </td>
-        </tr>
+<%
+  has_both_docs = @tax_submission.form_2307.attached? && @tax_submission.deposit_slip.attached?
+  rows = [
+    { label: "Submission Status", value: "Received", emphasize: true }
+  ]
+  rows << { label: "Submitted From", value: "[#{@sender_source}]" } if has_both_docs
+  rows << { label: "Additional Notes", value: @tax_submission.details.presence || "None provided" }
+%>
+<% content_for :email_title, "Tax Document Submission Confirmation" %>
+<% content_for :email_category, "Tax Submission" %>
+<% content_for :email_accent, "success" %>
+<% content_for :email_preheader, "We’ve received your tax documents and our team will review them shortly." %>
+<% content_for :email_footer_note, "This confirmation was sent after uploading tax documents on Tax Form Hub. If you believe this was a mistake, please contact support." %>
 
-        <tr>
-          <td style="padding:20px;background:#f3f4f6;border-radius:8px;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0">
-              <tr>
-                <td style="padding:6px 0;font-size:14px;color:#374151;"><strong>Submission Details:</strong></td>
-                <td style="padding:6px 0;font-size:14px;color:#111827;text-align:right;">Received</td>
-              </tr>
-              <tr>
-                <td style="padding:6px 0;font-size:14px;color:#374151;"><strong>Additional Notes:</strong></td>
-                <td style="padding:6px 0;font-size:14px;color:#111827;text-align:right;"><%= @tax_submission.details.presence || "None provided" %></td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+<%= render "shared/mailer/header",
+      title: "Thank you for your submission",
+      subtitle: "We’ve received your tax documents and our team will review them shortly.",
+      status_label: "Received",
+      status_tone: :success %>
 
-        <tr>
-          <td style="text-align:center;padding:30px 0;">
-            <a href="<%= root_url(open_submission: @tax_submission.id) %>"
-              style="background:#00aeff;color:#ffffff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:16px;font-weight:600;display:inline-block;">
-              View Submission
-            </a>
-          </td>
-        </tr>
+<%= render "shared/mailer/details_table", rows: rows %>
 
-        <tr>
-          <td style="text-align:center;padding-top:20px;font-size:12px;color:#9ca3af;line-height:18px;">
-            This confirmation was sent to you after uploading tax documents.  
-            If you believe this was a mistake, please contact support.
-          </td>
-        </tr>
-
-      </table>
-    </td>
-  </tr>
-</table>
+<%= render "shared/mailer/button",
+      label: "View Submission",
+      url: root_url(open_submission: @tax_submission.id),
+      tone: :primary %>

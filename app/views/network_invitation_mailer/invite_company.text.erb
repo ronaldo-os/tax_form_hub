@@ -1,17 +1,30 @@
-You're Invited to Tax Form Hub
+<%
+  ttl = @expires_in.presence || NetworkInvitationMailer::INVITE_TOKEN_TTL
+  valid_for = email_duration_label(ttl)
+  expires_at = @expires_at.presence || (Time.current + ttl.to_i)
+  expires_at_label = email_expiration_timestamp(expires_at)
+%>
+<% content_for :email_footer_note, "Once you register using this link, your company will automatically connect with #{@inviter_company_name}. This invitation expires in #{valid_for} (#{expires_at_label})." %>
+YOU'RE INVITED TO TAX FORM HUB
 
 <% if @company_name.present? %>
 <%= @inviter_company_name %> invited <%= @company_name %> to connect on Tax Form Hub.
 <% else %>
 <%= @inviter_company_name %> invited you to connect on Tax Form Hub.
 <% end %>
+
+Invited By: <%= @inviter_company_name %>
+<% if @company_name.present? %>Company: <%= @company_name %>
+<% end %>Invitation Valid For: <%= valid_for %>
+Expires At: <%= expires_at_label %>
 <% if @personal_message.present? %>
 
-Message from <%= @inviter_company_name %>:
+Personal Note from <%= @inviter_company_name %>:
 <%= @personal_message %>
 <% end %>
 
 Create your account and connect automatically using the link below:
 <%= @signup_url %>
 
-This invitation expires in 14 days. If you didn't expect this email, you can safely ignore it.
+Invitation Expiration:
+This invitation link is valid for <%= valid_for %> and expires on <%= expires_at_label %>. If it expires before you sign up, ask <%= @inviter_company_name %> to send you a new invitation.

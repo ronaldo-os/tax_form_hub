@@ -95,7 +95,7 @@ class NetworksController < ApplicationController
 
   INVITE_EMAIL_REGEX = /\A[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\z/
   MAX_INVITES_PER_HOUR = 10
-  INVITE_TOKEN_TTL = 14.days
+  INVITE_TOKEN_TTL = NetworkInvitationMailer::INVITE_TOKEN_TTL
 
   def destroy
     @network = current_user.networks.find(params[:id])
@@ -171,11 +171,13 @@ class NetworksController < ApplicationController
       return
     end
 
+    expires_at = INVITE_TOKEN_TTL.from_now
     invite_token = Rails.application.message_verifier(:network_company_invite).generate(
       {
         inviter_id: current_user.id,
         company_name: company_name.presence,
-        email: email
+        email: email,
+        expires_at: expires_at.iso8601
       },
       expires_in: INVITE_TOKEN_TTL,
       purpose: :network_company_invite
@@ -188,7 +190,9 @@ class NetworksController < ApplicationController
         recipient_email: email,
         invite_token: invite_token,
         message: message.presence,
-        signup_url: new_user_registration_url(invite_token: invite_token)
+        signup_url: new_user_registration_url(invite_token: invite_token),
+        expires_in: INVITE_TOKEN_TTL,
+        expires_at: expires_at
       ).deliver_later
 
       Rails.cache.write(user_rate_key, sent_count + 1, expires_in: 1.hour)

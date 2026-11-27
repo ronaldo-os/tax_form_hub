@@ -1,0 +1,23 @@
+<%# locals: (rows:) %>
+<% valid_rows = Array(rows).select { |row| row.is_a?(Hash) && row[:label].present? } %>
+<% return if valid_rows.empty? %>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:24px;">
+  <tr>
+    <td style="padding:6px 20px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+        <% valid_rows.each_with_index do |row, index| %>
+          <% divider_style = index < valid_rows.length - 1 ? "border-bottom:1px solid #e2e8f0;" : "" %>
+          <% value_style = row[:emphasize] ? "font-weight:700;color:#0f172a;" : "font-weight:500;color:#0f172a;" %>
+          <tr>
+            <td valign="top" style="padding:11px 12px 11px 0;font-size:13px;line-height:20px;color:#64748b;font-weight:500;width:42%;<%= divider_style %>">
+              <%= row[:label] %>
+            </td>
+            <td valign="top" align="right" style="padding:11px 0 11px 12px;font-size:13px;line-height:20px;<%= value_style %>text-align:right;word-break:break-word;font-variant-numeric:tabular-nums;<%= divider_style %>">
+              <%= row[:value].presence || "—" %>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    </td>
+  </tr>
+</table>

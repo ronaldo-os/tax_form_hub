@@ -1,0 +1,27 @@
+<%# locals: (title:, subtitle: nil, status_label: nil, status_tone: nil) %>
+<% palette = status_tone.present? ? email_accent_palette(status_tone) : nil %>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
+  <% if status_label.present? && palette.present? %>
+    <tr>
+      <td style="padding-bottom:12px;">
+        <span style="display:inline-block;padding:4px 10px;border-radius:6px;background-color:<%= palette[:badge_bg] %>;border:1px solid <%= palette[:badge_border] %>;color:<%= palette[:badge_text] %>;font-size:12px;font-weight:600;line-height:1.2;">
+          <%= status_label %>
+        </span>
+      </td>
+    </tr>
+  <% end %>
+  <tr>
+    <td>
+      <h1 style="margin:0;font-size:22px;font-weight:700;line-height:1.3;letter-spacing:-0.015em;color:#0f172a;">
+        <%= title %>
+      </h1>
+    </td>
+  </tr>
+  <% if subtitle.present? %>
+    <tr>
+      <td style="padding-top:10px;font-size:14px;line-height:22px;color:#475569;">
+        <%= subtitle %>
+      </td>
+    </tr>
+  <% end %>
+</table>

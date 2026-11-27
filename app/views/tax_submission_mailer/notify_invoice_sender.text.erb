@@ -1,0 +1,11 @@
+NEW TAX DOCUMENTS SUBMITTED
+
+<%= @tax_submission.email %> uploaded tax documents linked to your invoice.
+
+Invoice Number: <%= @tax_submission.invoice&.invoice_number %>
+Submitted By: <%= @tax_submission.email %>
+Details: <%= @tax_submission.details.presence || "No additional details" %>
+Submission Date: <%= @tax_submission.created_at&.strftime("%B %d, %Y") %>
+
+View Dashboard:
+<%= root_url %>

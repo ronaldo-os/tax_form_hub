@@ -1,1 +1,8 @@
-<%= yield %>
+<% footer_note = content_for?(:email_footer_note) ? CGI.unescapeHTML(content_for(:email_footer_note).to_s).strip : "This is an automated message from Tax Form Hub. Please do not reply directly to this email." %>TAX FORM HUB
+============================================================
+
+<%= yield.to_s.strip %>
+
+------------------------------------------------------------
+<%= footer_note %>
+© <%= Time.current.year %> Tax Form Hub. All rights reserved.

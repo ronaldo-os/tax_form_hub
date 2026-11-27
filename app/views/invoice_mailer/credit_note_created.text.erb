@@ -1,0 +1,15 @@
+<% formatted_total = email_format_amount(@credit_note.grand_total, @credit_note.currency) %>
+<% from_name = @credit_note.user.company&.name || @credit_note.user.email %>
+CREDIT NOTE CREATED
+
+Created by: <%= @credit_note.user.email %>
+
+Credit Note Number: <%= @credit_note.invoice_number %>
+Original Invoice: <%= @original_invoice&.invoice_number %>
+From: <%= from_name %>
+To: <%= @credit_note.recipient_company&.name %>
+Total Amount: <%= formatted_total %>
+Date: <%= @credit_note.created_at&.strftime("%b %d, %Y") %>
+
+View Credit Note:
+<%= invoices_url %>

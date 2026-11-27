@@ -1,0 +1,11 @@
+<% content_for :email_footer_note, "You're receiving this automated notification because you have administrator access to tax submissions on Tax Form Hub." %>
+NEW TAX SUBMISSION RECEIVED
+
+A new tax document submission is ready for review in the admin dashboard.
+
+<% if @tax_submission.email.present? %>Submitted Email: <%= @tax_submission.email %>
+<% end %>Notes: <%= @tax_submission.details.presence || "None" %>
+Submitted On: <%= (@tax_submission.created_at || Time.current).strftime("%B %d, %Y") %>
+
+Review in Dashboard:
+<%= admin_tax_submissions_url(open_submission: @tax_submission.id) %>
